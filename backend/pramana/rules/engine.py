@@ -83,10 +83,15 @@ def _effective(rule: dict[str, Any], on: date) -> bool:
     return (f is None or f <= on) and (t is None or on <= t)
 
 
+class _Lenient(dict):
+    def __missing__(self, key: str) -> str:
+        return "n/a"
+
+
 def _fmt(template: str, values: dict[str, Any]) -> str:
     try:
-        return template.format(**{k.replace(".", "_"): v for k, v in values.items()})
-    except (KeyError, IndexError, ValueError):
+        return template.format_map(_Lenient({k.replace(".", "_"): v for k, v in values.items()}))
+    except (IndexError, ValueError):
         return template
 
 
@@ -148,7 +153,7 @@ def _check(rule: dict[str, Any], facts: FactStore, as_of: date) -> RuleResult:
                           [f.describe() for f in ev.read.values()], missing=[m.path])
     except (ExprError, TypeError, ValueError) as e:
         return RuleResult(rule, ERROR, f"Rule could not be evaluated: {e}", [f.describe() for f in ev.read.values()])
-    values = {p: f.value for p, f in ev.read.items()}
+    values = {f.path: f.value for f in facts.all()}
     values["as_of"] = as_of
     derived = {}
     for name, expr in (chk.get("show") or {}).items():

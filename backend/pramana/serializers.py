@@ -51,10 +51,16 @@ def run_full(r: ValidationRun) -> dict[str, Any]:
             "previous_run": s.get("previous_run"), "facts": s.get("facts", [])}
 
 
-def application(a: Application, latest: ValidationRun | None = None) -> dict[str, Any]:
+INSTITUTION_RUN_KEYS = ("id", "status", "round", "started_at", "finished_at", "as_of", "ruleset_id")
+
+
+def application(a: Application, latest: ValidationRun | None = None, *, for_institution: bool = False) -> dict[str, Any]:
+    run = run_brief(latest)
+    if for_institution and run:
+        run = {k: run[k] for k in INSTITUTION_RUN_KEYS}
     return {"id": a.id, "institution": institution(a.institution), "category": a.category,
             "academic_year": a.academic_year, "status": a.status, "round": a.round, "declared": a.declared,
-            "created_at": _dt(a.created_at), "submitted_at": _dt(a.submitted_at), "latest_run": run_brief(latest)}
+            "created_at": _dt(a.created_at), "submitted_at": _dt(a.submitted_at), "latest_run": run}
 
 
 def field(f: ExtractedField) -> dict[str, Any]:

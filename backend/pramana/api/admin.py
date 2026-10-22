@@ -202,8 +202,8 @@ def sim_lookup(code: str, ref: str, user: User = Depends(require_roles(*OFFICIAL
 
 
 @router.post("/tools/verify-pdf")
-async def verify_pdf(file: UploadFile = File(...), user: User = Depends(require_roles(*OFFICIAL_ROLES)),
-                     db: Session = Depends(get_db)):
+def verify_pdf(file: UploadFile = File(...), user: User = Depends(require_roles(*OFFICIAL_ROLES)),
+               db: Session = Depends(get_db)):
     """Check any PDF's signatures and structure without filing it. Nothing is stored except an audit entry."""
     from dataclasses import asdict
 
@@ -211,7 +211,7 @@ async def verify_pdf(file: UploadFile = File(...), user: User = Depends(require_
     from ..pipeline.intake import UploadRejected, validate_upload
     from ..verification.signature import validate_signatures
 
-    data = await file.read(get_settings().max_upload_mb * 1024 * 1024 + 1)
+    data = file.file.read(get_settings().max_upload_mb * 1024 * 1024 + 1)
     name = (file.filename or "upload.pdf").rsplit("/", 1)[-1][:120]
     try:
         res = validate_upload(name if name.lower().endswith(".pdf") else name + ".pdf", data)

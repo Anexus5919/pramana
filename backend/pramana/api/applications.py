@@ -49,7 +49,8 @@ def list_applications(user: User = Depends(current_user), db: Session = Depends(
     if user.role == "institution":
         q = q.where(Application.institution_id == user.institution_id)
     apps = db.scalars(q.order_by(Application.created_at.desc())).all()
-    return [ser.application(a, latest_run(db, a.id)) for a in apps]
+    inst = user.role == "institution"
+    return [ser.application(a, latest_run(db, a.id), for_institution=inst) for a in apps]
 
 
 class NewApplication(BaseModel):
@@ -90,7 +91,7 @@ def get_application(app_id: str, user: User = Depends(current_user), db: Session
                 for t in cl.get("required", []) + cl.get("optional", [])]
     rect = db.scalars(select(RectificationRequest).where(RectificationRequest.application_id == app.id)
                       .order_by(RectificationRequest.created_at.desc())).all()
-    return {**ser.application(app, latest_run(db, app.id)),
+    return {**ser.application(app, latest_run(db, app.id), for_institution=user.role == "institution"),
             "category_label": cl.get("label", app.category), "checklist_source": cl.get("source"),
             "document_checklist": required,
             "documents": [ser.document(d) for d in docs],
