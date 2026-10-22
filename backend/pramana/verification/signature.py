@@ -65,6 +65,18 @@ def _anchor_for(chain_root: x509.Certificate | None) -> Anchor | None:
     return None
 
 
+def _display_name(cert: x509.Certificate) -> str:
+    """Name and organisation only; India PKI subjects also carry hashed PAN and phone fields."""
+    n = cert.subject.native
+    parts = [n.get("common_name"), n.get("organization_name")]
+    ou = n.get("organizational_unit_name")
+    if isinstance(ou, list):
+        ou = ou[0] if ou else None
+    if ou:
+        parts.append(ou)
+    return ", ".join(str(p) for p in parts if p) or cert.subject.human_friendly
+
+
 def has_signatures(data: bytes) -> bool:
     try:
         return bool(PdfFileReader(io.BytesIO(data), strict=False).embedded_signatures)
@@ -89,17 +101,22 @@ def validate_signatures(data: bytes) -> list[VerificationResult]:
             )
         ]
     anchors = trust_anchors()
-    vc = ValidationContext(trust_roots=[a.cert for a in anchors], allow_fetching=False, revocation_mode="soft-fail")
+    fetch = get_settings().pki_fetch_revocation
     results = []
     for sig in sigs:
         name = sig.field_name
+        # Most Indian DSC PDFs carry no trusted timestamp, so validate at the signer-reported time (CCA
+        # guidance judges a signature at the time it was applied) and say that this time is self-asserted.
+        moment = getattr(sig, "self_reported_timestamp", None)
+        vc = ValidationContext(trust_roots=[a.cert for a in anchors], allow_fetching=fetch,
+                               revocation_mode="soft-fail", moment=moment, retroactive_revinfo=True)
         try:
             st = validate_pdf_signature(sig, signer_validation_context=vc)
         except (SignatureValidationError, ValueError) as e:
             results.append(VerificationResult("pdf_signature", MISMATCH, "pyHanko", False, f"{name}: {e}"))
             continue
         cert = st.signing_cert
-        signer = cert.subject.human_friendly if cert else "unknown"
+        signer = _display_name(cert) if cert else "unknown"
         root = None
         try:
             path = st.validation_path
@@ -122,6 +139,10 @@ def validate_signatures(data: bytes) -> list[VerificationResult]:
             "trust_anchor": anchor.label if anchor else None,
             "demo_anchor": anchor.demo if anchor else None,
             "docmdp_ok": st.docmdp_ok,
+            "validated_at": moment.isoformat() if moment else "now",
+            "time_source": "timestamp token" if st.timestamp_validity else
+            ("signer-reported (self-asserted)" if moment else "validation time"),
+            "revocation_checked": fetch,
         }
         src = "pyHanko PAdES validation"
         if not st.intact or not st.valid:
@@ -154,7 +175,8 @@ def validate_signatures(data: bytes) -> list[VerificationResult]:
             results.append(VerificationResult(
                 "pdf_signature", VERIFIED, src, demo,
                 f"Signature '{name}' by {signer} is intact and chains to {anchor.label if anchor else 'a trust anchor'}."
-                + (" This anchor is a prototype DEMO root, not India PKI." if demo else ""),
+                + (" This anchor is a prototype DEMO root, not India PKI." if demo else "")
+                + ("" if fetch else " Revocation status was not fetched (offline mode)."),
                 response=resp,
                 claim="Document bytes are unchanged since signing by the named certificate holder.",
             ))

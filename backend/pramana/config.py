@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     frontend_dist: Path = REPO_DIR / "frontend" / "dist"
     rulesets_dir: Path = BACKEND_DIR / "rulesets"
     trust_dir: Path = BACKEND_DIR / "trust"
+    # Fetch CRL/OCSP for India PKI signatures; off by default so demos work offline
+    pki_fetch_revocation: bool = False
     # Optional local LLM endpoint (Ollama); the pipeline never requires it
     ollama_url: str | None = None
     ollama_model: str = "qwen2.5:3b"
