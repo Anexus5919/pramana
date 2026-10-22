@@ -8,11 +8,13 @@ import { Digest } from "../../components/ui/Digest";
 import { fmtDate, fmtDateTime } from "../../lib/format";
 import type { ApplicationDetail } from "../../types";
 
-function Meta({ label, children }: { label: string; children: ReactNode }) {
+function Meta({ label, children, title }: { label: string; children: ReactNode; title?: string }) {
   return (
     <div className="min-w-0">
       <dt className="text-[11px] text-subtle-fg">{label}</dt>
-      <dd className="mt-0.5 truncate text-sm text-fg">{children}</dd>
+      <dd className="mt-0.5 truncate text-sm text-fg" title={title}>
+        {children}
+      </dd>
     </div>
   );
 }
@@ -100,7 +102,7 @@ export function WorkspaceHeader({
             <Meta label="Latest run">
               <span className="font-mono text-xs">{run.id}</span>
             </Meta>
-            <Meta label="Ruleset">
+            <Meta label="Ruleset" title={`${run.ruleset_id}, hash ${run.ruleset_hash}`}>
               <span className="font-mono text-xs">{run.ruleset_id}</span>
             </Meta>
             <Meta label="Report digest">

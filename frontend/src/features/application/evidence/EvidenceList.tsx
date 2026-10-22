@@ -192,8 +192,12 @@ export function GeoFigure({ e }: { e: GeoEvidence }) {
       <line x1={cx} y1={cy} x2={px} y2={py} stroke="currentColor" strokeDasharray="3 3" className="text-subtle-fg" />
       <circle cx={cx} cy={cy} r="5" className="fill-verified-dot" />
       <circle cx={px} cy={py} r="5" className="fill-mismatch-dot" />
-      <text x={cx} y={cy + 15} textAnchor="middle" className="fill-muted text-[8px]">campus</text>
-      <text x={px} y={py - 9} textAnchor="middle" className="fill-muted text-[8px]">photo</text>
+      <text x={cx + (dx >= 0 ? -8 : 8)} y={cy + 3} textAnchor={dx >= 0 ? "end" : "start"} className="fill-muted text-[9px]">
+        campus
+      </text>
+      <text x={px + (dx >= 0 ? 8 : -8)} y={py + 3} textAnchor={dx >= 0 ? "start" : "end"} className="fill-muted text-[9px]">
+        photo
+      </text>
     </svg>
   );
 }

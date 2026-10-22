@@ -82,8 +82,8 @@ export function RectificationDialog({
     >
       <div className="space-y-4">
         <Callout tone="info">
-          Forensic and cross-application indicators are visible to the institution only through the items you select
-          here. Select deficiencies the institution can correct.
+          The institution already sees its completeness, compliance and validity findings. Verification, forensic and
+          consistency indicators reach it only if you select them here. Select items the institution can correct.
         </Callout>
         {groups.length === 0 && <p className="text-sm text-muted">There are no open findings to include.</p>}
         {groups.map((g) => (

@@ -17,6 +17,9 @@ function provenanceText(i: FactInput): string {
   if (p.record_id) parts.push(String(p.record_id));
   if (p.records) parts.push(`${p.records} records`);
   if (p.form_field) parts.push(`form field ${p.form_field}`);
+  for (const k of ["checked_by", "rule", "computation", "rounding"]) {
+    if (typeof p[k] === "string" && p[k]) parts.push(k === "checked_by" ? `checked by ${p[k]}` : String(p[k]));
+  }
   return parts.join(", ");
 }
 

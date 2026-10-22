@@ -13,6 +13,14 @@ import { humanize, severityRank } from "../../lib/labels";
 import type { PdfSignatureCheck, PdfVerifyResult } from "../../types";
 import { PageHeader } from "../shared/Summaries";
 
+/** PDF date strings look like D:20250107190806+05'30'. */
+function pdfDate(v: string): string | null {
+  const m = /^D:(\d{4})(\d{2})(\d{2})(\d{2})?(\d{2})?(\d{2})?(Z|[+-]\d{2}'?\d{2}'?)?/.exec(v);
+  if (!m) return null;
+  const tz = m[7] && m[7] !== "Z" ? `${m[7].slice(0, 3)}:${m[7].replace(/'/g, "").slice(3, 5) || "00"}` : "Z";
+  return fmtDateTime(`${m[1]}-${m[2]}-${m[3]}T${m[4] ?? "00"}:${m[5] ?? "00"}:${m[6] ?? "00"}${tz}`);
+}
+
 function AnchorBadge({ r }: { r: PdfSignatureCheck["response"] }) {
   if (r.demo_anchor === true) {
     return (
@@ -66,7 +74,15 @@ function SignatureCard({ s, index }: { s: PdfSignatureCheck; index: number }) {
     <li className="rounded-lg border border-line bg-surface p-4 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-fg">{r.field ? `Signature ${r.field}` : `Signature ${index + 1}`}</span>
+          <span className="text-sm font-semibold text-fg">
+            {r.field ? (
+              <>
+                Signature field <span className="font-mono text-[13px]">{r.field}</span>
+              </>
+            ) : (
+              `Signature ${index + 1}`
+            )}
+          </span>
           <StatusPill status={s.status} />
           {!noSignature && <AnchorBadge r={r} />}
         </div>
@@ -187,7 +203,9 @@ function Result({ data }: { data: PdfVerifyResult }) {
               {meta.map(([k, v]) => (
                 <div key={k} className="contents">
                   <dt className="text-xs text-subtle-fg">{k}</dt>
-                  <dd className="text-xs break-words text-fg">{v}</dd>
+                  <dd className="text-xs break-words text-fg" title={v}>
+                    {pdfDate(v) ?? v}
+                  </dd>
                 </div>
               ))}
             </dl>
