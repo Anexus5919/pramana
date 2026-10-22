@@ -177,7 +177,7 @@ export function IssuerSimulatorPage() {
         Every result from them carries a SIMULATED label. A real deployment would replace each one with an authorised
         integration behind the same adapter interface.
       </Callout>
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card aria-labelledby="issuers-title">
           <CardHeader
             id="issuers-title"

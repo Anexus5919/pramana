@@ -167,7 +167,7 @@ export function VerificationTab({ app, attemptsQuery }: { app: ApplicationDetail
   }
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
       <Card aria-labelledby="matrix-title">
         <CardHeader
           id="matrix-title"

@@ -169,7 +169,7 @@ function Result({ data }: { data: PdfVerifyResult }) {
         </ul>
       </section>
 
-      <div className="grid items-start gap-5 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
         <Card aria-labelledby="fx-title">
           <CardHeader id="fx-title" title={`Forensic signals (${signals.length})`} subtitle="Observable facts about the file structure, not conclusions" />
           {signals.length === 0 ? (

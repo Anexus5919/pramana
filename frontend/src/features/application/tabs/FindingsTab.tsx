@@ -98,7 +98,7 @@ export function FindingsTab({
   const filtersActive = !!(ec || sev || status || q);
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <div className="min-w-0">
         <div className="mb-3 grid grid-cols-3 gap-2">
           <label className="relative col-span-3 block">

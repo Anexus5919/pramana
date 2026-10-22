@@ -8,7 +8,7 @@ import { Pill, StatusPill } from "../../../components/ui/Badge";
 import { Card } from "../../../components/ui/Card";
 import { EmptyState, ErrorBanner, Skeleton } from "../../../components/ui/Feedback";
 import { fmtBytes } from "../../../lib/format";
-import { humanize } from "../../../lib/labels";
+import { humanize, verificationMeta } from "../../../lib/labels";
 import type { ApplicationDetail, BBox, DocumentSummary, Finding, RunFull } from "../../../types";
 import { DocumentSidePanel } from "../../documents/DocumentSidePanel";
 import { DocumentViewer, type Focus } from "../../documents/DocumentViewer";
@@ -145,8 +145,26 @@ export function DocumentsTab({ app, run, findings }: { app: ApplicationDetail; r
   }
 
   return (
-    <div className="grid items-start gap-4 xl:grid-cols-[220px_minmax(0,1fr)_380px]">
-      <div className="min-w-0">
+    <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[220px_minmax(0,1fr)_380px]">
+      <div className="min-w-0 xl:hidden">
+        <label htmlFor="doc-select" className="mb-1 block text-xs font-medium text-muted">
+          Document
+        </label>
+        <select
+          id="doc-select"
+          value={docId ?? ""}
+          onChange={(e) => update({ doc: e.target.value, page: 1, hl: null, hlabel: null })}
+          className="block h-9 w-full rounded-md border border-line-strong bg-surface px-2.5 text-sm text-fg"
+        >
+          {listed.map((d) => (
+            <option key={d.id} value={d.id}>
+              {docType(d.declared_type)} ({d.original_filename})
+              {run?.document_status[d.id] ? `, ${verificationMeta[run.document_status[d.id]]?.label ?? run.document_status[d.id]}` : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="hidden min-w-0 xl:block">
         <DocList docs={listed} selected={docId} onSelect={(id) => update({ doc: id, page: 1, hl: null, hlabel: null })} status={run?.document_status ?? {}} docTypeLabel={docType} />
         {docs.some((d) => d.superseded) && (
           <label className="mt-2 flex items-center gap-2 px-1 text-xs text-muted">

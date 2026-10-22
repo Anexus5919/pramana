@@ -235,7 +235,7 @@ export function InstitutionApplicationPage() {
         </Card>
       )}
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card aria-labelledby="docs-title">
           <CardHeader
             id="docs-title"

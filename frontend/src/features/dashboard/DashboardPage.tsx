@@ -45,7 +45,7 @@ export function DashboardPage() {
       ) : dash.data ? (
         <div className="space-y-5">
           <KpiTiles data={dash.data} metrics={metrics.data} />
-          <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
             <TriageTable rows={dash.data.applications} />
             <AlertsPanel alerts={dash.data.alerts} />
           </div>

@@ -74,7 +74,7 @@ export function AppShell() {
           <Link to={role === "institution" ? "/portal" : "/dashboard"} className="rounded-md" aria-label="Pramana home">
             <Brand compact />
           </Link>
-          <nav aria-label="Main" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+          <nav aria-label="Main" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]">
             {items.map((n) => (
               <NavLink
                 key={n.to}
@@ -94,14 +94,14 @@ export function AppShell() {
           </nav>
           <div className="flex shrink-0 items-center gap-2">
             {user && (
-              <div className="hidden items-center gap-2.5 md:flex">
+              <div className="flex items-center gap-2.5" title={`${user.display_name}, ${session?.role_label ?? roleLabel[user.role]}`}>
                 <span
                   aria-hidden
                   className="inline-flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary-ink"
                 >
                   {initials(user.display_name)}
                 </span>
-                <span className="flex flex-col leading-tight">
+                <span className="hidden flex-col leading-tight xl:flex">
                   <span className="max-w-48 truncate text-sm font-medium text-fg">{user.display_name}</span>
                   <span className="text-xs text-subtle-fg">{session?.role_label ?? roleLabel[user.role]}</span>
                 </span>
