@@ -332,6 +332,17 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                f"(keywords: {', '.join(cls['candidates'][0]['matched'][:4])}).",
                     "limitation": "Keyword classification; a reviewer should open the file.",
                     "evidence": [{"kind": "document", "document_id": d.id}], "document_id": d.id})
+            for il in (d.analysis or {}).get("instruction_lines") or []:
+                findings.append({
+                    "code": "SEC-INSTRUCTION-TEXT", "fingerprint": _fp("inj", d.declared_type, il["text"][:60]),
+                    "category": "forensic", "evidence_class": "structural", "severity": "high",
+                    "outcome": "indicator", "title": "Document contains instructions aimed at automated readers",
+                    "message": f"Page {il['page']} says: '{il['text']}'. Genuine certificates do not address "
+                               "software. Values found only in this line are never accepted.",
+                    "limitation": "Pattern-based; unusual but legitimate wording could match. Read the line.",
+                    "evidence": [{"kind": "region", "document_id": d.id, "page": il["page"], "bbox": il["bbox"],
+                                  "label": "instruction text", "value": il["text"]}],
+                    "document_id": d.id})
             unread = (d.analysis or {}).get("unreadable_pages") or []
             if unread:
                 findings.append({

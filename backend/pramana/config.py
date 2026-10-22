@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -26,9 +27,18 @@ class Settings(BaseSettings):
     trust_dir: Path = BACKEND_DIR / "trust"
     # Fetch CRL/OCSP for India PKI signatures; off by default so demos work offline
     pki_fetch_revocation: bool = False
-    # Optional local LLM endpoint (Ollama); the pipeline never requires it
-    ollama_url: str | None = None
-    ollama_model: str = "qwen2.5:3b"
+    # Optional grounded LLM extraction for fields the patterns miss; the pipeline never requires it.
+    # Providers are tried in order. External providers also need llm_allow_external=true.
+    llm_providers: str = ""  # e.g. "ollama" or "ollama,groq,gemini"
+    llm_allow_external: bool = False
+    llm_timeout_s: int = 60
+    ollama_url: str = "http://127.0.0.1:11434"
+    ollama_model: str = "qwen3:4b-instruct-2507-q4_K_M"
+    groq_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GROQ_API_KEY", "GROQ_API_KEY"))
+    groq_model: str = "openai/gpt-oss-20b"
+    gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
+                                                                          "GEMINI_API_KEY", "GOOGLE_API_KEY"))
+    gemini_model: str = "gemini-2.5-flash"
 
     @property
     def db_url(self) -> str:

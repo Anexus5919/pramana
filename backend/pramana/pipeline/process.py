@@ -14,6 +14,7 @@ from ..models import Document, DocumentPage, ExtractedField
 from ..rules.engine import Ruleset
 from ..verification.signed_qr import decode_qr
 from .extract import classify, extract_fields, extract_table
+from .llm_extract import fill_missing, injection_lines
 from .text import extract_image, extract_pdf, render_pdf_page
 
 log = logging.getLogger(__name__)
@@ -63,7 +64,9 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
     spec = rs.doc_types.get(use_type or "", {})
 
     issue_date = None
-    for e in extract_fields(pages, spec):
+    extracted = extract_fields(pages, spec)
+    extracted, llm_report = fill_missing(pages, spec, spec.get("label", use_type or "document"), extracted)
+    for e in extracted:
         doc.fields.append(ExtractedField(
             name=e.name, raw=e.raw, value=e.value.isoformat() if hasattr(e.value, "isoformat") else
             (str(e.value) if e.value is not None else None), value_type=e.value_type, page=e.page, bbox=e.bbox,
@@ -72,7 +75,7 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         if e.name == "issue_date" and e.value is not None:
             issue_date = datetime(e.value.year, e.value.month, e.value.day)
 
-    analysis: dict[str, Any] = {}
+    analysis: dict[str, Any] = {"llm": llm_report} if llm_report else {}
     if spec.get("table"):
         analysis["rows"] = extract_table(pages, spec["table"])
 
@@ -91,6 +94,7 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         log.warning("QR decode failed for %s: %s", doc.id, e)
         analysis["qr"] = []
     analysis["unreadable_pages"] = [p.page_no for p in pages if p.source == "unreadable"]
+    analysis["instruction_lines"] = injection_lines(pages)
     doc.analysis = analysis
     doc.processing_status = "processed"
     doc.processing_error = None
