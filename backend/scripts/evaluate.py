@@ -56,7 +56,9 @@ def main() -> None:
             continue
         durations.append((run.finished_at - run.started_at).total_seconds())
         got = {f.code for f in db.scalars(select(Finding).where(Finding.run_id == run.id))}
-        exp = set(a["expected"])
+        from pramana.pipeline.llm_extract import enabled_providers
+
+        exp = set(a.get("expected_with_llm", a["expected"]) if enabled_providers() else a["expected"])
         tp, fp, fn = got & exp, got - exp, exp - got
         tp_all, fp_all, fn_all = tp_all + len(tp), fp_all + len(fp), fn_all + len(fn)
         for c in exp | got:
