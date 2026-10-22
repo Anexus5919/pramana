@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Runtime data, keys and generated fixtures
+var/
+backend/trust/demo/
+fixtures/out/
+
+# Frontend
+node_modules/
+frontend/dist/
+*.local
+
+# Env and editors
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+.claude/
+CLAUDE.md
+.DS_Store
+Thumbs.db
