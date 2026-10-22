@@ -18,6 +18,7 @@ from ..models import (
     Application,
     Document,
     Finding,
+    Institution,
     ReferenceRecord,
     ValidationRun,
     VerificationAttempt,
@@ -107,11 +108,53 @@ def _qr_compare(doc: Document, payload: dict[str, Any], mapping: dict[str, str])
     return comps
 
 
-def _verify_document(doc: Document, spec: dict[str, Any], as_of: date) -> list[vb.VerificationResult]:
+def _signer_role(signer: str, vspec: dict[str, Any], inst: Institution) -> str:
+    s = signer.lower()
+    if any(p.lower() in s for p in vspec.get("issuer_signers", [])):
+        return "issuer"
+    names = [(inst.attributes or {}).get("authorised_signatory", ""), inst.name, inst.society_name or ""]
+    if any(n and n.lower() in s for n in names):
+        return "applicant"
+    return "unknown"
+
+
+def _classify_signatures(results: list[vb.VerificationResult], vspec: dict[str, Any],
+                         inst: Institution) -> list[vb.VerificationResult]:
+    """Separate who signed. A valid applicant DSC proves who uploaded the file, not who issued it."""
+    out = []
+    expects_issuer = bool(vspec.get("issuer_signers"))
+    issuer_seen = False
+    for r in results:
+        if r.status == vb.NOT_CHECKED:
+            r.channel = "issuer_signature" if expects_issuer else "applicant_signature"
+            out.append(r)
+            continue
+        role = _signer_role(r.response.get("signer", ""), vspec, inst)
+        r.response["signer_role"] = role
+        if role == "applicant":
+            r.channel = "applicant_signature"
+            if r.status == vb.VERIFIED:
+                r.claim = "The institution's authorised signatory signed this exact file. This does not authenticate the issuer."
+                r.detail += " Signer is the applicant institution, not the issuing authority."
+        else:
+            r.channel = "issuer_signature"
+            issuer_seen = True
+            if role == "unknown" and r.status == vb.VERIFIED:
+                r.status = vb.MANUAL_REVIEW
+                r.detail += " The signer is neither the expected issuing authority nor the applicant."
+        out.append(r)
+    if expects_issuer and not issuer_seen and not any(r.channel == "issuer_signature" for r in out):
+        out.append(vb.VerificationResult(
+            "issuer_signature", vb.NOT_CHECKED, "Embedded signature", False,
+            "No signature from the issuing authority. Any signature present is the applicant's own DSC."))
+    return out
+
+
+def _verify_document(doc: Document, spec: dict[str, Any], as_of: date, inst: Institution) -> list[vb.VerificationResult]:
     results: list[vb.VerificationResult] = []
     vspec = spec.get("verification") or {}
     if doc.mime == "application/pdf":
-        results.extend(validate_signatures(load_document(doc.storage_name)))
+        results.extend(_classify_signatures(validate_signatures(load_document(doc.storage_name)), vspec, inst))
     tokens = (doc.analysis or {}).get("qr", [])
     for tok in tokens:
         chk = verify_token(tok["text"])
@@ -128,13 +171,13 @@ def _verify_document(doc: Document, spec: dict[str, Any], as_of: date) -> list[v
         bad = [c for c in comps if c.match is False]
         to = chk.payload.get("valid_until")
         if bad:
-            status, detail = vb.MISMATCH, ("The issuer-signed QR is genuine but disagrees with the printed text: "
+            status, detail = vb.MISMATCH, ("The issuer-signed QR verifies, but its signed values disagree with the printed text: "
                                            + "; ".join(f"{c.field} printed '{c.submitted}' vs signed '{c.authoritative}'"
                                                        for c in bad))
         elif to and date.fromisoformat(to) < as_of:
-            status, detail = vb.EXPIRED, f"Signed QR is genuine; validity ended {to}."
+            status, detail = vb.EXPIRED, f"Signed QR verifies; the validity it certifies ended {to}."
         else:
-            status, detail = vb.VERIFIED, (f"Signed QR from {chk.issuer['issuer']} is genuine and matches "
+            status, detail = vb.VERIFIED, (f"Signed QR from {chk.issuer['issuer']} verifies and matches "
                                            f"{len(comps)} printed fields.")
         results.append(vb.VerificationResult(
             "signed_qr", status, chk.issuer["issuer"], bool(chk.issuer.get("simulated")), detail,
@@ -158,7 +201,9 @@ def _verify_document(doc: Document, spec: dict[str, Any], as_of: date) -> list[v
     return results
 
 
-def document_status(statuses: list[str]) -> str:
+def document_status(results: list[vb.VerificationResult]) -> str:
+    """Authenticity status of a document; the applicant's own signature only counts when it is broken."""
+    statuses = [r.status for r in results if r.channel != "applicant_signature" or r.status == vb.MISMATCH]
     real = [s for s in statuses if s != vb.NOT_CHECKED]
     if not real:
         return vb.NOT_CHECKED
@@ -245,33 +290,23 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         stage("extraction_checks", t0)
 
         t0 = time.perf_counter()
-        facts = build_facts(db, app, docs)
-        results = evaluate(rs, facts, category=app.category, as_of=as_of)
-        findings += _rule_findings(rs, results, app)
-        checklist = [{
-            "rule_id": r.rule["id"], "title": r.rule["title"], "category": r.rule.get("category"),
-            "outcome": r.outcome, "message": r.message, "severity": r.rule.get("severity"),
-            "citation": r.citation(rs), "inputs": r.inputs, "missing": r.missing,
-            "evidence": _evidence_from_inputs(r.inputs),
-        } for r in results]
-        stage("rules", t0, evaluated=len(results), facts=len(facts.all()))
-
-        t0 = time.perf_counter()
         doc_status: dict[str, str] = {}
+        ver_facts: dict[str, dict[str, tuple]] = {}
         latest = latest_by_type(docs)
         for d in docs:
             if d.processing_status != "processed":
                 continue
             spec = rs.doc_types.get(d.declared_type, {})
-            vres = _verify_document(d, spec, as_of)
-            statuses = []
+            vres = _verify_document(d, spec, as_of, app.institution)
+            if d is latest.get(d.declared_type):
+                for v in vres:
+                    ver_facts.setdefault(d.declared_type, {})[v.channel] = (v.status, d.id, v.source_name)
             for v in vres:
                 db.add(VerificationAttempt(
                     application_id=app.id, document_id=d.id, run_id=run.id, channel=v.channel,
                     source_name=v.source_name, simulated=v.simulated, status=v.status, request=v.request,
                     response=v.response, comparison=[c.as_dict() for c in v.comparisons], detail=v.detail,
                     actor="system", completed_at=utcnow()))
-                statuses.append(v.status)
                 if v.status in (vb.VERIFIED, vb.NOT_CHECKED):
                     continue
                 sev = {"mismatch_detected": "high", "expired": "high", "source_unavailable": "medium",
@@ -282,7 +317,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     "code": f"VER-{v.channel.upper()}-{v.status.upper()}",
                     "fingerprint": _fp("ver", d.declared_type, v.channel, v.status),
                     "category": "verification",
-                    "evidence_class": "cryptographic" if v.channel in ("pdf_signature", "signed_qr") else "issuer",
+                    "evidence_class": "cryptographic" if v.channel in ("issuer_signature", "applicant_signature", "signed_qr") else "issuer",
                     "severity": sev, "outcome": v.status,
                     "title": f"{spec.get('label', d.declared_type)}: {v.status.replace('_', ' ')} ({v.channel.replace('_', ' ')})",
                     "message": v.detail, "limitation": None if not v.simulated else
@@ -294,8 +329,21 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                  {"kind": "verification", "channel": v.channel, "source": v.source_name,
                                   "simulated": v.simulated, "comparisons": [c.as_dict() for c in v.comparisons]}],
                     "document_id": d.id})
-            doc_status[d.id] = document_status(statuses)
+            doc_status[d.id] = document_status(vres)
         stage("verification", t0, documents=len(doc_status))
+
+        t0 = time.perf_counter()
+        facts = build_facts(db, app, docs, rs, ver_facts, as_of)
+        results = evaluate(rs, facts, category=app.category, as_of=as_of)
+        findings += _rule_findings(rs, results, app)
+        checklist = [{
+            "rule_id": r.rule["id"], "title": r.rule["title"], "category": r.rule.get("category"),
+            "outcome": r.outcome, "message": r.message, "severity": r.rule.get("severity"),
+            "citation": r.citation(rs), "inputs": r.inputs, "missing": r.missing,
+            "evidence": _evidence_from_inputs(r.inputs),
+        } for r in results]
+        stage("rules", t0, evaluated=len(results), facts=len(facts.all()))
+
 
         t0 = time.perf_counter()
         for d in docs:

@@ -71,7 +71,7 @@ def analyse(data: bytes, campus: tuple[float, float] | None, *, max_km: float = 
             "FX-IMG-NO-CAPTURE-METADATA", "No capture time or location in photo",
             "The image carries no EXIF capture time or GPS position, so when and where it was taken cannot be "
             "checked from the file.", "low",
-            limitation="Messaging apps and many upload tools strip EXIF from genuine photos.",
+            limitation="Messaging apps and many upload tools strip EXIF from unaltered photos.",
         ))
     sw = str(meta.get("Software", "")).lower()
     hits = [s for s in EDIT_SOFTWARE if s in sw]

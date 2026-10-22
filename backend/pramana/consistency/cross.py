@@ -13,11 +13,12 @@ import networkx as nx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..forensics.fingerprints import minhash_similarity, phash_distance
+from ..forensics.fingerprints import phash_distance
 from ..models import Application, Document, ReferenceRecord
 
-PHASH_MAX_DISTANCE = 18  # of 256 bits; tuned on fixtures, see docs/evaluation-results.md
-MINHASH_MIN_SIMILARITY = 0.85
+PHASH_MAX_DISTANCE = 18  # of 256 bits, photos only; tuned on fixtures, see docs/evaluation-results.md
+FIELD_OVERLAP_MIN = 0.6
+NAME_FIELDS = {"institution_name", "entity_name", "deponent_name", "holder_name"}
 
 
 @dataclass
@@ -36,6 +37,13 @@ class Link:
 
 def norm_id(s: str | None) -> str:
     return re.sub(r"[^A-Z0-9]", "", (s or "").upper())
+
+
+def _shared_values(a: Document, b: Document) -> tuple[int, int]:
+    va = {f.name: norm_id(f.value) for f in a.fields if f.value and f.name not in NAME_FIELDS}
+    vb = {f.name: norm_id(f.value) for f in b.fields if f.value and f.name not in NAME_FIELDS}
+    common = va.keys() & vb.keys()
+    return sum(1 for k in common if va[k] == vb[k]), len(common)
 
 
 def _faculty_rows(doc: Document) -> list[dict[str, Any]]:
@@ -85,18 +93,18 @@ def cross_checks(db: Session, app: Application, docs: list[Document], ref_fields
                                                                        "application_id": papp.id}],
                         "Very similar scenes (e.g. identical stock layouts) can collide; compare the images.",
                     ))
-            elif (d.declared_type == pd.declared_type and fp.get("minhash") and pfp.get("minhash")
-                  and d.mime == "application/pdf" and pd.mime == "application/pdf"):
-                sim = minhash_similarity(fp["minhash"], pfp["minhash"])
-                if sim >= MINHASH_MIN_SIMILARITY:
+            elif d.declared_type == pd.declared_type and d.mime == "application/pdf" == pd.mime:
+                shared, total = _shared_values(d, pd)
+                if total >= 3 and shared / total >= FIELD_OVERLAP_MIN:
                     links.append(Link(
-                        "XA-NEAR-DUPLICATE-TEXT", "Near-duplicate document text in another application",
-                        f"Text of '{d.original_filename}' is {sim:.0%} similar (MinHash of 4-word shingles) to a "
-                        f"{pd.declared_type} from {inst} ({papp.id}).", "medium", "heuristic",
-                        f"minhash:{d.id}", papp.id, inst,
+                        "XA-NEAR-DUPLICATE-DETAILS", "Same certificate details in another institution's document",
+                        f"{shared} of {total} extracted values in '{d.original_filename}' (numbers, dates, issuer) are "
+                        f"identical to a {pd.declared_type} submitted by {inst} ({papp.id}).", "medium", "record",
+                        f"fields:{d.declared_type}:{pd.id}", papp.id, inst,
                         [{"kind": "document", "document_id": d.id}, {"kind": "peer_document", "document_id": pd.id,
                                                                        "application_id": papp.id}],
-                        "Standard issuer templates share wording; meaningful when values also match.",
+                        "Compares variable fields only, since page images and boilerplate of one issuer's template "
+                        "look alike for every holder.",
                     ))
 
         rf = ref_fields.get(d.declared_type)

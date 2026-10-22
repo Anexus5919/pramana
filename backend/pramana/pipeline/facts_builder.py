@@ -1,6 +1,7 @@
 """Assemble the fact store a validation run evaluates: institution master, declared form values,
 document claims and reference records, each tagged with where it came from."""
 
+import math
 from datetime import date
 from typing import Any
 
@@ -8,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import Application, Document, ReferenceRecord
+from ..rules.engine import Ruleset
 from ..rules.facts import FactStore
 
 
@@ -35,8 +37,10 @@ def latest_by_type(docs: list[Document]) -> dict[str, Document]:
     return out
 
 
-def build_facts(db: Session, app: Application, docs: list[Document]) -> FactStore:
+def build_facts(db: Session, app: Application, docs: list[Document], rs: Ruleset | None = None,
+                ver: dict[str, dict[str, tuple]] | None = None, as_of: date | None = None) -> FactStore:
     fs = FactStore()
+    as_of = as_of or (app.submitted_at or app.created_at).date()
     inst = app.institution
     src = {"record": "AICTE institution master"}
     for k in ("name", "aicte_id", "aishe_code", "society_name", "address", "state", "district", "pincode",
@@ -114,4 +118,65 @@ def build_facts(db: Session, app: Application, docs: list[Document]) -> FactStor
 
     open_def = [r for r in by_type.get("deficiency", []) if r.data.get("status") == "open"]
     fs.add("ref.deficiency.open_count", len(open_def), "reference", record="AICTE deficiency register")
+
+    for t, channels in (ver or {}).items():
+        for ch, (status, doc_id, source) in channels.items():
+            fs.add(f"ver.{t}.{ch}", status, "verified", document_id=doc_id, source=source)
+    _derived(fs, decl, rs, as_of, by_type)
     return fs
+
+
+def _derived(fs: FactStore, decl: dict[str, Any], rs: Ruleset | None, as_of: date,
+             by_type: dict[str, list[ReferenceRecord]]) -> None:
+    """Values computed from other facts. Each records the inputs and the norm it applied."""
+    norms = (rs.norms if rs else {}) or {}
+    progs = decl.get("programmes") or []
+    ratios = norms.get("faculty_student_ratio", {})
+    if progs and ratios:
+        need, parts = 0.0, []
+        for p in progs:
+            r = ratios.get(p.get("level"))
+            if not r:
+                continue
+            s = int(p.get("approved_intake", 0)) * int(p.get("duration_years", 4))
+            need += s / r
+            parts.append(f"{p.get('code')}: {s} students / {r}")
+        fs.add("derived.required_faculty", math.ceil(need), "derived", rule="Annexure 5 faculty-student ratio",
+               computation="; ".join(parts), rounding="ceil (rounding not specified in APH)")
+    if progs:
+        core = [p for p in progs if p.get("core")]
+        fs.add("derived.core_branch_count", len(core), "derived", computation="programmes flagged core")
+        fs.add("derived.non_cs_core_count", sum(1 for p in core if not p.get("cs_allied")), "derived",
+               computation="core programmes not in CS or allied disciplines")
+        hist = sorted(by_type.get("approval_history", []), key=lambda r: r.data.get("academic_year", ""))
+        if hist:
+            rec = {x["code"]: x.get("intake") for x in hist[-1].data.get("programmes", [])}
+            bad = [f"{p.get('code')} (declared {p.get('approved_intake')}, record {rec.get(p.get('code'), 'none')})"
+                   for p in progs if rec.get(p.get("code")) != int(p.get("approved_intake", -1))]
+            fs.add("derived.intake_mismatches", bad, "derived", record_id=hist[-1].id,
+                   computation="declared approved intake vs last approval record, per programme")
+        nba = {r.data.get("programme_code"): r for r in by_type.get("accreditation", [])}
+        unsupported = []
+        for p in progs:
+            if p.get("nba_accredited"):
+                r = nba.get(p.get("code"))
+                vu = r.data.get("valid_until") if r else None
+                if not r or not vu or date.fromisoformat(vu) < as_of:
+                    unsupported.append(p.get("code"))
+        fs.add("derived.nba_claims_unsupported", unsupported, "derived",
+               computation="programmes declared NBA-accredited without a valid entry in the accreditation register")
+        tiers = norms.get("bandwidth_tiers_mbps")
+        if tiers:
+            total = sum(int(p.get("approved_intake", 0)) for p in progs)
+            req = next((t["mbps"] for t in tiers if total <= t["max_intake"]), tiers[-1]["mbps"])
+            fs.add("derived.required_bandwidth_mbps", req, "derived", rule="Annexure 4.1 note 5",
+                   computation=f"total approved intake {total}")
+    fy_end = as_of.year if as_of.month >= 4 else as_of.year - 1
+    fs.add("derived.previous_fy", f"{fy_end - 1}-{fy_end % 100:02d}", "derived",
+           computation="last financial year (April to March) completed before the as-of date")
+    oc = fs.get("doc.occupancy_certificate.issue_date")
+    if oc:
+        fs.add("derived.years_since_completion", round((as_of - oc.value).days / 365.25, 1), "derived",
+               computation="as-of date minus completion/occupancy certificate issue date",
+               document_id=oc.provenance.get("document_id"), page=oc.provenance.get("page"),
+               bbox=oc.provenance.get("bbox"))

@@ -32,7 +32,22 @@ def _to_date(s: str) -> date:
     return date.fromisoformat(s)
 
 
+def _similar(a: Any, b: Any) -> float:
+    from rapidfuzz import fuzz
+
+    return float(fuzz.token_sort_ratio(str(a).lower(), str(b).lower()))
+
+
+def _geo_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    la1, lo1, la2, lo2 = map(math.radians, (float(lat1), float(lon1), float(lat2), float(lon2)))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return round(2 * 6371.0 * math.asin(math.sqrt(h)), 3)
+
+
 FUNCS: dict[str, Callable[..., Any]] = {
+    "similar": _similar,
+    "geo_km": _geo_km,
+    "join": lambda xs: ", ".join(str(x) for x in xs),
     "min": min,
     "max": max,
     "abs": abs,

@@ -31,6 +31,7 @@ class Ruleset:
     path: Path
     doc_types: dict[str, dict[str, Any]] = field(default_factory=dict)
     checklists: dict[str, dict[str, Any]] = field(default_factory=dict)
+    norms: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -62,6 +63,7 @@ def load_ruleset(path: Path) -> Ruleset:
         path=path,
         doc_types=data.get("document_types", {}),
         checklists=data.get("checklists", {}),
+        norms=data.get("norms", {}),
     )
 
 
@@ -94,6 +96,12 @@ def evaluate(rs: Ruleset, facts: FactStore, *, category: str, as_of: date) -> li
         applies = rule.get("applies_to") or {}
         cats = applies.get("categories")
         if (cats and category not in cats) or not _effective(rule, as_of):
+            continue
+        missing_docs = [t for t in applies.get("requires_docs", []) if not facts.get(f"doc.{t}.document_id")]
+        if missing_docs:
+            results.append(RuleResult(rule, NOT_APPLICABLE,
+                                      f"Not evaluated: depends on {', '.join(missing_docs)}, which was not submitted "
+                                      "(reported by the document checklist).", missing=missing_docs))
             continue
         ev = Evaluator(facts, {"as_of": as_of})
         when = applies.get("when")
