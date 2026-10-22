@@ -70,6 +70,10 @@ def _evidence_from_inputs(inputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return ev
 
 
+def _overlap(a: list[float], b: list[float]) -> bool:
+    return a[0] < b[2] and a[2] > b[0] and a[1] < b[3] and a[3] > b[1]
+
+
 def _fp(*parts: Any) -> str:
     return sha256_hex("|".join(str(p) for p in parts).encode())
 
@@ -276,7 +280,25 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     "message": f"No text layer and OCR produced nothing on pages {unread}. Values on these pages "
                                "were not checked.", "evidence": [{"kind": "document", "document_id": d.id}],
                     "document_id": d.id})
+            diffs = ((d.analysis or {}).get("forensic_facts") or {}).get("revision_diffs") or []
             for f in d.fields:
+                hit = next((x for x in diffs if f.bbox and x.get("bbox") and x["page"] == f.page
+                            and _overlap(f.bbox, x["bbox"])), None)
+                if hit:
+                    label = f.name.replace("_", " ")
+                    findings.append({
+                        "code": "FX-FIELD-OVERWRITTEN", "fingerprint": _fp("fxf", d.declared_type, f.name),
+                        "category": "forensic", "evidence_class": "structural", "severity": "high",
+                        "outcome": "indicator", "title": f"{label.capitalize()} was overwritten",
+                        "message": f"The text layer reads '{f.raw}' for {label}, but revision {hit['to_revision']} "
+                                   f"drew '{hit['added_text']}' over that position. A reader sees "
+                                   f"'{hit['added_text']}'; checks in this report use the original '{f.raw}'.",
+                        "limitation": "Issuers rarely amend a signed certificate in place; confirm with the issuer.",
+                        "evidence": [{"kind": "region", "document_id": d.id, "page": f.page, "bbox": hit["bbox"],
+                                      "label": f"drawn over {label}", "value": hit["added_text"]},
+                                     {"kind": "region", "document_id": d.id, "page": f.page, "bbox": f.bbox,
+                                      "label": f"{label} (text layer)", "value": f.raw}],
+                        "document_id": d.id})
                 if f.status in ("uncertain", "unparseable"):
                     findings.append({
                         "code": "FIELD-UNCERTAIN", "fingerprint": _fp("fld", d.declared_type, f.name),

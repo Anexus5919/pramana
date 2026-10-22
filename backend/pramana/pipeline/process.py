@@ -23,10 +23,14 @@ def _qr_tokens(data: bytes, doc: Document) -> list[dict[str, Any]]:
     out = []
     if doc.mime == "application/pdf":
         for i in range(min(doc.page_count, 3)):
-            img = render_pdf_page(data, i, 150)
-            scale = 150 / 72
-            for text, box in decode_qr(img):
-                out.append({"page": i + 1, "text": text, "bbox": [round(v / scale, 2) for v in box]})
+            # Dense signed tokens need more pixels per module; stop at the first resolution that decodes
+            for dpi in (150, 220, 300):
+                found = decode_qr(render_pdf_page(data, i, dpi))
+                if found:
+                    scale = dpi / 72
+                    out.extend({"page": i + 1, "text": t, "bbox": [round(v / scale, 2) for v in box]}
+                               for t, box in found)
+                    break
     else:
         import io
 

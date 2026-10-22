@@ -44,7 +44,7 @@ def build_facts(db: Session, app: Application, docs: list[Document], rs: Ruleset
     inst = app.institution
     src = {"record": "AICTE institution master"}
     for k in ("name", "aicte_id", "aishe_code", "society_name", "address", "state", "district", "pincode",
-              "institution_type", "women_only", "established_year"):
+              "institution_type", "women_only", "established_year", "latitude", "longitude"):
         fs.add(f"inst.{k}", getattr(inst, k), "reference", **src)
     for k, v in (inst.attributes or {}).items():
         fs.add(f"inst.{k}", v, "reference", **src)
@@ -121,7 +121,7 @@ def build_facts(db: Session, app: Application, docs: list[Document], rs: Ruleset
 
     for t, channels in (ver or {}).items():
         for ch, (status, doc_id, source) in channels.items():
-            fs.add(f"ver.{t}.{ch}", status, "verified", document_id=doc_id, source=source)
+            fs.add(f"ver.{t}.{ch}", status, "verified", document_id=doc_id, checked_by=source)
     _derived(fs, decl, rs, as_of, by_type)
     return fs
 
