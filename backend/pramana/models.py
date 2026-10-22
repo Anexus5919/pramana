@@ -115,6 +115,7 @@ class Document(Base):
     processing_status: Mapped[str] = mapped_column(String(30), default="pending")
     processing_error: Mapped[str | None] = mapped_column(Text)
     fingerprints: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    analysis: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     uploaded_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     superseded: Mapped[bool] = mapped_column(Boolean, default=False)
