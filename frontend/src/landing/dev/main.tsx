@@ -8,6 +8,8 @@ import "../../index.css";
 import "../landing.css";
 import LoginPage from "../../pages/login/LoginPage";
 import LandingPage from "../LandingPage";
+import { computeLayout } from "../hero/eyeState";
+import StaticEye from "../hero/StaticEye";
 import { landingVars } from "../palette";
 import BuiltInOpen from "../sections/BuiltInOpen";
 import CrossApplications from "../sections/CrossApplications";
@@ -42,6 +44,10 @@ createRoot(document.getElementById("root")!).render(
         <MotionConfig reducedMotion="user">
           {page === "login" ? (
             <LoginPage />
+          ) : page === "static" ? (
+            <div className="lp lp-sky relative h-svh" style={landingVars}>
+              <StaticEye layout={computeLayout(window.innerWidth, window.innerHeight, 540, 430)} />
+            </div>
           ) : One ? (
             <div className="lp min-h-screen" style={landingVars}>
               <One />
