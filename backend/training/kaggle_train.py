@@ -1,14 +1,16 @@
-"""QLoRA fine-tune of Qwen3-1.7B (Apache-2.0) as Pramana's grounded field extractor, for a Kaggle GPU.
+"""QLoRA fine-tune of Qwen3-1.7B (Apache-2.0) as Pramana's grounded field extractor, for a Kaggle T4 GPU.
 
-Input: train.jsonl and val.jsonl from training/make_dataset.py, attached as a Kaggle dataset.
-Output (/kaggle/working): pramana-extract-q4_k_m.gguf (or an F16 GGUF if quantisation is unavailable),
-train_log.json with losses and settings.
+Uses plain transformers + PEFT + bitsandbytes (fp16 compute, fp32 LoRA weights), which behave predictably
+on T4s that lack bf16. Input: train.jsonl and val.jsonl from training/make_dataset.py attached as a Kaggle
+dataset. Output in /kaggle/working: pramana-extract-q4_k_m.gguf (or pramana-extract-f16.gguf when the
+quantiser cannot be built) and train_log.json.
 
-The text format is written out by hand so it matches training/Modelfile exactly:
-system, user, then an assistant turn with an empty think block, and loss on the JSON answer only.
+The text format is written out by hand so it matches training/Modelfile exactly: system, user, then an
+assistant turn with an empty think block; loss is computed on the JSON answer only.
 """
 
 import glob
+import inspect
 import json
 import os
 import shutil
@@ -16,16 +18,27 @@ import subprocess
 import sys
 import time
 
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "unsloth"], check=False)
+# PRAMANA_DRYRUN=1 runs the same code path on CPU with a tiny Qwen3 model and two steps, to catch
+# library and config errors locally before spending GPU time
+DRY = os.environ.get("PRAMANA_DRYRUN") == "1"
+# One process, one GPU: SFTTrainer refuses nn.DataParallel when two T4s are visible
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+if not DRY:
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "trl", "bitsandbytes", "accelerate"],
+                   check=False)
 
 import torch  # noqa: E402
 from datasets import Dataset  # noqa: E402
+from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training  # noqa: E402
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
+from trl import SFTConfig, SFTTrainer  # noqa: E402
 
-BASE = "unsloth/Qwen3-1.7B"
+BASE = "trl-internal-testing/tiny-Qwen3ForCausalLM" if DRY else "Qwen/Qwen3-1.7B"
 MAX_LEN = 1536
-OUT = "/kaggle/working"
-data_dir = next(p for p in glob.glob("/kaggle/input/**/train.jsonl", recursive=True))
-data_dir = os.path.dirname(data_dir)
+OUT = os.environ.get("PRAMANA_OUT", "/kaggle/working")
+TMP = os.environ.get("PRAMANA_TMP", "/tmp")
+data_dir = os.environ.get("PRAMANA_DATA") or os.path.dirname(
+    next(iter(glob.glob("/kaggle/input/**/train.jsonl", recursive=True))))
 
 
 def to_pc(row):
@@ -41,69 +54,89 @@ def load(name):
 
 
 train, val = load("train.jsonl"), load("val.jsonl")
-print("examples", len(train), len(val), "gpu", torch.cuda.get_device_name(0))
+if DRY:
+    train, val = train.select(range(32)), val.select(range(8))
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print("examples", len(train), len(val), "device", torch.cuda.get_device_name(0) if DEVICE == "cuda" else "cpu")
 
-from trl import SFTConfig, SFTTrainer  # noqa: E402
-from unsloth import FastLanguageModel  # noqa: E402
+tok = AutoTokenizer.from_pretrained(BASE)
+if tok.pad_token is None:
+    tok.pad_token = tok.eos_token
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_use_double_quant=True,
+                         bnb_4bit_compute_dtype=torch.float16)
+if DRY:
+    model = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.float32)
+else:
+    model = AutoModelForCausalLM.from_pretrained(BASE, quantization_config=bnb, dtype=torch.float16,
+                                                 device_map={"": 0})
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
+                  target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"])
 
-# T4 (compute 7.5) emulates bf16 but its AMP path needs fp16; use bf16 only on Ampere or newer
-USE_BF16 = torch.cuda.get_device_capability(0)[0] >= 8
-DTYPE = torch.bfloat16 if USE_BF16 else torch.float16
-model, tok = FastLanguageModel.from_pretrained(BASE, max_seq_length=MAX_LEN, load_in_4bit=True, dtype=DTYPE)
-model = FastLanguageModel.get_peft_model(
-    model, r=16, lora_alpha=32, lora_dropout=0, bias="none",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-    use_gradient_checkpointing="unsloth", random_state=26261)
-
-steps = 2 * len(train) // (8 * 2)
-cfg = dict(output_dir=f"{OUT}/ckpt", per_device_train_batch_size=8, gradient_accumulation_steps=2,
-           num_train_epochs=2, learning_rate=2e-4, warmup_steps=max(1, steps // 20), lr_scheduler_type="cosine",
-           logging_steps=10, eval_strategy="epoch", save_strategy="no", optim="adamw_8bit",
-           weight_decay=0.01, seed=26261, report_to="none", max_length=MAX_LEN,
-           completion_only_loss=True, fp16=not USE_BF16, bf16=USE_BF16)
+steps = len(train) // (4 * 4)
+cfg = dict(output_dir=f"{OUT}/ckpt", per_device_train_batch_size=4, gradient_accumulation_steps=4,
+           num_train_epochs=1, learning_rate=2e-4, warmup_steps=max(1, steps // 20), lr_scheduler_type="cosine",
+           logging_steps=1 if DRY else 10, eval_strategy="epoch", save_strategy="no",
+           optim="adamw_torch" if DRY else "paged_adamw_8bit", weight_decay=0.01, seed=26261, report_to="none",
+           max_length=MAX_LEN, completion_only_loss=True, fp16=not DRY, bf16=False,
+           gradient_checkpointing=True, max_grad_norm=1.0, **({"max_steps": 2} if DRY else {}))
 # Library versions on the runner move; keep only arguments this SFTConfig accepts
-import inspect  # noqa: E402
-
 accepted = inspect.signature(SFTConfig.__init__).parameters
 print("dropping unsupported SFTConfig args:", [k for k in cfg if k not in accepted])
 args = SFTConfig(**{k: v for k, v in cfg.items() if k in accepted})
-trainer = SFTTrainer(model=model, processing_class=tok, train_dataset=train, eval_dataset=val, args=args)
+trainer = SFTTrainer(model=model, processing_class=tok, train_dataset=train, eval_dataset=val, args=args,
+                     peft_config=lora)
+# The fp16 grad scaler needs fp32 trainable weights
+for _, prm in trainer.model.named_parameters():
+    if prm.requires_grad and prm.dtype != torch.float32:
+        prm.data = prm.data.float()
+print("trainable dtypes:", sorted({str(p.dtype) for p in trainer.model.parameters() if p.requires_grad}))
+
 t0 = time.time()
 res = trainer.train()
 ev = trainer.evaluate()
-log = {"base": BASE, "train_examples": len(train), "val_examples": len(val), "train_loss": res.training_loss,
-       "eval": ev, "minutes": round((time.time() - t0) / 60, 1), "log_history": trainer.state.log_history}
+log = {"base": BASE, "method": "QLoRA r16 (transformers+peft+bitsandbytes), fp16", "train_examples": len(train),
+       "val_examples": len(val), "train_loss": res.training_loss, "eval": ev,
+       "minutes": round((time.time() - t0) / 60, 1), "log_history": trainer.state.log_history}
 json.dump(log, open(f"{OUT}/train_log.json", "w"), indent=2)
 print(json.dumps({k: v for k, v in log.items() if k != "log_history"}, indent=2))
 
-# Sanity check on three validation prompts
-FastLanguageModel.for_inference(model)
+trainer.model.eval()
 for i in range(3):
-    p = val[i]["prompt"]
-    ids = tok(p, return_tensors="pt").to("cuda")
-    out = model.generate(**ids, max_new_tokens=200, do_sample=False)
+    ids = tok(val[i]["prompt"], return_tensors="pt").to(DEVICE)
+    with torch.no_grad():
+        out = trainer.model.generate(**ids, max_new_tokens=20 if DRY else 200, do_sample=False)
     print("GOT ", tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True))
     print("WANT", val[i]["completion"])
 
-gguf = None
-try:
-    model.save_pretrained_gguf(f"{OUT}/gguf", tok, quantization_method="q4_k_m")
-    cands = sorted(glob.glob(f"{OUT}/gguf*/**/*.gguf", recursive=True) + glob.glob(f"{OUT}/*.gguf"))
-    q = [c for c in cands if "q4_k_m" in c.lower()] or cands
-    if q:
-        gguf = f"{OUT}/pramana-extract-q4_k_m.gguf"
-        shutil.copy(q[-1], gguf)
-except Exception as e:  # noqa: BLE001
-    print("unsloth gguf export failed:", e)
-if gguf is None:
-    # Fallback: merged 16-bit weights converted with llama.cpp's converter; Ollama quantises on import
-    model.save_pretrained_merged(f"{OUT}/merged", tok, save_method="merged_16bit")
-    subprocess.run(["git", "clone", "--depth", "1", "https://github.com/ggml-org/llama.cpp", "/tmp/llama.cpp"],
+adapter = f"{OUT}/adapter"
+trainer.model.save_pretrained(adapter)
+del trainer, model
+torch.cuda.empty_cache()
+
+# Merge the adapter into fp16 base weights, convert with llama.cpp, quantise if the tool builds
+base = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.float16, device_map={"": "cpu"})
+merged = PeftModel.from_pretrained(base, adapter).merge_and_unload()
+merged.save_pretrained(f"{OUT}/merged", safe_serialization=True)
+tok.save_pretrained(f"{OUT}/merged")
+del base, merged
+
+if not os.path.exists(f"{TMP}/llama.cpp"):
+    subprocess.run(["git", "clone", "--depth", "1", "https://github.com/ggml-org/llama.cpp", f"{TMP}/llama.cpp"],
                    check=True)
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "gguf", "sentencepiece"], check=True)
-    subprocess.run([sys.executable, "/tmp/llama.cpp/convert_hf_to_gguf.py", f"{OUT}/merged", "--outtype", "f16",
-                    "--outfile", f"{OUT}/pramana-extract-f16.gguf"], check=True)
-    shutil.rmtree(f"{OUT}/merged", ignore_errors=True)
-for d in ("ckpt", "gguf"):
-    shutil.rmtree(f"{OUT}/{d}", ignore_errors=True)
-print("outputs:", os.listdir(OUT))
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "gguf", "sentencepiece", "protobuf"], check=True)
+f16 = f"{OUT}/pramana-extract-f16.gguf"
+subprocess.run([sys.executable, f"{TMP}/llama.cpp/convert_hf_to_gguf.py", f"{OUT}/merged", "--outtype", "f16",
+                "--outfile", f16], check=True)
+shutil.rmtree(f"{OUT}/merged", ignore_errors=True)
+try:
+    subprocess.run(["cmake", "-S", f"{TMP}/llama.cpp", "-B", f"{TMP}/llama.cpp/build", "-DGGML_CUDA=OFF",
+                    "-DLLAMA_CURL=OFF"], check=True)
+    subprocess.run(["cmake", "--build", f"{TMP}/llama.cpp/build", "--target", "llama-quantize", "-j", "4"], check=True)
+    qbin = next(iter(glob.glob(f"{TMP}/llama.cpp/build/bin/**/llama-quantize*", recursive=True)))
+    subprocess.run([qbin, f16, f"{OUT}/pramana-extract-q4_k_m.gguf", "Q4_K_M"], check=True)
+    os.remove(f16)
+except Exception as e:  # noqa: BLE001
+    print("quantise step failed, keeping F16 GGUF:", e)
+shutil.rmtree(f"{OUT}/ckpt", ignore_errors=True)
+print("outputs:", sorted(os.listdir(OUT)))
