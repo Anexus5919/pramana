@@ -26,6 +26,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 if not DRY:
     subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "trl", "bitsandbytes", "accelerate"],
                    check=False)
+    # The image ships an old torchao that newer PEFT rejects when merging; LoRA does not need it
+    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "-q", "torchao"], check=False)
 
 import torch  # noqa: E402
 from datasets import Dataset  # noqa: E402
