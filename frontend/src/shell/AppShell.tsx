@@ -129,7 +129,7 @@ export function AppShell() {
       <div className="relative flex min-h-dvh flex-col transition-[padding] duration-300 ease-in-out lg:pl-[var(--sidebar-w)]">
         <Topbar onOpenNav={() => setNavOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
         <main id="main" tabIndex={-1} className="relative mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 lg:py-8">
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="popLayout" initial={false}>
             <motion.div key={key} variants={pageTransition} initial="initial" animate="enter" exit="exit" className="min-w-0">
               <PresentOutlet />
             </motion.div>
