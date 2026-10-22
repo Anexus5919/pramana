@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ApiError, qk, setCsrfToken } from "./api";
 import { App } from "./App";
+import { AppProviders } from "./shell/AppShell";
 import "./index.css";
 
 function onAuthError(err: unknown) {
@@ -29,7 +30,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
+        <AppProviders>
+          <App />
+        </AppProviders>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

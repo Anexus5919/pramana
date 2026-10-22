@@ -1,31 +1,40 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { homePath, useSession } from "./auth/session";
-import { AppShell } from "./components/layout/AppShell";
-import { Footer } from "./components/layout/Footer";
-import { ErrorBanner, PageLoading } from "./components/ui/Feedback";
-import { AuditLogPage } from "./features/admin/AuditLogPage";
-import { IssuerSimulatorPage } from "./features/admin/IssuerSimulatorPage";
-import { RulesPage } from "./features/admin/RulesPage";
-import { ApplicationWorkspace } from "./features/application/ApplicationWorkspace";
-import { DashboardPage } from "./features/dashboard/DashboardPage";
-import { LoginPage } from "./features/login/LoginPage";
-import { InstitutionApplicationPage } from "./features/portal/InstitutionApplicationPage";
-import { MyApplicationsPage } from "./features/portal/MyApplicationsPage";
-import { NewApplicationPage } from "./features/portal/NewApplicationPage";
-import { NotFoundPage } from "./features/NotFoundPage";
-import { VerifyPdfPage } from "./features/tools/VerifyPdfPage";
+import ApplicationWorkspace from "./pages/application/ApplicationWorkspace";
+import AuditLogPage from "./pages/audit/AuditLogPage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import IssuerSimulatorPage from "./pages/issuers/IssuerSimulatorPage";
+import NotFoundPage from "./pages/not-found/NotFoundPage";
+import InstitutionApplicationPage from "./pages/portal/InstitutionApplicationPage";
+import MyApplicationsPage from "./pages/portal/MyApplicationsPage";
+import NewApplicationPage from "./pages/portal/NewApplicationPage";
+import RulesPage from "./pages/rules/RulesPage";
+import VerifyPdfPage from "./pages/verify/VerifyPdfPage";
+import { AppShell, Footer, FullScreenLoader } from "./shell/AppShell";
 import type { Role } from "./types";
+import { ErrorState } from "./ui/States";
+
+const LandingPage = lazy(() => import("./landing/LandingPage"));
+const LoginPage = lazy(() => import("./pages/login/LoginPage"));
+
+const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
 
 function Guard({ roles, children }: { roles?: Role[]; children: ReactNode }) {
-  const { data, isPending, error } = useSession();
+  const { data, isPending, error, refetch, isFetching } = useSession();
   const location = useLocation();
-  if (isPending) return <PageLoading label="Checking session" />;
+  if (isPending) return <FullScreenLoader label="Checking session" />;
   if (error)
     return (
-      <div className="flex min-h-screen flex-col">
-        <div className="mx-auto w-full max-w-xl flex-1 p-6">
-          <ErrorBanner error={error} title="Could not reach the Pramana service" />
+      <div className="flex min-h-dvh flex-col bg-canvas">
+        <div className="mx-auto flex w-full max-w-xl flex-1 items-center p-6">
+          <ErrorState
+            error={error}
+            title="Could not reach the Pramana service"
+            onRetry={() => void refetch()}
+            retrying={isFetching}
+            className="w-full"
+          />
         </div>
         <Footer />
       </div>
@@ -35,40 +44,35 @@ function Guard({ roles, children }: { roles?: Role[]; children: ReactNode }) {
   return <>{children}</>;
 }
 
-function Home() {
-  const { data, isPending } = useSession();
-  if (isPending) return <PageLoading label="Checking session" />;
-  return <Navigate to={data ? homePath(data.user.role) : "/login"} replace />;
+function only(roles: Role[], el: ReactNode) {
+  return <Guard roles={roles}>{el}</Guard>;
 }
-
-const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<Home />} />
-      <Route
-        element={
-          <Guard>
-            <AppShell />
-          </Guard>
-        }
-      >
-        <Route path="/dashboard" element={<Guard roles={OFFICIAL}><DashboardPage /></Guard>} />
-        <Route path="/applications/:appId/:tab?" element={<Guard roles={OFFICIAL}><ApplicationWorkspace /></Guard>} />
-        <Route path="/rules" element={<Guard roles={OFFICIAL}><RulesPage /></Guard>} />
-        <Route path="/issuers" element={<Guard roles={OFFICIAL}><IssuerSimulatorPage /></Guard>} />
-        <Route path="/verify-pdf" element={<Guard roles={OFFICIAL}><VerifyPdfPage /></Guard>} />
-        <Route path="/audit" element={<Guard roles={["officer", "admin"]}><AuditLogPage /></Guard>} />
-        <Route path="/portal" element={<Guard roles={["institution"]}><MyApplicationsPage /></Guard>} />
-        <Route path="/portal/new" element={<Guard roles={["institution"]}><NewApplicationPage /></Guard>} />
+    <Suspense fallback={<FullScreenLoader />}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/portal/applications/:appId"
-          element={<Guard roles={["institution"]}><InstitutionApplicationPage /></Guard>}
-        />
+          element={
+            <Guard>
+              <AppShell />
+            </Guard>
+          }
+        >
+          <Route path="/dashboard" element={only(OFFICIAL, <DashboardPage />)} />
+          <Route path="/applications/:appId/:tab?" element={only(OFFICIAL, <ApplicationWorkspace />)} />
+          <Route path="/rules" element={only(OFFICIAL, <RulesPage />)} />
+          <Route path="/issuers" element={only(OFFICIAL, <IssuerSimulatorPage />)} />
+          <Route path="/verify-pdf" element={only(OFFICIAL, <VerifyPdfPage />)} />
+          <Route path="/audit" element={only(["officer", "admin"], <AuditLogPage />)} />
+          <Route path="/portal" element={only(["institution"], <MyApplicationsPage />)} />
+          <Route path="/portal/new" element={only(["institution"], <NewApplicationPage />)} />
+          <Route path="/portal/applications/:appId" element={only(["institution"], <InstitutionApplicationPage />)} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
