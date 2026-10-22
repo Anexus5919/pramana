@@ -122,7 +122,8 @@ def overlapping_text(data: bytes) -> list[dict[str, Any]]:
     hits = []
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            chars = [c for c in page.chars if c["text"].strip()]
+            # Rotated glyphs (circular seals, stamps) crowd each other legitimately; compare upright text only
+            chars = [c for c in page.chars if c["text"].strip() and _horizontal(c)]
             chars.sort(key=lambda c: (round(c["top"]), c["x0"]))
             clusters: list[list[dict]] = []
             for i, a in enumerate(chars):
@@ -142,6 +143,11 @@ def overlapping_text(data: bytes) -> list[dict[str, Any]]:
                 hits.append({"page": pno, "bbox": [round(xs0, 2), round(ys0, 2), round(xs1, 2), round(ys1, 2)],
                              "overlapping_glyph_pairs": len(clusters)})
     return hits
+
+
+def _horizontal(c: dict) -> bool:
+    m = c.get("matrix") or (1, 0, 0, 1, 0, 0)
+    return abs(m[1]) < 1e-3 and abs(m[2]) < 1e-3
 
 
 def covered_text(data: bytes) -> list[dict[str, Any]]:

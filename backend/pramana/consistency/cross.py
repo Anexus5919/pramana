@@ -46,6 +46,13 @@ def _shared_values(a: Document, b: Document) -> tuple[int, int]:
     return sum(1 for k in common if va[k] == vb[k]), len(common)
 
 
+def _submitted_before(other: Application, app: Application) -> bool:
+    """True when `app` was submitted earlier than `other`."""
+    a = app.submitted_at or app.created_at
+    b = other.submitted_at or other.created_at
+    return a < b
+
+
 def _faculty_rows(doc: Document) -> list[dict[str, Any]]:
     return [r for r in (doc.analysis or {}).get("rows", []) if r.get("faculty_id")]
 
@@ -83,7 +90,18 @@ def cross_checks(db: Session, app: Application, docs: list[Document], ref_fields
                 continue
             if d.mime.startswith("image/") and pd.mime.startswith("image/") and fp.get("phash") and pfp.get("phash"):
                 dist = phash_distance(fp["phash"], pfp["phash"])
-                if dist <= PHASH_MAX_DISTANCE:
+                if dist <= PHASH_MAX_DISTANCE and _submitted_before(papp, app):
+                    links.append(Link(
+                        "XA-PHOTO-REUSED-LATER", "This photo also appears in a later application",
+                        f"Photo '{d.original_filename}' is visually near-identical (perceptual hash distance {dist}/256) "
+                        f"to '{pd.original_filename}' submitted later by {inst} ({papp.id}). Recorded here so both "
+                        "files can be compared; the later submission carries the main finding.",
+                        "low", "heuristic", f"phash:{fp['phash'][:12]}", papp.id, inst,
+                        [{"kind": "document", "document_id": d.id}, {"kind": "peer_document", "document_id": pd.id,
+                                                                       "application_id": papp.id}],
+                        "Who took the photo first cannot be established from the files alone.",
+                    ))
+                elif dist <= PHASH_MAX_DISTANCE:
                     links.append(Link(
                         "XA-PHOTO-REUSED", "Same photo appears in another institution's application",
                         f"Photo '{d.original_filename}' is visually near-identical (perceptual hash distance {dist}/256) "
