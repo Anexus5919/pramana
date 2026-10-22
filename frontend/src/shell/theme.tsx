@@ -1,6 +1,6 @@
 import { Moon, Sun } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { createContext, useContext, type ReactNode } from "react";
+import { motion } from "motion/react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 import { useTheme } from "../lib/theme";
 import { IconButton } from "../ui/Button";
 import { dur } from "../ui/motion";
@@ -23,24 +23,25 @@ export function useAppTheme(): ThemeCtx {
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggle } = useAppTheme();
   const dark = theme === "dark";
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+  }, []);
   return (
     <IconButton
       label={dark ? "Switch to light theme" : "Switch to dark theme"}
       onClick={toggle}
       className={className}
       icon={
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
-            key={theme}
-            initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
-            animate={{ rotate: 0, scale: 1, opacity: 1 }}
-            exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
-            transition={{ duration: dur.ui }}
-            className="inline-flex"
-          >
-            {dark ? <Moon /> : <Sun />}
-          </motion.span>
-        </AnimatePresence>
+        <motion.span
+          key={theme}
+          initial={mounted.current ? { rotate: -90, scale: 0.4, opacity: 0 } : false}
+          animate={{ rotate: 0, scale: 1, opacity: 1 }}
+          transition={{ duration: dur.ui }}
+          className="inline-flex"
+        >
+          {dark ? <Moon /> : <Sun />}
+        </motion.span>
       }
     />
   );

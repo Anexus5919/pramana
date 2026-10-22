@@ -50,7 +50,7 @@ export function VerificationBlocks({ counts }: { counts: Record<string, number> 
               })}
             </svg>
           </div>
-          <ul className="mt-4 grid gap-x-4 gap-y-1 sm:grid-cols-2">
+          <ul className="mt-4 grid gap-y-0.5">
             {keys.map((k) => (
               <li
                 key={k}

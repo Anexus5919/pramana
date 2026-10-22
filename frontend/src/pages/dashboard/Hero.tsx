@@ -18,6 +18,7 @@ function greeting(d: Date) {
 const dayFmt = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
 const S = 15;
+const STEP = 1.4;
 
 /** Each tower is an application in review order; height is open findings, a red cap marks high severity open. */
 function QueueSkyline({ rows }: { rows: DashboardRow[] }) {
@@ -28,10 +29,10 @@ function QueueSkyline({ rows }: { rows: DashboardRow[] }) {
   const unit = Math.max(1, Math.ceil(max / 7));
   const levels = shown.map((r) => (r.open_findings ? Math.ceil(r.open_findings / unit) : 0));
   const tallest = Math.max(1, ...levels);
-  const width = shown.length * S + S * 2 + 8;
-  const height = tallest * S + shown.length * (S / 2) + S * 2 + 8;
+  const width = shown.length * S * STEP + S * 2 + 8;
   const baseX = S + 4;
   const baseY = tallest * S + 4;
+  const height = baseY + (shown.length - 1) * ((S * STEP) / 2) + S + 6;
 
   return (
     <figure className="relative flex min-w-0 flex-col items-center">
@@ -42,8 +43,8 @@ function QueueSkyline({ rows }: { rows: DashboardRow[] }) {
         aria-label={`Review queue skyline: ${shown.length} applications, tower height is open findings`}
       >
         {shown.map((r, i) => {
-          const x = baseX + i * S;
-          const y0 = baseY + i * (S / 2);
+          const x = baseX + i * S * STEP;
+          const y0 = baseY + i * ((S * STEP) / 2);
           const n = levels[i];
           const high = r.open_high > 0;
           const active = hover?.id === r.id;
@@ -83,7 +84,7 @@ function QueueSkyline({ rows }: { rows: DashboardRow[] }) {
           );
         })}
       </svg>
-      <figcaption className="mt-2 min-h-10 max-w-[360px] text-center text-xs text-ink-2" aria-live="polite">
+      <figcaption className="mt-1 min-h-10 max-w-[340px] text-center text-xs text-ink-2" aria-live="polite">
         {hover ? (
           <>
             <span className="font-semibold text-ink">{hover.institution.name}</span>
@@ -116,7 +117,7 @@ export function Hero({ data, onRefresh, refreshing }: { data: Dashboard; onRefre
 
   return (
     <section className="relative overflow-hidden rounded-hero border border-white/50 bg-sky shadow-md grain dark:border-white/5">
-      <div className="relative grid items-center gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,380px)]">
+      <div className="relative grid items-center gap-8 px-6 py-8 sm:px-10 sm:py-10 md:grid-cols-[minmax(0,1fr)_minmax(200px,250px)] xl:grid-cols-[minmax(0,1fr)_minmax(280px,380px)]">
         <div className="min-w-0">
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -131,7 +132,7 @@ export function Hero({ data, onRefresh, refreshing }: { data: Dashboard; onRefre
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: dur.story, ease: ease.out, delay: 0.05 }}
-            className="mt-3 font-display text-3xl font-semibold tracking-display text-ink sm:text-4xl"
+            className="mt-3 font-display text-3xl font-semibold tracking-display text-ink 2xl:text-4xl"
           >
             {greeting(now)}, {name}
           </motion.h1>

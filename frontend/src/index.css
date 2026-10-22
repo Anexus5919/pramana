@@ -388,9 +388,7 @@
     background: transparent;
   }
   img,
-  svg,
-  video,
-  canvas {
+  video {
     max-width: 100%;
   }
   code,

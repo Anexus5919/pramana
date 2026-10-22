@@ -133,12 +133,12 @@ function QueueRow({ row, index, onPreview }: { row: DashboardRow; index: number;
         onFocus={(e) => start(e.currentTarget)}
         onBlur={stop}
         onClick={stop}
-        className="group/row relative grid grid-cols-[40px_minmax(0,1fr)_24px] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors duration-200 hover:bg-brand-soft/50 focus-visible:bg-brand-soft/50 focus-visible:outline-offset-[-2px] lg:grid-cols-[40px_minmax(0,2.1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.15fr)_20px]"
+        className="group/row relative grid grid-cols-[52px_minmax(0,1fr)_24px] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors duration-200 hover:bg-brand-soft/50 focus-visible:bg-brand-soft/50 focus-visible:outline-offset-[-2px] lg:grid-cols-[52px_minmax(0,2.1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.15fr)_20px]"
       >
         <span className="flex flex-col items-start">
           <span className="font-display text-lg leading-none font-semibold text-ink tabular">{index + 1}</span>
           {run?.review_priority != null && (
-            <span className="mt-1 font-mono text-[10px] text-ink-3" title="Sort key">
+            <span className="mt-1 font-mono text-[10px] whitespace-nowrap text-ink-3" title="Sort key">
               key {run.review_priority}
             </span>
           )}
@@ -152,7 +152,7 @@ function QueueRow({ row, index, onPreview }: { row: DashboardRow; index: number;
             {row.institution.name}
           </motion.span>
           <span className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-ink-3">
-            <span className="font-mono">{row.institution.aicte_id}</span>
+            <span className="shrink-0 font-mono whitespace-nowrap">{row.institution.aicte_id}</span>
             <span aria-hidden className="text-ink-4">/</span>
             <span className="truncate">
               {row.institution.district}, {row.institution.state}
@@ -261,7 +261,7 @@ export function ReviewQueue({ rows }: { rows: DashboardRow[] }) {
       </header>
 
       <div
-        className="hidden grid-cols-[40px_minmax(0,2.1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.15fr)_20px] gap-x-4 border-y border-line bg-surface-2/60 px-5 py-2 lg:grid"
+        className="hidden grid-cols-[52px_minmax(0,2.1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.15fr)_20px] gap-x-4 border-y border-line bg-surface-2/60 px-5 py-2 lg:grid"
         aria-hidden
       >
         <Tooltip content="Position in the queue. Sorted by a severity-weighted key; it is not a score.">
