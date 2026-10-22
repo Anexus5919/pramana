@@ -1,0 +1,77 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/inter-tight";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* Landing-only styles; tokens come from palette.ts via inline CSS variables on .lp */
+.lp {
+  font-family: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  color: var(--lp-ink);
+  background: var(--lp-canvas);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  color-scheme: light;
+}
+
+.lp-display {
+  font-family: "Inter Tight Variable", "Inter Tight", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.lp-mono {
+  font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.lp-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+
+.lp :focus-visible {
+  outline: 2px solid var(--lp-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.lp ::selection {
+  background: var(--lp-brand-200);
+  color: var(--lp-ink);
+}
+
+.lp-sky {
+  background:
+    radial-gradient(60% 55% at 50% 52%, rgb(255 250 246 / 0.9) 0%, rgb(255 244 236 / 0) 70%),
+    linear-gradient(180deg, var(--lp-peach) 0%, var(--lp-apricot) 34%, var(--lp-rose) 70%, var(--lp-lilac) 100%);
+}
+
+.lp-glass {
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgb(255 255 255 / 0.65);
+}
+
+.lp-shadow-md {
+  box-shadow:
+    0 10px 30px -12px rgb(60 20 110 / 0.18),
+    0 2px 6px -2px rgb(28 22 34 / 0.06);
+}
+
+.lp-shadow-lg {
+  box-shadow:
+    0 30px 60px -24px rgb(60 20 110 / 0.28),
+    0 8px 18px -8px rgb(28 22 34 / 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp *,
+  .lp *::before,
+  .lp *::after {
+    scroll-behavior: auto !important;
+  }
+}
