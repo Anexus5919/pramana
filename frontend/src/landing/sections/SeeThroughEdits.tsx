@@ -307,13 +307,13 @@ function XrayStage({
           <motion.div aria-hidden className="pointer-events-none absolute top-0 bottom-0 left-0 w-0" style={{ x: wipeX }}>
             <div className="absolute inset-y-0 -left-px w-[2px]" style={{ background: palette.brand[500] }} />
             <div
-              className="lp-mono absolute top-4 -translate-x-full rounded-l-full py-1 pr-2 pl-2.5 text-[10px] font-semibold text-white"
+              className="lp-mono absolute top-4 -translate-x-full rounded-l-full py-1 pr-2 pl-2.5 text-[10px] font-semibold whitespace-nowrap text-white"
               style={{ background: palette.brand[600] }}
             >
               REV 1
             </div>
             <div
-              className="lp-mono absolute top-4 rounded-r-full py-1 pr-2.5 pl-2 text-[10px] font-semibold"
+              className="lp-mono absolute top-4 rounded-r-full py-1 pr-2.5 pl-2 text-[10px] font-semibold whitespace-nowrap"
               style={{ background: palette.status.mismatch.bg, color: palette.status.mismatch.fg }}
             >
               REV 3
