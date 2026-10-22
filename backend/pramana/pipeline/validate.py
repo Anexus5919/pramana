@@ -8,7 +8,7 @@ from datetime import date
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from .. import audit
 from ..config import get_settings
@@ -19,6 +19,7 @@ from ..models import (
     Document,
     Finding,
     Institution,
+    RectificationRequest,
     ReferenceRecord,
     ValidationRun,
     VerificationAttempt,
@@ -39,6 +40,14 @@ STATUS_ORDER = [vb.MISMATCH, vb.EXPIRED, vb.SOURCE_UNAVAILABLE, vb.MANUAL_REVIEW
 
 
 def as_of_date(app: Application) -> date:
+    """Documents are judged on the date they were submitted; in a rectification round, on the response date."""
+    db = object_session(app)
+    if app.round > 1 and db is not None:
+        r = db.scalars(select(RectificationRequest).where(RectificationRequest.application_id == app.id,
+                                                          RectificationRequest.status == "responded")
+                       .order_by(RectificationRequest.responded_at.desc())).first()
+        if r and r.responded_at:
+            return r.responded_at.date()
     return (app.submitted_at or app.created_at).date()
 
 
@@ -203,6 +212,58 @@ def _verify_document(doc: Document, spec: dict[str, Any], as_of: date, inst: Ins
         else:
             results.append(adapter.verify(ref, fields, as_of))
     return results
+
+
+def _declared_changes(before: dict[str, Any], after: dict[str, Any]) -> set[str]:
+    keys = set(before) | set(after)
+    return {k for k in keys if before.get(k) != after.get(k)}
+
+
+def _rectification_scope(db: Session, app: Application, docs: list[Document]) -> list[dict[str, Any]]:
+    """Changes made in a rectification round that the officer did not ask for.
+
+    Re-scrutiny examines only the deficiencies raised earlier, so edits outside that scope would
+    otherwise pass unexamined."""
+    req = db.scalars(select(RectificationRequest).where(RectificationRequest.application_id == app.id,
+                                                        RectificationRequest.status == "responded")
+                     .order_by(RectificationRequest.created_at.desc())).first()
+    if not req or not req.snapshot or req.round != app.round - 1:
+        return []
+    scope_docs = {i.get("document_type") for i in req.items if i.get("document_type")}
+    scope_fields = set()
+    for i in req.items:
+        for p in i.get("fact_paths", []):
+            if p.startswith("doc."):
+                scope_docs.add(p.split(".")[1])
+            elif p.startswith("app."):
+                scope_fields.add(p.split(".")[1])
+    if any(f in scope_fields for f in ("total_proposed_intake", "total_approved_intake_claimed", "programme_count")):
+        scope_fields.add("programmes")
+    now_docs = {d.declared_type: d.sha256 for d in docs}
+    before_docs = req.snapshot.get("documents", {})
+    changed_docs = {t for t in set(now_docs) | set(before_docs) if now_docs.get(t) != before_docs.get(t)}
+    changed_fields = _declared_changes(req.snapshot.get("declared", {}), app.declared or {})
+    out = []
+    for t in sorted(changed_docs - scope_docs):
+        d = next((x for x in docs if x.declared_type == t), None)
+        out.append({
+            "code": "RECT-OUT-OF-SCOPE-DOCUMENT", "fingerprint": _fp("rect", "doc", t), "category": "consistency",
+            "evidence_class": "record", "severity": "medium", "outcome": "indicator",
+            "title": "Document changed outside the rectification request",
+            "message": f"In round {app.round} the {t.replace('_', ' ')} was "
+                       f"{'replaced' if t in before_docs and t in now_docs else 'added' if t in now_docs else 'removed'}, "
+                       "but the rectification request did not ask for it. Re-scrutiny of only the requested items "
+                       "would not examine this change.",
+            "evidence": [{"kind": "document", "document_id": d.id}] if d else [], "document_id": d.id if d else None})
+    for k in sorted(changed_fields - scope_fields):
+        out.append({
+            "code": "RECT-OUT-OF-SCOPE-FIELD", "fingerprint": _fp("rect", "field", k), "category": "consistency",
+            "evidence_class": "record", "severity": "medium", "outcome": "indicator",
+            "title": "Declared value changed outside the rectification request",
+            "message": f"'{k}' changed from {req.snapshot.get('declared', {}).get(k)!r} to "
+                       f"{(app.declared or {}).get(k)!r} in round {app.round}, outside the items requested.",
+            "evidence": [{"kind": "declared", "field": k, "value": (app.declared or {}).get(k)}], "document_id": None})
+    return out
 
 
 def document_status(results: list[vb.VerificationResult]) -> str:
@@ -395,6 +456,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                 "document_id": next((e.get("document_id") for e in ln.evidence if e.get("kind") != "peer_document"),
                                     None)})
         graph = relationship_graph(db, app, links)
+        findings += _rectification_scope(db, app, docs)
         stage("cross_application", t0, links=len(links))
 
         # Reviewer decisions carry over when the same finding reappears in a later run

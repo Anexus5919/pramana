@@ -387,10 +387,10 @@ rules:
     applies_to: {categories: [EOA, INCREASE_INTAKE], when: "app.academic_year == '2026-27'"}
     source: {doc: PN2627, section: Revised Public Notice 12.01.2026, page: 1,
              quote: "The submission of an application on the AICTE Web-Portal and payment of TER Charges shall not be later than the last date as notified in the Public Notice."}
-    check: {type: expression, expr: "as_of <= date('2026-01-20')"}
+    check: {type: expression, expr: "app.submitted_on <= date('2026-01-20')"}
     messages:
-      pass: "Submitted {as_of}: within the window (without late fee until 17-01-2026, with late fee until 20-01-2026)."
-      fail: "Submitted {as_of}, after the last date with late fee (20-01-2026)."
+      pass: "Submitted {app_submitted_on}: within the window (without late fee until 17-01-2026, with late fee until 20-01-2026)."
+      fail: "Submitted {app_submitted_on}, after the last date with late fee (20-01-2026)."
 
   # ---------------- Institutional record consistency ----------------
   - id: XR-INTAKE-RECORD

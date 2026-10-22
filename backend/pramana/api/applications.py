@@ -146,8 +146,7 @@ async def upload_document(app_id: str, declared_type: str = Form(...), file: Upl
     for old in db.scalars(select(Document).where(Document.application_id == app.id,
                                                  Document.declared_type == declared_type,
                                                  Document.superseded.is_(False))):
-        if old.round == app.round:
-            old.superseded = True
+        old.superseded = True
     doc = Document(application_id=app.id, round=app.round, declared_type=declared_type, original_filename=name,
                    sha256=sha, size_bytes=len(data), mime=res.mime, page_count=res.page_count,
                    storage_name=f"{uuid.uuid4().hex}.bin", uploaded_by=user.id,
@@ -374,9 +373,15 @@ def request_rectification(app_id: str, body: RectifyBody, user: User = Depends(r
         if not f or f.application_id != app.id:
             raise HTTPException(400, f"finding {fid} does not belong to this application")
         f.review_status = "evidence_requested"
-        items.append({"finding_id": f.id, "code": f.code, "title": f.title, "message": f.message})
+        doc = db.get(Document, f.document_id) if f.document_id else None
+        paths = sorted({i.get("path") for i in (f.trace or {}).get("inputs", []) if i.get("path")})
+        items.append({"finding_id": f.id, "code": f.code, "title": f.title, "message": f.message,
+                      "document_type": doc.declared_type if doc else None, "fact_paths": paths})
+    current = db.scalars(select(Document).where(Document.application_id == app.id,
+                                                Document.superseded.is_(False))).all()
+    snapshot = {"declared": app.declared, "documents": {d.declared_type: d.sha256 for d in current}}
     r = RectificationRequest(application_id=app.id, round=app.round, items=items, message=body.message,
-                             created_by=user.id)
+                             created_by=user.id, snapshot=snapshot)
     db.add(r)
     app.round += 1
     app.status = "rectification_requested"

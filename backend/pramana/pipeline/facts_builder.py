@@ -52,6 +52,9 @@ def build_facts(db: Session, app: Application, docs: list[Document], rs: Ruleset
     fs.add("app.id", app.id, "declared", form_field="id")
     fs.add("app.category", app.category, "declared", form_field="category")
     fs.add("app.academic_year", app.academic_year, "declared", form_field="academic_year")
+    if app.submitted_at:
+        fs.add("app.submitted_on", app.submitted_at.date(), "declared", form_field="submitted_at")
+    fs.add("app.round", app.round, "declared", form_field="round")
     decl = app.declared or {}
     for k, v in decl.items():
         if isinstance(v, str | int | float | bool):

@@ -263,6 +263,8 @@ class RectificationRequest(Base):
     application_id: Mapped[str] = mapped_column(ForeignKey("applications.id"), index=True)
     round: Mapped[int] = mapped_column(Integer)
     items: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    # What the application looked like when rectification was requested, to detect out-of-scope changes
+    snapshot: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     message: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="open")
     created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
