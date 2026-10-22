@@ -138,6 +138,17 @@ export function OverviewTab({
             </Card>
           </>
         )}
+        <Card aria-labelledby="declared-title">
+          <CardHeader
+            id="declared-title"
+            icon={<ListChecks className="size-4" />}
+            title="Declared application data"
+            subtitle="Typed by the institution; a claim until checked against documents or records"
+          />
+          <div className="px-4 py-3">
+            <DeclaredDataView declared={app.declared ?? {}} />
+          </div>
+        </Card>
       </div>
 
       <div className="space-y-5">
@@ -169,18 +180,6 @@ export function OverviewTab({
           </Card>
         )}
 
-        <Card aria-labelledby="declared-title">
-          <CardHeader
-            id="declared-title"
-            icon={<ListChecks className="size-4" />}
-            title="Declared application data"
-            subtitle="Typed by the institution; a claim until checked against documents or records"
-          />
-          <div className="px-4 py-3">
-            <DeclaredDataView declared={app.declared ?? {}} />
-          </div>
-        </Card>
-
         <Card aria-labelledby="inst-title">
           <CardHeader
             id="inst-title"
@@ -195,7 +194,7 @@ export function OverviewTab({
                 { label: "AICTE ID", value: <span className="font-mono text-xs">{inst.aicte_id}</span> },
                 { label: "AISHE code", value: fmtValue(inst.aishe_code) },
                 { label: "Type", value: inst.institution_type },
-                { label: "Established", value: fmtValue(inst.established_year) },
+                { label: "Established", value: inst.established_year ? String(inst.established_year) : "Not on record" },
                 { label: "Society / trust", value: fmtValue(inst.society_name) },
                 { label: "Women only", value: inst.women_only ? "Yes" : "No" },
                 { label: "Address", value: [inst.address, inst.district, inst.state, inst.pincode].filter(Boolean).join(", ") },

@@ -5,7 +5,7 @@ import { ApiError } from "../../api";
 import { ButtonLink } from "../../components/ui/Button";
 import { EmptyState, ErrorBanner, PageLoading } from "../../components/ui/Feedback";
 import { TabPanel, Tabs } from "../../components/ui/Tabs";
-import { fmtMs, sum } from "../../lib/format";
+import { fmtMs, pluralize, sum } from "../../lib/format";
 import { appPath, TABS, type WorkspaceTab } from "./links";
 import { RectificationDialog } from "./RectificationDialog";
 import { ReplayDialog } from "./ReplayDialog";
@@ -116,7 +116,7 @@ export function ApplicationWorkspace() {
           <CircleCheck aria-hidden className="size-4 shrink-0" />
           <span className="flex-1">
             {validate.data.status === "complete"
-              ? `Validation complete: ${validate.data.findings ?? 0} findings, ${validate.data.checklist.length} rules evaluated in ${fmtMs(sum(validate.data.stages.map((s) => s.ms)))}.`
+              ? `Validation complete: ${pluralize(validate.data.findings ?? 0, "finding")}, ${pluralize(validate.data.checklist.length, "rule")} evaluated in ${fmtMs(sum(validate.data.stages.map((s) => s.ms)))}.`
               : `Validation ${validate.data.status}: ${validate.data.error ?? ""}`}
           </span>
           <button

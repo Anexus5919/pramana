@@ -55,7 +55,7 @@ function IssuerRow({ issuer, canToggle }: { issuer: SimIssuer; canToggle: boolea
               <ServerOff aria-hidden className="size-4 text-unavail-dot" />
             )}
             <span className="text-sm font-semibold text-fg">{issuer.name}</span>
-            <SimulatedBadge />
+            {!/simulated/i.test(issuer.name) && <SimulatedBadge />}
           </div>
           <p className="mt-0.5 text-xs text-muted">{typeof issuer.models === "string" ? issuer.models : ""}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">

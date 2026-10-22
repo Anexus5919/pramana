@@ -99,12 +99,12 @@ export function RelationshipGraph({
           .distance((l) => {
             const a = l.source as SimNode;
             const b = l.target as SimNode;
-            return a.kind === "application" && b.kind === "application" ? 160 : 95;
+            return a.kind === "application" && b.kind === "application" ? 220 : 150;
           })
           .strength(0.7),
       )
-      .force("charge", forceManyBody<SimNode>().strength((n) => (n.kind === "application" ? -520 : -180)))
-      .force("collide", forceCollide<SimNode>().radius((n) => radius(n) + 18))
+      .force("charge", forceManyBody<SimNode>().strength((n) => (n.kind === "application" ? -900 : -320)))
+      .force("collide", forceCollide<SimNode>().radius((n) => radius(n) + (n.kind === "application" ? 64 : 34)).strength(0.9))
       .force("x", forceX<SimNode>(cx).strength(0.04))
       .force("y", forceY<SimNode>(cy).strength(0.06))
       .alphaDecay(0.035)
@@ -263,7 +263,7 @@ export function RelationshipGraph({
                   stroke="var(--surface)"
                   strokeWidth={3}
                 >
-                  {n.label.length > 30 ? `${n.label.slice(0, 29)}...` : n.label}
+                  {n.label.length > 26 ? `${n.label.slice(0, 25)}...` : n.label}
                 </text>
               </g>
             );

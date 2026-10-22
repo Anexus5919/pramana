@@ -15,6 +15,7 @@ export function Tabs({
   label,
   idPrefix = "tab",
   className,
+  size = "md",
 }: {
   items: TabItem[];
   value: string;
@@ -22,6 +23,7 @@ export function Tabs({
   label: string;
   idPrefix?: string;
   className?: string;
+  size?: "sm" | "md";
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -39,7 +41,11 @@ export function Tabs({
   }
 
   return (
-    <div role="tablist" aria-label={label} className={clsx("flex gap-1 overflow-x-auto", className)}>
+    <div
+      role="tablist"
+      aria-label={label}
+      className={clsx("flex gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none]", className)}
+    >
       {items.map((t, i) => {
         const selected = t.id === value;
         return (
@@ -57,7 +63,8 @@ export function Tabs({
             onClick={() => onChange(t.id)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={clsx(
-              "relative inline-flex shrink-0 items-center gap-1.5 rounded-t-md px-3 py-2.5 text-sm font-medium transition-colors",
+              "relative inline-flex shrink-0 items-center gap-1.5 rounded-t-md font-medium transition-colors",
+              size === "sm" ? "px-2 py-2 text-[13px]" : "px-3 py-2.5 text-sm",
               selected ? "text-primary-ink" : "text-muted hover:text-fg",
             )}
           >
@@ -76,7 +83,7 @@ export function Tabs({
             <span
               aria-hidden
               className={clsx(
-                "absolute inset-x-2 -bottom-px h-0.5 rounded-full transition-colors",
+                "absolute inset-x-2 bottom-0 h-0.5 rounded-full transition-colors",
                 selected ? "bg-primary-ink" : "bg-transparent",
               )}
             />

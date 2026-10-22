@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, BadgeCheck, FileSearch, KeyRound, Network, RotateCcw } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, FileSearch, KeyRound, LoaderCircle, Network, RotateCcw } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api, qk } from "../../api";
@@ -46,50 +46,55 @@ function DemoAccounts({ onPick, pending }: { onPick: (a: DemoAccount, password: 
       </p>
     );
   }
-  const groups = roleOrder
-    .map((r) => ({ role: r, accounts: demo.data.accounts.filter((a) => a.role === r) }))
-    .filter((g) => g.accounts.length);
+  const officials = roleOrder.filter((r) => r !== "institution").flatMap((r) => demo.data.accounts.filter((a) => a.role === r));
+  const institutions = demo.data.accounts.filter((a) => a.role === "institution");
+  const button = (a: DemoAccount, primary: string, secondary: string) => (
+    <button
+      type="button"
+      disabled={!!pending}
+      onClick={() => onPick(a, demo.data.password)}
+      className="group flex w-full items-center justify-between gap-2 rounded-md border border-line bg-surface px-3 py-2 text-left transition-colors hover:border-primary/50 hover:bg-primary-soft/50 disabled:opacity-60"
+    >
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-fg">{primary}</span>
+        <span className="block truncate text-xs text-subtle-fg">{secondary}</span>
+      </span>
+      {pending === a.username ? (
+        <LoaderCircle aria-hidden className="size-4 shrink-0 animate-spin text-primary-ink" />
+      ) : (
+        <ArrowUpRight aria-hidden className="size-4 shrink-0 text-subtle-fg transition-colors group-hover:text-primary-ink" />
+      )}
+    </button>
+  );
   return (
     <div>
       <p className="text-xs text-muted">
         {demo.data.notice}. One click signs in with the shared demo password{" "}
         <code className="rounded bg-subtle px-1 font-mono text-[12px] text-fg">{demo.data.password}</code>.
       </p>
-      <div className="mt-3 space-y-4">
-        {groups.map((g) => (
-          <div key={g.role}>
-            <h3 className="mb-1.5 text-[11px] font-semibold tracking-wider text-subtle-fg uppercase">
-              {g.accounts[0]?.role_label ?? roleLabel[g.role]}
-            </h3>
+      <div className="mt-4 space-y-4">
+        {officials.length > 0 && (
+          <div>
+            <h3 className="mb-1.5 text-[11px] font-semibold tracking-wider text-subtle-fg uppercase">Officials</h3>
+            <ul className="grid gap-1.5 sm:grid-cols-3">
+              {officials.map((a) => (
+                <li key={a.id}>{button(a, a.role_label || roleLabel[a.role], `${a.display_name.replace(/\s*\(.*\)$/, "")}, ${a.username}`)}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {institutions.length > 0 && (
+          <div>
+            <h3 className="mb-1.5 text-[11px] font-semibold tracking-wider text-subtle-fg uppercase">Institution applicants</h3>
             <ul className="grid gap-1.5 sm:grid-cols-2">
-              {g.accounts.map((a) => (
+              {institutions.map((a) => (
                 <li key={a.id}>
-                  <button
-                    type="button"
-                    disabled={!!pending}
-                    onClick={() => onPick(a, demo.data.password)}
-                    className="group flex w-full items-center justify-between gap-2 rounded-md border border-line bg-surface px-3 py-2 text-left transition-colors hover:border-primary/50 hover:bg-primary-soft/50 disabled:opacity-60"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-fg">{a.display_name}</span>
-                      <span className="block truncate text-xs text-subtle-fg">
-                        {a.institution ?? a.username}
-                      </span>
-                    </span>
-                    {pending === a.username ? (
-                      <Spinner label="" />
-                    ) : (
-                      <ArrowUpRight
-                        aria-hidden
-                        className="size-4 shrink-0 text-subtle-fg transition-colors group-hover:text-primary-ink"
-                      />
-                    )}
-                  </button>
+                  {button(a, a.institution ?? a.display_name, `${a.display_name.replace(/\s*\(.*\)$/, "")}, ${a.username}`)}
                 </li>
               ))}
             </ul>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

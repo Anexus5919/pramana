@@ -5,8 +5,8 @@ import type { Declared, Programme } from "../../types";
 import { DECLARED_FIELDS } from "../shared/DeclaredDataView";
 
 export const LEVELS = [
-  { value: "UG_ET", label: "UG Engineering and Technology" },
-  { value: "PG_ET", label: "PG Engineering and Technology" },
+  { value: "UG_ET", label: "UG Engineering" },
+  { value: "PG_ET", label: "PG Engineering" },
   { value: "DIPLOMA", label: "Diploma" },
   { value: "MCA", label: "MCA" },
   { value: "MBA", label: "MBA" },

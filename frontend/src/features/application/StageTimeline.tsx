@@ -22,7 +22,7 @@ export function StageTimeline({ stages }: { stages: Stage[] }) {
     <div>
       <ol className="space-y-2">
         {stages.map((s, i) => (
-          <li key={`${s.stage}-${i}`} className="grid grid-cols-[18px_150px_minmax(0,1fr)_64px] items-center gap-2.5">
+          <li key={`${s.stage}-${i}`} className="grid grid-cols-[18px_178px_minmax(0,1fr)_64px] items-center gap-2.5">
             <CircleCheck aria-hidden className="size-4 text-verified-dot" />
             <span className="truncate text-sm text-fg">{stageLabel[s.stage] ?? humanize(s.stage)}</span>
             <span className="min-w-0">

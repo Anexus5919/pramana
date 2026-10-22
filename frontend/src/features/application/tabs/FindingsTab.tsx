@@ -59,14 +59,15 @@ export function FindingsTab({
     .filter((g) => g.items.length);
 
   const selected = all.find((f) => f.id === selectedId) ?? null;
+  const firstShown = groups[0]?.items[0]?.id;
 
   useEffect(() => {
-    if (!selectedId && filtered.length) {
+    if (!selectedId && firstShown) {
       const p = new URLSearchParams(params);
-      p.set("finding", filtered[0].id);
+      p.set("finding", firstShown);
       setParams(p, { replace: true });
     }
-  }, [selectedId, filtered, params, setParams]);
+  }, [selectedId, firstShown, params, setParams]);
 
   function setParam(key: string, value: string) {
     const p = new URLSearchParams(params);
@@ -99,8 +100,8 @@ export function FindingsTab({
   return (
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <div className="min-w-0">
-        <div className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <label className="relative col-span-2 block lg:col-span-1">
+        <div className="mb-3 grid grid-cols-3 gap-2">
+          <label className="relative col-span-3 block">
             <span className="sr-only">Search findings</span>
             <Search aria-hidden className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-subtle-fg" />
             <input

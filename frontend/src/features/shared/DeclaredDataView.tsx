@@ -39,7 +39,7 @@ export function ProgrammesTable({ programmes }: { programmes: Programme[] }) {
               <tr key={`${p.code}-${i}`} className="border-t border-line">
                 <td className="px-2.5 py-1.5 font-mono text-xs">{p.code}</td>
                 <td className="px-2.5 py-1.5">{p.name}</td>
-                <td className="px-2.5 py-1.5 text-muted">
+                <td className="px-2.5 py-1.5 whitespace-nowrap text-muted">
                   {p.level}
                   {p.duration_years ? <span className="text-subtle-fg">, {p.duration_years} y</span> : null}
                 </td>

@@ -259,7 +259,7 @@ export function RulesPage() {
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card aria-labelledby="sources-title">
           <CardHeader id="sources-title" icon={<BookOpen className="size-4" />} title="Sources" subtitle="Documents the rules cite" />
           <ul className="divide-y divide-line">

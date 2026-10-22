@@ -1,5 +1,11 @@
 export type Tone = "verified" | "mismatch" | "expired" | "pending" | "unavail" | "manual" | "unchecked" | "primary";
 
+/** Label for a fact path such as doc.fire_noc.valid_until: its last segment, humanized. */
+export function pathLabel(s: string | null | undefined): string {
+  if (!s) return "";
+  return humanize(s.includes(".") ? s.slice(s.lastIndexOf(".") + 1) : s);
+}
+
 export function humanize(s: string | null | undefined): string {
   if (!s) return "";
   const t = s.replace(/[_.]+/g, " ").trim();
@@ -87,13 +93,17 @@ export const CATEGORIES = [
   "consistency",
 ] as const;
 
-export const categoryMeta: Record<string, { label: string; meaning: string }> = {
-  completeness: { label: "Completeness", meaning: "Required documents and readable values." },
-  compliance: { label: "Compliance", meaning: "Norms and conditions from the cited regulations." },
-  validity: { label: "Validity", meaning: "Dates, validity periods and expiry." },
-  verification: { label: "Verification", meaning: "Signatures, signed QR codes and issuer registries." },
-  forensic: { label: "Document forensics", meaning: "Observable traces in the files themselves." },
-  consistency: { label: "Cross-application consistency", meaning: "Entities shared with other applications." },
+export const categoryMeta: Record<string, { label: string; short: string; meaning: string }> = {
+  completeness: { label: "Completeness", short: "Completeness", meaning: "Required documents and readable values." },
+  compliance: { label: "Compliance", short: "Compliance", meaning: "Norms and conditions from the cited regulations." },
+  validity: { label: "Validity", short: "Validity", meaning: "Dates, validity periods and expiry." },
+  verification: { label: "Verification", short: "Verification", meaning: "Signatures, signed QR codes and issuer registries." },
+  forensic: { label: "Document forensics", short: "Forensics", meaning: "Observable traces in the files themselves." },
+  consistency: {
+    label: "Consistency",
+    short: "Consistency",
+    meaning: "Agreement between documents, records and other applications.",
+  },
 };
 
 export const reviewStatusMeta: Record<string, { label: string; tone: Tone }> = {

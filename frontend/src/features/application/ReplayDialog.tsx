@@ -80,8 +80,12 @@ export function ReplayDialog({
             <thead>
               <tr className="border-b border-line text-left text-[11px] tracking-wider text-subtle-fg uppercase">
                 <th scope="col" className="py-1.5 font-semibold">Digest</th>
-                <th scope="col" className="py-1.5 font-semibold">Original {result.original.id}</th>
-                <th scope="col" className="py-1.5 font-semibold">Replay {result.replay.id}</th>
+                <th scope="col" className="py-1.5 font-semibold">
+                  Original <span className="font-mono normal-case">{result.original.id}</span>
+                </th>
+                <th scope="col" className="py-1.5 font-semibold">
+                  Replay <span className="font-mono normal-case">{result.replay.id}</span>
+                </th>
                 <th scope="col" className="py-1.5 text-right font-semibold">Result</th>
               </tr>
             </thead>

@@ -400,7 +400,7 @@ export function DocumentSidePanel({
   return (
     <div className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-xs">
       <div className="border-b border-line px-2">
-        <Tabs label="Document details" idPrefix="docpanel" value={tab} onChange={(t) => setTab(t as PanelTab)} items={items} />
+        <Tabs size="sm" label="Document details" idPrefix="docpanel" value={tab} onChange={(t) => setTab(t as PanelTab)} items={items} />
       </div>
       <TabPanel id={tab} idPrefix="docpanel" key={tab} className="max-h-[min(78vh,980px)] overflow-y-auto p-3">
         {tab === "fields" && <FieldsPanel fields={doc.fields} onFocus={onFocus} />}

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { SimulatedBadge } from "../../../components/ui/Badge";
 import { fmtValue } from "../../../lib/format";
-import { channelMeta, humanize, isSignatureChannel } from "../../../lib/labels";
+import { channelMeta, humanize, isSignatureChannel, pathLabel } from "../../../lib/labels";
 import type {
   BBox,
   DocumentSummary,
@@ -75,7 +75,7 @@ function Region({ e, docs, docHref, fallbackDocId, docTypeLabel }: {
       icon={<SquareDashed className="size-4" />}
       title={
         <>
-          {humanize(e.label ?? "Region")}
+          {pathLabel(e.label ?? "Region")}
           {e.value !== undefined && e.value !== null && (
             <span className="ml-1.5 font-normal text-muted">
               = <span className="font-mono text-[12px] text-fg">{fmtValue(e.value)}</span>
@@ -259,7 +259,7 @@ export function EvidenceList({
                 icon={<Database className="size-4" />}
                 title={
                   <>
-                    {humanize(e.label ?? "Reference record")}
+                    {pathLabel(e.label ?? "Reference record")}
                     {e.value !== undefined && (
                       <span className="ml-1.5 font-normal text-muted">
                         = <span className="font-mono text-[12px] text-fg">{fmtValue(e.value)}</span>
@@ -279,7 +279,7 @@ export function EvidenceList({
                 icon={<PenLine className="size-4" />}
                 title={
                   <>
-                    {humanize(e.label ?? e.field ?? "Declared value")}
+                    {pathLabel(e.label ?? e.field ?? "Declared value")}
                     {e.value !== undefined && (
                       <span className="ml-1.5 font-normal text-muted">
                         = <span className="font-mono text-[12px] text-fg">{fmtValue(e.value)}</span>

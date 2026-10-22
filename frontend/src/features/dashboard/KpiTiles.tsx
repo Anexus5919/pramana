@@ -61,7 +61,7 @@ export function KpiTiles({ data, metrics }: { data: Dashboard; metrics?: RunMetr
         <ul className="space-y-1">
           {CATEGORIES.filter((c) => data.open_findings_by_category[c]).map((c) => (
             <li key={c} className="grid grid-cols-[96px_1fr_24px] items-center gap-2 text-xs">
-              <span className="truncate text-muted">{categoryMeta[c].label.replace("Cross-application ", "")}</span>
+              <span className="truncate text-muted">{categoryMeta[c].short}</span>
               <span className="h-1.5 overflow-hidden rounded-full bg-subtle">
                 <span
                   className="block h-full origin-left animate-grow rounded-full bg-primary/70"

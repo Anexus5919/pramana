@@ -7,6 +7,7 @@ import { EmptyState, Skeleton } from "../../../components/ui/Feedback";
 import { graphKindMeta, humanize } from "../../../lib/labels";
 import type { ApplicationDetail, Finding, GraphNode, RunFull } from "../../../types";
 import { KIND_COLOR, RelationshipGraph } from "../../graph/RelationshipGraph";
+import { useLabels } from "../../shared/useRuleset";
 import { appPath, findingLink } from "../links";
 
 const norm = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -28,6 +29,15 @@ function relatedFindings(node: GraphNode, run: RunFull, findings: Finding[]): Fi
   return exact.length ? exact : candidates;
 }
 
+function displayLabel(n: GraphNode, docType: (c: string) => string): string {
+  const rest = n.id.split(":").slice(1);
+  if (n.kind === "fields") return `${docType(rest[0] ?? "")} details`;
+  if (n.kind === "sha256") return `File ${n.label.slice(0, 10)}`;
+  if (n.kind === "phash") return `Photo ${n.label.slice(0, 8)}`;
+  if (n.kind === "minhash") return "Similar text";
+  return n.label;
+}
+
 export function RelationshipsTab({
   app,
   run,
@@ -40,9 +50,14 @@ export function RelationshipsTab({
   loading: boolean;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const graph = run?.graph;
+  const { docType } = useLabels();
+  const graph = useMemo(
+    () => (run?.graph ? { ...run.graph, nodes: run.graph.nodes.map((n) => ({ ...n, label: displayLabel(n, docType) })) } : undefined),
+    [run?.graph, docType],
+  );
   const node = graph?.nodes.find((n) => n.id === selected) ?? null;
   const related = useMemo(() => (node && run ? relatedFindings(node, run, findings) : []), [node, run, findings]);
+
   const kinds = useMemo(() => [...new Set(graph?.nodes.map((n) => n.kind) ?? [])], [graph]);
   const others = graph?.nodes.filter((n) => n.kind === "application" && !n.focus) ?? [];
 

@@ -100,7 +100,9 @@ export function TriageTable({ rows }: { rows: DashboardRow[] }) {
                       </div>
                     </td>
                     <td className="px-2 py-2.5">
-                      <div className="max-w-[200px] truncate text-fg">{category(r.category)}</div>
+                      <div className="max-w-[200px] truncate text-fg" title={category(r.category)}>
+                        {category(r.category).replace(/\s*\(.*\)$/, "")}
+                      </div>
                       <div className="text-xs text-subtle-fg">AY {r.academic_year}</div>
                     </td>
                     <td className="px-2 py-2.5">
