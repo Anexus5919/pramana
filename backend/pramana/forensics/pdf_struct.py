@@ -7,6 +7,7 @@ append revisions (signing, form filling) and re-save files. They tell a reviewer
 
 import io
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -78,6 +79,18 @@ def _word_chars(w: Word, chars: list[dict]) -> list[dict]:
     return [c for c in chars if c["x0"] >= w.x0 - 0.01 and c["x1"] <= w.x1 + 0.01 and abs(c["top"] - w.top) < 2]
 
 
+def _take_extra(chars: list[dict], extra: Counter) -> list[dict]:
+    """The last `extra[key]` glyphs with each key, in drawing order (later draws sit on top)."""
+    left = Counter(extra)
+    out = []
+    for c in reversed(chars):
+        k = _ckey(c)
+        if left[k] > 0:
+            out.append(c)
+            left[k] -= 1
+    return list(reversed(out))
+
+
 def diff_revisions(data: bytes) -> list[dict[str, Any]]:
     """Character-level difference between consecutive revisions, with page and box of each change."""
     ends = revision_offsets(data)
@@ -94,9 +107,10 @@ def diff_revisions(data: bytes) -> list[dict[str, Any]]:
             for p in range(max(len(prev), len(cur))):
                 b = prev[p] if p < len(prev) else []
                 a = cur[p] if p < len(cur) else []
-                bk, ak = {_ckey(c) for c in b}, {_ckey(c) for c in a}
-                added = [c for c in a if _ckey(c) not in bk]
-                removed = [c for c in b if _ckey(c) not in ak]
+                # Multiset difference: a glyph redrawn at the exact spot of an identical glyph is still an addition
+                bk, ak = Counter(_ckey(c) for c in b), Counter(_ckey(c) for c in a)
+                added = _take_extra(a, ak - bk)
+                removed = _take_extra(b, bk - ak)
                 if not added and not removed:
                     continue
                 aw, rw = chars_to_words(added), chars_to_words(removed)
