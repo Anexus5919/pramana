@@ -1,0 +1,327 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --canvas: #f4f5f9;
+  --surface: #ffffff;
+  --subtle: #f0f2f7;
+  --sunken: #e7eaf1;
+  --line: #dce0ea;
+  --line-strong: #c3c9d7;
+  --fg: #141a2e;
+  --muted: #475069;
+  --subtle-fg: #5f6780;
+  --primary: #27338f;
+  --primary-hover: #1e2874;
+  --primary-on: #ffffff;
+  --primary-soft: #e8eaf8;
+  --primary-ink: #27338f;
+  --ring: #4c5bd4;
+  --overlay: rgba(14, 18, 34, 0.48);
+
+  --verified-fg: #14673a;
+  --verified-bg: #e5f5eb;
+  --verified-dot: #16a34a;
+  --mismatch-fg: #b11d1d;
+  --mismatch-bg: #fde8e7;
+  --mismatch-dot: #dc2626;
+  --expired-fg: #9a3412;
+  --expired-bg: #fdeedd;
+  --expired-dot: #ea580c;
+  --pending-fg: #1c4fc9;
+  --pending-bg: #e6eefe;
+  --pending-dot: #3b82f6;
+  --unavail-fg: #5b2bb0;
+  --unavail-bg: #efe9fb;
+  --unavail-dot: #7c3aed;
+  --manual-fg: #8a4108;
+  --manual-bg: #fdf2d4;
+  --manual-dot: #d97706;
+  --unchecked-fg: #4b5563;
+  --unchecked-bg: #eef0f3;
+  --unchecked-dot: #9ca3af;
+
+  --sev-critical-bg: #6f0f3b;
+  --sev-critical-fg: #ffffff;
+  --sev-high-bg: #ad1f56;
+  --sev-high-fg: #ffffff;
+  --sev-medium-bg: #fbe2ec;
+  --sev-medium-fg: #851a47;
+  --sev-low-bg: #f5eef2;
+  --sev-low-fg: #694656;
+  --sev-info-bg: #eef0f4;
+  --sev-info-fg: #4b5366;
+
+  --ev-1-bg: #1d2873;
+  --ev-1-fg: #ffffff;
+  --ev-2-bg: #3442a8;
+  --ev-2-fg: #ffffff;
+  --ev-3-bg: #d9defa;
+  --ev-3-fg: #1f2a78;
+  --ev-4-bg: #e8ebfb;
+  --ev-4-fg: #2c3785;
+  --ev-5-bg: #f0f1f8;
+  --ev-5-fg: #3c4466;
+  --ev-6-bg: transparent;
+  --ev-6-fg: #474f6b;
+  --ev-7-bg: transparent;
+  --ev-7-fg: #575e78;
+  --ev-line: #9aa1bd;
+
+  --ov-field: #2563eb;
+  --ov-finding: #dc2626;
+  --ov-qr: #16a34a;
+  --ov-row: #9333ea;
+  --ov-focus: #f59e0b;
+
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #0c101b;
+  --surface: #131929;
+  --subtle: #192034;
+  --sunken: #0f1422;
+  --line: #273049;
+  --line-strong: #39445f;
+  --fg: #e7eaf3;
+  --muted: #abb2c6;
+  --subtle-fg: #8f97ad;
+  --primary: #4b58cc;
+  --primary-hover: #5866dc;
+  --primary-on: #ffffff;
+  --primary-soft: #1d2450;
+  --primary-ink: #aeb8ff;
+  --ring: #8c98ff;
+  --overlay: rgba(2, 4, 10, 0.66);
+
+  --verified-fg: #86e3a9;
+  --verified-bg: #0f2a1c;
+  --verified-dot: #22c55e;
+  --mismatch-fg: #fca5a5;
+  --mismatch-bg: #3a1315;
+  --mismatch-dot: #ef4444;
+  --expired-fg: #fdba74;
+  --expired-bg: #3a1e0d;
+  --expired-dot: #f97316;
+  --pending-fg: #9cc3fd;
+  --pending-bg: #112342;
+  --pending-dot: #60a5fa;
+  --unavail-fg: #c8b8fd;
+  --unavail-bg: #261b42;
+  --unavail-dot: #a78bfa;
+  --manual-fg: #fcd34d;
+  --manual-bg: #33270b;
+  --manual-dot: #f59e0b;
+  --unchecked-fg: #cbd2de;
+  --unchecked-bg: #1f2534;
+  --unchecked-dot: #6b7280;
+
+  --sev-critical-bg: #d03f7e;
+  --sev-critical-fg: #ffffff;
+  --sev-high-bg: #9c1d4f;
+  --sev-high-fg: #ffffff;
+  --sev-medium-bg: #3f1628;
+  --sev-medium-fg: #f6a9c8;
+  --sev-low-bg: #271c22;
+  --sev-low-fg: #dbbfcc;
+  --sev-info-bg: #1f2534;
+  --sev-info-fg: #b3bacb;
+
+  --ev-1-bg: #5a68e0;
+  --ev-1-fg: #ffffff;
+  --ev-2-bg: #3d4ab8;
+  --ev-2-fg: #ffffff;
+  --ev-3-bg: #26306b;
+  --ev-3-fg: #d6dbff;
+  --ev-4-bg: #1e2655;
+  --ev-4-fg: #c5ccfb;
+  --ev-5-bg: #1b2136;
+  --ev-5-fg: #b9c0d6;
+  --ev-6-bg: transparent;
+  --ev-6-fg: #aeb5c9;
+  --ev-7-bg: transparent;
+  --ev-7-fg: #9da4b9;
+  --ev-line: #56607d;
+
+  --ov-field: #60a5fa;
+  --ov-finding: #f87171;
+  --ov-qr: #4ade80;
+  --ov-row: #c084fc;
+  --ov-focus: #fbbf24;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle-fg: var(--subtle-fg);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-on: var(--primary-on);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+  --color-ring: var(--ring);
+
+  --color-verified-fg: var(--verified-fg);
+  --color-verified-bg: var(--verified-bg);
+  --color-verified-dot: var(--verified-dot);
+  --color-mismatch-fg: var(--mismatch-fg);
+  --color-mismatch-bg: var(--mismatch-bg);
+  --color-mismatch-dot: var(--mismatch-dot);
+  --color-expired-fg: var(--expired-fg);
+  --color-expired-bg: var(--expired-bg);
+  --color-expired-dot: var(--expired-dot);
+  --color-pending-fg: var(--pending-fg);
+  --color-pending-bg: var(--pending-bg);
+  --color-pending-dot: var(--pending-dot);
+  --color-unavail-fg: var(--unavail-fg);
+  --color-unavail-bg: var(--unavail-bg);
+  --color-unavail-dot: var(--unavail-dot);
+  --color-manual-fg: var(--manual-fg);
+  --color-manual-bg: var(--manual-bg);
+  --color-manual-dot: var(--manual-dot);
+  --color-unchecked-fg: var(--unchecked-fg);
+  --color-unchecked-bg: var(--unchecked-bg);
+  --color-unchecked-dot: var(--unchecked-dot);
+
+  --color-sev-critical-bg: var(--sev-critical-bg);
+  --color-sev-critical-fg: var(--sev-critical-fg);
+  --color-sev-high-bg: var(--sev-high-bg);
+  --color-sev-high-fg: var(--sev-high-fg);
+  --color-sev-medium-bg: var(--sev-medium-bg);
+  --color-sev-medium-fg: var(--sev-medium-fg);
+  --color-sev-low-bg: var(--sev-low-bg);
+  --color-sev-low-fg: var(--sev-low-fg);
+  --color-sev-info-bg: var(--sev-info-bg);
+  --color-sev-info-fg: var(--sev-info-fg);
+
+  --color-ev-1-bg: var(--ev-1-bg);
+  --color-ev-1-fg: var(--ev-1-fg);
+  --color-ev-2-bg: var(--ev-2-bg);
+  --color-ev-2-fg: var(--ev-2-fg);
+  --color-ev-3-bg: var(--ev-3-bg);
+  --color-ev-3-fg: var(--ev-3-fg);
+  --color-ev-4-bg: var(--ev-4-bg);
+  --color-ev-4-fg: var(--ev-4-fg);
+  --color-ev-5-bg: var(--ev-5-bg);
+  --color-ev-5-fg: var(--ev-5-fg);
+  --color-ev-6-bg: var(--ev-6-bg);
+  --color-ev-6-fg: var(--ev-6-fg);
+  --color-ev-7-bg: var(--ev-7-bg);
+  --color-ev-7-fg: var(--ev-7-fg);
+  --color-ev-line: var(--ev-line);
+
+  --color-ov-field: var(--ov-field);
+  --color-ov-finding: var(--ov-finding);
+  --color-ov-qr: var(--ov-qr);
+  --color-ov-row: var(--ov-row);
+  --color-ov-focus: var(--ov-focus);
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-grow: grow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-pulse-ring: pulse-ring 1.8s ease-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    stroke-opacity: 0.95;
+    stroke-width: 3;
+  }
+  70% {
+    stroke-opacity: 0.25;
+    stroke-width: 9;
+  }
+  100% {
+    stroke-opacity: 0;
+    stroke-width: 9;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--canvas);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--ring) 30%, transparent);
+  }
+  dialog::backdrop {
+    background: var(--overlay);
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.ov-box {
+  transition: fill-opacity 0.15s ease;
+}
+.ov-box:hover,
+.ov-box:focus-visible {
+  fill-opacity: 0.32;
+  stroke-width: 2.5px;
+}
