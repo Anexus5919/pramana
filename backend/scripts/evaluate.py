@@ -82,6 +82,7 @@ def main() -> None:
                     field_ok += 1
                 else:
                     misses.append(f"{a['key']}/{d.declared_type}.{f.name}={f.status}")
+    controls = benign_and_adversarial_controls()
     prec = tp_all / (tp_all + fp_all) if tp_all + fp_all else 0.0
     rec = tp_all / (tp_all + fn_all) if tp_all + fn_all else 0.0
     out = {
@@ -96,6 +97,7 @@ def main() -> None:
         "verification_outcomes": dict(sorted(ver_counts.items())),
         "validation_seconds": {"mean": round(sum(durations) / len(durations), 2) if durations else None,
                                "max": round(max(durations), 2) if durations else None},
+        "controls": controls,
     }
     (FIX / "evaluation.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
 
@@ -111,6 +113,67 @@ def main() -> None:
     print(f"Field extraction: {fe['extracted']}/{fe['fields']} extracted ({fe['rate']}); not extracted: {misses[:8]}")
     print(f"Validation time per application: {out['validation_seconds']}")
     print(f"Verification outcomes: {out['verification_outcomes']}")
+    print("\n| Control | Kind | Signals (medium or high) | Signature status | As expected |")
+    print("|---|---|---|---|---|")
+    for c in controls:
+        print(f"| {c['name']} | {c['kind']} | {', '.join(c['signals']) or '-'} | {c['signature'] or '-'} | "
+              f"{'yes' if c['as_expected'] else 'NO'} |")
+
+
+def benign_and_adversarial_controls() -> list[dict]:
+    """Transform fixture PDFs in ways that should not raise flags (benign) or that we expect to miss
+    (adversarial), and report what the forensic and signature checks say."""
+    import io
+
+    import pikepdf
+    from pyhanko.pdf_utils import generic
+    from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+
+    from pramana.forensics.pdf_struct import analyse
+    from pramana.verification.signature import validate_signatures
+
+    def save(data: bytes, **kw) -> bytes:
+        with pikepdf.open(io.BytesIO(data)) as p:
+            b = io.BytesIO()
+            p.save(b, **kw)
+            return b.getvalue()
+
+    def meta_update(data: bytes) -> bytes:
+        w = IncrementalPdfFileWriter(io.BytesIO(data))
+        w.trailer["/Info"] = w.add_object(generic.DictionaryObject({
+            generic.NameObject("/Title"): generic.TextStringObject("Fire NOC")}))
+        out = io.BytesIO()
+        w.write(out)
+        return out.getvalue()
+
+    clean_unsigned = (FIX / "A1" / "ter_receipt.pdf").read_bytes()
+    clean_signed = (FIX / "A1" / "fire_noc.pdf").read_bytes()
+    tampered = (FIX / "A7" / "fire_noc.pdf").read_bytes()
+    cases = [
+        ("Linearised re-save of an unsigned PDF", "benign", save(clean_unsigned, linearize=True), set(), None),
+        ("Recompressed re-save of an unsigned PDF", "benign",
+         save(clean_unsigned, compress_streams=True, object_stream_mode=pikepdf.ObjectStreamMode.generate), set(), None),
+        ("Metadata-only incremental update", "benign", meta_update(clean_unsigned), set(), None),
+        ("Issuer-signed PDF, untouched", "benign", clean_signed, set(), "verified"),
+        ("Issuer-signed PDF re-saved by a tool (no content change)", "benign-but-breaks-signature",
+         save(clean_signed), set(), "mismatch_detected"),
+        ("Tampered PDF flattened into a single revision", "adversarial", save(tampered),
+         {"FX-PDF-OVERLAID-TEXT"}, "mismatch_detected"),
+    ]
+    out = []
+    for name, kind, data, expect_signals, expect_sig in cases:
+        signals, _ = analyse(data)
+        found = sorted({s.code for s in signals if s.severity in ("medium", "high")})
+        sigs = validate_signatures(data)
+        st = sigs[0].status if sigs and sigs[0].status != "not_checked" else None
+        ok = set(found) >= expect_signals and (kind != "benign" or not found) and st == expect_sig
+        out.append({"name": name, "kind": kind, "signals": found, "signature": st, "as_expected": ok})
+    out.append({"name": "Certificate retyped from scratch with an altered date (no QR, unsigned)",
+                "kind": "adversarial-expected-undetectable-by-forensics", "signals": [], "signature": None,
+                "as_expected": True,
+                "note": "No file-level trace exists; only the issuer registry, cross-application links or a "
+                        "reviewer can catch it (see A8)."})
+    return out
 
 
 if __name__ == "__main__":

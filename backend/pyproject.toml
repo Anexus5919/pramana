@@ -3,7 +3,7 @@ name = "pramana"
 version = "0.1.0"
 description = "Evidence-linked application validation, document authentication and compliance assistance for AICTE approval processing"
 requires-python = ">=3.12"
-license = { text = "Apache-2.0" }
+license = { text = "MIT" }
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
