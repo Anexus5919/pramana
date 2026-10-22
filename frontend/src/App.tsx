@@ -17,6 +17,7 @@ import { ErrorState } from "./ui/States";
 
 const LandingPage = lazy(() => import("./landing/LandingPage"));
 const LoginPage = lazy(() => import("./pages/login/LoginPage"));
+const UiKit = import.meta.env.DEV ? lazy(() => import("./ui/Showcase")) : null;
 
 const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
 
@@ -70,6 +71,7 @@ export function App() {
           <Route path="/portal" element={only(["institution"], <MyApplicationsPage />)} />
           <Route path="/portal/new" element={only(["institution"], <NewApplicationPage />)} />
           <Route path="/portal/applications/:appId" element={only(["institution"], <InstitutionApplicationPage />)} />
+          {UiKit && <Route path="/ui-kit" element={<UiKit />} />}
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
