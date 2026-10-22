@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -199,6 +199,39 @@ def sim_lookup(code: str, ref: str, user: User = Depends(require_roles(*OFFICIAL
         raise HTTPException(404, "unknown issuer") from e
     except sim.SourceUnavailable as e:
         raise HTTPException(503, str(e)) from e
+
+
+@router.post("/tools/verify-pdf")
+async def verify_pdf(file: UploadFile = File(...), user: User = Depends(require_roles(*OFFICIAL_ROLES)),
+                     db: Session = Depends(get_db)):
+    """Check any PDF's signatures and structure without filing it. Nothing is stored except an audit entry."""
+    from dataclasses import asdict
+
+    from ..forensics.pdf_struct import analyse
+    from ..pipeline.intake import UploadRejected, validate_upload
+    from ..verification.signature import validate_signatures
+
+    data = await file.read(get_settings().max_upload_mb * 1024 * 1024 + 1)
+    name = (file.filename or "upload.pdf").rsplit("/", 1)[-1][:120]
+    try:
+        res = validate_upload(name if name.lower().endswith(".pdf") else name + ".pdf", data)
+    except UploadRejected as e:
+        raise HTTPException(422, str(e)) from e
+    if res.mime != "application/pdf":
+        raise HTTPException(422, "only PDF files can be checked here")
+    sigs = validate_signatures(data)
+    signals, facts = analyse(data)
+    import hashlib
+
+    sha = hashlib.sha256(data).hexdigest()
+    audit.record(db, actor=user.username, actor_role=user.role, action="tool.verify_pdf", object_type="file",
+                 object_id=sha[:16], details={"sha256": sha, "signatures": [r.status for r in sigs]})
+    db.commit()
+    return {"filename": name, "sha256": sha, "pages": res.page_count, "active_content": res.active_content,
+            "signatures": [{"status": r.status, "simulated": r.simulated, "detail": r.detail, "claim": r.claim,
+                            "response": r.response} for r in sigs],
+            "forensic_signals": [asdict(x) for x in signals],
+            "revisions": facts.get("revisions"), "metadata": facts.get("metadata", {}).get("info", {})}
 
 
 @router.get("/metrics/runs")

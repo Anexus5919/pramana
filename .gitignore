@@ -26,3 +26,4 @@ frontend/dist/
 CLAUDE.md
 .DS_Store
 Thumbs.db
+fixtures/real/
