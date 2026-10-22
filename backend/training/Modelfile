@@ -1,0 +1,19 @@
+# Ollama model for the fine-tuned Pramana extractor.
+# Put pramana-extract-q4_k_m.gguf next to this file, then: ollama create pramana-extract -f Modelfile
+FROM ./pramana-extract-q4_k_m.gguf
+
+TEMPLATE """{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{- range .Messages }}<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+<think>
+
+</think>
+
+"""
+
+PARAMETER temperature 0
+PARAMETER num_ctx 8192
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"
