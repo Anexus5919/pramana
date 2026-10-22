@@ -33,8 +33,7 @@ export function FieldGrid() {
     <div ref={ref} className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-center">
       <div>
         <div
-          className="grid gap-[3px]"
-          style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
+          className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-[3px] sm:grid-cols-[repeat(41,minmax(0,1fr))]"
           role="img"
           aria-label="328 printed fields: 323 read by deterministic patterns, 4 recovered by the local model, 1 model proposal rejected by grounding"
         >
