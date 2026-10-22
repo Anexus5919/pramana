@@ -12,7 +12,16 @@ from typing import Any, Protocol
 from rapidfuzz import fuzz
 
 from ..sim import issuers as sim
-from .base import EXPIRED, MANUAL_REVIEW, MISMATCH, PENDING, SOURCE_UNAVAILABLE, VERIFIED, Comparison, VerificationResult
+from .base import (
+    EXPIRED,
+    MANUAL_REVIEW,
+    MISMATCH,
+    PENDING,
+    SOURCE_UNAVAILABLE,
+    VERIFIED,
+    Comparison,
+    VerificationResult,
+)
 
 
 def norm_text(v: Any) -> str:

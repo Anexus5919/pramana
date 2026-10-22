@@ -1,0 +1,396 @@
+"""A validation run: process documents, evaluate rules, verify with issuers, collect forensic and
+cross-application signals, and pin everything needed to reproduce the result."""
+
+import logging
+import shutil
+import time
+from datetime import date
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from .. import audit
+from ..config import get_settings
+from ..consistency.cross import cross_checks, relationship_graph
+from ..crypto import digest, load_document, sha256_hex
+from ..models import (
+    Application,
+    Document,
+    Finding,
+    ReferenceRecord,
+    ValidationRun,
+    VerificationAttempt,
+    utcnow,
+)
+from ..rules.engine import ERROR, FAIL, INSUFFICIENT, Ruleset, active_ruleset, evaluate, load_ruleset
+from ..verification import base as vb
+from ..verification.issuer import adapters, compare_values
+from ..verification.signature import validate_signatures
+from ..verification.signed_qr import verify_token
+from .facts_builder import build_facts, latest_by_type
+from .process import process_document
+
+log = logging.getLogger(__name__)
+ENGINE_VERSION = "0.3.0"
+SEVERITY_WEIGHT = {"critical": 40, "high": 15, "medium": 5, "low": 1, "info": 0}
+STATUS_ORDER = [vb.MISMATCH, vb.EXPIRED, vb.SOURCE_UNAVAILABLE, vb.MANUAL_REVIEW, vb.PENDING, vb.VERIFIED, vb.NOT_CHECKED]
+
+
+def as_of_date(app: Application) -> date:
+    return (app.submitted_at or app.created_at).date()
+
+
+def _archive_ruleset(rs: Ruleset) -> None:
+    d = get_settings().data_dir / "rulesets"
+    d.mkdir(parents=True, exist_ok=True)
+    dst = d / f"{rs.sha256}.yaml"
+    if not dst.exists():
+        shutil.copyfile(rs.path, dst)
+
+
+def ruleset_by_hash(h: str) -> Ruleset | None:
+    p = get_settings().data_dir / "rulesets" / f"{h}.yaml"
+    return load_ruleset(p) if p.exists() else None
+
+
+def _evidence_from_inputs(inputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    ev = []
+    for i in inputs:
+        prov = i.get("provenance", {})
+        if i["source"] == "document":
+            ev.append({"kind": "region", "document_id": prov.get("document_id"), "page": prov.get("page"),
+                       "bbox": prov.get("bbox"), "label": i["path"], "value": i["value"], "raw": prov.get("raw")})
+        elif i["source"] == "reference":
+            ev.append({"kind": "reference_record", "record_id": prov.get("record_id"), "source": prov.get("record"),
+                       "label": i["path"], "value": i["value"]})
+        else:
+            ev.append({"kind": "declared", "field": prov.get("form_field"), "label": i["path"], "value": i["value"]})
+    return ev
+
+
+def _fp(*parts: Any) -> str:
+    return sha256_hex("|".join(str(p) for p in parts).encode())
+
+
+def _rule_findings(rs: Ruleset, results, app: Application) -> list[dict[str, Any]]:
+    out = []
+    for r in results:
+        if r.outcome not in (FAIL, INSUFFICIENT, ERROR):
+            continue
+        rule = r.rule
+        sources = {i["source"] for i in r.inputs}
+        eclass = "record" if "reference" in sources else "rule"
+        sev = rule.get("severity", "medium") if r.outcome == FAIL else ("medium" if r.outcome == INSUFFICIENT else "low")
+        title = rule["title"] if r.outcome == FAIL else f"Cannot evaluate: {rule['title']}"
+        ev = _evidence_from_inputs(r.inputs)
+        doc_id = next((e["document_id"] for e in ev if e.get("document_id")), None)
+        out.append({
+            "code": rule["id"], "fingerprint": _fp("rule", rule["id"], r.outcome), "category": rule.get("category", "compliance"),
+            "evidence_class": eclass, "severity": sev, "outcome": r.outcome, "title": title, "message": r.message,
+            "limitation": rule.get("limitation"), "rule": {"id": rule["id"], "version": rule.get("version"),
+                                                           "citation": r.citation(rs)},
+            "evidence": ev, "trace": {"inputs": r.inputs, "missing": r.missing, "detail": r.detail,
+                                      "check": rule.get("check")},
+            "document_id": doc_id,
+        })
+    return out
+
+
+def _qr_compare(doc: Document, payload: dict[str, Any], mapping: dict[str, str]) -> list[vb.Comparison]:
+    fields = {f.name: f for f in doc.fields}
+    comps = []
+    for pkey, fname in mapping.items():
+        if pkey in payload:
+            f = fields.get(fname)
+            comps.append(compare_values(fname, f.value if f else None, payload[pkey]))
+    return comps
+
+
+def _verify_document(doc: Document, spec: dict[str, Any], as_of: date) -> list[vb.VerificationResult]:
+    results: list[vb.VerificationResult] = []
+    vspec = spec.get("verification") or {}
+    if doc.mime == "application/pdf":
+        results.extend(validate_signatures(load_document(doc.storage_name)))
+    tokens = (doc.analysis or {}).get("qr", [])
+    for tok in tokens:
+        chk = verify_token(tok["text"])
+        if chk.payload is None and not chk.ok:
+            continue  # a QR that is not a signed token (e.g. a URL) is reported in the document view only
+        if not chk.ok:
+            status = vb.MANUAL_REVIEW if chk.issuer is None else vb.MISMATCH
+            results.append(vb.VerificationResult(
+                "signed_qr", status, chk.issuer["issuer"] if chk.issuer else "Unknown issuer key", True,
+                f"QR token on page {tok['page']}: {chk.error}.", {"page": tok["page"], "kid": chk.kid},
+                {"payload": chk.payload}))
+            continue
+        comps = _qr_compare(doc, chk.payload, vspec.get("qr_fields", {}))
+        bad = [c for c in comps if c.match is False]
+        to = chk.payload.get("valid_until")
+        if bad:
+            status, detail = vb.MISMATCH, ("The issuer-signed QR is genuine but disagrees with the printed text: "
+                                           + "; ".join(f"{c.field} printed '{c.submitted}' vs signed '{c.authoritative}'"
+                                                       for c in bad))
+        elif to and date.fromisoformat(to) < as_of:
+            status, detail = vb.EXPIRED, f"Signed QR is genuine; validity ended {to}."
+        else:
+            status, detail = vb.VERIFIED, (f"Signed QR from {chk.issuer['issuer']} is genuine and matches "
+                                           f"{len(comps)} printed fields.")
+        results.append(vb.VerificationResult(
+            "signed_qr", status, chk.issuer["issuer"], bool(chk.issuer.get("simulated")), detail,
+            {"page": tok["page"], "kid": chk.kid, "bbox": tok["bbox"]}, {"payload": chk.payload}, comps,
+            claim="Signature over the QR payload verified with the issuer's published key."))
+    issuer_code = vspec.get("issuer")
+    if issuer_code:
+        adapter = adapters().get(issuer_code)
+        ref_field = vspec.get("ref_field")
+        fields = {f.name: f.value for f in doc.fields}
+        ref = fields.get(ref_field)
+        if adapter is None:
+            results.append(vb.VerificationResult("issuer_registry", vb.SOURCE_UNAVAILABLE, issuer_code, True,
+                                                 "No adapter configured for this issuer."))
+        elif not ref:
+            results.append(vb.VerificationResult(
+                "issuer_registry", vb.MANUAL_REVIEW, adapter.name, True,
+                f"Reference number ({ref_field}) could not be read from the document, so the issuer was not queried."))
+        else:
+            results.append(adapter.verify(ref, fields, as_of))
+    return results
+
+
+def document_status(statuses: list[str]) -> str:
+    real = [s for s in statuses if s != vb.NOT_CHECKED]
+    if not real:
+        return vb.NOT_CHECKED
+    for s in STATUS_ORDER:
+        if s in real:
+            return s
+    return vb.NOT_CHECKED
+
+
+def run_validation(db: Session, app: Application, actor: str, actor_role: str, *, ruleset: Ruleset | None = None,
+                   as_of: date | None = None, replay_of: str | None = None) -> ValidationRun:
+    rs = ruleset or active_ruleset()
+    _archive_ruleset(rs)
+    as_of = as_of or as_of_date(app)
+    run = ValidationRun(application_id=app.id, round=app.round, ruleset_id=f"{rs.id}@{rs.version}",
+                        ruleset_hash=rs.sha256, engine_version=ENGINE_VERSION, triggered_by=actor)
+    db.add(run)
+    db.flush()
+    stages: list[dict[str, Any]] = []
+
+    def stage(name: str, t0: float, **info: Any) -> None:
+        stages.append({"stage": name, "ms": round((time.perf_counter() - t0) * 1000), **info})
+
+    try:
+        docs = list(db.scalars(select(Document).where(Document.application_id == app.id,
+                                                      Document.superseded.is_(False))))
+        campus = (app.institution.latitude, app.institution.longitude) if app.institution.latitude else None
+
+        t0 = time.perf_counter()
+        processed = 0
+        for d in docs:
+            if d.processing_status != "processed":
+                try:
+                    process_document(db, d, rs, campus)
+                    processed += 1
+                except Exception as e:  # noqa: BLE001  one bad file must not sink the run
+                    log.exception("processing failed for %s", d.id)
+                    d.processing_status, d.processing_error = "failed", str(e)[:500]
+        db.flush()
+        stage("document_processing", t0, documents=len(docs), newly_processed=processed)
+
+        findings: list[dict[str, Any]] = []
+
+        t0 = time.perf_counter()
+        for d in docs:
+            if d.processing_status == "failed":
+                findings.append({"code": "DOC-PROCESSING-FAILED", "fingerprint": _fp("proc", d.declared_type),
+                                 "category": "completeness", "evidence_class": "structural", "severity": "medium",
+                                 "outcome": "manual_review", "title": "Document could not be processed",
+                                 "message": f"'{d.original_filename}': {d.processing_error}", "evidence": [],
+                                 "document_id": d.id})
+                continue
+            cls = d.classification or {}
+            if cls.get("type") and cls["type"] != d.declared_type and d.declared_type in rs.doc_types:
+                findings.append({
+                    "code": "DOC-TYPE-MISMATCH", "fingerprint": _fp("cls", d.declared_type, cls["type"]),
+                    "category": "completeness", "evidence_class": "heuristic", "severity": "medium",
+                    "outcome": "fail", "title": "Uploaded document does not look like the required document",
+                    "message": f"Uploaded as {rs.doc_types[d.declared_type]['label']} but its content matches "
+                               f"{rs.doc_types.get(cls['type'], {}).get('label', cls['type'])} "
+                               f"(keywords: {', '.join(cls['candidates'][0]['matched'][:4])}).",
+                    "limitation": "Keyword classification; a reviewer should open the file.",
+                    "evidence": [{"kind": "document", "document_id": d.id}], "document_id": d.id})
+            unread = (d.analysis or {}).get("unreadable_pages") or []
+            if unread:
+                findings.append({
+                    "code": "DOC-UNREADABLE", "fingerprint": _fp("unread", d.declared_type),
+                    "category": "completeness", "evidence_class": "structural", "severity": "medium",
+                    "outcome": "manual_review", "title": "Pages could not be read",
+                    "message": f"No text layer and OCR produced nothing on pages {unread}. Values on these pages "
+                               "were not checked.", "evidence": [{"kind": "document", "document_id": d.id}],
+                    "document_id": d.id})
+            for f in d.fields:
+                if f.status in ("uncertain", "unparseable"):
+                    findings.append({
+                        "code": "FIELD-UNCERTAIN", "fingerprint": _fp("fld", d.declared_type, f.name),
+                        "category": "completeness", "evidence_class": "heuristic", "severity": "low",
+                        "outcome": "manual_review", "title": f"Uncertain value for {f.name.replace('_', ' ')}",
+                        "message": f"Read '{f.raw}' via {f.method}"
+                                   + (f" with OCR confidence {f.confidence:.2f}" if f.confidence is not None else "")
+                                   + ". Confirm against the page.",
+                        "evidence": [{"kind": "region", "document_id": d.id, "page": f.page, "bbox": f.bbox,
+                                      "label": f.name, "value": f.raw}], "document_id": d.id})
+        stage("extraction_checks", t0)
+
+        t0 = time.perf_counter()
+        facts = build_facts(db, app, docs)
+        results = evaluate(rs, facts, category=app.category, as_of=as_of)
+        findings += _rule_findings(rs, results, app)
+        checklist = [{
+            "rule_id": r.rule["id"], "title": r.rule["title"], "category": r.rule.get("category"),
+            "outcome": r.outcome, "message": r.message, "severity": r.rule.get("severity"),
+            "citation": r.citation(rs), "inputs": r.inputs, "missing": r.missing,
+            "evidence": _evidence_from_inputs(r.inputs),
+        } for r in results]
+        stage("rules", t0, evaluated=len(results), facts=len(facts.all()))
+
+        t0 = time.perf_counter()
+        doc_status: dict[str, str] = {}
+        latest = latest_by_type(docs)
+        for d in docs:
+            if d.processing_status != "processed":
+                continue
+            spec = rs.doc_types.get(d.declared_type, {})
+            vres = _verify_document(d, spec, as_of)
+            statuses = []
+            for v in vres:
+                db.add(VerificationAttempt(
+                    application_id=app.id, document_id=d.id, run_id=run.id, channel=v.channel,
+                    source_name=v.source_name, simulated=v.simulated, status=v.status, request=v.request,
+                    response=v.response, comparison=[c.as_dict() for c in v.comparisons], detail=v.detail,
+                    actor="system", completed_at=utcnow()))
+                statuses.append(v.status)
+                if v.status in (vb.VERIFIED, vb.NOT_CHECKED):
+                    continue
+                sev = {"mismatch_detected": "high", "expired": "high", "source_unavailable": "medium",
+                       "manual_review_required": "medium", "verification_pending": "low"}[v.status]
+                if d is not latest.get(d.declared_type):
+                    sev = "low"
+                findings.append({
+                    "code": f"VER-{v.channel.upper()}-{v.status.upper()}",
+                    "fingerprint": _fp("ver", d.declared_type, v.channel, v.status),
+                    "category": "verification",
+                    "evidence_class": "cryptographic" if v.channel in ("pdf_signature", "signed_qr") else "issuer",
+                    "severity": sev, "outcome": v.status,
+                    "title": f"{spec.get('label', d.declared_type)}: {v.status.replace('_', ' ')} ({v.channel.replace('_', ' ')})",
+                    "message": v.detail, "limitation": None if not v.simulated else
+                    "Result from a SIMULATED source or DEMO trust anchor; not a real-world confirmation.",
+                    "evidence": [{"kind": "document", "document_id": d.id},
+                                 *([{"kind": "region", "document_id": d.id, "page": v.request.get("page"),
+                                     "bbox": v.request.get("bbox"), "label": "signed QR"}]
+                                   if v.request.get("bbox") else []),
+                                 {"kind": "verification", "channel": v.channel, "source": v.source_name,
+                                  "simulated": v.simulated, "comparisons": [c.as_dict() for c in v.comparisons]}],
+                    "document_id": d.id})
+            doc_status[d.id] = document_status(statuses)
+        stage("verification", t0, documents=len(doc_status))
+
+        t0 = time.perf_counter()
+        for d in docs:
+            an = d.analysis or {}
+            for s in an.get("forensic_signals", []):
+                if s["severity"] == "info":
+                    continue
+                evs = [{**e, "document_id": d.id} for e in s.get("evidence", [])] or [{"kind": "document",
+                                                                                         "document_id": d.id}]
+                findings.append({
+                    "code": s["code"], "fingerprint": _fp("fx", d.declared_type, s["code"]),
+                    "category": "forensic", "evidence_class": "structural" if s["code"].startswith("FX-PDF-") and
+                    s["severity"] in ("high", "medium") else "heuristic",
+                    "severity": s["severity"], "outcome": "indicator", "title": s["title"], "message": s["detail"],
+                    "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id})
+        stage("forensics", t0)
+
+        t0 = time.perf_counter()
+        ref_fields = {t: (s.get("verification") or {}).get("ref_field") for t, s in rs.doc_types.items()
+                      if (s.get("verification") or {}).get("ref_field")}
+        links = cross_checks(db, app, [d for d in docs if d.processing_status == "processed"], ref_fields)
+        for ln in links:
+            findings.append({
+                "code": ln.code, "fingerprint": _fp("xa", ln.code, ln.entity), "category": "consistency",
+                "evidence_class": ln.evidence_class, "severity": ln.severity, "outcome": "indicator",
+                "title": ln.title, "message": ln.detail, "limitation": ln.limitation, "evidence": ln.evidence,
+                "document_id": next((e.get("document_id") for e in ln.evidence if e.get("kind") != "peer_document"),
+                                    None)})
+        graph = relationship_graph(db, app, links)
+        stage("cross_application", t0, links=len(links))
+
+        # Reviewer decisions carry over when the same finding reappears in a later run
+        prev = db.scalars(select(ValidationRun).where(ValidationRun.application_id == app.id,
+                                                      ValidationRun.id != run.id, ValidationRun.status == "complete")
+                          .order_by(ValidationRun.started_at.desc()).limit(1)).first()
+        prev_f = {f.fingerprint: f for f in db.scalars(select(Finding).where(Finding.run_id == prev.id))} if prev else {}
+        seen = set()
+        for f in findings:
+            if f["fingerprint"] in seen:
+                f["fingerprint"] = _fp(f["fingerprint"], f["message"])
+            seen.add(f["fingerprint"])
+            old = prev_f.get(f["fingerprint"])
+            row = Finding(run_id=run.id, application_id=app.id, **{k: f.get(k) for k in (
+                "code", "fingerprint", "category", "evidence_class", "severity", "outcome", "title", "message",
+                "limitation", "rule", "document_id")}, evidence=f.get("evidence", []), trace=f.get("trace", {}))
+            if old and old.review_status in ("dismissed", "accepted", "escalated"):
+                row.review_status = old.review_status
+                row.review_note = f"Carried over from run {prev.id}: {old.review_note or ''}".strip()
+            db.add(row)
+        resolved = [{"code": f.code, "title": f.title} for fp, f in prev_f.items() if fp not in seen]
+
+        canonical = sorted(({k: f.get(k) for k in ("code", "fingerprint", "severity", "outcome", "message", "evidence")}
+                            for f in findings), key=lambda x: (x["fingerprint"], x["message"]))
+        refs = db.scalars(select(ReferenceRecord).where(ReferenceRecord.institution_id == app.institution_id)).all()
+        run.input_digest = digest({
+            "documents": sorted([d.declared_type, d.sha256] for d in docs), "declared": app.declared,
+            "category": app.category, "academic_year": app.academic_year, "ruleset": rs.sha256,
+            "engine": ENGINE_VERSION, "as_of": as_of.isoformat(),
+            "references": sorted(digest(r.data) for r in refs)})
+        run.report_digest = digest({"findings": canonical,
+                                    "checklist": [[c["rule_id"], c["outcome"]] for c in checklist],
+                                    "verification": sorted(doc_status.items())})
+        by_sev: dict[str, int] = {}
+        for f in findings:
+            by_sev[f["severity"]] = by_sev.get(f["severity"], 0) + 1
+        run.summary = {
+            "as_of": as_of.isoformat(), "replay_of": replay_of,
+            "findings": len(findings), "by_severity": by_sev,
+            "by_category": _count(findings, "category"), "by_evidence_class": _count(findings, "evidence_class"),
+            "checklist": checklist, "document_status": doc_status, "graph": graph,
+            "review_priority": sum(SEVERITY_WEIGHT.get(f["severity"], 0) for f in findings),
+            "resolved_since_previous": resolved, "previous_run": prev.id if prev else None,
+            "facts": facts.snapshot(),
+        }
+        run.stages = stages
+        run.status = "complete"
+        run.finished_at = utcnow()
+        if app.status in ("submitted", "validating", "rectified"):
+            app.status = "under_review"
+        audit.record(db, actor=actor, actor_role=actor_role, action="validation.completed", object_type="run",
+                     object_id=run.id, application_id=app.id,
+                     details={"ruleset": run.ruleset_id, "ruleset_hash": rs.sha256, "input_digest": run.input_digest,
+                              "report_digest": run.report_digest, "findings": len(findings), "replay_of": replay_of})
+    except Exception as e:
+        log.exception("validation failed")
+        run.status, run.error, run.finished_at = "failed", str(e)[:1000], utcnow()
+        run.stages = stages
+        audit.record(db, actor=actor, actor_role=actor_role, action="validation.failed", object_type="run",
+                     object_id=run.id, application_id=app.id, details={"error": str(e)[:300]})
+    db.commit()
+    return run
+
+
+def _count(items: list[dict[str, Any]], key: str) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for i in items:
+        out[i[key]] = out.get(i[key], 0) + 1
+    return out

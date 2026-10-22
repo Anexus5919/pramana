@@ -13,8 +13,8 @@ from pathlib import Path
 
 from asn1crypto import pem, x509
 from pyhanko.pdf_utils.reader import PdfFileReader
-from pyhanko.sign.validation.errors import SignatureValidationError
 from pyhanko.sign.validation import validate_pdf_signature
+from pyhanko.sign.validation.errors import SignatureValidationError
 from pyhanko_certvalidator import ValidationContext
 
 from ..config import get_settings
