@@ -23,8 +23,14 @@ export type EyeState = {
 
 export const now = () => performance.now() / 1000;
 
-export function computeLayout(width: number, height: number, copyW: number, copyH: number): EyeLayout {
-  const compact = width < 720;
+export function computeLayout(
+  width: number,
+  height: number,
+  copyW: number,
+  copyH: number,
+  opts: { compact?: boolean } = {},
+): EyeLayout {
+  const compact = opts.compact ?? width < 720;
   const halfDiag = 0.5 * Math.hypot(copyW, copyH);
   let pupilR: number;
   let irisR: number;
