@@ -53,19 +53,37 @@ def sniff_mime(data: bytes) -> str | None:
 
 
 def _scan_active(pdf: pikepdf.Pdf) -> list[dict]:
+    """Walk every object, including dictionaries nested inline (e.g. an /OpenAction carrying /JS)."""
     found: dict[str, int] = {}
-    for obj in pdf.objects:
-        if isinstance(obj, pikepdf.Dictionary):
-            for k in obj.keys():
+    seen: set[tuple[int, int]] = set()
+
+    def visit(obj, depth: int) -> None:
+        if depth > 40:
+            return
+        if getattr(obj, "is_indirect", False):
+            og = obj.objgen
+            if og in seen:
+                return
+            seen.add(og)
+        if isinstance(obj, pikepdf.Dictionary | pikepdf.Stream):
+            d = obj.stream_dict if isinstance(obj, pikepdf.Stream) else obj
+            for k in d.keys():
                 if k in ACTIVE_KEYS:
                     found[k] = found.get(k, 0) + 1
-            if obj.get("/S") in ("/JavaScript", "/Launch", "/SubmitForm", "/ImportData"):
-                found[str(obj.get("/S"))] = found.get(str(obj.get("/S")), 0) + 1
-    out = []
-    for k, n in found.items():
-        # An OpenAction that only sets the initial view is benign; it is reported with its target type
-        out.append({"key": k, "count": n, "meaning": ACTIVE_KEYS.get(k, k)})
-    return out
+            s = d.get("/S")
+            if s in ("/JavaScript", "/Launch", "/SubmitForm", "/ImportData"):
+                found[str(s)] = found.get(str(s), 0) + 1
+            for k in d.keys():
+                if k not in ("/Parent", "/P"):
+                    visit(d[k], depth + 1)
+        elif isinstance(obj, pikepdf.Array):
+            for v in obj:
+                visit(v, depth + 1)
+
+    for o in pdf.objects:
+        visit(o, 0)
+    visit(pdf.Root, 0)
+    return [{"key": k, "count": n, "meaning": ACTIVE_KEYS.get(k, k)} for k, n in found.items()]
 
 
 def validate_upload(filename: str, data: bytes) -> IntakeResult:
