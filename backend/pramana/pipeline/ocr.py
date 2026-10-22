@@ -48,11 +48,20 @@ def ocr_image(img: Image.Image) -> list[tuple[str, float, float, float, float, f
     with _lock:  # onnxruntime sessions are shared; serialise to keep memory flat on a laptop
         res = eng(np.array(img.convert("RGB")), return_word_box=True)
     out = []
-    for line in res.word_results or ():
-        for text, conf, quad in line:
-            if not text.strip():
-                continue
+    for text, conf, quad in _word_items(res.word_results):
+        if text.strip():
             xs = [p[0] for p in quad]
             ys = [p[1] for p in quad]
             out.append((text, float(min(xs)) - 2, float(min(ys)), float(max(xs)) + 2, float(max(ys)), float(conf)))
     return out
+
+
+def _word_items(word_results):
+    """RapidOCR nests (text, score, quad) per line, but a one-word line can come back unnested."""
+    for line in word_results or ():
+        if len(line) == 3 and isinstance(line[0], str):
+            yield line
+            continue
+        for item in line:
+            if isinstance(item, tuple | list) and len(item) == 3 and isinstance(item[0], str):
+                yield item

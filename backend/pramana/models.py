@@ -4,12 +4,28 @@ from typing import Any
 
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import TypeDecorator
 
 from .db import Base
 
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+class UTCDateTime(TypeDecorator):
+    """Stores UTC and always returns timezone-aware values (SQLite drops tzinfo otherwise)."""
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is not None and value.tzinfo is not None:
+            value = value.astimezone(UTC).replace(tzinfo=None)
+        return value
+
+    def process_result_value(self, value, dialect):
+        return value.replace(tzinfo=UTC) if value is not None and value.tzinfo is None else value
 
 
 def new_id(prefix: str) -> str:
@@ -53,7 +69,7 @@ class ReferenceRecord(Base):
     key: Mapped[str] = mapped_column(String(120), index=True)
     institution_id: Mapped[str | None] = mapped_column(ForeignKey("institutions.id"), index=True)
     data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    as_of: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     provenance: Mapped[str] = mapped_column(String(40), default="synthetic")
 
 
@@ -75,8 +91,8 @@ class AuthSession(Base):
     token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     csrf_token: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
 
 
 class Application(Base):
@@ -89,8 +105,8 @@ class Application(Base):
     status: Mapped[str] = mapped_column(String(40), default="draft")
     round: Mapped[int] = mapped_column(Integer, default=1)
     declared: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    submitted_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
     institution: Mapped[Institution] = relationship()
     documents: Mapped[list["Document"]] = relationship(back_populates="application")
@@ -117,7 +133,7 @@ class Document(Base):
     fingerprints: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     analysis: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     uploaded_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
-    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    uploaded_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     superseded: Mapped[bool] = mapped_column(Boolean, default=False)
 
     application: Mapped[Application] = relationship(back_populates="documents")
@@ -180,8 +196,8 @@ class ValidationRun(Base):
     summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     stages: Mapped[list[Any]] = mapped_column(JSON, default=list)
     triggered_by: Mapped[str | None] = mapped_column(String(80))
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     error: Mapped[str | None] = mapped_column(Text)
 
 
@@ -224,8 +240,8 @@ class VerificationAttempt(Base):
     comparison: Mapped[list[Any]] = mapped_column(JSON, default=list)
     detail: Mapped[str | None] = mapped_column(Text)
     actor: Mapped[str | None] = mapped_column(String(80))
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
 
 class ReviewAction(Base):
@@ -237,7 +253,7 @@ class ReviewAction(Base):
     actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     action: Mapped[str] = mapped_column(String(40))
     note: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
 class RectificationRequest(Base):
@@ -250,8 +266,8 @@ class RectificationRequest(Base):
     message: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="open")
     created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    responded_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
 
 class AuditEvent(Base):
@@ -260,7 +276,7 @@ class AuditEvent(Base):
     __tablename__ = "audit_events"
 
     seq: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    ts: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     actor: Mapped[str] = mapped_column(String(80))
     actor_role: Mapped[str] = mapped_column(String(30))
     action: Mapped[str] = mapped_column(String(60), index=True)
@@ -282,4 +298,4 @@ class AuditCheckpoint(Base):
     head_hash: Mapped[str] = mapped_column(String(64))
     signature: Mapped[str] = mapped_column(String(200))
     public_key: Mapped[str] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
