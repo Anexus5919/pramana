@@ -8,7 +8,7 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "soft
 export type ButtonSize = "sm" | "md" | "lg";
 
 const base =
-  "relative inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap font-medium rounded-control transition-[background-color,color,border-color,box-shadow,opacity] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50";
+  "relative inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap font-medium rounded-control transition-[background-color,color,border-color,box-shadow,opacity,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
@@ -26,14 +26,20 @@ const sizes: Record<ButtonSize, string> = {
   lg: "h-12 px-6 text-base [&_svg]:size-[18px]",
 };
 
-const iconOnly: Record<ButtonSize, string> = {
-  sm: "w-8 px-0",
-  md: "w-10 px-0",
-  lg: "w-12 px-0",
+const iconSizes: Record<ButtonSize, string> = {
+  sm: "size-8 [&_svg]:size-4",
+  md: "size-10 [&_svg]:size-[18px]",
+  lg: "size-12 [&_svg]:size-5",
 };
 
-export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string): string {
-  return cn(base, variants[variant], sizes[size], className);
+/** Classes for a button-styled element. Pass `iconOnly` for square icon buttons. */
+export function buttonClasses(
+  variant: ButtonVariant = "primary",
+  size: ButtonSize = "md",
+  className?: string,
+  iconOnly = false,
+): string {
+  return cn(base, variants[variant], iconOnly ? iconSizes[size] : sizes[size], className);
 }
 
 /** Three blocks lighting in sequence; shown only while a request is pending. */
@@ -145,7 +151,7 @@ export function ButtonLink({
   ...rest
 }: ButtonLinkProps) {
   return (
-    <Link className={cn(buttonClasses(variant, size, className), "active:scale-[0.97] transition-transform")} {...rest}>
+    <Link className={buttonClasses(variant, size, cn("active:scale-[0.97]", className))} {...rest}>
       {variant === "primary" && (
         <span
           aria-hidden
@@ -181,12 +187,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       title={label}
       disabled={disabled || loading}
       whileTap={disabled ? undefined : tap}
-      className={cn(
-        buttonClasses(variant, size),
-        iconOnly[size],
-        active && "bg-surface-2 text-ink",
-        className,
-      )}
+      className={buttonClasses(variant, size, cn(active && "bg-surface-2 text-ink", className), true)}
       {...rest}
     >
       {loading ? <BlockLoader /> : icon}
