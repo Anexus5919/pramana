@@ -145,7 +145,9 @@ def extract_pdf(data: bytes) -> list[PageText]:
                 for w in raw
             ]
             n_chars = sum(len(w.text) for w in words)
-            if n_chars >= MIN_DIGITAL_CHARS:
+            # Broken Devanagari text layers map conjuncts to Private Use Area code points; OCR those pages
+            pua = sum(1 for w in words for ch in w.text if 0xE000 <= ord(ch) <= 0xF8FF or ch == "�")
+            if n_chars >= MIN_DIGITAL_CHARS and pua / n_chars < 0.03:
                 pt = PageText(i + 1, float(page.width), float(page.height), "digital", words)
                 pt.lines = group_lines(words)
             else:
