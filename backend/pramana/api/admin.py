@@ -17,8 +17,9 @@ from ..auth import (
     require_roles,
     start_session,
 )
+from ..config import get_settings
 from ..db import get_db
-from ..models import Application, AuditEvent, Finding, User, ValidationRun, VerificationAttempt
+from ..models import Application, AuditEvent, Finding, Institution, User, ValidationRun, VerificationAttempt
 from ..rules.engine import active_ruleset
 from ..sim import issuers as sim
 from .applications import latest_run
@@ -53,6 +54,17 @@ def logout(request: Request, response: Response, user: User = Depends(current_us
                  object_id=user.id)
     db.commit()
     return {"ok": True}
+
+
+@router.get("/auth/demo-accounts")
+def demo_accounts(db: Session = Depends(get_db)):
+    s = get_settings()
+    if not s.demo_mode:
+        raise HTTPException(404, "not found")
+    users = db.scalars(select(User).where(User.active.is_(True)).order_by(User.role, User.username)).all()
+    return {"password": s.demo_password, "notice": "Synthetic demo data only", "accounts": [
+        {**ser.user(u), "role_label": ROLES[u.role],
+         "institution": db.get(Institution, u.institution_id).name if u.institution_id else None} for u in users]}
 
 
 @router.get("/auth/me")

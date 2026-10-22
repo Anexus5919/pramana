@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     storage_key: str | None = None
     session_ttl_minutes: int = 480
     max_upload_mb: int = 15
+    # Shows demo accounts on the login page; never enable with real data
+    demo_mode: bool = True
+    demo_password: str = "Pramana@2026"
     max_pdf_pages: int = 60
     cookie_secure: bool = False
     frontend_dist: Path = REPO_DIR / "frontend" / "dist"
