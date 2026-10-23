@@ -13,8 +13,8 @@ from .config import get_settings
 from .db import init_db
 from .history import api as history_api
 from .history.watch import start_scheduler
-from .insights import proof as insights_proof
 from .insights import network as insights_network
+from .insights import proof as insights_proof
 from .officer import routes as officer
 from .sandbox_worker import windows_full_speed
 
