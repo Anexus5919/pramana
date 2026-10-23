@@ -301,3 +301,18 @@ class AuditCheckpoint(Base):
     signature: Mapped[str] = mapped_column(String(200))
     public_key: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class RunEvent(Base):
+    """One progress event of a validation run, persisted so a reload or a second viewer can resume the stream."""
+
+    __tablename__ = "run_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("validation_runs.id"), index=True)
+    seq: Mapped[int] = mapped_column(Integer)
+    ts: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    kind: Mapped[str] = mapped_column(String(40))
+    # "all" events are safe to show the applicant; "official" events carry checks and finding counts
+    audience: Mapped[str] = mapped_column(String(20), default="official")
+    data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)

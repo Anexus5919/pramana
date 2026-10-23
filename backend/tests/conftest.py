@@ -8,6 +8,8 @@ _TMP = Path(tempfile.mkdtemp(prefix="pramana-test-"))
 os.environ["PRAMANA_DATA_DIR"] = str(_TMP)
 # Tests are deterministic: no language model, whatever backend/.env enables for demos
 os.environ["PRAMANA_LLM_PROVIDERS"] = ""
+# The API tests assert on finished runs, so validation stays synchronous here; test_platform turns it on
+os.environ["PRAMANA_BACKGROUND_RUNS"] = "false"
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import logging  # noqa: E402

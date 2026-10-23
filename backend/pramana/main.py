@@ -5,7 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import admin, applications
+from . import jobs, sandbox
+from .api import admin, applications, live
 from .config import get_settings
 from .db import init_db
 
@@ -18,7 +19,10 @@ for noisy in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "fontTools"):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    jobs.recover_interrupted()
     yield
+    jobs.shutdown()
+    sandbox.shutdown()
 
 
 app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
@@ -26,6 +30,7 @@ app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
                           "assistance. Decision support only: findings are for review by competent authorities.")
 app.include_router(applications.router)
 app.include_router(admin.router)
+app.include_router(live.router)
 
 
 @app.middleware("http")
@@ -36,6 +41,8 @@ async def security_headers(request: Request, call_next):
     resp.headers.setdefault("Referrer-Policy", "no-referrer")
     if request.url.path.startswith("/api"):
         resp.headers.setdefault("Cache-Control", "no-store")
+    if get_settings().cookie_secure:
+        resp.headers.setdefault("Strict-Transport-Security", f"max-age={get_settings().hsts_max_age}; includeSubDomains")
     return resp
 
 
