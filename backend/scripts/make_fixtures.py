@@ -562,17 +562,44 @@ def scan(pdf: bytes) -> bytes:
     return b.getvalue()
 
 
-def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: float) -> bytes:
-    """Cover a printed value with a white box and draw a new value in an incremental update."""
+def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: float,
+                font_name: str = "Helvetica") -> bytes:
+    """Cover a printed value with a white box and draw a new value in an incremental update.
+
+    A font_name other than Helvetica mimics an editor that substitutes its own font; Helvetica widths keep
+    the glyphs where a reader expects them, so only the font name gives the edit away."""
     from pyhanko.pdf_utils import generic
     from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+    from reportlab.pdfbase.pdfmetrics import getFont
 
     w = IncrementalPdfFileWriter(io.BytesIO(signed))
-    font = w.add_object(generic.DictionaryObject({
+    fd = {
         generic.NameObject("/Type"): generic.NameObject("/Font"),
         generic.NameObject("/Subtype"): generic.NameObject("/Type1"),
-        generic.NameObject("/BaseFont"): generic.NameObject("/Helvetica"),
-    }))
+        generic.NameObject("/BaseFont"): generic.NameObject(f"/{font_name}"),
+    }
+    if font_name != "Helvetica":
+        widths = getFont("Helvetica").widths
+        fd.update({
+            generic.NameObject("/Encoding"): generic.NameObject("/WinAnsiEncoding"),
+            generic.NameObject("/FirstChar"): generic.NumberObject(32),
+            generic.NameObject("/LastChar"): generic.NumberObject(126),
+            generic.NameObject("/Widths"): generic.ArrayObject([generic.NumberObject(int(widths[i]))
+                                                                for i in range(32, 127)]),
+            generic.NameObject("/FontDescriptor"): w.add_object(generic.DictionaryObject({
+                generic.NameObject("/Type"): generic.NameObject("/FontDescriptor"),
+                generic.NameObject("/FontName"): generic.NameObject(f"/{font_name}"),
+                generic.NameObject("/Flags"): generic.NumberObject(32),
+                generic.NameObject("/FontBBox"): generic.ArrayObject(
+                    [generic.NumberObject(v) for v in (-665, -325, 2000, 1006)]),
+                generic.NameObject("/ItalicAngle"): generic.NumberObject(0),
+                generic.NameObject("/Ascent"): generic.NumberObject(905),
+                generic.NameObject("/Descent"): generic.NumberObject(-212),
+                generic.NameObject("/CapHeight"): generic.NumberObject(716),
+                generic.NameObject("/StemV"): generic.NumberObject(80),
+            })),
+        })
+    font = w.add_object(generic.DictionaryObject(fd))
     wid = stringWidth(old, "Helvetica", size) + 4
     ops = (f"q 1 1 1 rg {x - 1:.2f} {y - 3:.2f} {wid:.2f} {size + 4:.2f} re f Q "
            f"BT /FX1 {size} Tf {x:.2f} {y:.2f} Td ({new}) Tj ET").encode()
@@ -840,14 +867,15 @@ def main() -> None:
     # A7 issuer-signed fire NOC whose validity date is edited after signing
     docs = standard_docs("I7", fire_issue=d("2023-07-01"), fire_valid=d("2025-06-30"))
     x, y, old, size = base["I7"]["fire_marks"]["valid_until"]
-    docs["fire_noc"] = tamper_date(docs["fire_noc"], x, y, old, "30-06-2027", size)
+    docs["fire_noc"] = tamper_date(docs["fire_noc"], x, y, old, "30-06-2027", size, font_name="ArialMT")
     emit("A7", "I7", "EOA", docs, declared("I7"),
          ["VER-ISSUER_SIGNATURE-MISMATCH_DETECTED", "APH-617I-FIRE-VALID", "VER-SIGNED_QR-EXPIRED",
           "VER-ISSUER_REGISTRY-EXPIRED", "FX-FIELD-OVERWRITTEN", "FX-PDF-REVISION-TEXT-CHANGE", "FX-PDF-OVERLAID-TEXT",
-          "FX-PDF-WHITEOUT", "XA-FACULTY-MULTIPLE-INSTITUTIONS"],
-         "Fire NOC expired 30-06-2025; the date was covered and overwritten as 30-06-2027 in an incremental update "
-         "after the issuer signed. The text layer still holds the original date, so the expiry, QR and registry "
-         "checks see 2025 while the page shows 2027. Shares three faculty with A6.")
+          "FX-PDF-WHITEOUT", "FX-FONT-MISMATCH", "XA-FACULTY-MULTIPLE-INSTITUTIONS"],
+         "Fire NOC expired 30-06-2025; the date was covered and overwritten as 30-06-2027 in ArialMT, a font no "
+         "other value uses, in an incremental update after the issuer signed. The text layer still holds the "
+         "original date, so the expiry, QR and registry checks see 2025 while the page shows 2027. Shares three "
+         "faculty with A6.")
 
     # A8 fabricated fire NOC: no issuer signature or QR, number unknown to the issuer, applicant DSC only
     docs = standard_docs("I8")

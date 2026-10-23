@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from ..crypto import load_document
-from ..forensics import fingerprints, pdf_struct
+from ..forensics import fingerprints, fonts, pdf_struct
 from ..forensics import image as img_forensics
 from ..models import Document, DocumentPage, ExtractedField
 from ..rules.engine import Ruleset
@@ -84,6 +84,7 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
 
     if doc.mime == "application/pdf":
         signals, facts = pdf_struct.analyse(data, issue_date)
+        signals += fonts.font_mismatches(data, extracted, facts)
     else:
         signals, facts = img_forensics.analyse(data, campus)
     analysis["forensic_signals"] = [asdict(s) for s in signals]

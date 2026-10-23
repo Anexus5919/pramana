@@ -449,8 +449,9 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                                                                          "document_id": d.id}]
                 findings.append({
                     "code": s["code"], "fingerprint": _fp("fx", d.declared_type, s["code"]),
-                    "category": "forensic", "evidence_class": "structural" if s["code"].startswith("FX-PDF-") and
-                    s["severity"] in ("high", "medium") else "heuristic",
+                    "category": "forensic", "evidence_class": s.get("evidence_class") or (
+                        "structural" if s["code"].startswith("FX-PDF-") and s["severity"] in ("high", "medium")
+                        else "heuristic"),
                     "severity": s["severity"], "outcome": "indicator", "title": s["title"], "message": s["detail"],
                     "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id})
         stage("forensics", t0)
