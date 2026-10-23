@@ -109,7 +109,10 @@ def issuer_of(fields: dict[str, Any]) -> str | None:
 
 
 def issuer_key(issuer: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", issuer.lower())
+    """The issuing organisation: 'Chief Fire Officer, Pune Fire Brigade' and 'Divisional Fire Officer, Pune Fire
+    Brigade' are one issuer, so a signatory's title does not make the same office look like two."""
+    org = issuer.rsplit(",", 1)[-1] if "," in issuer else issuer
+    return re.sub(r"[^a-z0-9]", "", org.lower())
 
 
 @lru_cache(maxsize=4096)

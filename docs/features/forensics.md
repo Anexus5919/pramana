@@ -76,8 +76,10 @@ copied certificate tends to carry the image lifted from a real one.
    academic year. Two images match when the pixels are identical, or when both hashes are within 8 of 256
    bits. Seals of one template differ only in their text: in the fixtures, rescaling and recompression move a
    seal by about 4 bits and different offices' seals sit 10 or more apart.
-5. A match is reported only when the two documents name different issuers (the `issuing_authority` value).
-   The same issuer reusing its own seal is normal. An image that appears under three or more distinct issuers
+5. A match is reported only when the two documents name different issuers. The issuer is the organisation
+   in the `issuing_authority` value (the part after the signatory's title, so "Chief Fire Officer, Pune Fire
+   Brigade" and "Divisional Fire Officer, Pune Fire Brigade" are one issuer). The same issuer reusing its own
+   seal is normal. An image that appears under three or more distinct issuers
    is shared artwork, such as a state emblem, and is ignored. The fixtures print one shared emblem on every
    fire and municipal certificate to keep this rule honest.
 

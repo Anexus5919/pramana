@@ -308,3 +308,10 @@ def test_public_registry_lookup_needs_a_valid_signature(monkeypatch):
         assert r["simulated"] is True and r["found"] is True and all(x["match"] for x in r["compare"])
         bad = sign_payload({"noc": "X"}, Ed25519PrivateKey.generate(), "fire-sim-2025")
         assert c.post("/api/public/scan/registry", json={"token": bad}).status_code == 422
+
+
+def test_issuer_key_ignores_the_signatory_title():
+    from pramana.forensics.seals import issuer_key
+
+    assert issuer_key("Chief Fire Officer, Pune Fire Brigade") == issuer_key("Divisional Fire Officer, Pune Fire Brigade")
+    assert issuer_key("Chief Fire Officer, Pune Fire Brigade") != issuer_key("Chief Fire Officer, Hyderabad Fire Brigade")
