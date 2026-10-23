@@ -98,6 +98,34 @@ def test_score_counts_pairs_and_clean_false_alarms():
     assert s["false_positives"] == ["R1:X", "R3:Y"] and s["false_negatives"] == ["R2:C"]
 
 
+def test_near_duplicate_needs_more_than_shared_office_fee_status_or_dates():
+    # Found by the random evaluation: NBA letters of one accreditation cycle and TER receipts paid on one day
+    # were reported as copies of each other
+    from types import SimpleNamespace as NS
+
+    from pramana.consistency.cross import FIELD_OVERLAP_MIN, _shared_values
+
+    def doc(**values):
+        types = {"issue_date": "date", "valid_from": "date", "valid_until": "date", "payment_date": "date",
+                 "amount": "amount"}
+        return NS(fields=[NS(name=k, value=v, value_type=types.get(k, "text")) for k, v in values.items()])
+
+    def near(a, b):
+        shared, total, beyond = _shared_values(a, b)
+        return total >= 3 and shared / total >= FIELD_OVERLAP_MIN and beyond
+
+    nba = dict(programme_code="CE", valid_from="2024-07-01", valid_until="2027-06-30")
+    assert not near(doc(nba_ref="NBA/ACCR/2024/00871", **nba), doc(nba_ref="NBA/ACCR/2024/01422", **nba))
+    ter = dict(amount="72600", payment_date="2025-12-16", payment_status="Payment Received")
+    assert not near(doc(application_id="APP-2026-000101", transaction_id="TER26-1", **ter),
+                    doc(application_id="APP-2026-000102", transaction_id="TER26-2", **ter))
+    noc = dict(noc_number="FES/KAR/2025/04502", issue_date="2025-03-12", valid_until="2027-03-11",
+               issuing_authority="Chief Fire Officer, Karad Fire Brigade")
+    assert near(doc(institution_name="A", **noc), doc(institution_name="B", **noc))
+    office = dict(issue_date="2025-03-12", valid_until="2027-03-11", issuing_authority="Chief Fire Officer, Pune")
+    assert not near(doc(noc_number="FES/PUN/2025/1", **office), doc(noc_number="FES/PUN/2025/2", **office))
+
+
 def test_blind_run_end_to_end(tmp_path):
     out = tmp_path / "run"
     r = subprocess.run([sys.executable, str(SCRIPTS / "random_eval.py"), "--seed", "5", "--n", "4", "--out", str(out)],
