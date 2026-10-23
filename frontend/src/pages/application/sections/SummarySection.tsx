@@ -22,6 +22,8 @@ import { useDocTypeLabel, useWorkspace } from "../context";
 import { isOpenFinding, useVerifications } from "../data";
 import { useSinceLastYear } from "../history/api";
 import { WatchCard } from "../history/WatchCard";
+import { CoverageCalendar } from "../insights/CoverageCalendar";
+import { ProofMatrix } from "../insights/ProofMatrix";
 
 const RULE_ORDER: [string, string][] = [
   ["pass", "met"],
@@ -299,7 +301,9 @@ export function SummarySection() {
   return (
     <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0 space-y-6">
+        <ProofMatrix />
         <NeedsAttention />
+        <CoverageCalendar />
         <Checks />
         <SinceLastYearLine />
         <WatchCard />

@@ -45,7 +45,7 @@ LITERAL_RE = re.compile(rb"\((?:[^()\\]|\\.)*\)")
 # What each source certificate is, and the edit a person would make to it
 SOURCES = {
     "a1_fire": {"app": "A1", "type": "fire_noc", "file": "A1/fire_noc.pdf", "label": "Valid Up To",
-                "field": "valid_until", "old": "11-03-2027", "new": "11-03-2029"},
+                "field": "valid_until", "old": "11-03-2028", "new": "11-03-2029"},
     "a1_oc": {"app": "A1", "type": "occupancy_certificate", "file": "A1/occupancy_certificate.pdf",
               "label": "Total Built-up Area", "field": "built_up_area_sqm", "old": "14,650", "new": "18,650"},
     "a3_fire": {"app": "A3", "type": "fire_noc", "file": "A3/fire_noc.pdf", "label": "Valid Up To",
