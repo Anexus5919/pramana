@@ -1,4 +1,4 @@
-import { FileArchive, FileWarning, Gavel, History, MessageSquareText, Play, ScrollText } from "lucide-react";
+import { ClipboardList, FileArchive, FileWarning, Gavel, History, MessageSquareText, Play, ScrollText } from "lucide-react";
 import { WORKSPACE_SECTIONS, workspacePath, type WorkspaceSection } from "../../shell/nav";
 import type { ApplicationDetail } from "../../types";
 import { ActionMenu, ApplicationStatusBadge, Button, Code, MetaList, PageHeader, Skeleton, Tabs, type ActionMenuItem } from "../../ui2";
@@ -15,6 +15,8 @@ export interface HeaderProps {
   onValidate?: () => void;
   onReplay?: () => void;
   onPack?: () => void;
+  /** Opens the inspection brief for the Expert Visit Committee (officer) */
+  onBrief?: () => void;
   onAsk?: () => void;
   onRectify?: () => void;
   onOutcome?: () => void;
@@ -31,6 +33,7 @@ export function WorkspaceHeader({
   onValidate,
   onReplay,
   onPack,
+  onBrief,
   onAsk,
   onRectify,
   onOutcome,
@@ -47,6 +50,7 @@ export function WorkspaceHeader({
     },
     { id: "replay", label: "Replay latest run", icon: <History />, onSelect: onReplay, hidden: !onReplay || !app.latest_run },
     { id: "pack", label: "Export evidence pack", icon: <FileArchive />, onSelect: onPack, hidden: !onPack },
+    { id: "brief", label: "Prepare inspection brief", description: "What to see, count and ask on a site visit", icon: <ClipboardList />, onSelect: onBrief, hidden: !onBrief },
     { id: "audit", label: "View audit trail", icon: <ScrollText />, to: workspacePath(app.id, "activity", { view: "audit" }), separated: true },
   ];
   const decide: ActionMenuItem[] = [

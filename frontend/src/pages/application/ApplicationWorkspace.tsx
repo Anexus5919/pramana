@@ -15,6 +15,7 @@ import { OutcomeDialog } from "./history/WatchCard";
 import { RunCallout } from "./live/RunCallout";
 import { useValidation } from "./live/useValidation";
 import { AskPanel } from "./officer/AskPanel";
+import { InspectionBriefDialog } from "./insights/InspectionBriefDialog";
 import { EvidencePackDialog } from "./officer/EvidencePackDialog";
 import { LetterEditor } from "./officer/LetterEditor";
 import { RectifyDialog } from "./RectifyDialog";
@@ -66,6 +67,7 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
   const [letter, setLetter] = useState<{ open: boolean; findingIds?: string[]; resumeId?: string | null }>({ open: false });
   const [viewer, setViewer] = useState<DocTarget | null>(null);
   const [packOpen, setPackOpen] = useState(false);
+  const [briefOpen, setBriefOpen] = useState(false);
   const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [ask, setAsk] = useState<{ open: boolean; prefill?: { question: string; key: number } }>({ open: false });
 
@@ -157,6 +159,7 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
           onValidate={actions.validate}
           onReplay={actions.replay ? () => startReplay() : undefined}
           onPack={actions.exportPack}
+          onBrief={officer ? () => setBriefOpen(true) : undefined}
           onAsk={actions.ask ? () => setAsk((a) => ({ open: !a.open })) : undefined}
           onRectify={actions.rectify ? () => setRectify({ open: true }) : undefined}
           onOutcome={actions.recordOutcome}
@@ -215,6 +218,7 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
           />
           <LetterEditor appId={app.id} open={letter.open} findingIds={letter.findingIds} resumeId={letter.resumeId} onClose={() => setLetter({ open: false })} />
           <EvidencePackDialog appId={app.id} open={packOpen} onClose={() => setPackOpen(false)} />
+          <InspectionBriefDialog appId={app.id} open={briefOpen} onClose={() => setBriefOpen(false)} />
           <OutcomeDialog open={outcomeOpen} onClose={() => setOutcomeOpen(false)} watch={watchQ.data} />
           <AskPanel open={ask.open} prefill={ask.prefill} onClose={() => setAsk({ open: false })} />
         </>
