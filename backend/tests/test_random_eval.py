@@ -51,6 +51,19 @@ def test_answer_keys_are_consistent_across_seeds(rw):
     assert len(kinds) >= 35
 
 
+def test_generator_session_matches_the_ruleset_configuration(rw):
+    # Certificates are generated to cover the session unless a condition makes one lapse in it
+    from random_plan import SESSION_END, SESSION_START, SSC_DAYS
+
+    from pramana.insights.proof import session_window, time_bound_types
+    from pramana.rules.engine import active_ruleset
+
+    rs = active_ruleset()
+    s = session_window(rs, "2026-27")
+    assert (s["start"], s["end"]) == (SESSION_START, SESSION_END)
+    assert time_bound_types(rs)["structural_stability"]["days"] == SSC_DAYS
+
+
 def test_partner_findings_respect_submission_order(rw):
     for seed in range(6):
         w, planted, _ = _plan(rw, 2000 + seed, 120)

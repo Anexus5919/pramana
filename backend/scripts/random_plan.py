@@ -32,6 +32,11 @@ ON_TIME = (date(2025, 11, 27), DEADLINE)
 LATE = (date(2026, 1, 23), date(2026, 2, 27))
 PREV_WINDOW = (date(2024, 11, 18), date(2024, 12, 31))
 PREVIOUS_FY = "2024-25"  # for as-of dates from April 2025 to March 2026
+# The 2026-27 session as the ruleset configures it (norms.academic_session: 1 July, 12 months). A certificate
+# valid at submission that ends before SESSION_END is XD-CERT-EXPIRES-IN-SESSION; genuine ones outlast it
+SESSION_START, SESSION_END = date(2026, 7, 1), date(2027, 6, 30)
+COVER = timedelta(days=30)  # margin past the session end for certificates meant to cover it
+SSC_DAYS = 1826  # APH-617H-SSC-VALID: a Structural Stability Certificate is valid five years
 RATIO, YEARS = 20, 4  # UG_ET faculty-student ratio and programme duration (ruleset norms)
 BANDWIDTH_TIERS = [(300, 100), (600, 300), (900, 500), (999999, 1000)]
 TURNOVER_THRESHOLD = 0.5
@@ -44,7 +49,7 @@ DERIVED = {"APH-ANX5-FSR", "XD-FACULTY-COUNT", "APH-ANX41-BANDWIDTH", "APH-ANX33
            "XD-FIRE-INSTITUTION", "APH-232D-TER-STATUS", "XR-TER-RECEIPT-MATCH", "APH-639-AFF2-DSC",
            "XD-AFF2-APPLICATION", "XD-ACCOUNTS-ENTITY", "XD-SATMAP-LOCATION", "XR-NBA-CLAIMS", "XD-OC-INSTITUTION",
            "YOY-INTAKE-JUMP", "YOY-LAND-AREA-DECREASED", "YOY-BUILT-UP-AREA-DECREASED", "YOY-FACULTY-TURNOVER",
-           "YOY-CERT-REUSED-NEW-VALIDITY"}
+           "YOY-CERT-REUSED-NEW-VALIDITY", "XD-CERT-EXPIRES-IN-SESSION"}
 # Which planned slots a derived code depends on, most likely cause first, to attribute side effects to the
 # condition that caused them: a raised intake raises the faculty and bandwidth norms, while the other faculty
 # conditions never shorten the roster
@@ -57,7 +62,8 @@ RELATED_SLOTS = {"APH-ANX5-FSR": ("intake", "fac"), "XD-FACULTY-COUNT": {"fac"},
                  "XD-AFF2-APPLICATION": {"aff"}, "XD-ACCOUNTS-ENTITY": {"acc"}, "XD-SATMAP-LOCATION": {"sat"},
                  "XR-NBA-CLAIMS": {"nba"}, "XD-OC-INSTITUTION": {"oc"}, "YOY-INTAKE-JUMP": {"intake"},
                  "YOY-LAND-AREA-DECREASED": {"land"}, "YOY-BUILT-UP-AREA-DECREASED": {"area"},
-                 "YOY-FACULTY-TURNOVER": {"fac"}, "YOY-CERT-REUSED-NEW-VALIDITY": {"fire"}}
+                 "YOY-FACULTY-TURNOVER": {"fac"}, "YOY-CERT-REUSED-NEW-VALIDITY": {"fire"},
+                 "XD-CERT-EXPIRES-IN-SESSION": ("fire", "ssc", "nba")}
 
 
 @dataclass
@@ -222,7 +228,8 @@ def fire_number(w: World, inst: Inst, year: int) -> str:
 
 
 def genuine_fire(w: World, a: App, *, expired: bool = False) -> dict:
-    """The institution's own fire NOC as the issuer printed, signed and registered it."""
+    """The institution's own fire NOC as the issuer printed, signed and registered it; unless expired, valid
+    beyond the session being approved."""
     r = w.rng
     for _ in range(200):
         term = r.choice([1, 2, 3, 5])
@@ -232,7 +239,7 @@ def genuine_fire(w: World, a: App, *, expired: bool = False) -> dict:
         else:
             issue = a.as_of - timedelta(days=r.randint(20, 1000))
             valid = add_years(issue, term) - timedelta(days=1)
-            if valid < a.as_of + timedelta(days=20):
+            if valid < SESSION_END + COVER:
                 continue
         break
     return {"number": fire_number(w, a.inst, issue.year), "issue": issue, "valid": valid}
@@ -283,7 +290,7 @@ def base_app(w: World, key: str, inst: Inst, category: str, submitted: date, cle
     a.sat = {"lat": lat, "lon": lon}
     if r.random() < 0.25:
         p = r.choice(a.progs)
-        y = r.choice([2023, 2024, 2025])
+        y = r.choice([2024, 2025])  # cycles ending 30 June 2027 or 2028, covering the session
         a.nba = {"prog": p["code"], "ref": ids.number(w.nba_fmt, inst.city, inst.st, y), "from": date(y, 7, 1),
                  "to": date(y + 3, 6, 30), "qr": w.nba_qr, "register": True}
         p["nba_accredited"] = True
@@ -417,6 +424,11 @@ def derived_codes(a: App, prev: dict) -> set[str]:
     pf = prev["certificates"].get("fire_noc")
     if f["readable"] and pf and norm(pf["number"]) == norm(f["number"]) and pf["valid_until"] != f["valid"].isoformat():
         out.add("YOY-CERT-REUSED-NEW-VALIDITY")
+    # Valid at submission but ending before the session does: the fire NOC as printed, the NBA letter, the SSC
+    ends = [f["valid"] if f["readable"] else None, a.nba["to"] if a.nba else None,
+            a.ssc["issue"] + timedelta(days=SSC_DAYS) if a.ssc else None]
+    if any(e is not None and a.as_of <= e < SESSION_END for e in ends):
+        out.add("XD-CERT-EXPIRES-IN-SESSION")
     return out
 
 

@@ -17,7 +17,11 @@ from typing import Any
 
 from random_identity import COMMON_LABS, INSTRUCTION_LINES, PROGRAMMES, add_years, haversine_km, offset
 from random_plan import (
+    COVER,
     DEADLINE,
+    SESSION_END,
+    SESSION_START,
+    SSC_DAYS,
     App,
     World,
     bandwidth_tier,
@@ -116,7 +120,7 @@ def fire_qr_mismatch(w, a, b):
     _fire(w, a, g)
     a.fire["qr"] = {"number": g["number"], "name": a.inst.name, "issue": g["issue"], "valid": g["valid"]}
     k = 1
-    while add_years(g["valid"], k) < a.as_of + timedelta(days=30):
+    while add_years(g["valid"], k) < SESSION_END + COVER:
         k += 1
     a.fire.update(valid=add_years(g["valid"], k + w.rng.choice([0, 1])), sign="applicant")
     return [E(a, "VER-SIGNED_QR-MISMATCH_DETECTED"), E(a, "VER-ISSUER_REGISTRY-MISMATCH_DETECTED"),
@@ -125,7 +129,7 @@ def fire_qr_mismatch(w, a, b):
 
 def fire_after_submission(w, a, b):
     issue = a.as_of + timedelta(days=w.rng.randint(5, 45))
-    valid = add_years(issue, w.rng.choice([1, 2, 3, 5])) - timedelta(days=1)
+    valid = add_years(issue, w.rng.choice([2, 3, 5])) - timedelta(days=1)
     _fire(w, a, {"number": fire_number(w, a.inst, issue.year), "issue": issue, "valid": valid})
     return [E(a, "APH-A31D-FIRE-BEFORE")]
 
@@ -163,6 +167,21 @@ def seal_other_issuer(w, a, b):
     return pair(a, b, "FX-SEAL-REUSED", "FX-SEAL-REUSED-LATER") + [E(a, "VER-ISSUER-SIGNATURE-ABSENT")]
 
 
+def cert_lapses_in_session(w, a, b):
+    """A genuine fire NOC, valid on the submission date, that lapses before the session starts or during it."""
+    r = w.rng
+    if r.random() < 0.3:
+        valid = a.as_of + timedelta(days=r.randint(30, max(31, (SESSION_START - a.as_of).days - 30)))
+    else:
+        valid = SESSION_START + timedelta(days=r.randint(15, (SESSION_END - SESSION_START).days - 30))
+    term = 1
+    while add_years(valid + timedelta(days=1), -term) > a.as_of - timedelta(days=20):
+        term += 1
+    issue = add_years(valid + timedelta(days=1), -term)
+    _fire(w, a, {"number": fire_number(w, a.inst, issue.year), "issue": issue, "valid": valid})
+    return [E(a, "XD-CERT-EXPIRES-IN-SESSION")]
+
+
 def yoy_cert_reused(w, a, b):
     g = genuine_fire(w, a)
     _fire(w, a, g)
@@ -196,7 +215,8 @@ def ssc_missing(w, a, b):
 
 def ssc_pending(w, a, b):
     _old_building(w, a)
-    _ssc(w, a, (180, int(4.5 * 365)))
+    # Issued recently enough that its five years outlast the session
+    _ssc(w, a, (180, (a.as_of - (SESSION_END + COVER - timedelta(days=SSC_DAYS))).days))
     return [E(a, "VER-ISSUER_REGISTRY-VERIFICATION_PENDING")]
 
 
@@ -439,6 +459,8 @@ KINDS = [
          ("fire",), variant(True)),
     Kind("seal_other_issuer", "Fire NOC carrying another city's fire brigade seal", ("fire", "date"),
          seal_other_issuer, partner_slots=("fire", "date"), partner_ok=seal_ok),
+    Kind("cert_lapses_in_session", "Fire NOC valid at submission that lapses before or during the session",
+         ("fire",), cert_lapses_in_session),
     Kind("yoy_cert_reused", "Fire NOC number from last year returns with a new validity", ("fire",),
          yoy_cert_reused),
     Kind("ssc_missing", "Building over 30 years old without a Structural Stability Certificate", ("ssc",),
