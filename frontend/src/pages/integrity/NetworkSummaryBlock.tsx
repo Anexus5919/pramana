@@ -39,7 +39,7 @@ function Thumbnail({ data }: { data: NetworkPayload }) {
 }
 
 export function NetworkSummaryBlock() {
-  const q = useQuery({ queryKey: qk.integrityNetwork, queryFn: api.integrityNetwork, staleTime: 60_000 });
+  const q = useQuery({ queryKey: qk.integrityNetwork(), queryFn: () => api.integrityNetwork(), staleTime: 60_000 });
   const data = q.data;
   if (q.isPending) return <Skeleton className="h-48" rounded="lg" />;
   if (!data) return null;

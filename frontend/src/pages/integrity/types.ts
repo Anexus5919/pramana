@@ -54,9 +54,18 @@ export interface NetworkCluster {
   kinds: Partial<Record<ItemKind, number>>;
 }
 
+export interface NetworkDataset {
+  id: "current" | "synthetic";
+  label: string;
+  applications: number;
+  note?: string | null;
+}
+
 export interface NetworkPayload {
   dataset: string;
   synthetic: boolean;
+  note?: string | null;
+  datasets?: NetworkDataset[];
   academic_year: string | null;
   applications: NetworkApplication[];
   items: NetworkItem[];

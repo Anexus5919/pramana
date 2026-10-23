@@ -168,7 +168,7 @@ export const api = {
   campus: (id: string) => get<CampusPayload>(`/applications/${enc(id)}/campus`),
 
   // Cycle-wide integrity insights (officials only)
-  integrityNetwork: () => get<NetworkPayload>("/insights/network"),
+  integrityNetwork: (dataset: "current" | "synthetic" = "current") => get<NetworkPayload>(`/insights/network?dataset=${dataset}`),
   facultyOverlaps: () => get<FacultyOverlapPayload>("/insights/faculty-overlaps"),
 
   // Findings and verification
@@ -219,7 +219,7 @@ export const qk = {
   verifications: (id: string) => ["application", id, "verifications"] as const,
   appAudit: (id: string) => ["application", id, "audit"] as const,
   campus: (id: string) => ["application", id, "campus"] as const,
-  integrityNetwork: ["insights", "network"] as const,
+  integrityNetwork: (dataset: "current" | "synthetic" = "current") => ["insights", "network", dataset] as const,
   facultyOverlaps: ["insights", "faculty-overlaps"] as const,
   run: (runId: string) => ["run", runId] as const,
   activeRun: (id: string) => ["application", id, "active-run"] as const,

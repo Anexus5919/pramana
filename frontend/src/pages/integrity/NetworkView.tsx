@@ -24,7 +24,7 @@ import { GraphCanvas } from "./GraphCanvas";
 import { ITEM_KINDS, KIND_META } from "./graphTheme";
 import { KindDot, LegendItem } from "./legend";
 import { layoutNetwork } from "./layout";
-import type { FindingBrief, ItemKind, NetworkApplication, NetworkEdge, NetworkItem, NetworkPayload } from "./types";
+import type { FindingBrief, ItemKind, NetworkApplication, NetworkDataset, NetworkEdge, NetworkItem, NetworkPayload } from "./types";
 
 function bboxParam(b: number[] | null | undefined): string | undefined {
   return b && b.length === 4 ? b.map((v) => Math.round(v * 100) / 100).join(",") : undefined;
@@ -36,7 +36,14 @@ function kindCount(k: ItemKind, n: number): string {
   return `${n} ${word.charAt(0).toLowerCase()}${word.slice(1)}`;
 }
 
-export function FindingLink({ appId, f }: { appId: string; f: FindingBrief }) {
+export function FindingLink({ appId, f, inert }: { appId: string; f: FindingBrief; inert?: boolean }) {
+  if (inert || !f.id)
+    return (
+      <span className="flex items-center gap-2 px-2 py-1.5 text-sm text-ink-2">
+        <SeverityIndicator severity={f.severity} showLabel={false} />
+        <span className="min-w-0 flex-1 truncate">{f.title}</span>
+      </span>
+    );
   return (
     <Link
       to={workspacePath(appId, "findings", { finding: f.id })}
@@ -54,7 +61,7 @@ export function ShowOnPage({ appId, docId, page, bbox, label }: { appId: string;
   return (
     <Link
       to={workspacePath(appId, "documents", { doc: docId, page: page ? String(page) : undefined, hl: bboxParam(bbox), hlabel: label })}
-      className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-ink-2 transition-colors duration-150 hover:bg-surface-2 hover:text-ink"
+      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-xs font-medium text-ink-2 transition-colors duration-150 hover:bg-surface-2 hover:text-ink"
     >
       <FileSearch aria-hidden className="size-3.5" />
       Show on page{page ? ` ${page}` : ""}
@@ -63,6 +70,7 @@ export function ShowOnPage({ appId, docId, page, bbox, label }: { appId: string;
 }
 
 function ItemDetail({ item, data, apps }: { item: NetworkItem; data: NetworkPayload; apps: Map<string, NetworkApplication> }) {
+  const inert = data.synthetic;
   const edges = data.edges.filter((e) => e.target === item.id);
   return (
     <div className="space-y-3">
@@ -75,24 +83,28 @@ function ItemDetail({ item, data, apps }: { item: NetworkItem; data: NetworkPayl
         Appears in {pluralize(edges.length, "application")}. {KIND_META[item.kind].meaning} Needs confirmation with the documents.
       </p>
       {edges.map((e) => (
-        <AppEvidence key={e.source} edge={e} app={apps.get(e.source)} item={item} />
+        <AppEvidence key={e.source} edge={e} app={apps.get(e.source)} item={item} inert={inert} />
       ))}
     </div>
   );
 }
 
-function AppEvidence({ edge, app, item }: { edge: NetworkEdge; app?: NetworkApplication; item: NetworkItem }) {
+function AppEvidence({ edge, app, item, inert }: { edge: NetworkEdge; app?: NetworkApplication; item: NetworkItem; inert?: boolean }) {
   return (
     <section aria-label={app?.institution ?? edge.source} className="rounded-card border border-line">
       <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2">
-        <Link to={workspacePath(edge.source, "comparisons", { view: "related" })} className="min-w-0 truncate text-sm font-medium text-ink hover:underline">
-          {app?.institution ?? edge.source}
-        </Link>
+        {inert ? (
+          <span className="min-w-0 truncate text-sm font-medium text-ink">{app?.institution ?? edge.source}</span>
+        ) : (
+          <Link to={workspacePath(edge.source, "comparisons", { view: "related" })} className="min-w-0 truncate text-sm font-medium text-ink hover:underline">
+            {app?.institution ?? edge.source}
+          </Link>
+        )}
         <ShowOnPage appId={edge.source} docId={edge.document_id} page={edge.page} bbox={edge.bbox} label={KIND_META[item.kind].label} />
       </div>
       <div className="p-1">
         {edge.findings.length ? (
-          edge.findings.map((f) => <FindingLink key={f.id} appId={edge.source} f={f} />)
+          edge.findings.map((f, i) => <FindingLink key={f.id || i} appId={edge.source} f={f} inert={inert} />)
         ) : (
           <p className="px-2 py-1.5 text-xs text-ink-3">Recorded on the other application only.</p>
         )}
@@ -109,9 +121,11 @@ function AppDetail({ app, data, items, onSelect }: { app: NetworkApplication; da
       <div className="text-sm text-ink-3">
         <Code className="text-xs">{app.id}</Code> <span>{app.district}</span>
       </div>
-      <ButtonLink size="sm" variant="secondary" to={workspacePath(app.id, "comparisons", { view: "related" })}>
-        Open the application
-      </ButtonLink>
+      {!data.synthetic && (
+        <ButtonLink size="sm" variant="secondary" to={workspacePath(app.id, "comparisons", { view: "related" })}>
+          Open the application
+        </ButtonLink>
+      )}
       {cluster ? (
         <>
           <p className="text-sm text-ink-2">{cluster.summary}.</p>
@@ -130,7 +144,7 @@ function AppDetail({ app, data, items, onSelect }: { app: NetworkApplication; da
                   >
                     <KindDot kind={it.kind} className="mt-1.5" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-mono text-sm text-ink">{it.label}</span>
+                      <span className={`block truncate text-sm text-ink ${it.kind === "faculty" || it.kind === "certificate" || it.kind === "file" ? "font-mono" : ""}`}>{it.label}</span>
                       <span className="block truncate text-xs text-ink-3">
                         {KIND_META[it.kind].label}, also in {data.applications.filter((a) => others.includes(a.id)).map((a) => a.short_name).join(", ")}
                       </span>
@@ -148,7 +162,14 @@ function AppDetail({ app, data, items, onSelect }: { app: NetworkApplication; da
   );
 }
 
-export function NetworkView({ query }: { query: UseQueryResult<NetworkPayload> }) {
+interface ViewProps {
+  query: UseQueryResult<NetworkPayload>;
+  datasets: NetworkDataset[];
+  dataset: "current" | "synthetic";
+  onDataset: (d: "current" | "synthetic") => void;
+}
+
+export function NetworkView({ query, datasets, dataset, onDataset }: ViewProps) {
   const [params, setParams] = useSearchParams();
   const selected = params.get("node");
   const [mode, setMode] = useState<"evidence" | "applications">("evidence");
@@ -181,7 +202,7 @@ export function NetworkView({ query }: { query: UseQueryResult<NetworkPayload> }
           <span className="flex min-w-0 items-center gap-2.5">
             <KindDot kind={r.kind} />
             <span className="min-w-0">
-              <span className="block truncate font-mono text-sm">{r.label}</span>
+              <span className={`block truncate text-sm ${r.kind === "faculty" || r.kind === "certificate" || r.kind === "file" ? "font-mono" : ""}`}>{r.label}</span>
               {r.detail && <span className="block truncate text-xs font-normal text-ink-3">{r.detail}</span>}
             </span>
           </span>
@@ -232,8 +253,22 @@ export function NetworkView({ query }: { query: UseQueryResult<NetworkPayload> }
     ? `${pluralize(data.clusters.length, "linked cluster")} across ${pluralize(s.linked_applications, "application")}: ${data.clusters.map((c) => c.summary).join("; ")}.`
     : "No applications share evidence.";
 
+  const switcher =
+    datasets.length > 1 ? (
+      <div className="flex flex-wrap items-center gap-3">
+        <SegmentedControl
+          label="Dataset"
+          value={dataset}
+          onChange={(v) => onDataset(v as "current" | "synthetic")}
+          options={datasets.map((d) => ({ value: d.id, label: d.id === "current" ? "This cycle" : "Synthetic world", count: d.applications }))}
+        />
+        {data.synthetic && <span className="text-sm text-ink-3">{data.note}</span>}
+      </div>
+    ) : null;
+
   return (
     <div className="space-y-6">
+      {switcher}
       <StatGroup label="Network summary">
         <Stat label="Linked clusters" value={s.clusters} hint={`Groups of applications joined by shared evidence`} />
         <Stat label="Applications linked" value={`${s.linked_applications} of ${s.applications}`} hint={`${s.applications - s.linked_applications} share nothing with another application`} />
