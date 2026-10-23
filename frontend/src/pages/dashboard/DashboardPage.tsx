@@ -141,7 +141,7 @@ export default function DashboardPage() {
       {
         id: "category",
         header: "Category",
-        hideBelow: "lg",
+        hideBelow: "2xl",
         sortValue: (r) => categoryLabel(r.category),
         cell: (r) => (
           <span className="block min-w-0">
