@@ -19,6 +19,7 @@ from ..auth import (
 )
 from ..config import get_settings
 from ..db import get_db
+from ..history.watch import dashboard_alerts as watch_alerts
 from ..models import Application, AuditEvent, Finding, Institution, User, ValidationRun, VerificationAttempt
 from ..rules.engine import active_ruleset
 from ..sim import issuers as sim
@@ -104,6 +105,7 @@ def dashboard(user: User = Depends(require_roles(*OFFICIAL_ROLES)), db: Session 
                                    "attempt_id": v.id})
         rows.append({**ser.application(a, run), "open_findings": len(open_f),
                      "open_high": sum(1 for f in open_f if f.severity in ("critical", "high"))})
+    watch_alerts(db, alerts)
     rows.sort(key=lambda r: -((r["latest_run"] or {}).get("review_priority") or 0))
     sev_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3}
     alerts.sort(key=lambda x: sev_rank.get(x["severity"], 9))

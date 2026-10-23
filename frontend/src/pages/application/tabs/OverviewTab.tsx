@@ -17,6 +17,7 @@ import { EmptyState } from "../../../ui/States";
 import { Tooltip } from "../../../ui/Tooltip";
 import { useWorkspace } from "../context";
 import { appPath } from "../data";
+import { WatchCard } from "../history/WatchCard";
 
 const EV_BG = ["bg-ev-1", "bg-ev-2", "bg-ev-3", "bg-ev-4", "bg-ev-5", "bg-ev-6", "bg-ev-7"];
 const EV_BORDER = ["border-ev-1", "border-ev-2", "border-ev-3", "border-ev-4", "border-ev-5", "border-ev-6", "border-ev-7"];
@@ -377,6 +378,7 @@ export function OverviewTab() {
   return (
     <div className="space-y-5">
       <Glance />
+      <WatchCard />
       <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <TrustLadder />
         <PipelineTimeline />

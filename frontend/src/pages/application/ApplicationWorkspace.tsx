@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import {
+  CalendarClock,
   ClipboardCheck,
   FileText,
   History,
@@ -26,6 +27,7 @@ import { TabPanel, Tabs, type TabItem } from "../../ui/Tabs";
 import { WorkspaceProvider, type DocTarget, type WorkspaceCtx } from "./context";
 import { appPath, isTab, useApplication, useFindings, useInvalidateApp, useRun, useVerifications, type WorkspaceTab } from "./data";
 import { HeaderTitle, WorkspaceHeader } from "./Header";
+import { SinceLastYearTab } from "./history/SinceLastYearTab";
 import { RectifyDialog } from "./RectifyDialog";
 import { ReplayDialog } from "./ReplayDialog";
 import { RunPanel, useValidation } from "./RunPanel";
@@ -47,6 +49,7 @@ const ICONS: Record<WorkspaceTab, ReactNode> = {
   verification: <ShieldCheck />,
   relationships: <Network />,
   campus: <MapPinned />,
+  "since-last-year": <CalendarClock />,
   runs: <History />,
   audit: <ScrollText />,
 };
@@ -128,6 +131,7 @@ export default function ApplicationWorkspace() {
   const openHigh = findings.some((f) => OPEN.has(f.review_status) && (f.severity === "high" || f.severity === "critical"));
   const currentAttempts = (verQ.data ?? []).filter((a) => a.run_id === app.latest_run?.id);
   const peers = run?.graph?.nodes.filter((n) => n.kind === "application" && !n.focus).length;
+  const yoyOpen = findings.filter((f) => f.code.startsWith("YOY-") && OPEN.has(f.review_status)).length;
 
   const items: TabItem<WorkspaceTab>[] = [
     { id: "overview", label: WORKSPACE_TAB_LABEL.overview, icon: ICONS.overview },
@@ -140,6 +144,7 @@ export default function ApplicationWorkspace() {
     ...(is("officer", "verifier", "admin")
       ? [{ id: "campus" as const, label: WORKSPACE_TAB_LABEL.campus ?? "Campus", icon: ICONS.campus, count: app.documents.filter((d) => !d.superseded && d.mime.startsWith("image/")).length || undefined }]
       : []),
+    { id: "since-last-year", label: WORKSPACE_TAB_LABEL["since-last-year"], icon: ICONS["since-last-year"], count: yoyOpen || undefined, attention: yoyOpen > 0 },
     { id: "runs", label: WORKSPACE_TAB_LABEL.runs, icon: ICONS.runs },
     { id: "audit", label: WORKSPACE_TAB_LABEL.audit, icon: ICONS.audit },
   ];
@@ -194,6 +199,7 @@ export default function ApplicationWorkspace() {
                   <CampusTab />
                 </Suspense>
               )}
+              {tab === "since-last-year" && <SinceLastYearTab />}
               {tab === "runs" && <RunsTab />}
               {tab === "audit" && <AuditTab />}
             </TabPanel>

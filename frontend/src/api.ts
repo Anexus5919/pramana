@@ -67,9 +67,9 @@ function describeDetail(detail: unknown, status: number, statusText: string): st
   return `${status} ${statusText || "Request failed"}`;
 }
 
-type Body = FormData | object | undefined;
+export type Body = FormData | object | undefined;
 
-async function request<T>(method: string, path: string, body?: Body): Promise<T> {
+export async function request<T>(method: string, path: string, body?: Body): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   let payload: BodyInit | undefined;
   if (body instanceof FormData) {

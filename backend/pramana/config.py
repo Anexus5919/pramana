@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # tile URL for the Campus tab; empty disables tiles and the tab shows a plain plot instead
     models_dir: Path = BACKEND_DIR / "models"
     map_tile_url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    # Re-verification watch: how often issuer-verified certificates are re-queried after a scrutiny outcome
+    watch_interval_hours: float = 24.0
+    watch_scheduler: bool = True
 
     @property
     def db_url(self) -> str:

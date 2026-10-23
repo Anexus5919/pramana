@@ -18,6 +18,7 @@ import { useToast } from "../../../ui/Toast";
 import { reviewTone } from "../../../ui/tone";
 import { useWorkspace } from "../context";
 import { useReview } from "../data";
+import { TimeMachineLink } from "../history/TimeMachine";
 import { CautionNote, CitationCard, EvidenceList, PaneLabel, TraceInputs } from "../parts";
 
 export function ReviewPill({ status }: { status: string }) {
@@ -237,6 +238,7 @@ export function FindingDetail({ finding: f, canReview, onRectify }: { finding: F
       <section>
         <PaneLabel>Evidence ({f.evidence.length})</PaneLabel>
         <EvidenceList evidence={f.evidence} fallbackDocId={f.document_id} />
+        <TimeMachineLink finding={f} />
       </section>
 
       {(inputs.length > 0 || (f.trace?.missing?.length ?? 0) > 0) && (

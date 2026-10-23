@@ -51,6 +51,7 @@ export const WORKSPACE_TAB_LABEL: Record<string, string> = {
   verification: "Verification",
   relationships: "Relationships",
   campus: "Campus",
+  "since-last-year": "Since last year",
   runs: "Runs",
   audit: "Audit",
 };
