@@ -28,6 +28,9 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixture_assets import emblem_png, seal_png  # noqa: E402
+
 from pramana.verification import demo_pki  # noqa: E402
 from pramana.verification.signed_qr import sign_payload  # noqa: E402
 
@@ -197,6 +200,13 @@ class Doc:
         c.drawCentredString(x, y - 2, "SEAL")
         c.restoreState()
 
+    def seal_image(self, png: bytes, x: float, y: float, size: float = 80):
+        """A raster seal centred on (x, y), as issuers stamp scanned or digital certificates."""
+        self.c.drawImage(ImageReader(io.BytesIO(png)), x - size / 2, y - size / 2, size, size)
+
+    def emblem(self):
+        self.c.drawImage(ImageReader(io.BytesIO(EMBLEM)), 44, H - 92, 40, 40)
+
     def signature(self, x: float, y: float, name: str, role: str, seed: int):
         c = self.c
         r = random.Random(seed)
@@ -251,9 +261,23 @@ class Doc:
 
 # ---------------------------------------------------------------- document templates
 
+EMBLEM = emblem_png()
+
+
+def fire_seal(inst: dict) -> bytes:
+    city = inst["city"]
+    return seal_png(f"Fire and Emergency Services {city}", ["Chief Fire Officer", city], "#1d4ed8",
+                    sum(map(ord, city)))
+
+
+def municipal_seal(inst: dict) -> bytes:
+    city = inst["city"]
+    return seal_png(f"{city} Municipal Corporation", ["City Engineer", city], "#166534", sum(map(ord, city)) + 7)
+
+
 
 def fire_noc(inst: dict, noc: str, issue: date, valid: date, area: int, issued_to: str | None = None,
-             qr_token: str | None = None) -> tuple[bytes, dict]:
+             qr_token: str | None = None, seal: bytes | None = None) -> tuple[bytes, dict]:
     doc = Doc()
     doc.frame(f"{inst['state']} Fire and Emergency Services (SIMULATED ISSUER)",
               f"Office of the Chief Fire Officer, {inst['city']}  |  Synthetic issuer for prototype testing")
@@ -274,7 +298,8 @@ def fire_noc(inst: dict, noc: str, issue: date, valid: date, area: int, issued_t
              "certificate is valid up to the date stated above, subject to the facilities being maintained in "
              "working order. Any alteration to the premises requires fresh inspection.")
     doc.signature(70, 190, "Chief Fire Officer", f"{inst['city']} Fire Brigade (simulated)", seed=len(noc))
-    doc.seal(300, 205, f"FIRE AND EMERGENCY SERVICES {inst['city'].upper()} ")
+    doc.seal_image(seal or fire_seal(inst), 300, 205)
+    doc.emblem()
     if qr_token:
         doc.qr(qr_token, W - 205, 140)
     return doc.bytes(), doc.marks
@@ -326,7 +351,8 @@ def occupancy(inst: dict, cert: str, issue: date, area: int, ctype: str = "Full"
              "completion of which has been certified by the licensed architect and structural engineer. The "
              "building shall be used only for the purpose stated above.")
     doc.signature(70, 200, "City Engineer", f"{inst['city']} Municipal Corporation (simulated)", seed=len(cert))
-    doc.seal(330, 215, f"{inst['city'].upper()} MUNICIPAL CORPORATION ", "#166534")
+    doc.seal_image(municipal_seal(inst), 330, 215)
+    doc.emblem()
     return doc.bytes(), doc.marks
 
 
@@ -791,8 +817,9 @@ def main() -> None:
     p1 = base["I1"]["progs"]
     p1[0]["nba_accredited"] = True
     docs["nba_certificate"] = nba_for("I1", p1[0], d("2024-07-01"), d("2027-06-30"))
-    emit("A1", "I1", "EOA", docs, declared("I1"), ["XA-PHOTO-REUSED-LATER"],
-         "Clean application: issuer-signed fire NOC with signed QR, NBA QR, all registries match.",
+    emit("A1", "I1", "EOA", docs, declared("I1"), ["XA-PHOTO-REUSED-LATER", "FX-SEAL-REUSED-LATER"],
+         "Clean application: issuer-signed fire NOC with signed QR, NBA QR, all registries match. Its fire "
+         "brigade seal image later turns up on A8's NOC, so it carries a low note.",
          {"lab_photo.jpg": lab_original})
 
     # A2 building older than 30 years without a structural stability certificate; accounts arrive as a scan
@@ -879,13 +906,15 @@ def main() -> None:
 
     # A8 fabricated fire NOC: no issuer signature or QR, number unknown to the issuer, applicant DSC only
     docs = standard_docs("I8")
-    pdf, _ = fire_noc(INST["I8"], "FES/HYD/2025/07734", d("2025-05-02"), d("2027-05-01"), base["I8"]["area"])
+    pdf, _ = fire_noc(INST["I8"], "FES/HYD/2025/07734", d("2025-05-02"), d("2027-05-01"), base["I8"]["area"],
+                      seal=fire_seal(INST["I1"]))
     docs["fire_noc"] = demo_pki.sign_pdf(pdf, applicant["I8"], chain, reason="Uploaded", location="Hyderabad")
     registry["records"] = [r for r in registry["records"] if r["ref_no"] != base["I8"]["noc"]]
     emit("A8", "I8", "EOA", docs, declared("I8", fire_noc_number="FES/HYD/2025/07734"),
-         ["VER-ISSUER_REGISTRY-MISMATCH_DETECTED"],
+         ["VER-ISSUER_REGISTRY-MISMATCH_DETECTED", "FX-SEAL-REUSED"],
          "Fire NOC carries a valid DSC, but it is the applicant chairman's, not the fire department's. The issuer "
-         "has no record of the NOC number (pattern from the 2026 Hyderabad fake NOC cases).")
+         "has no record of the NOC number (pattern from the 2026 Hyderabad fake NOC cases). Its seal image is the "
+         "Pune fire brigade's, lifted from A1's certificate.")
 
     # A9 municipal registry unavailable at validation time; structural engineer register answers asynchronously
     docs = standard_docs("I9", oc_issue=d("1994-08-10"))

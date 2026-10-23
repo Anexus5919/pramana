@@ -1,14 +1,27 @@
+import importlib.util
 import io
+from pathlib import Path
 
 from pyhanko.pdf_utils import generic
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
 from pramana.forensics.fonts import font_mismatches
 from pramana.forensics.pdf_struct import analyse
+from pramana.forensics.seals import distance, image_fingerprints
 from pramana.pipeline.extract import extract_fields
 from pramana.pipeline.text import extract_pdf
 from pramana.rules.engine import active_ruleset
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+
+
+def _script(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _certificate() -> bytes:
@@ -73,3 +86,40 @@ def test_font_check_stands_alone_without_revision_context():
 def test_untouched_certificate_and_bold_labels_raise_nothing():
     data = _certificate()
     assert font_mismatches(data, _fields(data), analyse(data)[1]) == []
+
+
+# ---- seal images
+
+
+def _with_images(*images: tuple[bytes, float, float, float]) -> bytes:
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf)
+    c.drawString(70, 780, "Certificate with a seal")
+    for png, x, y, size in images:
+        c.drawImage(ImageReader(io.BytesIO(png)), x, y, size, size)
+    c.save()
+    return buf.getvalue()
+
+
+def test_seal_images_are_fingerprinted_and_qr_codes_skipped():
+    import segno
+
+    assets = _script("fixture_assets")
+    seal = assets.seal_png("Fire and Emergency Services Pune", ["Chief Fire Officer", "Pune"], "#1d4ed8", 1)
+    q = io.BytesIO()
+    segno.make("https://example.org/verify?ref=FES-PUN-2025-04417", error="l", micro=False).save(q, kind="png", scale=6, border=2)
+    data = _with_images((seal, 260, 180, 80), (q.getvalue(), 420, 160, 110))
+    ims = image_fingerprints(data)
+    assert len(ims) == 1
+    assert ims[0]["page"] == 1 and abs(ims[0]["bbox"][2] - ims[0]["bbox"][0] - 80) < 1
+
+
+def test_same_seal_matches_and_another_issuers_seal_does_not():
+    assets = _script("fixture_assets")
+    pune = assets.seal_png("Fire and Emergency Services Pune", ["Chief Fire Officer", "Pune"], "#1d4ed8", 1)
+    nashik = assets.seal_png("Fire and Emergency Services Nashik", ["Chief Fire Officer", "Nashik"], "#1d4ed8", 2)
+    a = image_fingerprints(_with_images((pune, 260, 180, 80)))[0]
+    b = image_fingerprints(_with_images((pune, 100, 300, 64)))[0]
+    c = image_fingerprints(_with_images((nashik, 260, 180, 80)))[0]
+    assert distance(a, b) == 0
+    assert distance(a, c) > 8

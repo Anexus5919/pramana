@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, object_session
 from .. import audit
 from ..config import get_settings
 from ..consistency.cross import cross_checks, relationship_graph
+from ..consistency.seal_reuse import seal_reuse
 from ..crypto import digest, load_document, sha256_hex
 from ..models import (
     Application,
@@ -459,7 +460,8 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         t0 = time.perf_counter()
         ref_fields = {t: (s.get("verification") or {}).get("ref_field") for t, s in rs.doc_types.items()
                       if (s.get("verification") or {}).get("ref_field")}
-        links = cross_checks(db, app, [d for d in docs if d.processing_status == "processed"], ref_fields)
+        processed_docs = [d for d in docs if d.processing_status == "processed"]
+        links = cross_checks(db, app, processed_docs, ref_fields) + seal_reuse(db, app, processed_docs)
         for ln in links:
             findings.append({
                 "code": ln.code, "fingerprint": _fp("xa", ln.code, ln.entity), "category": "consistency",
