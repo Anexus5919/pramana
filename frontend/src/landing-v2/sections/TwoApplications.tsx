@@ -44,6 +44,7 @@ export function TwoApplications() {
   const [active, setActive] = useState(false);
   const [line, setLine] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const lastPointer = useRef("mouse");
   const eyeRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
   const chipRefs = [useRef<HTMLButtonElement>(null), useRef<HTMLButtonElement>(null)];
 
@@ -137,11 +138,18 @@ export function TwoApplications() {
                         data-look
                         aria-pressed={active}
                         aria-describedby="two-finding"
+                        onPointerDown={(e) => {
+                          lastPointer.current = e.pointerType;
+                        }}
                         onPointerEnter={(e) => e.pointerType === "mouse" && setActive(true)}
                         onPointerLeave={(e) => e.pointerType === "mouse" && setActive(false)}
-                        onFocus={() => setActive(true)}
+                        onFocus={(e) => e.currentTarget.matches(":focus-visible") && setActive(true)}
                         onBlur={() => setActive(false)}
-                        onClick={() => setActive((v) => !v)}
+                        onClick={(e) => {
+                          // a mouse already shows the link on hover; taps and keys toggle it
+                          if (e.detail !== 0 && lastPointer.current === "mouse") return;
+                          setActive((v) => !v);
+                        }}
                         className={`flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-2.5 text-left transition-colors duration-200 ${active ? "bg-ink text-white" : "bg-white text-ink ring-2 ring-ink"}`}
                       >
                         <span className="min-w-0 text-[0.92rem]">
