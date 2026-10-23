@@ -82,7 +82,7 @@ function tick(t: number) {
     if (u >= 1) blinkStart = -1;
     else blink = 1 - Math.sin(Math.PI * u) * 0.94;
   }
-  let busy = blinkStart >= 0;
+  let busy = blinkStart >= 0 || t < busyUntil;
   for (const e of eyes) {
     if (!e.visible) continue;
     const o = center(e.origin);
@@ -148,6 +148,7 @@ function tick(t: number) {
 }
 
 let pointerDirty = false;
+let busyUntil = 0;
 function schedule() {
   if (!raf) raf = requestAnimationFrame(tick);
 }
@@ -155,6 +156,12 @@ function schedule() {
 export function wake() {
   pointerDirty = true;
   schedule();
+}
+
+// keep tracking while hands or cards are still moving after a state change
+export function wakeFor(ms: number) {
+  busyUntil = Math.max(busyUntil, performance.now() + ms);
+  wake();
 }
 
 export function blinkNow() {

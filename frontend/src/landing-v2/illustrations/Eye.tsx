@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-import { addEye, prefersReduced, wake, type EyeMode, type LookSource } from "../lib/gaze";
+import { addEye, prefersReduced, wakeFor, type EyeMode, type LookSource } from "../lib/gaze";
 
 export const INK = "#1B1530";
 const ALMOND = "M -40 0 C -24 -33 24 -33 40 0 C 24 33 -24 33 -40 0 Z";
@@ -47,9 +47,10 @@ export function Eye({ look = "auto", mode = "open", scale = 1, white = "#FFFFFF"
     });
   }, [live]);
 
+  const lookKey = typeof look === "function" ? "fn" : look;
   useEffect(() => {
-    wake();
-  }, [mode, look]);
+    wakeFor(900);
+  }, [mode, lookKey, look]);
 
   // React only writes the resting shape; while live, the loop owns these attributes
   const driven = live && !prefersReduced();

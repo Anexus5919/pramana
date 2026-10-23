@@ -24,7 +24,7 @@ const STEPS: Step[] = [
     text: "Signatures are checked against India PKI, QR codes against their issuers, records against issuer registries.",
     tone: "bg-sun",
     art: (
-      <Hand hue="tang" pose="ok" height={500} top={40} className="mx-auto h-full w-auto" eye={{ look: "auto" }} />
+      <Hand hue="tang" pose="ok" height={500} top={40} className="mx-auto h-full w-auto overflow-visible" eye={{ look: "auto" }} />
     ),
     artLabel: "A hand making an OK sign around an eye: confirmed",
   },
@@ -40,7 +40,7 @@ const STEPS: Step[] = [
     text: "An official reads each finding with its evidence and decides. Pramana never approves or rejects.",
     tone: "bg-white",
     art: (
-      <Hand hue="rose" mirror pose="open" height={500} top={40} className="mx-auto h-full w-auto" eye={{ look: "auto" }} />
+      <Hand hue="rose" mirror pose="open" height={500} top={40} className="mx-auto h-full w-auto overflow-visible" eye={{ look: "auto" }} />
     ),
     artLabel: "An open palm with an eye: a person decides",
   },
@@ -58,7 +58,7 @@ export function HowItReads() {
         </div>
         <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {STEPS.map((s, i) => (
-            <li key={s.name} className={`flex flex-col rounded-[28px] ${s.tone} p-6 ${s.tone === "bg-white" ? "ring-2 ring-ink/10" : ""}`}>
+            <li key={s.name} data-look className={`flex flex-col rounded-[28px] ${s.tone} p-6 ${s.tone === "bg-white" ? "ring-2 ring-ink/10" : ""}`}>
               <div className="flex items-center justify-between">
                 <span className="grid size-9 place-items-center rounded-full bg-ink font-display text-[1rem] font-[800] text-white">
                   {i + 1}

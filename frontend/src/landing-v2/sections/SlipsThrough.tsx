@@ -56,7 +56,7 @@ const CASES: Case[] = [
 function CaseCard({ c, run, instant }: { c: Case; run: boolean; instant: boolean }) {
   const shown = useCountUp(c.value, run, c.decimals, 1400, instant);
   return (
-    <article className={`flex flex-col rounded-[32px] ${c.tone} p-7 text-ink sm:p-8`}>
+    <article data-look className={`flex flex-col rounded-[32px] ${c.tone} p-7 text-ink sm:p-8`}>
       <p className="text-[0.8rem] font-bold tracking-[0.14em] uppercase">{c.where}</p>
       <p className="mt-6 font-display leading-none font-[800]" aria-label={`${c.value} ${c.unit}`}>
         <span aria-hidden className="text-[clamp(4rem,7vw,6.2rem)] tabular-nums">
