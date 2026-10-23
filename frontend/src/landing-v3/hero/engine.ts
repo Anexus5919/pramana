@@ -88,28 +88,35 @@ export function computeLayout(w: number, h: number, cardRatio: number): Layout {
     // the copy column is as wide as the headline, which scales like the h1 clamp in HeroStory
     const fs = clamp(Math.min(w * 0.046, h * 0.082), 40, 92);
     const copyW = Math.max(470, fs * 7.3);
-    const groundY = h * 0.82;
-    let s = clamp(h / 1040, 0.54, 0.98);
-    const cx = Math.min(w * 0.72, w - 360 * s - 40);
-    // the pair must clear the copy column
-    if (cx - 360 * s < left + copyW + 16) s = Math.max(0.5, (cx - left - copyW - 16) / 360);
-    const pair = 226 * s;
+    const groundY = h * 0.78;
+    // fingertips reach about a third of the way down; the pair (half extent ~370 units with lean) must fit
+    // between the copy column and the right edge, so narrow screens trade height for clearance
+    const copyRight = left + copyW;
+    const sTall = (groundY - h * 0.33) / (CUT - 51);
+    const s = clamp(Math.min(sTall, (w - 32 - copyRight - 24) / 740), 0.5, 1.3);
+    const cx = clamp(w * 0.72, copyRight + 24 + 370 * s, w - 32 - 370 * s);
+    const pair = 214 * s;
     const hero: [HandSpot, HandSpot] = [
       { x: cx - pair, tilt: -5 },
       { x: cx + pair, tilt: 6 },
     ];
-    const cw = clamp(w * 0.22, 330, 440);
+    const cw = clamp(w * 0.23, 330, 460);
     const ch = cw * cardRatio;
     // the certificate rises from a row in front of the hands, so they only lift a little to hold it
     const clipY = groundY + h * 0.115;
     const bottom = groundY + h * 0.095;
-    const card = { x: cx - cw / 2, y: bottom - ch, w: cw, h: ch };
+    // holding the card spreads the pair wider than the hero pose, and the wait palm leans outward,
+    // so the held group shifts left until the open palm stays on screen
+    const inset = 30;
+    const holdHalf = cw / 2 - inset + 300 * s;
+    const hx = Math.min(cx, w - 24 - holdHalf);
+    const card = { x: hx - cw / 2, y: bottom - ch, w: cw, h: ch };
     const ringY = card.y - 26 * s;
     const hold: [HoldSpot, HoldSpot] = [
-      solveHold(s, groundY, { x: card.x + 8, y: ringY }, 6, true),
-      solveHold(s, groundY, { x: card.x + cw - 8, y: ringY }, -6, false),
+      solveHold(s, groundY, { x: card.x + inset, y: ringY }, 6, true),
+      solveHold(s, groundY, { x: card.x + cw - inset, y: ringY }, -6, false),
     ];
-    const capW = Math.min(500, card.x - 250 * s - left - 48);
+    const capW = Math.min(500, card.x + inset - 250 * s - left - 40);
     return {
       w,
       h,
