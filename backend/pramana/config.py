@@ -33,7 +33,8 @@ class Settings(BaseSettings):
     llm_allow_external: bool = False
     llm_timeout_s: int = 60
     ollama_url: str = "http://127.0.0.1:11434"
-    ollama_model: str = "qwen3:4b-instruct-2507-q4_K_M"
+    # Fine-tuned Qwen3-1.7B extractor built by backend/training; any Ollama model name works here
+    ollama_model: str = "pramana-extract"
     groq_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GROQ_API_KEY", "GROQ_API_KEY"))
     groq_model: str = "openai/gpt-oss-20b"
     gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
