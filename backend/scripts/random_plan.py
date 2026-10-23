@@ -45,9 +45,11 @@ DERIVED = {"APH-ANX5-FSR", "XD-FACULTY-COUNT", "APH-ANX41-BANDWIDTH", "APH-ANX33
            "XD-AFF2-APPLICATION", "XD-ACCOUNTS-ENTITY", "XD-SATMAP-LOCATION", "XR-NBA-CLAIMS", "XD-OC-INSTITUTION",
            "YOY-INTAKE-JUMP", "YOY-LAND-AREA-DECREASED", "YOY-BUILT-UP-AREA-DECREASED", "YOY-FACULTY-TURNOVER",
            "YOY-CERT-REUSED-NEW-VALIDITY"}
-# Which planned slots a derived code depends on, to attribute side effects to the condition that caused them
-RELATED_SLOTS = {"APH-ANX5-FSR": {"fac", "intake"}, "XD-FACULTY-COUNT": {"fac"}, "APH-ANX41-BANDWIDTH": {"bw", "intake"},
-                 "APH-ANX33-ADMIN-AREA": {"admin", "intake"}, "XR-INTAKE-RECORD": {"intake"},
+# Which planned slots a derived code depends on, most likely cause first, to attribute side effects to the
+# condition that caused them: a raised intake raises the faculty and bandwidth norms, while the other faculty
+# conditions never shorten the roster
+RELATED_SLOTS = {"APH-ANX5-FSR": ("intake", "fac"), "XD-FACULTY-COUNT": {"fac"}, "APH-ANX41-BANDWIDTH": ("intake", "bw"),
+                 "APH-ANX33-ADMIN-AREA": ("intake", "admin"), "XR-INTAKE-RECORD": {"intake"},
                  "XR-EOA-NO-INCREASE": {"intake"}, "ADD26-26C-CORE-BRANCHES": {"intake"}, "XD-OC-AREA": {"area"},
                  "APH-A21-SSC-REQUIRED": {"ssc"}, "APH-617H-SSC-VALID": {"ssc"}, "PN2627-DEADLINE": {"date"},
                  "APH-617I-FIRE-VALID": {"fire"}, "APH-A31D-FIRE-BEFORE": {"fire"}, "XD-FIRE-INSTITUTION": {"fire"},

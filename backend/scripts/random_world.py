@@ -136,7 +136,7 @@ def finalise(w: World, planted: list[Planted]) -> None:
         if missing:
             raise GeneratorError(f"{a.key}: answer key expects {sorted(missing)} but the plan does not imply it")
         for code in sorted(implied - expected):
-            owner = next((p for p in a.conds if p.slots & RELATED_SLOTS[code]), None)
+            owner = next((p for slot in RELATED_SLOTS[code] for p in a.conds if slot in p.slots), None)
             if owner is None:
                 raise GeneratorError(f"{a.key}: plan implies {code} with no condition to explain it")
             owner.expect.append({"app": a.key, "code": code, "role": "side_effect",
@@ -387,12 +387,13 @@ def answer_key(w: World, planted: list[Planted]) -> dict[str, Any]:
     }
 
 
-def build(seed: int, n: int, out: Path) -> dict[str, Any]:
+def build(seed: int, n: int, out: Path, documents: bool = True) -> dict[str, Any]:
     out.mkdir(parents=True, exist_ok=True)
     w, planted = plan_world(seed, n)
     finalise(w, planted)
     key = answer_key(w, planted)
-    render(w, out)
+    if documents:
+        render(w, out)
     (out / "answer_key.json").write_text(json.dumps(_jsonable(key), indent=1, ensure_ascii=False), encoding="utf-8")
     return key
 
@@ -402,8 +403,9 @@ def main() -> None:
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--key-only", action="store_true", help="write answer_key.json without drawing documents")
     args = ap.parse_args()
-    key = build(args.seed, args.n, args.out)
+    key = build(args.seed, args.n, args.out, documents=not args.key_only)
     clean = sum(1 for a in key["applications"] if a["clean"])
     print(f"wrote {key['n']} applications ({clean} clean) and {len(key['conditions'])} conditions to {args.out}")
 
