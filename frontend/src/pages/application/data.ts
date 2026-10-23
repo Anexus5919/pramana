@@ -100,14 +100,18 @@ export function useRectification(appId: string) {
 /** Width of an element, tracked with a ResizeObserver. */
 export function useWidth(ref: RefObject<HTMLElement | null>): number {
   const [w, setW] = useState(0);
+  const [el, setEl] = useState<HTMLElement | null>(null);
+  // The element can mount after the first render (after a loading state), so pick it up on every render
   useEffect(() => {
-    const el = ref.current;
+    if (ref.current !== el) setEl(ref.current);
+  });
+  useEffect(() => {
     if (!el) return;
     const ro = new ResizeObserver(() => setW(el.clientWidth));
     ro.observe(el);
     setW(el.clientWidth);
     return () => ro.disconnect();
-  }, [ref]);
+  }, [el]);
   return w;
 }
 
