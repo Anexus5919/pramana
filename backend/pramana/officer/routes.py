@@ -244,6 +244,18 @@ def finalise_letter(letter_id: str, body: FinaliseBody, user: User = Depends(req
         # The existing rectification flow sets finding statuses, snapshots the application and opens the round
         res = request_rectification(app.id, RectifyBody(finding_ids=ids, message=message or letter.subject), user, db)
         rect_id, created = res["id"], True
+        # The portal lists request items; forensic and cross-application ones take the letter's neutral wording
+        pos = {fid: (n, k, i) for n, i in enumerate(letter.items, start=1) for k, fid in enumerate(i["finding_ids"])}
+        rect = db.get(RectificationRequest, rect_id)
+        items = []
+        for it in rect.items:
+            f = db.get(Finding, it["finding_id"])
+            n, k, li = pos[it["finding_id"]]
+            if f and f.category in ("forensic", "consistency"):
+                it = {**it, "code": (li.get("citation") or {}).get("rule_id") or f"NOTICE-ITEM-{n}", "title": li["title"],
+                      "message": li["description"] if k == 0 else f"Covered by item {n} of the deficiency notice."}
+            items.append(it)
+        rect.items = items
     letter = db.get(DeficiencyLetter, letter_id)
     letter.storage_name = f"letter_{letter.id}.bin"
     store_document(letter.storage_name, data)

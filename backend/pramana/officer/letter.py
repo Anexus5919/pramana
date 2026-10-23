@@ -128,8 +128,10 @@ def default_subject(app: Application) -> str:
 
 def letter_json(lt: DeficiencyLetter, *, for_institution: bool = False, page_count: int | None = None,
                 names: dict[str, str] | None = None) -> dict[str, Any]:
+    # Institutions get the letter's wording only, not finding ids or detector codes
+    items = [{k: v for k, v in i.items() if k not in ("finding_ids", "codes")} for i in lt.items]         if for_institution else lt.items
     out = {"id": lt.id, "application_id": lt.application_id, "round": lt.round, "status": lt.status,
-           "subject": lt.subject, "intro": lt.intro, "items": lt.items,
+           "subject": lt.subject, "intro": lt.intro, "items": items,
            "finalised_at": lt.finalised_at.isoformat() if lt.finalised_at else None,
            "final_sha256": lt.final_sha256, "rectification_id": lt.rectification_id}
     if not for_institution:

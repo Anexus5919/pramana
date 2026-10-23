@@ -117,6 +117,21 @@ def test_letter_quotes_the_ruleset_and_finalises_into_the_rectification_flow(app
     assert other.get(f"/api/letters/{letter['id']}/pdf").status_code == 404
 
 
+def test_letter_keeps_forensic_and_cross_institution_detail_away_from_the_institution(app):
+    officer = _login(app, "officer")
+    aid = "APP-2026-000110"
+    ids = [f["id"] for f in officer.get(f"/api/applications/{aid}/findings").json()]
+    letter = officer.post(f"/api/applications/{aid}/letters", json={"finding_ids": ids}).json()
+    r = officer.post(f"/api/letters/{letter['id']}/finalise", json={"reason": "Photo and map need clarification"})
+    assert r.status_code == 200, r.text
+    inst = _login(app, "inst10")
+    seen = json.dumps(inst.get(f"/api/applications/{aid}").json()["rectifications"])
+    seen += json.dumps(inst.get(f"/api/applications/{aid}/letters").json())
+    seen += _pdf_text(inst.get(f"/api/letters/{letter['id']}/pdf").content)
+    for leak in ("Shree Dnyaneshwar", "perceptual", "Geotag", "FX-IMG-GEOTAG-FAR", "finding_ids"):
+        assert leak not in seen, leak
+
+
 # ---- evidence packs
 
 
