@@ -1,21 +1,31 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, BookOpen, Check, Download, FileSignature, Trash2 } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ArrowDown, ArrowUp, Download, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, qk } from "../../../api";
 import { fmtDateTime, pluralize } from "../../../lib/format";
 import type { Rule } from "../../../types";
-import { Tag } from "../../../ui/Badge";
-import { BlockLoader, Button, IconButton, buttonClasses } from "../../../ui/Button";
-import { cn } from "../../../ui/cn";
-import { Dialog } from "../../../ui/Dialog";
-import { Digest } from "../../../ui/Digest";
-import { Field, Input, Select, Textarea } from "../../../ui/Field";
-import { dur, ease, fadeUp, spring, stagger } from "../../../ui/motion";
-import { Skeleton } from "../../../ui/Skeleton";
-import { ErrorState } from "../../../ui/States";
-import { useToast } from "../../../ui/Toast";
+import {
+  Button,
+  buttonStyles,
+  Callout,
+  cn,
+  Code,
+  DescriptionList,
+  Digest,
+  Drawer,
+  ErrorState,
+  EvidenceFrame,
+  Field,
+  IconButton,
+  Input,
+  MetaList,
+  Select,
+  Skeleton,
+  Textarea,
+  useToast,
+} from "../../../ui2";
 import { useInvalidateApp } from "../data";
+import { CitationCard } from "../parts";
 import { officerApi, useInvalidateLetters, type Letter, type LetterItem, type LetterItemInput } from "./officerApi";
 
 interface DraftItem extends LetterItemInput {
@@ -23,7 +33,7 @@ interface DraftItem extends LetterItemInput {
   codes: string[];
 }
 
-const MIN_REASON = 8;
+const MIN_REASON = 10;
 
 function today(): string {
   const d = new Date();
@@ -43,8 +53,10 @@ function toDraft(it: LetterItem): DraftItem {
   };
 }
 
-function itemErrors(it: DraftItem): Partial<Record<"title" | "description" | "required" | "respond_by", string>> {
-  const e: Partial<Record<"title" | "description" | "required" | "respond_by", string>> = {};
+type ItemField = "title" | "description" | "required" | "respond_by";
+
+function itemErrors(it: DraftItem): Partial<Record<ItemField, string>> {
+  const e: Partial<Record<ItemField, string>> = {};
   if (it.title.trim().length < 3) e.title = "Give the item a title.";
   if (it.description.trim().length < 3) e.description = "Describe what needs to be corrected.";
   if (it.required.trim().length < 3) e.required = "Say what the institution must submit.";
@@ -52,32 +64,7 @@ function itemErrors(it: DraftItem): Partial<Record<"title" | "description" | "re
   return e;
 }
 
-/** The clause exactly as the ruleset quotes it; the editor can change which rule is cited, never its text. */
-function ClauseQuote({ rule }: { rule: Rule | undefined }) {
-  if (!rule?.source?.quote)
-    return <p className="rounded-[10px] border border-dashed border-line-2 px-3 py-2 text-xs text-ink-3">No handbook clause is cited for this item.</p>;
-  const where = [rule.source.section, rule.source.page ? `page ${rule.source.page}` : null].filter(Boolean).join(", ");
-  return (
-    <motion.figure
-      key={rule.id}
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: dur.ui, ease: ease.out }}
-      className="relative overflow-hidden rounded-[10px] border border-line bg-surface-2/60 py-2.5 pr-3 pl-4"
-    >
-      <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-ev-4" />
-      <figcaption className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-ink-3">
-        <BookOpen aria-hidden className="size-3 text-ev-4" />
-        <span className="font-semibold text-ink-2">APH 2024-27</span>
-        {where && <span>{where}</span>}
-        <span className="text-ink-4">quoted verbatim, not editable</span>
-      </figcaption>
-      <blockquote className="mt-1 text-[13px] leading-relaxed text-ink text-pretty">"{rule.source.quote}"</blockquote>
-    </motion.figure>
-  );
-}
-
-function ItemCard({
+function ItemRow({
   item,
   index,
   total,
@@ -98,100 +85,81 @@ function ItemCard({
 }) {
   const err = touched ? itemErrors(item) : {};
   const rule = rules.find((r) => r.id === item.rule_id);
+  const n = index + 1;
   return (
-    <motion.li
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0, marginTop: 0, transition: { duration: dur.ui, ease: ease.inOut } }}
-      transition={{ layout: spring.snappy, duration: dur.panel, ease: ease.out }}
-      className="overflow-hidden rounded-card border border-line bg-surface shadow-xs"
-      aria-label={`Item ${index + 1}: ${item.title}`}
-    >
-      <div className="flex items-center gap-2 border-b border-line bg-surface-2/50 px-3 py-2">
-        <motion.span
-          layout="position"
-          className="inline-flex size-6 shrink-0 items-center justify-center rounded-[6px] bg-brand-500 font-mono text-xs font-semibold text-white shadow-[inset_0_2px_0_rgb(255_255_255/0.3)]"
-        >
-          {index + 1}
-        </motion.span>
-        <span className="flex min-w-0 flex-1 flex-wrap gap-1">
-          {item.codes.map((c) => (
-            <Tag key={c} variant="mono" className="max-w-full truncate">
-              {c}
-            </Tag>
-          ))}
+    <li className="space-y-3 py-5 first:pt-0 last:pb-0">
+      <div className="flex items-center gap-2">
+        <h3 className="text-base font-semibold text-ink">Item {n}</h3>
+        <span className="min-w-0 flex-1 truncate text-xs text-ink-3">
+          <MetaList items={item.codes.map((c) => <Code key={c} className="text-xs">{c}</Code>)} />
         </span>
-        <IconButton size="sm" variant="ghost" label={`Move item ${index + 1} up`} icon={<ArrowUp />} disabled={index === 0} onClick={() => onMove(-1)} />
-        <IconButton size="sm" variant="ghost" label={`Move item ${index + 1} down`} icon={<ArrowDown />} disabled={index === total - 1} onClick={() => onMove(1)} />
-        <IconButton size="sm" variant="ghost" label={`Remove item ${index + 1}`} icon={<Trash2 />} disabled={total === 1} onClick={onRemove} />
+        <IconButton size="sm" label={`Move item ${n} up`} icon={<ArrowUp />} disabled={index === 0} onClick={() => onMove(-1)} />
+        <IconButton size="sm" label={`Move item ${n} down`} icon={<ArrowDown />} disabled={index === total - 1} onClick={() => onMove(1)} />
+        <IconButton size="sm" label={`Remove item ${n}`} icon={<Trash2 />} disabled={total === 1} onClick={onRemove} />
       </div>
-      <div className="space-y-3 p-3.5">
-        <Field label="Title" error={err.title}>
-          <Input value={item.title} maxLength={300} onChange={(e) => onChange({ title: e.target.value })} />
-        </Field>
-        <Field label="What needs to be corrected" hint="Plain language for the institution. Detector internals stay out of the letter." error={err.description}>
-          <Textarea rows={3} maxLength={2000} value={item.description} onChange={(e) => onChange({ description: e.target.value })} />
-        </Field>
-        <div className="space-y-2">
-          <Field label="Handbook clause cited">
-            <Select value={item.rule_id ?? ""} onChange={(e) => onChange({ rule_id: e.target.value || null })}>
-              <option value="">No clause cited</option>
-              {rules.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.id}: {r.title}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <AnimatePresence mode="wait" initial={false}>
-            <ClauseQuote key={rule?.id ?? "none"} rule={rule} />
-          </AnimatePresence>
-        </div>
-        <Field label="What to submit" error={err.required}>
-          <Textarea rows={2} maxLength={1200} value={item.required} onChange={(e) => onChange({ required: e.target.value })} />
-        </Field>
-        <Field label="Respond by" error={err.respond_by} className="max-w-[220px]">
-          <Input type="date" min={today()} value={item.respond_by} onChange={(e) => onChange({ respond_by: e.target.value })} />
-        </Field>
-      </div>
-    </motion.li>
+      <Field label="Title" error={err.title}>
+        <Input value={item.title} maxLength={300} onChange={(e) => onChange({ title: e.target.value })} />
+      </Field>
+      <Field label="What needs to be corrected" hint="Plain language for the institution. Detector internals stay out of the letter." error={err.description}>
+        <Textarea rows={3} maxLength={2000} value={item.description} onChange={(e) => onChange({ description: e.target.value })} />
+      </Field>
+      <Field label="Handbook clause cited" hint="The clause is quoted exactly as the ruleset records it; only the choice of rule can change.">
+        <Select value={item.rule_id ?? ""} onChange={(e) => onChange({ rule_id: e.target.value || null })}>
+          <option value="">No clause cited</option>
+          {rules.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.id}: {r.title}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      {rule?.source ? (
+        <CitationCard citation={rule.source} ruleId={rule.id} />
+      ) : (
+        <p className="border-l-2 border-line-2 pl-3 text-sm text-ink-3">No handbook clause is cited for this item.</p>
+      )}
+      <Field label="What to submit" error={err.required}>
+        <Textarea rows={2} maxLength={1200} value={item.required} onChange={(e) => onChange({ required: e.target.value })} />
+      </Field>
+      <Field label="Respond by" error={err.respond_by} className="max-w-[220px]">
+        <Input type="date" min={today()} value={item.respond_by} onChange={(e) => onChange({ respond_by: e.target.value })} />
+      </Field>
+    </li>
   );
 }
 
 function Preview({ letter, saving }: { letter: Letter | null; saving: boolean }) {
   const pages = letter?.page_count ?? 0;
   const version = (letter?.status === "final" ? letter.finalised_at : letter?.updated_at) ?? "0";
+  const final = letter?.status === "final";
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="eyebrow">PDF preview</span>
-        <AnimatePresence initial={false}>
-          {saving && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="inline-flex items-center gap-1.5 text-xs text-ink-3" role="status">
-              <BlockLoader className="text-brand-500" /> Updating
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
-      {!letter ? (
-        <Skeleton className="aspect-[1/1.414] w-full" rounded="md" />
-      ) : (
-        Array.from({ length: pages }, (_, i) => (
-          <motion.img
-            key={`${version}-${i}`}
-            src={officerApi.letterPageUrl(letter.id, i + 1, version)}
-            alt={`Page ${i + 1} of ${pages} of the ${letter.status === "final" ? "final" : "draft"} deficiency notice`}
-            initial={{ opacity: 0.4 }}
-            animate={{ opacity: saving ? 0.55 : 1 }}
-            transition={{ duration: dur.ui }}
-            className="w-full rounded-[8px] border border-line bg-white shadow-sm"
-          />
-        ))
-      )}
+      <EvidenceFrame
+        title="PDF preview"
+        meta={
+          <span role="status">
+            {!letter ? "Preparing" : saving ? "Updating" : `${final ? "Final" : "Draft"}, ${pluralize(pages, "page")}`}
+          </span>
+        }
+      >
+        {!letter ? (
+          <Skeleton className="aspect-[1/1.414] w-full" />
+        ) : (
+          <div className="space-y-3">
+            {Array.from({ length: pages }, (_, i) => (
+              <img
+                key={`${version}-${i}`}
+                src={officerApi.letterPageUrl(letter.id, i + 1, version)}
+                alt={`Page ${i + 1} of ${pages} of the ${final ? "final" : "draft"} deficiency letter`}
+                className={cn("w-full rounded-control border border-line bg-white transition-opacity duration-150", saving && "opacity-60")}
+              />
+            ))}
+          </div>
+        )}
+      </EvidenceFrame>
       {letter && (
-        <a href={officerApi.letterPdfUrl(letter.id)} download className={buttonClasses("ghost", "sm", "w-full border border-line")}>
-          <Download aria-hidden /> {letter.status === "final" ? "Download final PDF" : "Download draft PDF"}
+        <a href={officerApi.letterPdfUrl(letter.id)} download className={buttonStyles("secondary", "sm", "w-full")}>
+          <Download aria-hidden /> {final ? "Download PDF" : "Download draft PDF"}
         </a>
       )}
     </div>
@@ -199,60 +167,29 @@ function Preview({ letter, saving }: { letter: Letter | null; saving: boolean })
 }
 
 function SentView({ letter, round }: { letter: Letter; round: number }) {
-  const reduce = useReducedMotion();
   return (
-    <motion.div variants={stagger(0.06)} initial="hidden" animate="show" className="grid gap-6 py-2 md:grid-cols-[minmax(0,1fr)_280px]">
-      <div>
-        <motion.div variants={fadeUp} className="flex items-center gap-3">
-          <span className="inline-flex size-11 items-center justify-center rounded-[12px] bg-verified-bg text-verified-fg">
-            <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-              <motion.path
-                d="M5 12.5l4.2 4.2L19 7"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.6}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                initial={{ pathLength: reduce ? 1 : 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: dur.panel, ease: ease.out, delay: 0.1 }}
-              />
-            </svg>
-          </span>
-          <div>
-            <h3 className="font-display text-lg font-semibold tracking-title text-ink">Deficiency notice sent</h3>
-            <p className="text-sm text-ink-3">
-              {pluralize(letter.items.length, "item")} attached to the rectification request. The application is now in round {round}.
-            </p>
-          </div>
-        </motion.div>
-        <motion.dl variants={fadeUp} className="mt-5 space-y-2.5 text-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <dt className="text-ink-3">PDF SHA-256, recorded in the audit chain</dt>
-            <dd>
-              <Digest value={letter.final_sha256} label="Letter SHA-256" head={12} tail={8} />
-            </dd>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <dt className="text-ink-3">Finalised</dt>
-            <dd className="text-ink">{fmtDateTime(letter.finalised_at)}</dd>
-          </div>
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <dt className="text-ink-3">Reason recorded</dt>
-            <dd className="max-w-[60%] text-right text-ink-2">"{letter.final_reason}"</dd>
-          </div>
-        </motion.dl>
-        <motion.p variants={fadeUp} className="mt-4 rounded-control bg-surface-2 px-3 py-2 text-xs text-ink-3">
-          The institution sees this notice and can download it on its application page under "What AICTE asked you to fix".
-        </motion.p>
+    <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
+      <div className="min-w-0 space-y-5">
+        <Callout tone="success" title="Deficiency letter sent" role="status">
+          {pluralize(letter.items.length, "item")} sent with the rectification request. The application is now in round {round}, and the institution can download
+          the letter from its application page.
+        </Callout>
+        <DescriptionList
+          labelWidth={148}
+          items={[
+            { label: "SHA-256", value: <Digest value={letter.final_sha256} label="Letter SHA-256" head={16} tail={10} />, hint: "Recorded in the audit trail" },
+            { label: "Finalised", value: fmtDateTime(letter.finalised_at) },
+            { label: "Reason", value: letter.final_reason },
+            { label: "Round", value: String(round || letter.round) },
+          ]}
+        />
       </div>
-      <motion.div variants={fadeUp}>
-        <Preview letter={letter} saving={false} />
-      </motion.div>
-    </motion.div>
+      <Preview letter={letter} saving={false} />
+    </div>
   );
 }
 
+/** Drafts, edits and finalises the deficiency letter that goes with a rectification request. */
 export function LetterEditor({
   appId,
   open,
@@ -320,7 +257,7 @@ export function LetterEditor({
       setStage("sent");
       invalidateApp();
       invalidateLetters();
-      toast.success("Deficiency notice sent", `Its SHA-256 is in the audit chain. ${pluralize(r.letter.items.length, "item")} sent with the rectification request.`);
+      toast.success("Deficiency letter sent", `Its SHA-256 is in the audit trail. ${pluralize(r.letter.items.length, "item")} sent with the rectification request.`);
     },
   });
 
@@ -335,7 +272,8 @@ export function LetterEditor({
     save.reset();
     finalise.reset();
     start.mutate();
-    // start a draft each time the dialog opens
+    // start a draft each time the drawer opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const invalid = items.some((it) => Object.keys(itemErrors(it)).length > 0) || subject.trim().length < 3;
@@ -380,13 +318,14 @@ export function LetterEditor({
 
   const busy = save.isPending || finalise.isPending;
   const shortReason = touched && stage === "confirm" && reason.trim().length < MIN_REASON;
+  const findingCount = items.reduce((n, it) => n + it.finding_ids.length, 0);
 
   return (
-    <Dialog
+    <Drawer
       open={open}
       onClose={onClose}
-      size="xl"
-      title={stage === "sent" ? "Deficiency notice" : "Draft deficiency notice"}
+      width={860}
+      title={stage === "sent" ? "Deficiency letter" : "Draft deficiency letter"}
       description={
         stage === "sent"
           ? "Final and sent. The PDF can no longer be edited."
@@ -397,7 +336,7 @@ export function LetterEditor({
           <Button onClick={onClose}>Done</Button>
         ) : (
           <>
-            <span className="mr-auto text-xs text-ink-3" aria-live="polite">
+            <span className="mr-auto text-xs text-ink-3" role="status">
               {letter && (dirty ? "Unsaved changes" : `Draft saved${letter.updated_at ? `, ${fmtDateTime(letter.updated_at)}` : ""}`)}
             </span>
             {stage === "confirm" ? (
@@ -409,78 +348,72 @@ export function LetterEditor({
                 <Button variant="ghost" onClick={onClose}>
                   Close
                 </Button>
-                <Button variant="secondary" onClick={onSave} disabled={!letter || !dirty || busy} loading={save.isPending}>
+                <Button onClick={onSave} disabled={!letter || !dirty || busy} loading={save.isPending}>
                   Save draft
                 </Button>
               </>
             )}
-            <Button leadingIcon={<FileSignature />} onClick={() => void onFinalise()} disabled={!letter || busy || start.isPending} loading={finalise.isPending}>
+            <Button variant="primary" onClick={() => void onFinalise()} disabled={!letter || busy || start.isPending} loading={finalise.isPending}>
               {stage === "confirm" ? "Finalise and send" : "Finalise"}
             </Button>
           </>
         )
       }
     >
-      {start.error ? (
-        <ErrorState error={start.error} title="The draft could not be prepared" onRetry={() => start.mutate()} retrying={start.isPending} />
-      ) : stage === "sent" && letter ? (
-        <SentView letter={letter} round={sentRound} />
-      ) : (
-        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="min-w-0 space-y-4">
-            {(save.error || finalise.error) && (
-              <ErrorState compact error={save.error ?? finalise.error} title={finalise.error ? "The notice was not sent" : "The draft was not saved"} />
-            )}
-            <AnimatePresence initial={false}>
-              {stage === "confirm" && (
-                <motion.section
-                  key="confirm"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: dur.panel, ease: ease.out }}
-                  className="overflow-hidden"
-                  aria-label="Finalise the notice"
-                >
-                  <div className="space-y-3 rounded-card border border-brand-200 bg-brand-soft/60 p-4">
-                    <p className="text-sm text-ink-2">
-                      Finalising removes the DRAFT watermark, stores the PDF, records its SHA-256 in the audit chain and sends it with a rectification request
-                      for {pluralize(items.reduce((n, it) => n + it.finding_ids.length, 0), "finding")}. The institution can then download it.
-                    </p>
-                    <Field label="Reason for sending this notice" hint={`At least ${MIN_REASON} characters. Kept in the audit chain, not printed on the letter.`} error={shortReason ? `Give a reason of at least ${MIN_REASON} characters.` : undefined}>
-                      <Textarea ref={reasonRef} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Fire certificate expired before submission; renewal needed." />
-                    </Field>
-                    <Field label="Message shown with the request" hint="Optional. The letter subject is used when this is empty.">
-                      <Textarea rows={2} value={message} onChange={(e) => setMessage(e.target.value)} />
-                    </Field>
-                  </div>
-                </motion.section>
+      <div className="p-5">
+        {start.error ? (
+          <ErrorState error={start.error} title="The draft could not be prepared" onRetry={() => start.mutate()} retrying={start.isPending} />
+        ) : stage === "sent" && letter ? (
+          <SentView letter={letter} round={sentRound} />
+        ) : (
+          <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
+            <div className="min-w-0 space-y-5">
+              {(save.error || finalise.error) && (
+                <ErrorState error={save.error ?? finalise.error} title={finalise.error ? "The letter was not sent" : "The draft was not saved"} />
               )}
-            </AnimatePresence>
-            {start.isPending || !letter ? (
-              <div className="space-y-3" role="status">
-                <span className="sr-only">Drafting the notice from the selected findings</span>
-                <Skeleton className="h-10" />
-                <Skeleton className="h-20" />
-                <Skeleton className="h-64" rounded="lg" />
-              </div>
-            ) : (
-              <fieldset disabled={stage === "confirm" || busy} className={cn("min-w-0 space-y-4 transition-opacity", stage === "confirm" && "opacity-60")}>
-                <Field label="Subject" error={touched && subject.trim().length < 3 ? "Give the notice a subject." : undefined}>
-                  <Input value={subject} maxLength={300} onChange={(e) => (setSubject(e.target.value), setDirty(true))} />
-                </Field>
-                <Field label="Opening paragraph">
-                  <Textarea rows={3} maxLength={3000} value={intro} onChange={(e) => (setIntro(e.target.value), setDirty(true))} />
-                </Field>
-                <div>
-                  <div className="mb-2 flex items-baseline justify-between">
-                    <span className="text-sm font-medium text-ink-2">Items</span>
-                    <span className="text-xs text-ink-3">{pluralize(items.length, "item")}, numbered in this order</span>
-                  </div>
-                  <ol className="space-y-3">
-                    <AnimatePresence initial={false}>
+              {stage === "confirm" && (
+                <section aria-labelledby="letter-confirm" className="space-y-3 border-b border-line pb-5">
+                  <h3 id="letter-confirm" className="text-base font-semibold text-ink">
+                    Finalise and send
+                  </h3>
+                  <p className="text-sm text-ink-2 text-pretty">
+                    Finalising removes the DRAFT watermark, stores the PDF, records its SHA-256 in the audit trail and sends it with a rectification request for{" "}
+                    {pluralize(findingCount, "finding")}. The institution can then download it.
+                  </p>
+                  <Field
+                    label="Reason for sending this letter"
+                    required
+                    hint={`At least ${MIN_REASON} characters. Kept in the audit trail, not printed on the letter.`}
+                    error={shortReason ? `Give a reason of at least ${MIN_REASON} characters.` : undefined}
+                  >
+                    <Textarea ref={reasonRef} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
+                  </Field>
+                  <Field label="Message shown with the request" hint="Optional. The letter subject is used when this is empty.">
+                    <Textarea rows={2} value={message} onChange={(e) => setMessage(e.target.value)} />
+                  </Field>
+                </section>
+              )}
+              {start.isPending || !letter ? (
+                <div className="space-y-3" role="status">
+                  <span className="sr-only">Drafting the letter from the selected findings</span>
+                  <Skeleton className="h-10" />
+                  <Skeleton className="h-20" />
+                  <Skeleton className="h-64" />
+                </div>
+              ) : (
+                <fieldset disabled={stage === "confirm" || busy} className={cn("min-w-0 space-y-4", stage === "confirm" && "opacity-60")}>
+                  <legend className="sr-only">Letter contents</legend>
+                  <Field label="Subject" error={touched && subject.trim().length < 3 ? "Give the letter a subject." : undefined}>
+                    <Input value={subject} maxLength={300} onChange={(e) => (setSubject(e.target.value), setDirty(true))} />
+                  </Field>
+                  <Field label="Opening paragraph">
+                    <Textarea rows={3} maxLength={3000} value={intro} onChange={(e) => (setIntro(e.target.value), setDirty(true))} />
+                  </Field>
+                  <div className="border-t border-line pt-4">
+                    <p className="mb-4 text-xs text-ink-3">{pluralize(items.length, "item")}, numbered in this order</p>
+                    <ol className="divide-y divide-line">
                       {items.map((it, i) => (
-                        <ItemCard
+                        <ItemRow
                           key={it.key}
                           item={it}
                           index={i}
@@ -492,23 +425,20 @@ export function LetterEditor({
                           onRemove={() => remove(i)}
                         />
                       ))}
-                    </AnimatePresence>
-                  </ol>
-                </div>
-              </fieldset>
-            )}
+                    </ol>
+                  </div>
+                </fieldset>
+              )}
+            </div>
+            <aside className="min-w-0 md:sticky md:top-0 md:self-start">
+              <Preview letter={letter} saving={save.isPending} />
+              {letter && (
+                <p className="mt-3 text-xs text-ink-3">Neutral layout without emblem or letterhead. Footer: Prepared with the Pramana prototype. Synthetic demo data.</p>
+              )}
+            </aside>
           </div>
-          <aside className="min-w-0 md:sticky md:top-0 md:self-start">
-            <Preview letter={letter} saving={save.isPending} />
-            {letter && (
-              <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-ink-4">
-                <Check aria-hidden className="mt-0.5 size-3 shrink-0" />
-                Neutral layout without emblem or letterhead. Footer: Prepared with the Pramana prototype. Synthetic demo data.
-              </p>
-            )}
-          </aside>
-        </div>
-      )}
-    </Dialog>
+        )}
+      </div>
+    </Drawer>
   );
 }
