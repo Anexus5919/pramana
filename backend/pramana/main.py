@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -9,6 +10,7 @@ from . import jobs, sandbox
 from .api import admin, applications, live, ops
 from .config import get_settings
 from .db import init_db
+from .sandbox_worker import windows_full_speed
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 # pyHanko logs full tracebacks for expected diff-analysis outcomes; results are reported through the API instead
@@ -19,6 +21,9 @@ for noisy in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "fontTools"):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    if os.name == "nt":
+        # A server started in the background would otherwise be slowed by Windows power throttling
+        windows_full_speed()
     jobs.recover_interrupted()
     yield
     jobs.shutdown()

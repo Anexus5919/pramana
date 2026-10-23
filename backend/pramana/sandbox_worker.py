@@ -203,7 +203,7 @@ def _posix_limits(mem_mb: int) -> None:
         ctypes.CDLL(None).prctl(1, signal.SIGKILL)
 
 
-def _windows_full_speed() -> None:
+def windows_full_speed() -> None:
     """Opt out of EcoQoS power throttling, which Windows applies to windowless background processes."""
     import ctypes
     from ctypes import wintypes
@@ -220,7 +220,7 @@ def _windows_full_speed() -> None:
 
 def main() -> None:
     if os.name == "nt":
-        _windows_full_speed()
+        windows_full_speed()
     ipc = os.fdopen(os.dup(sys.stdout.fileno()), "wb", buffering=0)
     # Libraries that print would corrupt the reply channel, so ordinary stdout goes to stderr from here on
     os.dup2(sys.stderr.fileno(), sys.stdout.fileno())

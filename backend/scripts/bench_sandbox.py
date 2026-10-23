@@ -21,7 +21,11 @@ def main(all_docs: bool = False) -> None:
     from pramana import sandbox
     from pramana.forensics import fingerprints, pdf_struct
     from pramana.pipeline.text import extract_image, extract_pdf
-    from pramana.sandbox_worker import op_qr
+    from pramana.sandbox_worker import op_qr, windows_full_speed
+
+    if os.name == "nt":
+        # Workers opt out of power throttling; this process must too, or the in-process side is slowed unfairly
+        windows_full_speed()
 
     files = sorted(FIX.rglob("*.pdf")) + sorted(FIX.rglob("*.jpg")) if all_docs else \
         sorted((FIX / "A7").glob("*.pdf")) + [FIX / "A2" / "audited_accounts.pdf"]
