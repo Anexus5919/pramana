@@ -34,6 +34,10 @@ def main(validate: bool = True) -> None:
         shutil.rmtree(s.data_dir / sub, ignore_errors=True)
     for f in s.data_dir.glob("pramana.db*"):
         f.unlink()
+    if not s.db_url.startswith("sqlite"):
+        from pramana.db import drop_all
+
+        drop_all()
     for d in (s.storage_dir, s.cache_dir):
         d.mkdir(parents=True, exist_ok=True)
 

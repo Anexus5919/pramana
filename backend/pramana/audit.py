@@ -10,7 +10,7 @@ from typing import Any
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from .crypto import audit_signing_key, canonical_json, public_key_b64, sha256_hex
@@ -49,7 +49,10 @@ def record(
     application_id: str | None = None,
     details: dict[str, Any] | None = None,
 ) -> AuditEvent:
-    """Append an event. Caller commits; the chain is serialised by SQLite's single writer."""
+    """Append an event. Caller commits; the chain is serialised by SQLite's single writer, and on PostgreSQL by
+    a transaction-level advisory lock held until that commit."""
+    if db.get_bind().dialect.name == "postgresql":
+        db.execute(text("SELECT pg_advisory_xact_lock(726272)"))
     last = db.scalars(select(AuditEvent).order_by(AuditEvent.seq.desc()).limit(1)).first()
     prev = last.hash if last else GENESIS
     seq = (last.seq + 1) if last else 1

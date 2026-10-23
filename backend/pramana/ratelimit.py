@@ -24,3 +24,34 @@ def limit(key: str, max_hits: int, window_s: float) -> None:
 def reset() -> None:
     with _lock:
         _hits.clear()
+
+
+def count(key: str, window_s: float) -> int:
+    """Hits recorded for key inside the window, without recording a new one."""
+    now = time.monotonic()
+    with _lock:
+        q = _hits.get(key)
+        if not q:
+            return 0
+        while q and now - q[0] > window_s:
+            q.popleft()
+        return len(q)
+
+
+def hit(key: str) -> None:
+    """Record a hit without checking the limit (e.g. a failed password, counted after the fact)."""
+    with _lock:
+        _hits[key].append(time.monotonic())
+
+
+def retry_after(key: str, window_s: float) -> int:
+    """Seconds until the oldest hit for key leaves the window."""
+    now = time.monotonic()
+    with _lock:
+        q = _hits.get(key)
+        return int(window_s - (now - q[0])) + 1 if q else 0
+
+
+def clear(key: str) -> None:
+    with _lock:
+        _hits.pop(key, None)

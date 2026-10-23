@@ -1,16 +1,19 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import admin, applications, photos
+from . import jobs, sandbox
+from .api import admin, applications, live, ops, photos
 from .config import get_settings
 from .db import init_db
 from .history import api as history_api
 from .history.watch import start_scheduler
 from .officer import routes as officer
+from .sandbox_worker import windows_full_speed
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 # pyHanko logs full tracebacks for expected diff-analysis outcomes; results are reported through the API instead
@@ -21,10 +24,16 @@ for noisy in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "fontTools"):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    if os.name == "nt":
+        # A server started in the background would otherwise be slowed by Windows power throttling
+        windows_full_speed()
+    jobs.recover_interrupted()
     watch_task = start_scheduler()
     yield
     if watch_task:
         watch_task.cancel()
+    jobs.shutdown()
+    sandbox.shutdown()
 
 
 app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
@@ -34,6 +43,8 @@ app.include_router(applications.router)
 app.include_router(admin.router)
 app.include_router(photos.router)
 app.include_router(history_api.router)
+app.include_router(live.router)
+app.include_router(ops.router)
 app.include_router(officer.router)
 
 
@@ -45,6 +56,8 @@ async def security_headers(request: Request, call_next):
     resp.headers.setdefault("Referrer-Policy", "no-referrer")
     if request.url.path.startswith("/api"):
         resp.headers.setdefault("Cache-Control", "no-store")
+    if get_settings().cookie_secure:
+        resp.headers.setdefault("Strict-Transport-Security", f"max-age={get_settings().hsts_max_age}; includeSubDomains")
     return resp
 
 

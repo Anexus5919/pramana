@@ -87,6 +87,24 @@ def _scan_active(pdf: pikepdf.Pdf) -> list[dict]:
 
 
 def validate_upload(filename: str, data: bytes) -> IntakeResult:
+    """Check an upload; the PDF and image parsing runs in the parser sandbox when it is enabled."""
+    if not get_settings().parser_sandbox:
+        return _validate_upload_local(filename, data)
+    from ..sandbox import SandboxError, SandboxUnsafe, call
+
+    try:
+        res, _ = call("intake", filename, data=data)
+    except SandboxUnsafe as e:
+        raise UploadRejected(f"the file could not be read safely ({e}); it was not accepted") from e
+    except SandboxError as e:
+        raise UploadRejected(f"unreadable file: {e}") from e
+    if "rejected" in res:
+        raise UploadRejected(res["rejected"])
+    return IntakeResult(mime=res["mime"], page_count=res["page_count"], active_content=res["active_content"],
+                        notes=res["notes"])
+
+
+def _validate_upload_local(filename: str, data: bytes) -> IntakeResult:
     s = get_settings()
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXT:

@@ -5,6 +5,7 @@ import {
   Inbox,
   LayoutDashboard,
   ScrollText,
+  ServerCog,
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
@@ -29,6 +30,7 @@ export const NAV: NavItem[] = [
   { to: "/rules", label: "Rules", icon: ScrollText, roles: OFFICIAL, group: "System", keywords: "ruleset handbook impact" },
   { to: "/issuers", label: "Issuer simulator", icon: FlaskConical, roles: OFFICIAL, group: "System", keywords: "registry simulated demo" },
   { to: "/audit", label: "Audit log", icon: ShieldCheck, roles: ["officer", "admin"], group: "System", keywords: "chain hash checkpoint" },
+  { to: "/platform", label: "Platform", icon: ServerCog, roles: ["officer", "admin"], group: "System", keywords: "sandbox keys retention jobs security" },
   { to: "/portal", label: "My applications", icon: Inbox, roles: ["institution"], group: "Portal", end: true, keywords: "home" },
   { to: "/portal/new", label: "New application", icon: FilePlus2, roles: ["institution"], group: "Portal", keywords: "create apply" },
 ];

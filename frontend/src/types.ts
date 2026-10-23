@@ -303,6 +303,59 @@ export interface RunFull extends RunBrief {
   facts: FactInput[];
 }
 
+/** One persisted progress event of a background validation run (GET /api/runs/{id}/events). */
+export interface RunEvent {
+  seq: number;
+  ts: string | null;
+  kind: string;
+  data: Record<string, unknown>;
+}
+
+/** Returned by submit, validate, reprocess and retry when the run continues in the background. */
+export type QueuedRun = RunBrief & { background: true; queued?: boolean };
+
+export interface RunProgress {
+  run: RunBrief | null;
+  events: RunEvent[];
+  done: boolean;
+}
+
+export interface SandboxStatus {
+  enabled: boolean;
+  max_workers: number;
+  timeout_s: number;
+  memory_mb: number;
+  max_tasks_per_worker: number;
+  enforced: { isolation: string; memory: string; timeout: string; processes: string };
+  idle_workers: { pid: number; tasks: number; peak_mb: number | null }[];
+  stats: { calls: number; unsafe: number; errors: number; spawned: number; recycled: number; mean_ms: number | null };
+  recent_unsafe: { op: string; reason: string; at: string }[];
+}
+
+export interface RetentionPlan {
+  policy: Record<string, number>;
+  as_of: string;
+  documents: { document_id: string; application_id: string; sha256: string; size_bytes: number; closed_at: string; due: string; eligible: boolean }[];
+  documents_eligible: number;
+  bytes_eligible: number;
+  previews_eligible: number;
+  run_events_eligible: number;
+  sessions_eligible: number;
+  dry_run: boolean;
+  documents_purged?: number;
+}
+
+/** GET /api/admin/platform: what the platform enforces right now. */
+export interface PlatformStatus {
+  database: string;
+  jobs: { background_runs: boolean; workers: number; active: RunBrief[]; recent: (RunBrief & { application_id: string })[] };
+  sandbox: SandboxStatus;
+  keys: { active_kid: string; master_keys: string[]; files_by_kid: Record<string, number>; legacy_files: number };
+  login_throttle: { max_attempts_per_ip: number; max_failures_per_username: number; window_s: number };
+  cookies: { secure: boolean; session_cookie: string; hsts: string | null };
+  retention: Record<string, number>;
+}
+
 export interface ReplayResult {
   original: RunBrief;
   replay: RunBrief;
