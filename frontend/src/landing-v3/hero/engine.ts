@@ -1,5 +1,5 @@
 // One mutable engine drives the ground, the hands, the eyes and the story cards; React only reads discrete beats
-import { CUT, type Hue, PALM_EYE, PIVOT, RING, tapAngle } from "./hands";
+import { CUT, fingerTip, type Folds, FREE_FINGERS, type Hue, PALM_EYE, PIVOT, RING, tapAngle } from "./hands";
 
 export const FOV = 50;
 export const CAM_H = 1.2;
@@ -207,6 +207,7 @@ export type HandFrame = {
   tilt: number;
   pose: number;
   tapDeg: number;
+  folds: Folds;
   eye: { px: number; py: number; open: number; scale: number };
   visible: number; // 0 fully underground, 1 up
 };
@@ -219,6 +220,9 @@ export const FLOW_SPEED = 0.15;
 export type Beats = { step: number; checked: number; confirmed: boolean; flagged: boolean; palm: boolean };
 
 type HandRt = {
+  fold: Spring[];
+  hover: number; // index of the free finger under the pointer, -1 for none
+  touchUntil: number[];
   pose: { from: number; to: number; t0: number };
   tapT0: number;
   palmLift: Spring;
@@ -279,11 +283,14 @@ export class Engine {
       px: sp(),
       py: sp(),
       open: sp(1),
+      fold: [sp(), sp(), sp()],
+      hover: -1,
+      touchUntil: [0, 0, 0],
       prevX: 0,
       prevY: 0,
     }));
     this.holeRt = [0, 1, 2].map(() => ({ d: sp(), prev: 0 }));
-    const hand = (): HandFrame => ({ wristX: 0, yOff: -600, tilt: 0, pose: 0, tapDeg: 0, eye: { px: 0, py: 0, open: 1, scale: 1 }, visible: 0 });
+    const hand = (): HandFrame => ({ wristX: 0, yOff: -600, tilt: 0, pose: 0, tapDeg: 0, folds: [0, 0, 0], eye: { px: 0, py: 0, open: 1, scale: 1 }, visible: 0 });
     this.frame = {
       hands: [hand(), hand()],
       holes: [0, 1, 2].map((i) => ({ x: 0, z: -6, rx: 0.4, rz: 0.3, disturb: 0, sink: 0, glow: 0, open: i < 2 ? 1 : 0 })),
@@ -305,6 +312,52 @@ export class Engine {
 
   startIntro() {
     if (this.introStart < 0) this.introStart = performance.now() + 250;
+  }
+
+  // a tap on a finger folds it briefly; on a mouse the hover does the same
+  touch(x: number, y: number) {
+    if (this.reduced) return;
+    for (let i = 0; i < 2; i++) {
+      const j = this.fingerAt(i, x, y, true);
+      if (j >= 0) this.hands[i].touchUntil[j] = performance.now() + 650;
+    }
+  }
+
+  // screen point a fraction k along free finger j of hand i (used by the dev screenshot checks)
+  fingerScreen(i: number, j: number, k = 0.75) {
+    const L = this.layout;
+    const f = this.frame.hands[i];
+    const F = FREE_FINGERS[j];
+    const x = F.b[0] + (F.t[0] - F.b[0]) * k;
+    const y = F.b[1] + (F.t[1] - F.b[1]) * k;
+    return handPoint(L.s, L.groundY, f.wristX, f.yOff, f.tilt, HANDS[i].mirror, x, y);
+  }
+
+  // hit-test the free fingers of one hand in screen space
+  private fingerAt(i: number, x: number, y: number, unfolded: boolean): number {
+    const L = this.layout;
+    const f = this.frame.hands[i];
+    if (f.visible < 0.6) return -1;
+    const mirror = HANDS[i].mirror;
+    let best = -1;
+    let bestD = Infinity;
+    for (let j = 0; j < 3; j++) {
+      const F = FREE_FINGERS[j];
+      const tip = unfolded ? F.t : fingerTip(j, f.folds[j]);
+      const a = handPoint(L.s, L.groundY, f.wristX, f.yOff, f.tilt, mirror, F.b[0], F.b[1]);
+      const b = handPoint(L.s, L.groundY, f.wristX, f.yOff, f.tilt, mirror, tip[0], tip[1]);
+      const vx = b.x - a.x;
+      const vy = b.y - a.y;
+      const k = clamp(((x - a.x) * vx + (y - a.y) * vy) / (vx * vx + vy * vy || 1), 0, 1);
+      // only the part of the finger above the palm counts, the base is covered by it
+      if (k < 0.3) continue;
+      const d = Math.hypot(x - (a.x + vx * k), y - (a.y + vy * k));
+      if (d < (F.w / 2) * L.s + 3 && d < bestD) {
+        best = j;
+        bestD = d;
+      }
+    }
+    return best;
   }
 
   blink() {
@@ -425,6 +478,17 @@ export class Engine {
       out.pose = this.reduced ? wantPose : lerp(rt.pose.from, rt.pose.to, 1 - Math.pow(1 - pe, 3));
       out.tapDeg = this.reduced ? 0 : tapAngle(t - rt.tapT0);
 
+      // a hovered free finger curls with a spring and springs back when the pointer leaves
+      if (!this.reduced && this.pointer.has) {
+        const now = this.fingerAt(i, this.pointer.x, this.pointer.y, false);
+        rt.hover = now >= 0 ? now : rt.hover >= 0 && this.fingerAt(i, this.pointer.x, this.pointer.y, true) === rt.hover ? rt.hover : -1;
+      } else rt.hover = -1;
+      for (let j = 0; j < 3; j++) {
+        const want = !this.reduced && (rt.hover === j || t < rt.touchUntil[j]) ? 1 : 0;
+        springTo(rt.fold[j], want, dt, 260, 19);
+        out.folds[j] = this.reduced ? 0 : rt.fold[j].x;
+      }
+
       springTo(rt.palmLift, i === 1 && b.palm ? 34 : 0, dt, 170, 18);
       springTo(rt.palmTilt, i === 1 && b.palm ? 9 : 0, dt, 170, 18);
 
@@ -453,7 +517,12 @@ export class Engine {
       const ey = lerp(RING.y, PALM_EYE.y, out.pose);
       const eye = handPoint(L.s, L.groundY, out.wristX, out.yOff, out.tilt, H.mirror, ex, ey);
       const lk = look[i];
-      const pt = lk.kind === "auto" ? target : lk.kind === "point" ? lk : null;
+      let pt = lk.kind === "auto" ? target : lk.kind === "point" ? lk : null;
+      // the eye glances at its own finger while that finger folds
+      if (lk.kind === "auto" && rt.hover >= 0) {
+        const tip = fingerTip(rt.hover, out.folds[rt.hover]);
+        pt = handPoint(L.s, L.groundY, out.wristX, out.yOff, out.tilt, H.mirror, tip[0], tip[1]);
+      }
       let tx = 0;
       let ty = 0;
       if (pt && !this.reduced) {

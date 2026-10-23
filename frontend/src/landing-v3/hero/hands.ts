@@ -61,12 +61,27 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.fill();
 }
 
+// The free fingers (middle, ring, little); thumb and index stay closed around the eye
+export const FREE_FINGERS = [
+  { b: [222, 262], t: [220, 72], w: 43, dot: 12, r: 10 },
+  { b: [267, 264], t: [271, 90], w: 43, dot: 12, r: 10 },
+  { b: [309, 272], t: [319, 142], w: 39, dot: 11, r: 9 },
+] as const;
+export type Folds = [number, number, number];
+
+// Tip of a free finger folded by f: the finger shortens toward the palm as it curls
+export function fingerTip(j: number, f: number): [number, number] {
+  const F = FREE_FINGERS[j];
+  const k = 1 - 0.46 * Math.max(-0.15, Math.min(1.1, f));
+  return [F.b[0] + (F.t[0] - F.b[0]) * k, F.b[1] + (F.t[1] - F.b[1]) * k];
+}
+
 // Texture windows in hand units
 export const UPPER_BOX = { x0: -24, y0: 18, x1: 384, y1: 452 };
 export const CUFF_BOX = { x0: 150, y0: 380, x1: 336, y1: 820 };
 
 // Fingers, thumb and palm: everything that leans about the wrist pivot
-export function drawUpper(ctx: CanvasRenderingContext2D, hue: Hue, pose: number, tapDeg: number) {
+export function drawUpper(ctx: CanvasRenderingContext2D, hue: Hue, pose: number, tapDeg: number, folds: Folds = [0, 0, 0]) {
   const c = HUES[hue];
   ctx.lineCap = "round";
   ctx.save();
@@ -82,12 +97,24 @@ export function drawUpper(ctx: CanvasRenderingContext2D, hue: Hue, pose: number,
     p.lineTo(x1, y1);
     stroke(ctx, p, c.base, w);
   };
-  line(222, 262, 220, 72, 43);
-  line(267, 264, 271, 90, 43);
-  line(309, 272, 319, 142, 39);
-  dot(ctx, 220, 84, 10, c.tips[0]);
-  dot(ctx, 271, 102, 10, c.tips[1]);
-  dot(ctx, 318.5, 153, 9, c.tips[2]);
+  FREE_FINGERS.forEach((F, j) => {
+    const f = folds[j];
+    const [tx, ty] = fingerTip(j, f);
+    line(F.b[0], F.b[1], tx, ty, F.w);
+    const len = Math.hypot(F.t[0] - F.b[0], F.t[1] - F.b[1]);
+    const ux = (F.t[0] - F.b[0]) / len;
+    const uy = (F.t[1] - F.b[1]) / len;
+    // the curled top joint turns away from the viewer and reads as a darker knuckle
+    if (f > 0.02) {
+      const p = new Path2D();
+      p.moveTo(tx - ux * len * 0.2 * f, ty - uy * len * 0.2 * f);
+      p.lineTo(tx, ty);
+      ctx.globalAlpha = Math.min(1, f * 1.4);
+      stroke(ctx, p, c.shade, F.w * 0.94);
+      ctx.globalAlpha = 1;
+    }
+    dot(ctx, tx - ux * F.dot, ty - uy * F.dot, F.r * (1 - 0.25 * Math.max(0, f)), c.tips[j]);
+  });
   stroke(ctx, bezier(mixNums(THUMB.ok, THUMB.open, pose)), c.base, 48);
   roundRect(ctx, 150, 206, 186, 232, 58, c.base);
 }
@@ -136,6 +163,7 @@ export type HandPose = {
   mirror: boolean;
   pose: number; // 0 OK sign, 1 open "wait" palm
   tapDeg?: number;
+  folds?: Folds;
   tilt?: number; // degrees, screen space, about the wrist pivot
   eye?: { px: number; py: number; open: number };
 };
@@ -166,7 +194,7 @@ export function drawWholeHand(ctx: CanvasRenderingContext2D, h: HandPose, clipY 
     ctx.translate(360, 0);
     ctx.scale(-1, 1);
   }
-  drawUpper(ctx, h.hue, h.pose, h.tapDeg ?? 0);
+  drawUpper(ctx, h.hue, h.pose, h.tapDeg ?? 0, h.folds);
   ctx.restore();
   const ex = lerp(RING.x, PALM_EYE.x, h.pose);
   const ey = lerp(RING.y, PALM_EYE.y, h.pose);

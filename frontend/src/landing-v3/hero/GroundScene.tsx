@@ -162,7 +162,7 @@ type HandRig = {
   eyeMat: THREE.ShaderMaterial;
   upperCtx: CanvasRenderingContext2D;
   upperTex: THREE.CanvasTexture;
-  last: { pose: number; tap: number };
+  last: { pose: number; tap: number; folds: string };
   dispose: () => void;
 };
 
@@ -257,7 +257,7 @@ function makeHand(hue: Hue, mirror: boolean, order: number): HandRig {
     eyeMat,
     upperCtx: upper.ctx,
     upperTex,
-    last: { pose: 0, tap: 0 },
+    last: { pose: 0, tap: 0, folds: "0,0,0" },
     dispose: () => {
       [cuffGeo, upperGeo, eyeGeo].forEach((g) => g.dispose());
       [cuffMat, upperMat, eyeMat].forEach((mm) => mm.dispose());
@@ -283,10 +283,12 @@ function Hands({ engine }: { engine: Engine }) {
       rig.group.position.set(g.x, G0 + f.yOff * k, g.z);
       rig.group.scale.setScalar(k);
       rig.lean.rotation.z = (-f.tilt * Math.PI) / 180;
-      if (Math.abs(f.pose - rig.last.pose) > 0.002 || Math.abs(f.tapDeg - rig.last.tap) > 0.05) {
-        rig.last = { pose: f.pose, tap: f.tapDeg };
+      // the finger texture is only redrawn while a pose, tap or fold is actually moving
+      const folds = f.folds.map((v) => v.toFixed(3)).join(",");
+      if (Math.abs(f.pose - rig.last.pose) > 0.002 || Math.abs(f.tapDeg - rig.last.tap) > 0.05 || folds !== rig.last.folds) {
+        rig.last = { pose: f.pose, tap: f.tapDeg, folds };
         prep(rig.upperCtx, UPPER_BOX);
-        drawUpper(rig.upperCtx, HANDS[i].hue, f.pose, f.tapDeg);
+        drawUpper(rig.upperCtx, HANDS[i].hue, f.pose, f.tapDeg, f.folds);
         rig.upperTex.needsUpdate = true;
       }
       const ex = RING.x + (PALM_EYE.x - RING.x) * f.pose;

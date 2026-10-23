@@ -57,7 +57,7 @@ export const FallbackHands = {
       const ox = mirror ? 360 - PIVOT.x : PIVOT.x;
       const s = L.s;
       ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * (f.wristX - ox * s), dpr * (L.groundY - CUT * s - f.yOff * s));
-      drawWholeHand(ctx, { hue, mirror, pose: f.pose, tapDeg: f.tapDeg, tilt: f.tilt, eye: f.eye }, CUT + f.yOff);
+      drawWholeHand(ctx, { hue, mirror, pose: f.pose, tapDeg: f.tapDeg, folds: f.folds, tilt: f.tilt, eye: f.eye }, CUT + f.yOff);
     });
   },
 };

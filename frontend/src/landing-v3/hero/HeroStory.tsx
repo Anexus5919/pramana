@@ -141,6 +141,7 @@ export default function HeroStory() {
   const [tabVisible, setTabVisible] = useState(true);
 
   useEffect(() => {
+    if (import.meta.env.DEV) (window as unknown as { __v3?: Engine }).__v3 = engine;
     engine.onBeats = setBeats;
     return () => {
       engine.onBeats = null;
@@ -186,6 +187,7 @@ export default function HeroStory() {
     const down = (e: PointerEvent) => {
       move(e);
       engine.blink();
+      if (e.pointerType === "touch") engine.touch(e.clientX, e.clientY);
     };
     const leave = () => {
       engine.pointer.has = false;
