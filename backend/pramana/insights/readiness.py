@@ -300,6 +300,11 @@ def _targets(rs: Ruleset, rule: dict[str, Any]) -> list[dict[str, str]]:
     return out[:2]
 
 
+def _years(age: float) -> str:
+    # Whole years, except near the 30-year line where the decimal decides
+    return f"{age:.1f}" if 29.5 <= age < 31.5 else f"{age:.0f}"
+
+
 def _num(facts: FactStore, path: str) -> Any:
     f = facts.get(path)
     return f.value if f else None
@@ -349,10 +354,10 @@ def _document_items(rs: Ruleset, app: Application, docs: dict[str, Any], facts: 
                  and facts.get("derived.years_since_completion").source == "derived" else "as you declared it")
         if res is not None and res.outcome in (PASS, FAIL):
             required.append("structural_stability")
-            conditional["structural_stability"] = (f"Required because the building is {age:g} years old, {basis}; "
+            conditional["structural_stability"] = (f"Required because the building is {_years(age)} years old, {basis}; "
                                                    "the handbook asks for it above 30 years.")
         elif res is not None and res.outcome == NOT_APPLICABLE and age is not None:
-            notes.append(f"A Structural Stability Certificate is not needed: the building is {age:g} years old, "
+            notes.append(f"A Structural Stability Certificate is not needed: the building is {_years(age)} years old, "
                          f"{basis}, and the handbook asks for it only above 30 years.")
         elif res is not None and res.outcome == INSUFFICIENT:
             notes.append("Upload the Occupancy / Completion Certificate, or declare the building age, to find out "
@@ -420,7 +425,8 @@ def _rule_item(rs: Ruleset, app: Application, r: Any, facts: FactStore, as_of: d
     if r.outcome == FAIL:
         it.status, it.title = "fix", words.get("fix", rule["title"])
         it.detail = words.get("detail") or _readable(r.message)
-        if app.status == "draft":
+        if it.detail:
+            # Judged as of today, the date the institution would submit or resubmit
             it.detail = re.sub(r"the submission date (\d{1,2} \w+ \d{4})", lambda m: f"today, {m.group(1)}",
                                it.detail)
         if rule["id"] == "APH-617I-FIRE-VALID":

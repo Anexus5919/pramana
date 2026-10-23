@@ -28,6 +28,7 @@ import { fieldErrors, fromDraft, programmeErrors, toDraft, type DeclaredDraft } 
 import { NextStepPanel } from "./NextStep";
 import { EDITABLE, checklistSourceText, currentDocs, missingRequired, openRectification, portalStage, progressSteps } from "./progress";
 import { ReadinessPanel } from "./readiness/ReadinessPanel";
+import type { Readiness } from "./readiness/types";
 import { DeficiencyLetterPanel, itemDocType } from "./RectificationLetter";
 import { RunHistoryPanel } from "./RunHistory";
 import { SubmitDialog } from "./SubmitDialog";
@@ -260,6 +261,7 @@ export default function InstitutionApplicationPage() {
   const [liveRun, setLiveRun] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [figure, setFigure] = useState<FigureRequest | null>(null);
+  const [readiness, setReadiness] = useState<Readiness | null>(null);
 
   const q = useQuery({ queryKey: qk.application(appId), queryFn: () => api.application(appId), enabled: !!appId });
   // A check still running after a reload is followed again from its saved progress
@@ -383,11 +385,11 @@ export default function InstitutionApplicationPage() {
       />
 
       {editable && !rect && (
-        <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} />
+        <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} onResult={setReadiness} />
       )}
       {rect && <DeficiencyLetterPanel appId={app.id} rect={rect} docLabel={docLabel} onShowDocument={showSlot} />}
       {editable && rect && (
-        <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} />
+        <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} onResult={setReadiness} />
       )}
       <AskedAboutPanel findings={asked} rectifying={!!rect} />
 
@@ -404,6 +406,7 @@ export default function InstitutionApplicationPage() {
         required={required}
         pending={submit.isPending}
         error={submit.error}
+        readiness={editable ? readiness : null}
       />
     </Page>
   );

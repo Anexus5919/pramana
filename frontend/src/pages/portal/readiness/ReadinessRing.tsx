@@ -89,7 +89,7 @@ export function ReadinessRing({ groups, active, activeGroup, onActive, checking,
   const dim = (s: Segment) => (active ? s.id !== active : activeGroup ? s.group !== activeGroup : false);
 
   return (
-    <div className={cn("relative aspect-square w-full", className)}>
+    <div className={cn("relative aspect-square", className)}>
       <svg viewBox="0 0 200 200" role="img" aria-label={label} className="block size-full overflow-visible">
         <style>{`
           @keyframes readiness-draw { from { stroke-dashoffset: 42; } to { stroke-dashoffset: 0; } }

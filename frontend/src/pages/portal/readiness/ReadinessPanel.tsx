@@ -1,5 +1,5 @@
 import { ArrowDown, ChevronRight, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fmtDate, fmtDateTime, pluralize } from "../../../lib/format";
 import type { ApplicationDetail } from "../../../types";
 import { Button, Callout, Panel, Skeleton, cn } from "../../../ui2";
@@ -67,7 +67,7 @@ function FixRow({ item, active, onActive, onGoTo, resubmission }: RowProps) {
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h4 className="text-sm font-medium text-ink">{item.title}</h4>
             <span className="text-xs text-ink-3">{GROUP_LABEL[item.group]}</span>
-            {resubmission && item.requested && <span className="text-xs font-medium text-manual-fg">In AICTE&rsquo;s request</span>}
+            {resubmission && item.requested && <span className="text-xs font-medium text-manual-fg">Asked by AICTE</span>}
           </div>
           {item.conditional && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{item.conditional}</p>}
           {item.detail && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{item.detail}</p>}
@@ -222,14 +222,19 @@ export interface ReadinessPanelProps {
   app: ApplicationDetail;
   onShowDocument: (docType: string) => void;
   onEditFigure: (key: string) => void;
+  /** Each new result, so the Submit dialog can mention what is still to fix */
+  onResult?: (r: Readiness) => void;
 }
 
 /**
  * Pre-submission readiness check: the handbook rules AICTE applies that an institution may see, run on the draft
  * as it stands. A self-check only; it never submits, never blocks and never decides anything.
  */
-export function ReadinessPanel({ app, onShowDocument, onEditFigure }: ReadinessPanelProps) {
+export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: ReadinessPanelProps) {
   const { data, error, checking, trigger, change, recheck } = useReadiness(app, true);
+  useEffect(() => {
+    if (data) onResult?.(data);
+  }, [data, onResult]);
   const [active, setActive] = useState<string | null>(null);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const goTo = (t: ReadinessTarget) => (t.kind === "document" ? onShowDocument(t.key) : onEditFigure(t.key));
@@ -320,6 +325,14 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure }: ReadinessP
                       After upload
                     </span>
                   )}
+                  {data.resubmission && data.counts.requested > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <svg viewBox="0 0 14 14" className="size-3.5">
+                        <line x1="7" y1="2" x2="7" y2="12" stroke="var(--ink-2)" strokeWidth={1.75} strokeLinecap="round" />
+                      </svg>
+                      Asked by AICTE
+                    </span>
+                  )}
                   {data.counts.advice > 0 && (
                     <span className="inline-flex items-center gap-1">
                       <span className="flex size-3.5 items-center justify-center">
@@ -336,12 +349,12 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure }: ReadinessP
             <div className="min-w-0">
               <h3 className={cn("text-md font-semibold", ready ? "text-verified-fg" : "text-ink")}>{headline(data)}</h3>
               <p className="mt-0.5 text-sm text-ink-2 text-pretty">{summary(data)}</p>
-              <p role="status" className="mt-1.5 min-h-5 text-sm text-ink-3">
+              <p role="status" className="mt-1 min-h-5 text-sm text-ink-3">
                 {checking ? `${TRIGGER_TEXT[trigger]}.` : changed}
               </p>
 
               {fixItems.length > 0 && (
-                <section aria-labelledby="readiness-fix" className="mt-3">
+                <section aria-labelledby="readiness-fix" className="mt-1">
                   <h4 id="readiness-fix" className="sr-only">
                     To fix
                   </h4>
