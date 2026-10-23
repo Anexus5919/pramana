@@ -162,13 +162,18 @@ function Registry({ token }: { token: string }) {
           {!r.available ? (
             <p className="text-unavail-fg">{r.detail ?? "The registry did not respond."} Nothing was confirmed.</p>
           ) : r.found ? (
-            <p className="flex items-center gap-1.5 text-ink">
-              <StatusCube tone={r.status === "valid" ? "verified" : "mismatch"} size={13} />
-              {r.registry} holds <span className="font-mono">{r.ref}</span>, status {r.status ?? "not stated"}.
+            <p className="flex items-start gap-2 text-ink">
+              <StatusCube tone={r.status === "valid" ? "verified" : "mismatch"} size={13} className="mt-1" />
+              <span className="min-w-0">
+                {r.registry} holds <span className="font-mono break-words">{r.ref}</span>, status {r.status ?? "not stated"}.
+              </span>
             </p>
           ) : (
-            <p className="flex items-center gap-1.5 text-mismatch-fg">
-              <StatusCube tone="mismatch" size={13} /> {r.registry} has no record of <span className="font-mono">{r.ref}</span>.
+            <p className="flex items-start gap-2 text-mismatch-fg">
+              <StatusCube tone="mismatch" size={13} className="mt-1" />
+              <span className="min-w-0">
+                {r.registry} has no record of <span className="font-mono break-words">{r.ref}</span>.
+              </span>
             </p>
           )}
           {r.compare && r.compare.length > 0 && (
