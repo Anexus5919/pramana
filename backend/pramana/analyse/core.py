@@ -7,9 +7,10 @@ SIMULATED issuer registry and the revision time machine come from the verificati
 Rules, cross-application links and declared values need an application, so they are not run.
 """
 
+import logging
 import time
 from collections.abc import Callable
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Any
 
 from .. import sandbox
@@ -17,6 +18,7 @@ from .. import serializers as ser
 from ..crypto import sha256_hex
 from ..forensics.pdf_struct import revision_offsets
 from ..history.revisions import describe
+from ..insights.story import build_story, pramana_event
 from ..models import Document, Institution
 from ..photos.findings import credential_status
 from ..pipeline.intake import IntakeResult
@@ -41,6 +43,8 @@ CANNOT_KNOW = [
     {"what": "Campus distance", "why": "A photo's geotag is shown as recorded; distance from the campus needs the "
                                        "campus on record."},
 ]
+
+log = logging.getLogger(__name__)
 
 
 class _NoSession:
@@ -201,6 +205,7 @@ def analyse(data: bytes, filename: str, intake: IntakeResult, token: str) -> dic
 
     out = ser.document(doc, detail=True)
     an = doc.analysis or {}
+    story = _story(doc, data, out, revisions, sigs, vspec, steps)
     facts = an.get("forensic_facts") or {}
     ocr = an.get("ocr_scripts") or []
     labels = {k: v.get("label", k) for k, v in rs.doc_types.items()}
@@ -224,4 +229,24 @@ def analyse(data: bytes, filename: str, intake: IntakeResult, token: str) -> dic
         "seal_images": (doc.fingerprints or {}).get("images", []) if pdf else [],
         "photo": None if pdf else _photo(doc),
         "cannot_know": CANNOT_KNOW,
+        "story": story,
     }
+
+
+def _story(doc: Document, data: bytes, out: dict[str, Any], revisions: dict[str, Any] | None,
+           sigs: list[vb.VerificationResult], vspec: dict[str, Any], steps: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """The life story from the in-memory analysis; a failure here never costs the rest of the report."""
+    an = doc.analysis or {}
+    src = {"digital": "the text layer", "ocr": "OCR", "mixed": "the text layer and OCR"}.get(doc.text_source or "",
+                                                                                             "the pipeline")
+    ms = sum(int(s.get("ms") or 0) for s in steps)
+    own = [pramana_event("analysed", "Analysed here", f"Read with {src} and checked on this page in {ms / 1000:.1f} s. "
+                         "Not filed: the bytes are released when you forget the file.", datetime.now(UTC))]
+    try:
+        return build_story(mime=doc.mime, data=data, fields=out["fields"], pages=out["pages"],
+                           facts=an.get("forensic_facts") or {}, photo=an.get("photo") or {}, revisions=revisions,
+                           signatures=[r.response for r in sigs], own=own,
+                           issuer_doc=bool(vspec.get("issuer") or vspec.get("issuer_signers")))
+    except Exception:  # noqa: BLE001
+        log.exception("life story failed for an analysed file")
+        return None
