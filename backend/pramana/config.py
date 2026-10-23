@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     llm_providers: str = ""
     llm_timeout_s: int = 60
     ollama_url: str = "http://127.0.0.1:11434"
-    # Fine-tuned Qwen3-1.7B extractor built by backend/training; any Ollama model name works here
-    ollama_model: str = "pramana-extract"
+    # Fine-tuned Qwen3-1.7B extractor (version 2) built by backend/training; pramana-extract is version 1
+    ollama_model: str = "pramana-extract-v2"
     # Model weights outside data_dir, so a fresh data directory does not refetch them: the photo detector
     # (scripts/fetch_photo_assets.py) and the Devanagari recogniser, both pinned by SHA-256. The map tile URL
     # is for the Campus tab; empty disables tiles and the tab shows a plain plot instead
