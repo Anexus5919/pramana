@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from .. import serializers as ser
 from ..auth import OFFICIAL_ROLES, load_application, require_roles
-from ..crypto import load_document, sha256_hex
+from ..crypto import DocumentPurged, load_document, sha256_hex
 from ..db import get_db
 from ..forensics.pdf_struct import editors_named, revision_offsets
 from ..history.revisions import describe
@@ -292,8 +292,8 @@ def _pdf_events(st: _Story, data: bytes, revisions: dict[str, Any] | None, sig_r
             e = st.add(
                 "signed", {"issuer": "Issuer signed", "applicant": "Applicant signed"}.get(role, "Signed"),
                 f"{who} signed revision {n} of {count}. The signature covers {through}"
-                + (", the whole file." if n == count else f"; revision{'s' if count - n > 1 else ''} after it "
-                   "are not covered.")
+                + (", the whole file." if n == count else f"; the revision{'s' if count - n > 1 else ''} after it "
+                   f"{'are' if count - n > 1 else 'is'} not covered.")
                 + ("" if when else " The signature records no signing time."),
                 _time(when, "tsa" if tsa else "signer" if when else "structure", s.get("signing_time")),
                 actor=who, role=role, revision=n, status=status, field=s.get("field"),
@@ -450,11 +450,15 @@ def _photo_events(st: _Story, facts: dict[str, Any], photo: dict[str, Any]) -> N
                    + (f" by {a['software']}" if a.get("software") else "") + ". Recorded actions are disclosed edits.",
                    _time(_iso(a.get("when")), "device" if a.get("when") else "structure", a.get("when")),
                    tool=a.get("software"), link={"to": "credentials"})
+        if captured and c2pa.get("signature_valid"):
+            st.coverage.append({"field": c2pa.get("manifest_label"), "signer": who, "role": "device",
+                                "through_revision": 1, "revision_count": 1, "event": signed["id"],
+                                "from_event": captured["id"]})
         if c2pa.get("hash_matches") is False:
-            mod = st.add("modified", "Changed after signing",
+            mod = st.add("modified", "Modified later",
                          "The image no longer matches the hash its Content Credentials signed, so its pixels or "
                          "metadata changed after the camera signed it. The file records no time for that change.",
-                         _time(None, "structure"), link={"to": "credentials"}, tone="warning")
+                         _time(None, "structure"), link={"to": "credentials"}, tone="warning", after_signature=True)
             st.flag("STORY-PHOTO-MODIFIED", "high", "Photo modified after capture",
                     "The Content Credentials were signed at capture and still validate, but the file no longer "
                     "matches what they signed. Ask for the original photo or retake it during inspection.",
@@ -602,4 +606,7 @@ def document_story(doc_id: str, user: User = Depends(require_roles(*OFFICIAL_ROL
     if not doc:
         raise HTTPException(404, "document not found")
     load_application(db, user, doc.application_id)
-    return story_for_document(db, doc)
+    try:
+        return story_for_document(db, doc)
+    except DocumentPurged as e:
+        raise HTTPException(410, "The file was purged under the retention policy, so its story cannot be read.") from e

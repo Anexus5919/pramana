@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from .. import audit
 from ..auth import load_application, require_roles
 from ..db import get_db
+from ..history.models import ScrutinyOutcome
 from ..models import Application, Document, Finding, User, utcnow
 from ..officer.common import doc_label, latest_run, run_findings
 from ..photos.campus import payload as campus_payload
@@ -146,6 +147,9 @@ def build_brief(db: Session, app: Application) -> dict[str, Any]:
         if len(questions) >= MAX_QUESTIONS:
             break
 
+    referral = db.scalars(select(ScrutinyOutcome).where(ScrutinyOutcome.application_id == app.id)
+                          .order_by(ScrutinyOutcome.created_at.desc()).limit(1)).first()
+    referred = referral.created_at.isoformat() if referral and referral.outcome == "referred_for_visit" else None
     far = [p for p in campus["photos"] if p.get("geotag") == "outside"]
     rec = campus.get("record")
     high = sum(1 for f in findings if SEV_RANK.get(f.severity, 9) <= 1)
@@ -163,7 +167,7 @@ def build_brief(db: Session, app: Application) -> dict[str, Any]:
         "academic_year": app.academic_year, "round": app.round, "status": app.status,
         "address": ", ".join(x for x in (inst.address, inst.district, inst.state) if x),
         "run_id": run.id if run else None, "ruleset_id": run.ruleset_id if run else None,
-        "prepared_at": utcnow().isoformat(), "summary": summary,
+        "prepared_at": utcnow().isoformat(), "summary": summary, "referred_for_visit_at": referred,
         "originals": sorted(originals.values(), key=lambda o: SEV_RANK.get(o["severity"], 9)),
         "count": count, "retake": retake, "questions": questions,
         "gps": {"record": rec, "declared": campus.get("declared"), "threshold_km": campus.get("threshold_km"),
@@ -242,6 +246,11 @@ def _plot(gps: dict[str, Any], size: float = 70 * mm) -> Drawing | None:
     return d
 
 
+def _category(c: Any) -> str:
+    c = str(c or "")
+    return c if c.isupper() and "_" not in c else c.replace("_", " ").capitalize()
+
+
 def brief_pdf(b: dict[str, Any]) -> bytes:
     st = _styles()
     buf = io.BytesIO()
@@ -262,10 +271,14 @@ def brief_pdf(b: dict[str, Any]) -> bytes:
     out: list[Any] = [
         _p("Inspection brief", st["h1"]), Spacer(1, 3),
         _p(f"{b['institution']} ({b['aicte_id']}), {b['address']}", st["base"]),
-        _p(f"Application {b['application_id']}, {str(b['category']).replace('_', ' ').capitalize()}, AY {b['academic_year']}, round {b['round']}. "
+        _p(f"Application {b['application_id']}, {_category(b['category'])}, AY {b['academic_year']}, round {b['round']}. "
            f"Prepared {prepared} from validation run {b['run_id']}.", st["small"]),
-        Spacer(1, 6), _p("Summary", st["h2"]), _p(b["summary"], st["base"]), _p(b["note"], st["small"]),
+        Spacer(1, 6), _p("Summary", st["h2"]),
     ]
+    if b.get("referred_for_visit_at"):
+        when = datetime.fromisoformat(b["referred_for_visit_at"]).strftime("%d %b %Y")
+        out.append(_p(f"Referred to an expert visit committee by the scrutiny officer on {when}.", st["bold"]))
+    out += [_p(b["summary"], st["base"]), _p(b["note"], st["small"])]
     out.append(_p("Original documents to ask for", st["h2"]))
     if b["originals"]:
         rows = [[_p("Document", st["bold"]), _p("Why", st["bold"]), _p("Ask for", st["bold"])]]

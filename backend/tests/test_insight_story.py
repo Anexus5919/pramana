@@ -156,6 +156,9 @@ def test_applicant_only_signature_and_photo_edited_after_capture(app):
     assert mod["severity"] == "high" and mod["to"] == k["modified"][0]["id"]
     seq = {e["kind"]: e["seq"] for e in p["events"]}
     assert seq["credentials"] < seq["modified"] < seq["uploaded"]
+    # The credentials cover the capture; the change after them lies outside
+    assert p["coverage"][0]["role"] == "device" and p["coverage"][0]["event"] == k["credentials"][0]["id"]
+    assert k["modified"][0]["after_signature"] is True
 
 
 def test_story_is_for_officials_only(app):
