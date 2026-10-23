@@ -1,4 +1,4 @@
-import { BookOpen, FileText, History, ListChecks, SendHorizontal, ScanText, ShieldCheck } from "lucide-react";
+import { BookOpen, CornerDownRight, FileText, History, ListChecks, SendHorizontal, ScanText, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { errorMessage } from "../../../api";
@@ -217,7 +217,7 @@ export function AskPanel({ open, onClose, prefill }: { open: boolean; onClose: (
             <h3 className="mb-2 text-sm font-medium text-ink">Suggested questions</h3>
             <div className="flex flex-col items-start gap-1">
               {SUGGESTIONS.map((s) => (
-                <Button key={s} size="sm" variant="ghost" onClick={() => submit(s)} className="-ml-2.5">
+                <Button key={s} size="sm" variant="ghost" leadingIcon={<CornerDownRight />} onClick={() => submit(s)} className="-ml-2.5 text-ink-2">
                   {s}
                 </Button>
               ))}

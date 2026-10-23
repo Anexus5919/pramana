@@ -76,7 +76,10 @@ export function WorkspaceHeader({
           items={[
             <Code key="aicte">{inst.aicte_id}</Code>,
             <Code key="id">{app.id}</Code>,
-            app.category_label,
+            // Same short label as the review queue; the bracketed qualifier made the line wrap at 1280
+            <span key="cat" title={app.category_label}>
+              {app.category_label.replace(/\s*\(.*\)$/, "")}
+            </span>,
             `AY ${app.academic_year}, round ${app.round}`,
             [inst.district, inst.state].filter(Boolean).join(", "),
           ]}

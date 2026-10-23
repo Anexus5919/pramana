@@ -210,7 +210,7 @@ function InstitutionPanel() {
         items={[
           { label: "Name", value: i.name },
           { label: "AICTE ID", value: i.aicte_id, mono: true },
-          { label: "AISHE code", value: i.aishe_code, mono: true },
+          { label: "AISHE code", value: i.aishe_code, mono: !!i.aishe_code },
           { label: "Type", value: humanize(i.institution_type) },
           { label: "Women only", value: i.women_only ? "Yes" : "No" },
           { label: "Society", value: i.society_name },
