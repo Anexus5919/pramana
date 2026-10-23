@@ -110,10 +110,14 @@ function DocRow({ d, label, active, failed }: { d: LiveDoc; label: string; activ
         "grid grid-cols-[minmax(0,1fr)_minmax(150px,44%)] items-center gap-3 rounded-[10px] px-2.5 py-2 transition-colors duration-300",
         active && "bg-brand-soft",
       )}
-      aria-label={`${label}: ${done} of ${DOC_STEPS.length} steps, ${docDetail(d, active)}`}
     >
       <div className="min-w-0">
-        <div className={cn("truncate text-sm font-medium", d.status === "failed" ? "text-mismatch-fg" : "text-ink")}>{label}</div>
+        <div className={cn("truncate text-sm font-medium", d.status === "failed" ? "text-mismatch-fg" : "text-ink")}>
+          {label}
+          <span className="sr-only">
+            , {done} of {DOC_STEPS.length} steps done
+          </span>
+        </div>
         <div className={cn("truncate text-xs", active ? "text-brand-ink" : "text-ink-3")}>{docDetail(d, active)}</div>
       </div>
       <div className="grid grid-cols-5 gap-1" aria-hidden>

@@ -210,7 +210,7 @@ def verify_pdf(file: UploadFile = File(...), user: User = Depends(require_roles(
     """Check any PDF's signatures and structure without filing it. Nothing is stored except an audit entry."""
     from dataclasses import asdict
 
-    from ..forensics.pdf_struct import analyse
+    from .. import sandbox
     from ..pipeline.intake import UploadRejected, validate_upload
     from ..verification.signature import validate_signatures
 
@@ -223,7 +223,10 @@ def verify_pdf(file: UploadFile = File(...), user: User = Depends(require_roles(
     if res.mime != "application/pdf":
         raise HTTPException(422, "only PDF files can be checked here")
     sigs = validate_signatures(data)
-    signals, facts = analyse(data)
+    try:
+        signals, facts = sandbox.forensics(data, "application/pdf", None, None)
+    except sandbox.SandboxError as e:
+        raise HTTPException(422, f"the file could not be read safely: {e}") from e
     import hashlib
 
     sha = hashlib.sha256(data).hexdigest()
