@@ -13,7 +13,7 @@ A chain of custody for one file, built only from evidence inside the file and Pr
   - **Created:** the file's CreationDate and the Creator and Producer recorded in the first revision. The text says plainly that the creating tool wrote both, so they are claims.
   - **Signed:** each embedded signature with signer, role (issuer or applicant, from the validation run), signing time, and the revision it covers (from its `/ByteRange`).
   - **Edited, Annotated, Re-saved:** each later revision with what changed (from the revision diff: "'30-06-2027' was drawn over '30-06-2025' on page 1"), the ModDate and Producer of that revision when it changed them, and annotations added. A signature's own widget annotation is part of signing, not an event.
-  - **Photos:** Captured (EXIF DateTimeOriginal and camera), Credentials signed (C2PA), actions recorded in the manifest, Changed after signing (the file no longer matches the signed hash; no time is recorded for that), and a later EXIF save by editing software.
+  - **Photos:** Captured (EXIF DateTimeOriginal and camera), Credentials signed (C2PA), actions recorded in the manifest, Modified later (the file no longer matches the signed hash; no time is recorded for that), and a later EXIF save by editing software.
 - **Pramana (its own records)**
   - **Uploaded** by the institution user, at the server's time, with the SHA-256 recorded at upload and whether the stored file still matches it.
   - **Read** (text layer, OCR, Devanagari OCR, or photo analysis) and **Checked** in each validation run, with the findings that point at the file.
@@ -56,7 +56,7 @@ The wording never calls a file forged, fake, fraudulent or genuine; the tests ch
 
 - **Broken, logarithmic axis.** The step between two events grows with the logarithm of the time between them, capped at a day; a gap longer than a day is drawn as a break on both lanes with its real length in a pill ("3 years 4 months"). Shorter intervals are labelled on the shared Interval axis ("same second", "+13 s", "+2 min"). A date printed without a time is compared by calendar day ("next day"). A caption under the strip states the scale.
 - **Film strip.** Small page thumbnails at the points where the page changed (each revision once), with the changed region outlined in red on the edit revision; the photo for a photo.
-- **Signature coverage.** A green band on the file lane from Created to the issuer's signature, labelled "Issuer signature covers revisions 1 to 2" (grey for an applicant); a hatched red band for revisions after the last signature.
+- **Signature coverage.** A green band on the file lane from Created to the issuer's signature, labelled "Issuer signature covers revisions 1 to 2" (grey for an applicant); for a photo, from Captured to its Content Credentials. A hatched red band marks what came after the last signature.
 - **Markers.** One drawn glyph per kind (page, printed date, seal rosette, pencil, note, aperture, warning, upload, read, check). Pramana's records are filled (trusted); file events are outlined; warnings use the mismatch tone, the issuer's seal the verified tone.
 - **Evidence.** Selecting an event shows its time, source, value as written, signer or tool and what the evidence says, with a button to the evidence: the time machine at that revision, the region on the page, the signature or credentials check, the capture metadata, the fields read, the findings, or the activity log.
 - **Accessible.** The strip is a group with a text summary; events are buttons in time order with full labels, Left and Right move between them (roving tab stop), Home and End jump. A List view is the text alternative: a table with every event, time, source and detail. No animation; light and dark come from the design tokens.
@@ -71,14 +71,14 @@ The wording never calls a file forged, fake, fraudulent or genuine; the tests ch
 `backend/pramana/insights/story.py`, one builder shared by both routes:
 
 - `build_story(mime, data, fields, pages, facts, photo, revisions, signatures, own, issuer_doc)` reads the per-revision document information dictionary with pikepdf (`revision_infos`), combines it with `history.revisions.describe` (signatures and coverage), the revision diff, the signature validation responses and Pramana's own events, orders events by time (an event without a time stays after its predecessor in file order) and adds the anomalies.
-- `GET /api/documents/{doc}/story`: officials only (institutions get 403); built from the stored file, its verification attempts, the upload audit event and the validation runs.
+- `GET /api/documents/{doc}/story`: officials only (institutions get 403); built from the stored file, its verification attempts, the upload audit event and the validation runs. A file purged under the retention policy returns 410.
 - `POST /api/analyse` now returns `story` in its result, built by `analyse.core._story`. A failure there is logged and never costs the rest of the report.
 
 ## 2. Inspection brief
 
 **More actions, Prepare inspection brief** (officers) opens a printable brief for the Expert Visit Committee, prepared from the application's open findings:
 
-- **Summary** in one or two lines: open findings, high ones, what to do on site.
+- **Summary** in one or two lines: open findings, high ones, what to do on site. When the latest scrutiny outcome referred the application to an expert visit committee, the brief says so and when.
 - **Original documents to ask for:** each document with a forensic or verification finding of medium severity or more, with the findings that make it worth seeing and what to ask for (the original, or a copy certified by the issuer).
 - **What to count or see on site:** declared facilities against the room check ("15 workstations declared, 6 visible in lab_photo.jpg"), the declared labs, faculty, built-up area, land and bandwidth, each with how to check it.
 - **Where to go:** the campus point on record, the point declared on the satellite map and every photo geotag, drawn as a small plot (rings at the geotag threshold and twice it; a far geotag sits on the outer ring with its real distance, for example 329 km).
@@ -100,7 +100,7 @@ The wording never calls a file forged, fake, fraudulent or genuine; the tests ch
 
 1. Sign in as `officer`. Panchganga Institute of Technology (APP-2026-000107), Documents, Fire Safety Certificate: the strip reads Issued 01 Jul 2023, a 3-year break, Created, Issuer signed (green band, revisions 1 to 2), Edited, revision 3 (red hatch, thumbnail with the changed date outlined), then Uploaded, Read and Checked on Pramana's lane. "Open revision 3 in the time machine" jumps to the edit.
 2. Deccan Institute (APP-2026-000108), Fire Safety Certificate: "Signed only by the applicant".
-3. APP-2026-000101 and APP-2026-000107, the lab photos: Captured, Credentials signed, and for A7 "Changed after signing" with no time.
+3. APP-2026-000101 and APP-2026-000107, the lab photos: Captured, Credentials signed, and for A7 "Modified later" with no time.
 4. Analyse a document, `fixtures/real/egazette_2025_260000.pdf`: dated 6 Jan 2025 by its masthead, created the next day, signed 3 minutes later, nothing stands out.
 5. Analyse `fixtures/out/tamper_lab/fire_word.pdf` (a real Word round-trip): "Made with a desktop editor or converter" and "No digital signature in the file".
 6. Tapi Valley (APP-2026-000110), More actions, Prepare inspection brief: the far geotag pinned at 329 km, Download PDF.
