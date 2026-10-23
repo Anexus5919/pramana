@@ -62,14 +62,14 @@ def seal_reuse(db: Session, app: Application, docs: list[Document]) -> list[Link
             how = "pixel-identical" if exact else f"visually near-identical (perceptual hash distance {dist}/256)"
             inst = papp.institution.name
             evidence = [
-                {"kind": "region", "document_id": d.id, "page": im["page"], "bbox": im["bbox"],
-                 "label": "seal image", "value": iss},
-                {"kind": "peer_document", "document_id": pd.id, "application_id": papp.id, "page": hit["page"],
-                 "bbox": hit["bbox"]},
                 {"kind": "image_match", "document_id": d.id, "page": im["page"], "bbox": im["bbox"], "issuer": iss,
                  "peer_document_id": pd.id, "peer_application_id": papp.id, "peer_institution": inst,
                  "peer_page": hit["page"], "peer_bbox": hit["bbox"], "peer_issuer": piss, "distance": dist,
                  "exact": exact},
+                {"kind": "region", "document_id": d.id, "page": im["page"], "bbox": im["bbox"],
+                 "label": "seal image", "value": iss},
+                {"kind": "peer_document", "document_id": pd.id, "application_id": papp.id, "page": hit["page"],
+                 "bbox": hit["bbox"]},
             ]
             if _submitted_before(papp, app):
                 links.append(Link(

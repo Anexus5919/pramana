@@ -125,11 +125,11 @@ def _context_boxes(facts: dict[str, Any]) -> list[tuple[int, list[float], str]]:
     out = []
     for d in facts.get("revision_diffs") or []:
         if d.get("bbox"):
-            out.append((d["page"], d["bbox"], f"revision {d['to_revision']} changed text at the same spot"))
+            out.append((d["page"], d["bbox"], f"revision {d['to_revision']} changed the text"))
     for o in facts.get("overlapping_text") or []:
-        out.append((o["page"], o["bbox"], "glyphs there overlap other glyphs"))
+        out.append((o["page"], o["bbox"], "glyphs sit on top of other glyphs"))
     for c in facts.get("covered_text") or []:
-        out.append((c["page"], c["bbox"], "a white box covers text there"))
+        out.append((c["page"], c["bbox"], "a white box hides earlier text"))
     return out
 
 
@@ -157,16 +157,17 @@ def _signal(f, odd: list[dict], usual, peers, context, kind: str) -> Signal:
               f"None of the other {len(peers)} key values on this document uses that {kind}; they use "
               f"{_fmt(ref_font, ref_size)}, for example the {_label(ref.name)} '{ref.raw}'.")
     if also:
-        detail += " At the same spot " + " and ".join(also) + "."
+        detail += " Other traces at the same spot: " + "; ".join(also) + "."
     return Signal(
         "FX-FONT-MISMATCH",
         f"{label.capitalize()} drawn in a different {kind}",
         detail,
         "high" if also else "medium",
-        [{"kind": "region", "page": f.page, "bbox": box, "label": f"{label} drawn in {_fmt(font, size)}",
-          "value": _text(odd)},
-         {"kind": "region", "page": ref.page, "bbox": _box(ref_chars),
-          "label": f"comparable value ({_label(ref.name)}) in {_fmt(ref_font, ref_size)}", "value": ref.raw}],
+        # Labels carry no dots: the interface reads a dotted label as a fact path
+        [{"kind": "region", "page": f.page, "bbox": box, "value": _text(odd),
+          "label": (f"{label} drawn in {font}" if kind == "font" else f"{label} drawn at another size").replace(".", " ")},
+         {"kind": "region", "page": ref.page, "bbox": _box(ref_chars), "value": ref.raw,
+          "label": f"comparable value, {_label(ref.name)}, in {ref_font}".replace(".", " ")}],
         "Templates sometimes set one value in bold or another size on purpose, and a document retyped from "
         f"scratch uses one font throughout. A different {kind} says where to look closely; it does not show "
         "who changed the value or when.",
