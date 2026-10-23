@@ -143,7 +143,7 @@ Version 3:
 
 **Every result below predates the new finding.** Seeds 1101 to 6606 ran on code without XD-CERT-EXPIRES-IN-SESSION and with generators 1 and 2, and were not rerun. On today's code those worlds would show it on certificates that lapse during the session, unplanned.
 
-Quick check with version 3, fixed before running: judge mode with seed 7707 and 30 applications. JUDGE_V3
+Quick check with version 3, fixed before running: judge mode with seed 7707 and 30 applications (9 clean), on the branch merged with the session finding. Recall 70 of 70, precision 70 of 70, all 33 conditions fully found, and nothing at all fired on the 9 clean applications. XD-CERT-EXPIRES-IN-SESSION fired on exactly the 4 applications where it was planted. Wall clock 609 s while the seeded evaluation and the test suite ran alongside. On the same code the seeded evaluation scores 54 of 54 with 0 false positives (A10 now plants the session finding), and the full suite passes (136 tests).
 
 ## Results
 
