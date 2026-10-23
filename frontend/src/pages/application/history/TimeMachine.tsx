@@ -616,7 +616,7 @@ export function RevisionPanel({ doc }: { doc: DocumentDetail }) {
   );
 }
 
-const TIME_MACHINE_CODES = new Set(["FX-PDF-REVISION-TEXT-CHANGE", "FX-FIELD-OVERWRITTEN", "FX-PDF-INCREMENTAL-UPDATE", "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"]);
+const TIME_MACHINE_CODES = new Set(["FX-PDF-REVISION-TEXT-CHANGE", "FX-FIELD-OVERWRITTEN", "FX-PDF-INCREMENTAL-UPDATE", "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED", "FX-ANNOT-OVER-FIELD", "FX-ANNOT-OVER-TEXT"]);
 
 /** From a revision finding straight to the revision that introduced the change. */
 export function TimeMachineLink({ finding }: { finding: Finding }) {
