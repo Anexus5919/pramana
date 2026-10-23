@@ -3,6 +3,9 @@
 The QR carries a compact JWS (RFC 7515) signed with EdDSA/Ed25519 (RFC 8037). Verification needs only
 the issuer's published public key. If the visible text was edited but the QR was left as issued, the
 signed payload disagrees with the page, which is strong, explainable evidence of alteration.
+
+The QR holds either the bare token or a scan link, {public_base_url}/scan#t={token}, which any phone camera
+opens. Only the token is ever trusted: the host in a link is neither trusted nor contacted.
 """
 
 import base64
@@ -10,6 +13,7 @@ import json
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 import cv2
 import numpy as np
@@ -54,8 +58,34 @@ def issuer_keys() -> dict[str, dict[str, Any]]:
     return json.loads(p.read_text())
 
 
+def scan_link(token: str, base_url: str | None = None) -> str:
+    """The link a QR carries: the token rides in the fragment, which browsers never send to a server."""
+    return f"{(base_url or get_settings().public_base_url).rstrip('/')}/scan#t={token}"
+
+
+def link_parts(text: str) -> tuple[str, str | None]:
+    """(token, link host) for QR text: a scan link gives its t parameter (fragment first, then query) and the
+    host it points at; anything else comes back unchanged with no host."""
+    text = text.strip()
+    if "://" not in text[:16]:
+        return text, None
+    try:
+        u = urlsplit(text)
+    except ValueError:
+        return text, None
+    for part in (u.fragment, u.query):
+        t = parse_qs(part).get("t")
+        if t and t[0].strip():
+            return t[0].strip(), u.netloc or None
+    return text, None
+
+
+def extract_token(text: str) -> str:
+    return link_parts(text)[0]
+
+
 def verify_token(token: str) -> QrCheck:
-    parts = token.strip().split(".")
+    parts = extract_token(token).split(".")
     if len(parts) != 3:
         return QrCheck(False, None, None, None, "QR does not contain a signed token")
     try:
