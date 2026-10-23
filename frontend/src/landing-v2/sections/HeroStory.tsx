@@ -233,13 +233,13 @@ function StaticHeroStory() {
     <div id="top">
       <div className="relative overflow-hidden bg-sun">
         <Nav />
-        <div className="grid min-[900px]:min-h-[calc(100svh-90px)] min-[900px]:grid-cols-[1.1fr_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] min-[900px]:min-h-[calc(100svh-90px)] min-[900px]:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           <div className="pb-6 [&>div]:pt-10 min-[900px]:[&>div]:pt-0">
             <HeroCopy />
           </div>
           <div className="flex items-end justify-center gap-0 self-end" aria-hidden>
-            <Hand hue="rose" mirror pose="ok" height={700} className="h-[min(62vh,620px)] w-auto" />
-            <Hand hue="tang" pose="ok" height={700} className="-ml-6 h-[min(66vh,660px)] w-auto" />
+            <Hand hue="rose" mirror pose="ok" height={700} className="h-auto w-[44%] min-[900px]:h-[min(62vh,620px)] min-[900px]:w-auto" />
+            <Hand hue="tang" pose="ok" height={700} className="-ml-6 h-auto w-[46%] min-[900px]:h-[min(66vh,660px)] min-[900px]:w-auto" />
           </div>
         </div>
       </div>

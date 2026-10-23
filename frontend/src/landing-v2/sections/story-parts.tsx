@@ -21,7 +21,7 @@ export function CheckList({ shown, compact = false }: { shown: number; compact?:
           <motion.li
             key={c.title}
             initial={false}
-            animate={{ opacity: on ? 1 : 0.32, x: on ? 0 : 8 }}
+            animate={{ opacity: on ? 1 : 0.6, x: on ? 0 : 8 }}
             transition={{ duration: 0.35, ease: [0.2, 0.9, 0.3, 1] }}
             className={`flex items-start gap-3 rounded-2xl bg-white/95 ${compact ? "px-3 py-2.5" : "px-4 py-3.5"} shadow-[0_2px_0_rgba(27,21,48,0.08)]`}
           >
