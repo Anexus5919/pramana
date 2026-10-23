@@ -20,6 +20,7 @@ Left sidebar, 232 px, collapsible to 56 px. Top bar with breadcrumbs, search (Ct
 |---|---|---|---|
 | (none) | Review queue | `/dashboard` | officer, verifier, admin |
 | Tools | Analyse a document | `/analyse` | officer, verifier, admin |
+| Tools | Integrity | `/integrity`, `/integrity/faculty` | officer, verifier, admin |
 | Tools | Issuer simulator | `/issuers` | officer, verifier, admin |
 | Governance | Rules | `/rules` | officer, verifier, admin |
 | Governance | Audit log | `/audit` | officer, admin |
@@ -115,6 +116,7 @@ Institutions never see forensic signals, severities, evidence classes or rule co
 ## Admin and tools
 
 - **Analyse a document** (Tools): a standalone single-file check. Primary: Choose a file. The report is one column with a sticky in-page section index on wide screens.
+- **Integrity** (Tools): the cycle-wide integrity network (applications linked by shared evidence, clustered) and the faculty overlap radar. No primary button; selection drives a side panel. See `docs/features/insight-network.md`.
 - **Issuer simulator** (Tools): labelled SIMULATED in the page header. Primary: Look up a record. Admin-only availability switches sit in the issuers table.
 - **Rules** (Governance): tabs Rules, Checklists, Change impact (officer and admin). Primary on Change impact: Recheck applications.
 - **Audit log** (Governance): Primary: Verify chain integrity. Admin secondary: Create signed checkpoint.
