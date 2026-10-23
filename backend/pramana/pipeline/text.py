@@ -115,6 +115,8 @@ def group_lines(words: list[Word]) -> list[Line]:
 def render_pdf_page(data: bytes, page_index: int, dpi: int = 110) -> Image.Image:
     pdf = pdfium.PdfDocument(data)
     try:
+        # Form fields are drawn too, so a page shows what any viewer shows (annotations are drawn by default)
+        pdf.init_forms()
         page = pdf[page_index]
         img = page.render(scale=dpi / 72).to_pil()
         page.close()

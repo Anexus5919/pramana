@@ -31,6 +31,7 @@ from ..models import (
 from ..photos.findings import photo_stage
 from ..rules.engine import ERROR, FAIL, INSUFFICIENT, Ruleset, active_ruleset, evaluate, load_ruleset
 from ..verification import base as vb
+from ..verification import issuer_copy
 from ..verification.issuer import adapters, compare_values
 from ..verification.signature import validate_signatures
 from ..verification.signed_qr import verify_token
@@ -392,13 +393,18 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                             and _overlap(f.bbox, x["bbox"])), None)
                 if hit:
                     label = f.name.replace("_", " ")
+                    message = (f"The text layer reads '{f.raw}' for {label}, but revision {hit['to_revision']} "
+                               f"drew '{hit['added_text']}' over that position. A reader sees "
+                               f"'{hit['added_text']}'; checks in this report use the original '{f.raw}'.")
+                    if hit.get("removed_text") and not hit.get("text_underneath") and hit.get("before_text"):
+                        # Edited in place: the old glyphs are gone, so the checks read the new value
+                        message = (f"Revision {hit['to_revision']} changed the {label} in place: it read "
+                                   f"'{hit['before_text']}' and now reads '{f.raw}'. The checks in this report "
+                                   "use the new value, as a reader sees it.")
                     findings.append({
                         "code": "FX-FIELD-OVERWRITTEN", "fingerprint": _fp("fxf", d.declared_type, f.name),
                         "category": "forensic", "evidence_class": "structural", "severity": "high",
-                        "outcome": "indicator", "title": f"{label.capitalize()} was overwritten",
-                        "message": f"The text layer reads '{f.raw}' for {label}, but revision {hit['to_revision']} "
-                                   f"drew '{hit['added_text']}' over that position. A reader sees "
-                                   f"'{hit['added_text']}'; checks in this report use the original '{f.raw}'.",
+                        "outcome": "indicator", "title": f"{label.capitalize()} was overwritten", "message": message,
                         "limitation": "Issuers rarely amend a signed certificate in place; confirm with the issuer.",
                         "evidence": [{"kind": "region", "document_id": d.id, "page": f.page, "bbox": hit["bbox"],
                                       "label": f"drawn over {label}", "value": hit["added_text"]},
@@ -460,6 +466,9 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                   "simulated": v.simulated, "comparisons": [c.as_dict() for c in v.comparisons]}],
                     "document_id": d.id})
             doc_status[d.id] = document_status(vres)
+            # Issuer documents without the issuer's signature, or as images (docs/features/edits.md)
+            copy = issuer_copy.findings(d, spec, vres, _fp)
+            findings += copy if d is latest.get(d.declared_type) else [{**f, "severity": "low"} for f in copy]
         stage("verification", t0, documents=len(doc_status))
 
         t0 = time.perf_counter()

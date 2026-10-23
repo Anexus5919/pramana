@@ -127,6 +127,13 @@ def op_font_check(data: bytes, fields: list[dict[str, Any]], facts: dict[str, An
     return [asdict(s) for s in signals], None
 
 
+def op_annotations(data: bytes, fields: list[dict[str, Any]]):
+    from .forensics import annotations
+
+    res = annotations.scan(data, fields)
+    return {**res, "signals": [asdict(s) for s in res["signals"]]}, None
+
+
 def op_render(data: bytes, mime: str, page_index: int, dpi: int):
     from PIL import Image
 
@@ -183,6 +190,7 @@ OPS = {
     "forensics": op_forensics,
     "seal_images": op_seal_images,
     "font_check": op_font_check,
+    "annotations": op_annotations,
     "render": op_render,
     "intake": op_intake,
     "selftest_sleep": op_selftest_sleep,
