@@ -83,6 +83,35 @@ def test_missing_broken_and_untrusted_credentials(monkeypatch, capture):
     assert credential_status(c)[0] == vb.MANUAL_REVIEW
 
 
+def test_credential_findings_carry_their_evidence_class():
+    from pramana.photos.findings import photo_stage
+
+    added = []
+    db = SimpleNamespace(add=added.append)
+    app = SimpleNamespace(id="APP-X", declared={})
+    run = SimpleNamespace(id="run_x")
+    ok = {"present": True, "readable": True, "signature_valid": True, "hash_matches": True, "trusted": True,
+          "signer": {"common_name": "Campus camera 01 (DEMO)"}}
+
+    def photo(name, c2pa):
+        return SimpleNamespace(id=f"doc_{name}", original_filename=name, mime="image/jpeg", processing_status="processed",
+                               analysis={"photo": {"c2pa": c2pa, "room": {"status": "not_analysed"}}})
+
+    docs = [photo("a.jpg", ok), photo("b.jpg", {**ok, "hash_matches": False}),
+            photo("c.jpg", {"present": True, "readable": False, "error": "Verify: expected JUMD"}),
+            photo("d.jpg", {"present": False})]
+    status: dict[str, str] = {}
+    found = {f["document_id"]: f for f in photo_stage(db, app, run, docs, status)}
+    assert set(found) == {"doc_b.jpg", "doc_c.jpg"}
+    assert found["doc_b.jpg"]["code"] == "PH-C2PA-MODIFIED-AFTER-SIGNING"
+    assert found["doc_b.jpg"]["evidence_class"] == "cryptographic"
+    assert found["doc_c.jpg"]["code"] == "PH-C2PA-MANIFEST-INVALID"
+    assert found["doc_c.jpg"]["evidence_class"] == "structural"
+    assert [a.status for a in added] == [vb.VERIFIED, vb.MISMATCH, vb.MANUAL_REVIEW]
+    assert all(a.simulated and a.channel == "content_credentials" for a in added)
+    assert "doc_d.jpg" not in status and status["doc_a.jpg"] == vb.VERIFIED
+
+
 def test_room_reading_from_object_mix():
     assert detector.room_reading({"workstation": 9, "seat": 4})[0] == "computer_lab"
     assert detector.room_reading({"workstation": 0, "seat": 12, "table": 3})[0] == "classroom"
