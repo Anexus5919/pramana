@@ -19,6 +19,9 @@ const hash = (n: number) => {
 
 const HAZE = mixHex(palette.lilac, "#ffffff", 0.3);
 const TEX_RES = 2; // texture px per hand unit
+// depth range the flowing floor wraps over: the near edge sits below the screen, the far edge inside the haze
+const NEAR = 1.8;
+const FAR = 31;
 
 function instancedBox(): THREE.InstancedBufferGeometry {
   const box = new THREE.BoxGeometry(1, 1, 1);
@@ -87,24 +90,26 @@ function Ground({ engine }: { engine: Engine }) {
   const cell = wide ? 0.3 : 0.22;
   const aspect = size.width / Math.max(1, size.height);
 
-  const geo = useMemo(() => {
+  // a rectangular grid wide enough for the far rows: every block travels the whole depth as the floor flows
+  const { geo, span } = useMemo(() => {
     const p5 = 1 / Math.tan(((FOV / 2) * Math.PI) / 180);
-    const cells: number[] = [];
-    const seeds: number[] = [];
-    let r = 0;
-    for (let d = 2.4; d < 34; d += cell, r++) {
-      const half = (d * aspect) / p5 + cell * 2;
-      const n = Math.ceil(half / cell);
-      for (let c = -n; c <= n; c++) {
-        cells.push(c * cell, -d);
-        seeds.push(hash(r * 917 + c * 131));
+    const rows = Math.ceil((FAR - NEAR) / cell);
+    const n = Math.ceil(((FAR * aspect) / p5 + cell * 2) / cell);
+    const cells = new Float32Array(rows * (2 * n + 1) * 2);
+    const seeds = new Float32Array(rows * (2 * n + 1));
+    let i = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = -n; c <= n; c++, i++) {
+        cells[i * 2] = c * cell;
+        cells[i * 2 + 1] = -(NEAR + r * cell);
+        seeds[i] = hash(r * 917 + c * 131);
       }
     }
     const g = instancedBox();
-    g.setAttribute("aCell", new THREE.InstancedBufferAttribute(new Float32Array(cells), 2));
-    g.setAttribute("aSeed", new THREE.InstancedBufferAttribute(new Float32Array(seeds), 1));
-    g.instanceCount = seeds.length;
-    return g;
+    g.setAttribute("aCell", new THREE.InstancedBufferAttribute(cells, 2));
+    g.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
+    g.instanceCount = i;
+    return { geo: g, span: rows * cell };
   }, [cell, aspect]);
   useEffect(() => () => geo.dispose(), [geo]);
 
@@ -124,20 +129,26 @@ function Ground({ engine }: { engine: Engine }) {
           uRim: { value: col(palette.voxel.rim) },
           uFog: { value: HAZE },
           uFogRange: { value: new THREE.Vector2(7, 30) },
+          uFlow: { value: 0 },
+          uSpan: { value: new THREE.Vector2(NEAR, 1) },
+          uHalfW: { value: 1 },
         },
       }),
     [],
   );
   mat.uniforms.uCell.value = cell;
+  (mat.uniforms.uSpan.value as THREE.Vector2).set(NEAR, span);
+  mat.uniforms.uHalfW.value = aspect * Math.tan(((FOV / 2) * Math.PI) / 180);
 
   useFrame(() => {
     const F = engine.frame;
     (mat.uniforms.uCursor.value as THREE.Vector3).set(F.cursor.x, F.cursor.z, F.cursor.on);
+    mat.uniforms.uFlow.value = F.flow % span;
     const holes = mat.uniforms.uHole.value as THREE.Vector4[];
     const ks = mat.uniforms.uHoleK.value as THREE.Vector4[];
     F.holes.forEach((h, i) => {
       holes[i].set(h.x, h.z, h.rx, h.rz);
-      ks[i].set(h.disturb, h.sink, h.glow, 0);
+      ks[i].set(h.disturb, h.sink, h.glow, h.open);
     });
   });
 

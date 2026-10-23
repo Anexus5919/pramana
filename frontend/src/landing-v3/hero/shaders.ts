@@ -4,8 +4,11 @@ export const groundVertex = /* glsl */ `
 uniform float uCell;
 uniform vec3 uCursor; // x, z, strength
 uniform vec4 uHole[3]; // x, z, rx, rz
-uniform vec4 uHoleK[3]; // disturb, sink, glow
-attribute vec2 aCell; // world x, world z
+uniform vec4 uHoleK[3]; // disturb, sink, glow, opening
+uniform float uFlow; // distance the floor has travelled toward the viewer
+uniform vec2 uSpan; // nearest block depth, depth span the blocks wrap over
+uniform float uHalfW; // visible half width per unit of depth
+attribute vec2 aCell; // world x, resting world z
 attribute float aSeed;
 varying vec3 vN;
 varying vec3 vLocal;
@@ -17,31 +20,47 @@ varying float vSeed;
 varying float vDist;
 const float BOTTOM = -0.7;
 void main() {
+  // treadmill: blocks slide toward the viewer and wrap from below the screen edge back into the far haze
+  float d = uSpan.x + mod(-aCell.y - uSpan.x - uFlow, uSpan.y);
+  vec2 c = vec2(aCell.x, -d);
+  // blocks outside the view at their current depth are dropped before any further work
+  if (abs(c.x) > d * uHalfW + 1.2) {
+    gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+    return;
+  }
+  // relief and seed travel with the block, so the moving floor never shimmers
   float relief = 0.5 + 0.5 * sin(aCell.x * 0.41 + aCell.y * 0.29) * cos(aCell.y * 0.33 - aCell.x * 0.17);
   float h = 0.04 + aSeed * 0.05 + relief * 0.15;
   h = floor(h / 0.05 + 0.5) * 0.05;
-  vec2 dc = aCell - uCursor.xy;
+  vec2 dc = c - uCursor.xy;
   float att = exp(-dot(dc, dc) / (uCell * uCell * 7.0)) * uCursor.z;
   h += att * 0.2;
   vec2 push = vec2(0.0);
+  float slide = 0.0;
+  float gone = 0.0;
   float rim = 0.0;
   for (int i = 0; i < 3; i++) {
     vec4 H = uHole[i];
     vec4 K = uHoleK[i];
-    vec2 q = (aCell - H.xy) / H.zw;
+    vec2 q = (c - H.xy) / H.zw;
     float r = length(q);
     float ring = exp(-pow((r - 1.15) / 0.5, 2.0));
     float inside = 1.0 - smoothstep(0.55, 1.0, r);
-    h += K.x * ring * (0.28 + 0.12 * aSeed) - inside * K.y * 0.03;
+    // an opening just wide enough for the hand; the flow slides around it like water around a rock
+    float open = K.y * K.w;
+    gone = max(gone, (1.0 - smoothstep(0.62, 1.0, r)) * open);
+    slide += sign(q.x) * exp(-r * r * 0.7) * open * H.z * 0.38;
+    h += K.x * ring * (0.28 + 0.12 * aSeed) - inside * K.y * 0.03 * (1.0 - K.w);
     push += (q / max(r, 0.001)) * K.x * ring;
     rim += K.z * exp(-r * r * 0.32);
   }
+  h = mix(h, -0.12, gone);
   vec3 p = position;
-  float w = uCell * 0.95;
+  float w = uCell * 0.95 * (1.0 - 0.9 * gone);
   float y = mix(BOTTOM, h, p.z);
   // parted blocks tilt away from whatever pushed through them
   vec2 tilt = push * 0.42 * (y - BOTTOM) / (h - BOTTOM + 0.001) * p.z;
-  vec3 world = vec3(aCell.x + p.x * w + tilt.x, y, aCell.y - p.y * w + tilt.y);
+  vec3 world = vec3(c.x + slide + p.x * w + tilt.x, y, c.y - p.y * w + tilt.y);
   vN = vec3(normal.x, -normal.y, normal.z);
   vLocal = p;
   vY = y;

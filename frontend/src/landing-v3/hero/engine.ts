@@ -204,7 +204,10 @@ export type HandFrame = {
   visible: number; // 0 fully underground, 1 up
 };
 
-export type HoleFrame = { x: number; z: number; rx: number; rz: number; disturb: number; sink: number; glow: number };
+export type HoleFrame = { x: number; z: number; rx: number; rz: number; disturb: number; sink: number; glow: number; open: number };
+
+// calm treadmill speed of the block floor, world units per second
+export const FLOW_SPEED = 0.15;
 
 export type Beats = { step: number; checked: number; confirmed: boolean; flagged: boolean; palm: boolean };
 
@@ -249,6 +252,7 @@ export class Engine {
     caption: number;
     fade: number;
     cursor: { x: number; z: number; on: number };
+    flow: number;
   };
   beats: Beats = { step: 0, checked: 0, confirmed: false, flagged: false, palm: false };
   onBeats: ((b: Beats) => void) | null = null;
@@ -275,13 +279,14 @@ export class Engine {
     const hand = (): HandFrame => ({ wristX: 0, yOff: -600, tilt: 0, pose: 0, tapDeg: 0, eye: { px: 0, py: 0, open: 1, scale: 1 }, visible: 0 });
     this.frame = {
       hands: [hand(), hand()],
-      holes: [0, 1, 2].map(() => ({ x: 0, z: -6, rx: 0.4, rz: 0.3, disturb: 0, sink: 0, glow: 0 })),
+      holes: [0, 1, 2].map((i) => ({ x: 0, z: -6, rx: 0.4, rz: 0.3, disturb: 0, sink: 0, glow: 0, open: i < 2 ? 1 : 0 })),
       cardY: [layout.clipY + 40, layout.clipY + 40],
       scan: null,
       copy: 1,
       caption: 0,
       fade: 0,
       cursor: { x: 0, z: -6, on: 0 },
+      flow: 0,
     };
     if (reduced) this.introStart = -1e9;
   }
@@ -525,6 +530,8 @@ export class Engine {
       hf.sink = vis;
       hf.glow = (i < 2 ? 0.55 : 0.3) * vis + hf.disturb * 0.5;
     }
+
+    if (!this.reduced) F.flow = (F.flow + FLOW_SPEED * dt) % 3600;
 
     // blocks under the pointer rise to meet it
     let on = 0;
