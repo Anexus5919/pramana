@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { request } from "../../../api";
+import { fmtDate } from "../../../lib/format";
 import { workspacePath } from "../../../shell/nav";
 import { buttonStyles, Callout, Dialog, SeverityIndicator, Skeleton } from "../../../ui2";
 import type { Severity } from "../../../types";
@@ -33,6 +34,8 @@ export interface InspectionBrief {
   address: string;
   run_id: string | null;
   prepared_at: string;
+  /** When the latest scrutiny outcome referred the application to an expert visit committee */
+  referred_for_visit_at: string | null;
   summary: string;
   note: string;
   footer: string;
@@ -151,6 +154,9 @@ export function InspectionBriefDialog({ appId, open, onClose }: { appId: string;
           <p className="text-xs text-ink-3">
             {b.institution} ({b.aicte_id}), {b.address}. Application {b.application_id}, round {b.round}, from run {b.run_id}.
           </p>
+          {b.referred_for_visit_at && (
+            <p className="mt-2 text-sm font-medium text-ink">Referred to an expert visit committee on {fmtDate(b.referred_for_visit_at)}.</p>
+          )}
           <p className="mt-2 text-base text-ink text-pretty">{b.summary}</p>
 
           <H>Original documents to ask for</H>

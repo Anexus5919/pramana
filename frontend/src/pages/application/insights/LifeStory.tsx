@@ -204,7 +204,7 @@ function KindGlyph({ kind }: { kind: string }) {
 
 const GUTTER = 112;
 const STEP = 128;
-const PAD_R = 80;
+const PAD_R = 64;
 const MAX_PER_DECADE = 80;
 const ROW_H = 24;
 const THUMB_W = 46;
@@ -257,10 +257,11 @@ function useLayout(story: LifeStoryData, width: number) {
     const avail = Math.max(0, width - GUTTER - PAD_R - 40);
     const sumExtra = extra.reduce((a, b) => a + b, 0);
     // Few events get wider steps, so a short story still reads across the strip
-    const step = Math.max(STEP, Math.min(190, (avail * 0.4) / Math.max(1, n - 1)));
+    const minStep = width < 1100 ? 112 : STEP;
+    const step = Math.max(minStep, Math.min(190, (avail * 0.4) / Math.max(1, n - 1)));
     const k = sumExtra > 0 ? Math.min(MAX_PER_DECADE, Math.max(0, (avail - (n - 1) * step) / sumExtra)) : 0;
     const xs: number[] = [];
-    ev.forEach((_, i) => xs.push(i === 0 ? GUTTER + 48 : xs[i - 1] + step + k * extra[i]));
+    ev.forEach((_, i) => xs.push(i === 0 ? GUTTER + 44 : xs[i - 1] + step + k * extra[i]));
     const contentW = Math.max(width, (xs[n - 1] ?? GUTTER) + PAD_R);
     const xOf = new Map(ev.map((e, i) => [e.id, xs[i]]));
 
@@ -275,8 +276,11 @@ function useLayout(story: LifeStoryData, width: number) {
         key: `cov-${c.event}`,
         x1: Math.min(a, b),
         x2: Math.max(a, b),
-        label: `${who} covers ${c.through_revision === 1 ? (c.revision_count === 1 ? "the whole file" : "revision 1") : `revisions 1 to ${c.through_revision}`}`,
-        tone: c.role === "issuer" ? "issuer" : "applicant",
+        label:
+          c.role === "device"
+            ? "Content Credentials cover the photo as captured"
+            : `${who} covers ${c.through_revision === 1 ? (c.revision_count === 1 ? "the whole file" : "revision 1") : `revisions 1 to ${c.through_revision}`}`,
+        tone: c.role === "issuer" || c.role === "device" ? "issuer" : "applicant",
         to: c.event,
       });
     }
@@ -319,14 +323,14 @@ function useLayout(story: LifeStoryData, width: number) {
     const height = yPram + 72;
 
     // Not covered by any signature: from the last signature to the last file event after it
-    const sigs = ev.filter((e) => e.kind === "signed");
+    const sigs = ev.filter((e) => e.kind === "signed" || e.kind === "credentials");
     const lastSig = sigs[sigs.length - 1];
     const after = ev.filter((e) => e.origin === "file" && e.after_signature);
     const uncovered = lastSig && after.length ? { x1: xOf.get(lastSig.id)!, x2: Math.max(...after.map((e) => xOf.get(e.id)!)) } : null;
 
     const lineFrom = (xs[0] ?? GUTTER) - 28;
     const lineTo = (xs[n - 1] ?? GUTTER) + 28;
-    const labelW = Math.min(step - 8, 156);
+    const labelW = Math.min(step - 2, 156);
     return { xs, gaps, xOf, spans, rows: rows.length, top, yFile, yAxis, yPram, height, contentW, uncovered, lineFrom, lineTo, thumbs, thumbOf, labelW };
   }, [story, width]);
 }
@@ -542,7 +546,7 @@ function Timeline(props: LifeStoryProps) {
                   width={Math.abs(b - a) + 32}
                   height={14}
                   rx={7}
-                  className={c.role === "issuer" ? "fill-verified-bg stroke-verified-dot" : "fill-surface-3 stroke-line-2"}
+                  className={c.role === "issuer" || c.role === "device" ? "fill-verified-bg stroke-verified-dot" : "fill-surface-3 stroke-line-2"}
                   strokeOpacity={0.5}
                 />
               );
