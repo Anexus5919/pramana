@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { forwardRef, type ButtonHTMLAttributes, type ComponentProps, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";

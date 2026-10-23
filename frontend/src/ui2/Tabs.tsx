@@ -1,6 +1,6 @@
 import { useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 
 export interface TabItem {
   id: string;

@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 
 export type StepStatus = "complete" | "current" | "upcoming" | "attention";
 

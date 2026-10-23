@@ -1,7 +1,7 @@
 import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 import { buttonStyles, type ButtonSize, type ButtonVariant } from "./Button";
 
 export interface ActionMenuItem {

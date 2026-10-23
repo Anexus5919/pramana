@@ -8,7 +8,7 @@ import {
   verificationMeta,
   type Tone,
 } from "../lib/labels";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 import { toneClass } from "../ui/tone";
 
 export interface StatusBadgeProps {

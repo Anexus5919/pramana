@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 
 export interface Column<T> {
   id: string;
