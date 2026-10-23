@@ -77,7 +77,7 @@ function Pending({ name, size, clientHash }: { name: string; size: number; clien
       {fmtBytes(size)}.{" "}
       {clientHash === null
         ? "Computing the SHA-256 in your browser while the server reads the file."
-        : `The server is running ${PENDING_STEPS.map((s) => STEP_LABEL[s].toLowerCase()).join(", ")}. Scanned and Hindi pages take a few seconds each for OCR.`}
+        : `The server is running ${PENDING_STEPS.map((s) => STEP_LABEL[s].charAt(0).toLowerCase() + STEP_LABEL[s].slice(1)).join(", ")}. Scanned and Hindi pages take a few seconds each for OCR.`}
     </Callout>
   );
 }
