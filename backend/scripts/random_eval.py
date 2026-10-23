@@ -9,6 +9,7 @@ Writes report.json and report.md to the output directory.
     python scripts/random_eval.py --seed 4242 --n 30          # judge mode, a few minutes
     python scripts/random_eval.py --seed 11 --n 120 --out ../var/random-eval/s11
     python scripts/random_eval.py --combine DIR [DIR ...]     # pool several runs into one report
+    python scripts/random_eval.py --revalidate DIR            # validate a processed run again and rescore
 """
 
 import argparse
@@ -32,12 +33,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from evaluate import wilson  # noqa: E402
 
 
-def isolate(out: Path) -> None:
-    """Point Pramana at a fresh data directory and trust store under `out`, before it is imported."""
+def isolate(out: Path, fresh: bool = True) -> None:
+    """Point Pramana at the data directory and trust store under `out`, before it is imported; fresh wipes them."""
     data, trust = out / "data", out / "trust"
-    shutil.rmtree(data, ignore_errors=True)
-    shutil.rmtree(trust, ignore_errors=True)
-    shutil.copytree(BACKEND / "trust", trust, ignore=shutil.ignore_patterns("demo", "demo-c2pa"))
+    if fresh:
+        shutil.rmtree(data, ignore_errors=True)
+        shutil.rmtree(trust, ignore_errors=True)
+        shutil.copytree(BACKEND / "trust", trust, ignore=shutil.ignore_patterns("demo", "demo-c2pa"))
     os.environ.update({"PRAMANA_DATA_DIR": str(data), "PRAMANA_TRUST_DIR": str(trust), "PRAMANA_DATABASE_URL": "",
                        "PRAMANA_LLM_PROVIDERS": "", "PRAMANA_ASK_PROVIDERS": "", "PRAMANA_BACKGROUND_RUNS": "false",
                        "PRAMANA_WATCH_SCHEDULER": "false"})
@@ -49,16 +51,13 @@ def run_pipeline(world: Path) -> tuple[dict[str, Any], dict[str, float]]:
     from sqlalchemy import select
 
     from pramana.db import SessionLocal
-    from pramana.models import Application, Document, Finding
+    from pramana.models import Document
     from pramana.pipeline.process import process_document
-    from pramana.pipeline.validate import run_validation
     from pramana.rules.engine import active_ruleset
-    from pramana.sim import issuers as sim
 
     t0 = time.perf_counter()
     seed_script.main(validate=False, fix=world)
     seeded = time.perf_counter() - t0
-    m = json.loads((world / "manifest.json").read_text(encoding="utf-8"))
     db = SessionLocal()
     rs = active_ruleset()
     proc: dict[str, float] = defaultdict(float)
@@ -76,6 +75,24 @@ def run_pipeline(world: Path) -> tuple[dict[str, Any], dict[str, float]]:
         ndocs[d.application_id] += 1
     db.commit()
     processing = time.perf_counter() - t0
+    db.close()
+    results, validating = validate_all(world, {k: {"documents": ndocs[k], "processing_s": round(v, 3)}
+                                               for k, v in proc.items()})
+    return results, {"seeding_s": round(seeded, 1), "processing_s": round(processing, 1),
+                     "validation_s": round(validating, 1)}
+
+
+def validate_all(world: Path, processed: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], float]:
+    """Validate every application of a seeded and processed world, with the outages the manifest marks."""
+    from sqlalchemy import select
+
+    from pramana.db import SessionLocal
+    from pramana.models import Application, Finding
+    from pramana.pipeline.validate import run_validation
+    from pramana.sim import issuers as sim
+
+    m = json.loads((world / "manifest.json").read_text(encoding="utf-8"))
+    db = SessionLocal()
     results: dict[str, Any] = {}
     t0 = time.perf_counter()
     for spec in m["applications"]:
@@ -104,11 +121,10 @@ def run_pipeline(world: Path) -> tuple[dict[str, Any], dict[str, float]]:
             "id": spec["id"], "status": status, "error": error,
             "codes": {k: {"n": v["n"], "severity": sorted(v["severity"]), "evidence_class": sorted(v["evidence_class"])}
                       for k, v in sorted(codes.items())},
-            "documents": ndocs[spec["id"]], "processing_s": round(proc[spec["id"]], 3), "validation_s": round(vt, 3)}
+            **processed.get(spec["id"], {"documents": 0, "processing_s": 0.0}), "validation_s": round(vt, 3)}
     validating = time.perf_counter() - t0
     db.close()
-    return results, {"seeding_s": round(seeded, 1), "processing_s": round(processing, 1),
-                     "validation_s": round(validating, 1)}
+    return results, validating
 
 
 def _rate(k: int, n: int) -> dict[str, Any]:
@@ -221,6 +237,9 @@ def markdown(rep: dict[str, Any], title: str) -> str:
                   f"validation {t['validation_s']} s, wall clock {t['wall_s']} s. Per application (processing plus "
                   f"validation): mean {t['per_application_s']['mean']} s, median {t['per_application_s']['median']} s, "
                   f"p90 {t['per_application_s']['p90']} s, max {t['per_application_s']['max']} s.", ""]
+        if "revalidated" in rep:
+            lines[-1:-1] = ["", f"Validated again after a validation-stage fix: {rep['revalidated']['validation_s']} s; "
+                                "the first scores are in report.first.md."]
     lines += ["## By condition", "", "| Condition | Instances | All found | Partial | Missed | Pairs found | Codes missed |",
               "|---|---|---|---|---|---|---|"]
     for k, v in s["by_kind"].items():
@@ -267,6 +286,33 @@ def evaluate_seed(seed: int, n: int, out: Path) -> dict[str, Any]:
     return rep
 
 
+def revalidate_seed(out: Path) -> dict[str, Any]:
+    """Validate an already processed world again after a fix to the validation stage, and rescore. Document
+    processing does not depend on that stage, so this matches a full rerun. The first report is kept as
+    report.first.json and report.first.md."""
+    wall = time.perf_counter()
+    first = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    for ext in ("json", "md"):
+        if not (out / f"report.first.{ext}").exists():
+            shutil.copyfile(out / f"report.{ext}", out / f"report.first.{ext}")
+    isolate(out, fresh=False)
+    logging.basicConfig(level=logging.WARNING)
+    processed = {r["id"]: {"documents": r["documents"], "processing_s": r["processing_s"]}
+                 for r in first["results"].values()}
+    results, validating = validate_all(out / "world", processed)
+    key = json.loads((out / "answer_key.json").read_text(encoding="utf-8"))
+    seed = first["seeds"][0]
+    rep = {"generated": datetime.now(UTC).isoformat(timespec="seconds"), "seeds": [seed], "n": first["n"],
+           "generator_version": key["generator_version"], "score": score(key, results), "timing": first["timing"],
+           "revalidated": {"validation_s": round(validating, 1), "wall_s": round(time.perf_counter() - wall, 1),
+                           "first_report": "report.first.json"},
+           "results": results}
+    (out / "report.json").write_text(json.dumps(rep, indent=1), encoding="utf-8")
+    (out / "report.md").write_text(markdown(rep, f"Random evaluation, seed {seed}, {first['n']} applications"),
+                                   encoding="utf-8")
+    return rep
+
+
 def combine(dirs: list[Path], out: Path) -> dict[str, Any]:
     """Pool runs: the answer keys and results of every run are scored together."""
     keys, results, seeds = {"conditions": [], "applications": []}, {}, []
@@ -299,8 +345,12 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--out", type=Path)
     ap.add_argument("--combine", type=Path, nargs="+", metavar="DIR")
+    ap.add_argument("--revalidate", type=Path, metavar="DIR",
+                    help="validate an already processed run again and rescore it, after a validation-stage fix")
     args = ap.parse_args()
-    if args.combine:
+    if args.revalidate:
+        rep = revalidate_seed(args.revalidate)
+    elif args.combine:
         rep = combine(args.combine, args.out or args.combine[0].parent / "combined")
     elif args.seed is None:
         ap.error("--seed is required (any integer)")
