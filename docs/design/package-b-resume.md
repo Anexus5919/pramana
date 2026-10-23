@@ -20,29 +20,32 @@ Branch `feat/redesign-b`. Stopped on 2026-10-23 evening because the laptop had t
 - `ReplayDialog`, `EvidencePackDialog` and `LetterEditor` (now a drawer) are rebuilt.
 - Light screenshots of every section at 1920 and some at 1280 are in the scratchpad `shots-redesign-b` folder (`r1-*`, `r2-*`). They looked clean.
 
-## Remaining checklist
+## Resume pass (2026-10-23, 21:05 to 22:30 IST): all done
 
-- [ ] Review the 1280 screenshots `r2-*` (taken, not yet reviewed) and fix clipping or alignment.
-- [ ] Dark theme screenshots of every section at 1920 and 1280; fix any token issues.
-- [ ] Screenshots of the dialogs and drawers:
-  - [ ] the Decide menu, Rectify on A3 and the LetterEditor;
-  - [ ] Record outcome on A6, then the watch on Summary;
-  - [ ] EvidencePack, Replay and Ask why;
-  - [ ] the live run drawer (Run validation again);
-  - [ ] the attempt drawer (`documents?view=verification&attempt=`).
-- [ ] Clickthrough of the acceptance list in `docs/design/screens.md` 3.9:
-  - [ ] old URLs redirect (checklist, `verification?attempt=`, since-last-year, runs, campus);
-  - [ ] Send rectification on A3 sets the status to Rectification requested;
-  - [ ] the evidence pack downloads;
-  - [ ] Replay shows "Reproduced identically";
-  - [ ] the time machine opens from a finding;
-  - [ ] A11 shows the Extraction tab and A2 the Hindi OCR note.
-- [ ] Verifier and admin check: no Decide; review actions for the verifier; Replay for the admin.
-- [ ] Polish noted: the evidence rows in the finding detail use the `SquareDashed` icon both as the row icon and on "Show on page"; consider dropping the row icon.
-- [ ] Tell package C that `RectificationItem.code` is no longer sent to institutions (`InstitutionApplicationPage.tsx` line 93 renders it).
-- [ ] Tell package A:
-  - `RevisionPanel` now pads its own rows and expects a `Panel padding="none"`;
-  - `DocViewer` renders its own frame and gained optional `title` and `meta` props.
+- [x] 1280 shots reviewed. The verification table now drops channel columns no document used and keeps "Not applicable" on one line. Document detail splits 1:1 at xl and 1.4:1 from 2xl, so the tabs fit. The header context uses the short category label, as the queue does.
+- [x] Dark theme checked at 1920 and 1280 for every section. No token issues found.
+- [x] Dialogs and drawers checked: Decide, More actions, Rectify, LetterEditor, OutcomeDialog, EvidencePack, Replay, Ask why, the live run drawer, the attempt drawer, the run drawer, the audit event drawer, and the Show on page viewer.
+- [x] Acceptance clickthrough passed:
+  - all old URLs redirect;
+  - rectify on A3 with the deficiency letter sets the status to Rectification requested;
+  - the outcome on A6 shows the watch;
+  - the evidence pack downloads (200, application/zip);
+  - Replay shows "Reproduced identically";
+  - the time machine opens at revision 3 from a finding;
+  - Extraction on A11 shows the model report (with PRAMANA_LLM_PROVIDERS=ollama and a re-read);
+  - A2 shows Hindi OCR provenance;
+  - Show on page and Open in Documents keep the region;
+  - manual confirmation works;
+  - Run validation again streams to the Callout and the drawer;
+  - Ask why answers, and the finding prefill works.
+- [x] Role checks: the verifier gets no Decide and no Ask why, but has review actions. The admin gets Replay, but no Decide and no review actions.
+- [x] Icon polish. "Show on page" and "Locate" use ScanSearch. Region evidence uses ScanText instead of the dashed square, which read as a checkbox.
+- [ ] For Foundation: MetaList puts its separator dot at the start of a wrapped line.
+- [ ] For package C: `RectificationItem.code` is no longer sent to institutions (`InstitutionApplicationPage.tsx` line 93 renders it).
+- [ ] For package A:
+  - `RevisionPanel` pads its own rows and expects a `Panel padding="none"`;
+  - `DocViewer` renders its own frame and has new optional `title` and `meta` props.
+- [ ] Backend copy, optional: the letter PDF heading still reads "Deficiency notice".
 
 ## Known state
 
