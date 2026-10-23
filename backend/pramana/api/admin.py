@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import audit
+from .. import audit, throttle
 from .. import serializers as ser
 from ..auth import (
     OFFICIAL_ROLES,
@@ -33,13 +33,16 @@ class Login(BaseModel):
 
 
 @router.post("/auth/login")
-def login(body: Login, response: Response, db: Session = Depends(get_db)):
+def login(body: Login, request: Request, response: Response, db: Session = Depends(get_db)):
+    throttle.check(db, request, body.username)
     u = db.scalars(select(User).where(User.username == body.username)).first()
     if not u or not u.active or not check_password(u.password_hash, body.password):
+        throttle.failed(body.username)
         audit.record(db, actor=body.username[:80], actor_role="anonymous", action="auth.login_failed",
                      object_type="user", object_id=None)
         db.commit()
         raise HTTPException(401, "invalid username or password")
+    throttle.succeeded(body.username)
     sess = start_session(db, u, response)
     audit.record(db, actor=u.username, actor_role=u.role, action="auth.login", object_type="user", object_id=u.id)
     db.commit()

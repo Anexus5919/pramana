@@ -16,3 +16,14 @@ import logging  # noqa: E402
 
 for _n in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "RapidOCR"):
     logging.getLogger(_n).setLevel(logging.CRITICAL)
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _no_login_throttling():
+    # Each test starts with empty login counters; test_platform checks the throttle on its own
+    from pramana import throttle
+
+    throttle.reset()
+    yield
