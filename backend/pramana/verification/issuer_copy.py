@@ -78,7 +78,7 @@ def findings(doc: Any, spec: dict[str, Any], results: list[vb.VerificationResult
                  "category": "forensic", "evidence_class": "structural", "severity": "medium",
                  "outcome": "indicator", "title": f"{label}: image-only copy of a signed document",
                  "message": message,
-                 "limitation": "An issuer may hand out a scanned copy, and a photo of a genuine paper certificate "
+                 "limitation": "An issuer may hand out a scanned copy, and a photo of the issued paper certificate "
                                "looks the same. Image-only copies cannot carry a signature, so only the registry, "
                                "the signed QR or the original can confirm the values.",
                  "evidence": evidence, "document_id": doc.id}]
