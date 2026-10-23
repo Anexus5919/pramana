@@ -5,6 +5,7 @@ Digital text layers are read directly; pages without one are rendered and sent t
 """
 
 import io
+import threading
 from dataclasses import asdict, dataclass, field
 
 import pdfplumber
@@ -112,17 +113,23 @@ def group_lines(words: list[Word]) -> list[Line]:
     return out
 
 
+# PDFium is not thread-safe: two pages rendered at once in one process can crash it (revision thumbnails
+# are requested in parallel), so in-process renders take turns
+_render_lock = threading.Lock()
+
+
 def render_pdf_page(data: bytes, page_index: int, dpi: int = 110) -> Image.Image:
-    pdf = pdfium.PdfDocument(data)
-    try:
-        # Form fields are drawn too, so a page shows what any viewer shows (annotations are drawn by default)
-        pdf.init_forms()
-        page = pdf[page_index]
-        img = page.render(scale=dpi / 72).to_pil()
-        page.close()
-        return img.convert("RGB")
-    finally:
-        pdf.close()
+    with _render_lock:
+        pdf = pdfium.PdfDocument(data)
+        try:
+            # Form fields are drawn too, so a page shows what any viewer shows (annotations are drawn by default)
+            pdf.init_forms()
+            page = pdf[page_index]
+            img = page.render(scale=dpi / 72).to_pil()
+            page.close()
+            return img.convert("RGB")
+        finally:
+            pdf.close()
 
 
 def _ocr_page(img: Image.Image, scale: float, page_no: int, width: float, height: float,
