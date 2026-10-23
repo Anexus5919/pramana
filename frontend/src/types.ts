@@ -303,6 +303,23 @@ export interface RunFull extends RunBrief {
   facts: FactInput[];
 }
 
+/** One persisted progress event of a background validation run (GET /api/runs/{id}/events). */
+export interface RunEvent {
+  seq: number;
+  ts: string | null;
+  kind: string;
+  data: Record<string, unknown>;
+}
+
+/** Returned by submit, validate, reprocess and retry when the run continues in the background. */
+export type QueuedRun = RunBrief & { background: true; queued?: boolean };
+
+export interface RunProgress {
+  run: RunBrief | null;
+  events: RunEvent[];
+  done: boolean;
+}
+
 export interface ReplayResult {
   original: RunBrief;
   replay: RunBrief;
