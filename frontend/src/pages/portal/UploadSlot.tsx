@@ -105,7 +105,7 @@ export function UploadSlot({
   doc,
   editable,
   emphasis = false,
-  flagged = false,
+  flag,
 }: {
   appId: string;
   slot: ChecklistSlot;
@@ -113,8 +113,8 @@ export function UploadSlot({
   editable: boolean;
   /** The first missing required slot carries the screen's upload action */
   emphasis?: boolean;
-  /** AICTE asked for a correction to this document in the open rectification request */
-  flagged?: boolean;
+  /** AICTE asked for a correction to this document: still to do, or a new copy is uploaded */
+  flag?: "requested" | "replaced";
 }) {
   const qc = useQueryClient();
   const { session } = useAuth();
@@ -126,7 +126,7 @@ export function UploadSlot({
   const busy = phase.kind === "uploading" || phase.kind === "processing";
   const has = !!doc || slot.uploaded;
   const unreadable = doc?.processing_status === "failed";
-  const state: SlotState = !has ? "missing" : unreadable ? "unreadable" : flagged ? "flagged" : "uploaded";
+  const state: SlotState = !has ? "missing" : unreadable ? "unreadable" : flag === "requested" ? "flagged" : "uploaded";
 
   useEffect(() => () => abortRef.current?.(), []);
 
@@ -206,7 +206,8 @@ export function UploadSlot({
             <div className="flex flex-wrap items-baseline gap-x-2">
               <h3 className="text-sm font-medium text-ink">{slot.label}</h3>
               <span className="text-xs text-ink-3">{slot.required ? "Required" : "Optional"}</span>
-              {flagged && <span className="text-xs font-medium text-manual-fg">Correction requested</span>}
+              {flag === "requested" && <span className="text-xs font-medium text-manual-fg">Correction requested</span>}
+              {flag === "replaced" && <span className="text-xs font-medium text-verified-fg">New copy uploaded</span>}
               <span className="sr-only">, {STATE_TEXT[state]}</span>
             </div>
             {/* Once the documents are locked the row is a record, so the guidance is left out */}

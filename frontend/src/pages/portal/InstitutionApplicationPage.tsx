@@ -53,13 +53,13 @@ function DocumentsPanel({
   docs,
   editable,
   firstMissing,
-  flagged,
+  flags,
 }: {
   app: ApplicationDetail;
   docs: Map<string, DocumentSummary>;
   editable: boolean;
   firstMissing?: string;
-  flagged: Set<string>;
+  flags: Map<string, "requested" | "replaced">;
 }) {
   const slots = [...app.document_checklist].sort((a, b) => Number(b.required) - Number(a.required));
   const source = checklistSourceText(app.checklist_source);
@@ -88,7 +88,7 @@ function DocumentsPanel({
             doc={docs.get(s.doc_type)}
             editable={editable}
             emphasis={s.doc_type === firstMissing}
-            flagged={flagged.has(s.doc_type)}
+            flag={flags.get(s.doc_type)}
           />
         ))}
       </ul>
@@ -290,7 +290,13 @@ export default function InstitutionApplicationPage() {
   const listed = new Set(rect?.items.map((i) => i.finding_id) ?? []);
   const asked = askedEnabled ? (findings.data ?? []).filter((f) => f.review_status === "evidence_requested" && !listed.has(f.id)) : [];
 
-  const flagged = new Set((rect?.items ?? []).map(itemDocType).filter((t): t is string => !!t));
+  // A requested document counts as corrected once a copy newer than the request is uploaded
+  const flags = new Map<string, "requested" | "replaced">();
+  for (const t of (rect?.items ?? []).map(itemDocType)) {
+    if (!t || !rect) continue;
+    const d = docs.get(t);
+    flags.set(t, d?.uploaded_at && d.uploaded_at > rect.created_at ? "replaced" : "requested");
+  }
   const docLabel = (t: string) => app.document_checklist.find((s) => s.doc_type === t)?.label;
 
   /** Scrolls a checklist row into view and puts the keyboard on its upload button. */
@@ -339,7 +345,7 @@ export default function InstitutionApplicationPage() {
       {rect && <DeficiencyLetterPanel appId={app.id} rect={rect} docLabel={docLabel} onShowDocument={showSlot} />}
       <AskedAboutPanel findings={asked} rectifying={!!rect} />
 
-      <DocumentsPanel app={app} docs={docs} editable={editable} firstMissing={missing[0]?.doc_type} flagged={flagged} />
+      <DocumentsPanel app={app} docs={docs} editable={editable} firstMissing={missing[0]?.doc_type} flags={flags} />
       <DeclaredPanel app={app} editable={editable} onEditing={setEditing} />
       <RunHistoryPanel appId={app.id} />
 
