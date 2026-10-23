@@ -38,7 +38,7 @@ export function ActivitySection() {
   const view: View = viewParam === "audit" ? "audit" : "runs";
   return (
     <div className="space-y-6">
-      <Toolbar end={view === "runs" ? <span className="text-xs text-ink-3">Select two runs to compare them</span> : undefined}>
+      <Toolbar>
         <SegmentedControl
           label="View"
           value={view}
@@ -223,7 +223,11 @@ function RunsView() {
       {ordered ? (
         <CompareRuns appId={app.id} a={ordered[0]} b={ordered[1]} onClear={() => setParams({ a: "none", b: "none" })} />
       ) : (
-        runs.length < 2 && <p className="text-sm text-ink-3">Run validation again, or replay the latest run, to compare findings across runs.</p>
+        <p className="text-sm text-ink-3">
+          {runs.length < 2
+            ? "Run validation again, or replay the latest run, to compare findings across runs."
+            : "Tick two runs to compare their findings."}
+        </p>
       )}
 
       <RunDrawer
