@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     sandbox_timeout_s: float = 120
     sandbox_memory_mb: int = 1536
     sandbox_max_tasks: int = 200
-    login_max_per_ip: int = 30
+    login_max_per_ip: int = 60
     login_max_failures_per_user: int = 5
     login_window_s: int = 900
     hsts_max_age: int = 31536000

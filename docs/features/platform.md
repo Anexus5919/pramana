@@ -85,7 +85,7 @@ If the officer has A3 open in another window, the officer's workspace picks up t
 
 ### Sign-in throttling
 
-- Every sign-in attempt counts against the client address: 30 per 15 minutes by default.
+- Every sign-in attempt counts against the client address: 60 per 15 minutes by default, enough for demo rehearsals that switch accounts often.
 - Failed passwords count against the username: 5 per 15 minutes. After that the account answers 429 with `Retry-After`, even for the right password, until the window passes.
 - The first refused attempt of each lockout writes `auth.locked_out` to the audit chain, with the scope, address and limit. Later refusals in the same lockout are not written, so a flood cannot bloat the chain.
 - Implemented in `pramana/throttle.py` on the shared `pramana/ratelimit.py`.
@@ -252,7 +252,7 @@ Limitations:
 | `PRAMANA_SANDBOX_TIMEOUT_S` | `120` | Wall-clock limit per parser operation |
 | `PRAMANA_SANDBOX_MEMORY_MB` | `1536` | Memory cap per worker |
 | `PRAMANA_SANDBOX_MAX_TASKS` | `200` | Operations before a worker is recycled |
-| `PRAMANA_LOGIN_MAX_PER_IP` | `30` | Sign-in attempts per client address per window |
+| `PRAMANA_LOGIN_MAX_PER_IP` | `60` | Sign-in attempts per client address per window |
 | `PRAMANA_LOGIN_MAX_FAILURES_PER_USER` | `5` | Failed passwords per username per window |
 | `PRAMANA_LOGIN_WINDOW_S` | `900` | Throttling window |
 | `PRAMANA_COOKIE_SECURE` | `false` | `__Host-` cookie and HSTS (existing setting, now complete) |
@@ -298,7 +298,7 @@ Tests and evaluation:
 | | Result |
 |---|---|
 | `pytest` on SQLite | 35 passed (the 22 existing tests and 13 in `tests/test_platform.py`) |
-| `pytest` on PostgreSQL 16.2 (portable binaries, `PRAMANA_DATABASE_URL=postgresql+psycopg://...`) | 35 passed in 233 s |
+| `pytest` on PostgreSQL 16.2 (portable binaries, `PRAMANA_DATABASE_URL=postgresql+psycopg://...`) | 35 passed (186 s; SQLite 165 s on the same machine) |
 | `scripts/evaluate.py` after a fresh seed through the sandbox | 42 of 42 planted conditions, 0 false positives, 323 of 328 fields read, as before |
 | Key rotation on the seeded data | 82 data keys rewrapped, document bytes identical before and after (hash of all files), all 82 decrypt after the old key is retired |
 
