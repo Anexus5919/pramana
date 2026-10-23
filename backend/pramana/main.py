@@ -14,6 +14,7 @@ from .db import init_db
 from .history import api as history_api
 from .history.watch import start_scheduler
 from .insights import proof as insights_proof
+from .insights import network as insights_network
 from .officer import routes as officer
 from .sandbox_worker import windows_full_speed
 
@@ -51,6 +52,7 @@ app.include_router(public.router)
 app.include_router(officer.router)
 app.include_router(analyse_api.router)
 app.include_router(insights_proof.router)
+app.include_router(insights_network.router)
 
 
 @app.middleware("http")

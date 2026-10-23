@@ -1,4 +1,4 @@
-import { FileSearch, FlaskConical, Inbox, ScrollText, ServerCog, ShieldCheck, type LucideIcon } from "lucide-react";
+import { FileSearch, FlaskConical, Inbox, Network, ScrollText, ServerCog, ShieldCheck, type LucideIcon } from "lucide-react";
 import type { Role } from "../types";
 
 export type NavGroup = "Review" | "Tools" | "Governance";
@@ -22,6 +22,7 @@ const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
 export const NAV: NavItem[] = [
   { to: "/dashboard", label: "Review queue", icon: Inbox, roles: OFFICIAL, group: "Review", keywords: "dashboard home applications triage alerts next" },
   { to: "/analyse", label: "Analyse a document", icon: FileSearch, roles: OFFICIAL, group: "Tools", keywords: "verify pdf signature check upload photo ocr hindi forensics revisions" },
+  { to: "/integrity", label: "Integrity", icon: Network, roles: OFFICIAL, group: "Tools", keywords: "network clusters shared evidence faculty overlaps ghost roster links" },
   { to: "/issuers", label: "Issuer simulator", icon: FlaskConical, roles: OFFICIAL, group: "Tools", keywords: "registry simulated demo revoke suspend watch" },
   { to: "/rules", label: "Rules", icon: ScrollText, roles: OFFICIAL, group: "Governance", keywords: "ruleset handbook checklist impact clauses" },
   { to: "/audit", label: "Audit log", icon: ShieldCheck, roles: ["officer", "admin"], group: "Governance", keywords: "chain hash checkpoint tamper" },

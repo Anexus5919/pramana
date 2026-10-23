@@ -1,1 +1,1 @@
-"""Officer insights computed from a finished validation run."""
+"""Officer insights: per-application proof and coverage, and cycle-wide integrity links."""

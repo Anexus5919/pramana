@@ -1056,7 +1056,9 @@ def main() -> None:
     # A6 genuine (its fire NOC number is copied by A5); A6 and A7 share three faculty
     docs6 = standard_docs("I6")
     shared = base["I7"]["fac"][:3]
-    fac6 = base["I6"]["fac"][:33] + [dict(r) for r in shared]
+    # A6 gives its own recent joining dates; the registry and A7's roster keep them at A7 for years
+    recent = [date(2024, 8, 1), date(2024, 8, 19), date(2025, 1, 6)]
+    fac6 = base["I6"]["fac"][:33] + [dict(r, doj=j) for r, j in zip(shared, recent, strict=True)]
     docs6["faculty_list"] = faculty_list(INST["I6"], fac6)[0]
     emit("A6", "I6", "EOA", docs6, declared("I6"),
          ["XA-FACULTY-MULTIPLE-INSTITUTIONS", "XA-FACULTY-REGISTERED-ELSEWHERE", "XA-SHARED-CERTIFICATE-NUMBER",
