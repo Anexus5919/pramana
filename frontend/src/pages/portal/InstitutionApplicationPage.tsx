@@ -132,7 +132,7 @@ function DeclaredPanel({
       await qc.invalidateQueries({ queryKey: qk.application(app.id) });
       setDraft(null);
       setTried(false);
-      toast.success("Declared figures saved", "The new figures are checked when you submit.");
+      toast.success("Declared figures saved", "The readiness check runs again with the new figures.");
     },
   });
   // Editors take a state setter; this one only acts while a draft is open
