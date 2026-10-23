@@ -1,156 +1,119 @@
-import {
-  ArrowUpRight,
-  BookOpen,
-  Database,
-  FileText,
-  GitCompareArrows,
-  Link2,
-  MapPin,
-  PenLine,
-  ShieldCheck,
-  SquareDashed,
-  TriangleAlert,
-} from "lucide-react";
-import { motion } from "motion/react";
+import { ArrowUpRight, Database, FileClock, FileText, GitCompareArrows, Link2, MapPin, PenLine, ShieldCheck, SquareDashed } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { fmtValue } from "../../lib/format";
 import { channelMeta, factSourceMeta, humanize, isSignatureChannel, pathLabel } from "../../lib/labels";
+import { workspacePath } from "../../shell/nav";
 import type { Citation, Comparison, Evidence, FactInput, GeoEvidence, Provenance, RevisionDiff } from "../../types";
-import { Tag } from "../../ui/Badge";
-import { cn } from "../../ui/cn";
-import { dur, ease } from "../../ui/motion";
-import { toneClass } from "../../ui/tone";
-import { Tooltip } from "../../ui/Tooltip";
+import { Button, buttonStyles, Callout, cn, Code, SimulatedTag, StatusBadge } from "../../ui2";
 import { useDocTypeLabel, useWorkspace } from "./context";
-import { appPath, bboxParam, evidenceDocId, methodLabel, validBox } from "./data";
+import { bboxParam, evidenceDocId, methodLabel, validBox } from "./data";
 import { SealCompare } from "./SealCompare";
 
+/** A caution inside a section: what a check cannot know, or why a reading is incomplete. */
 export function CautionNote({ children, title = "Limitation", className }: { children: ReactNode; title?: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex gap-2.5 rounded-[10px] border border-manual-dot/30 bg-manual-bg px-3 py-2.5", className)}>
-      <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-manual-dot" />
-      <div className="min-w-0 text-sm text-ink-2">
-        <span className="font-semibold text-manual-fg">{title}. </span>
-        {children}
-      </div>
-    </div>
+    <Callout tone="warning" title={title} className={className}>
+      {children}
+    </Callout>
   );
 }
 
+/** SIMULATED for issuer-simulator answers; "Demo key" for signatures made with the prototype's demo trust anchor. */
 export function SimTag({ channel, simulated, demo }: { channel?: string; simulated: boolean; demo?: boolean }) {
   if (!simulated && !demo) return null;
-  const label = demo || (channel && isSignatureChannel(channel)) ? "DEMO" : "SIMULATED";
-  return (
-    <Tooltip content={label === "DEMO" ? "Signed with a demo trust anchor, not a production certificate authority." : "Answered by a simulated issuer service for this prototype."}>
-      <Tag variant="demo" tabIndex={0}>
-        {label}
-      </Tag>
-    </Tooltip>
-  );
+  if (demo || (channel && isSignatureChannel(channel))) {
+    return (
+      <span
+        title="Signed with a demo trust anchor, not a production certificate authority"
+        className="inline-flex h-5 shrink-0 items-center rounded-[4px] border border-dashed border-line-2 px-1.5 text-xs leading-none font-medium text-ink-3"
+      >
+        Demo key
+      </span>
+    );
+  }
+  return <SimulatedTag />;
 }
 
-/** Rule citation as a quote card: document, clause, page and the verbatim text. */
+/** Rule citation as a quiet quote: source line, then the verbatim clause text. */
 export function CitationCard({ citation, ruleId, className }: { citation: Citation | null | undefined; ruleId?: string; className?: string }) {
   if (!citation) return null;
   const where = [citation.section, citation.clause, citation.page ? `page ${citation.page}` : null].filter(Boolean).join(", ");
   return (
-    <figure className={cn("relative overflow-hidden rounded-[12px] border border-line bg-surface-2/60 p-4 pl-5", className)}>
-      <span aria-hidden className="absolute inset-y-3 left-0 w-[3px] rounded-r-full bg-ev-4" />
-      <figcaption className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-        <BookOpen aria-hidden className="size-3.5 text-ev-4" />
-        <span className="font-semibold text-ink-2">{citation.doc_title ?? citation.doc ?? "Regulation"}</span>
-        {where && <span>{where}</span>}
-        {ruleId && <Tag variant="mono">{ruleId}</Tag>}
-      </figcaption>
+    <figure className={cn("min-w-0", className)}>
       {citation.quote ? (
-        <blockquote className="mt-2 font-display text-[15px] leading-relaxed text-ink text-pretty">
-          <span aria-hidden className="mr-0.5 text-ink-4">"</span>
-          {citation.quote}
-          <span aria-hidden className="ml-0.5 text-ink-4">"</span>
-        </blockquote>
+        <blockquote className="border-l-2 border-line-2 pl-3 text-sm text-ink text-pretty">{citation.quote}</blockquote>
       ) : (
-        <p className="mt-2 text-sm text-ink-3">No verbatim quote is recorded for this clause.</p>
+        <p className="border-l-2 border-line-2 pl-3 text-sm text-ink-3">No verbatim quote is recorded for this clause.</p>
       )}
-      {citation.doc_url && (
-        <a
-          href={citation.doc_url}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
-        >
-          Open the source document{citation.page ? ` at page ${citation.page}` : ""}
-          <ArrowUpRight aria-hidden className="size-3" />
-        </a>
-      )}
+      <figcaption className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 pl-3 text-xs text-ink-3">
+        <span className="font-medium text-ink-2">{citation.doc_title ?? citation.doc ?? "Regulation"}</span>
+        {where && <span>{where}</span>}
+        {ruleId && <Code className="text-xs">{ruleId}</Code>}
+        {citation.doc_url && (
+          <a href={citation.doc_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 rounded text-ink-2 underline-offset-2 hover:text-ink hover:underline">
+            Open the source{citation.page ? ` at page ${citation.page}` : ""}
+            <ArrowUpRight aria-hidden className="size-3" />
+          </a>
+        )}
+      </figcaption>
     </figure>
   );
 }
 
+/** Submitted value against the authoritative one, field by field. */
 export function ComparisonTable({ comparisons, className }: { comparisons: Comparison[]; className?: string }) {
   if (!comparisons?.length) return null;
   return (
-    <div className={cn("overflow-x-auto rounded-[10px] border border-line", className)}>
-      <table className="w-full min-w-[420px] text-sm">
+    <div className={cn("min-w-0 overflow-x-auto rounded-control border border-line", className)}>
+      <table className="w-full text-sm">
+        <caption className="sr-only">Submitted and authoritative values</caption>
         <thead>
-          <tr className="bg-surface-2 text-left text-[11px] tracking-[0.08em] text-ink-3 uppercase">
-            <th scope="col" className="px-3 py-2 font-semibold">Field</th>
-            <th scope="col" className="px-3 py-2 font-semibold">Submitted</th>
-            <th scope="col" className="px-3 py-2 font-semibold">Authoritative</th>
-            <th scope="col" className="w-10 px-2 py-2"><span className="sr-only">Result</span></th>
+          <tr className="border-b border-line bg-surface-2 text-left text-xs text-ink-3">
+            <th scope="col" className="h-8 px-3 font-medium">
+              Field
+            </th>
+            <th scope="col" className="h-8 px-3 font-medium">
+              Submitted
+            </th>
+            <th scope="col" className="h-8 px-3 font-medium">
+              Authoritative
+            </th>
+            <th scope="col" className="h-8 px-3 font-medium">
+              Result
+            </th>
           </tr>
         </thead>
         <tbody>
-          {comparisons.map((c, i) => {
-            const bad = c.match === false;
-            return (
-              <motion.tr
-                key={`${c.field}-${i}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.05, duration: dur.ui }}
-                className="border-t border-line align-top"
-              >
-                <th scope="row" className="px-3 py-2 text-left font-medium text-ink-2">
-                  {pathLabel(c.field)}
-                  {c.note && <span className="block text-[11px] font-normal text-ink-3">{c.note}</span>}
-                </th>
-                <td className={cn("px-3 py-2 font-mono text-[12.5px] break-words", bad ? "bg-mismatch-bg text-mismatch-fg" : "text-ink")}>
-                  {fmtValue(c.submitted)}
-                </td>
-                <td className={cn("px-3 py-2 font-mono text-[12.5px] break-words", bad ? "bg-mismatch-bg/60 text-ink" : "text-ink")}>
-                  {fmtValue(c.authoritative)}
-                </td>
-                <td className="px-2 py-2 text-center">
-                  <span
-                    className={cn(
-                      "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
-                      c.match === true && "bg-verified-bg text-verified-fg",
-                      c.match === false && "bg-mismatch-bg text-mismatch-fg",
-                      c.match === null && "bg-surface-2 text-ink-3",
-                    )}
-                  >
-                    {c.match === true ? "Match" : c.match === false ? "Differs" : "n/a"}
-                  </span>
-                </td>
-              </motion.tr>
-            );
-          })}
+          {comparisons.map((c, i) => (
+            <tr key={`${c.field}-${i}`} className="border-b border-line align-top last:border-b-0">
+              <th scope="row" className="px-3 py-2 text-left font-medium text-ink-2">
+                {pathLabel(c.field)}
+                {c.note && <span className="block text-xs font-normal text-ink-3">{c.note}</span>}
+              </th>
+              <td className="px-3 py-2 font-mono text-sm break-words text-ink">{fmtValue(c.submitted)}</td>
+              <td className="px-3 py-2 font-mono text-sm break-words text-ink">{fmtValue(c.authoritative)}</td>
+              <td className="px-3 py-2">
+                {c.match === true ? (
+                  <StatusBadge tone="verified">Match</StatusBadge>
+                ) : c.match === false ? (
+                  <StatusBadge tone="mismatch">Differs</StatusBadge>
+                ) : (
+                  <StatusBadge tone="unchecked">Not compared</StatusBadge>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   );
 }
 
+/** Where a fact came from: declared, document, reference record, verified or derived. */
 export function SourceChip({ source }: { source: string }) {
   const m = factSourceMeta[source];
-  const t = toneClass[m?.tone ?? "unchecked"];
-  return (
-    <span className={cn("inline-flex h-5 shrink-0 items-center gap-1 rounded-[5px] px-1.5 text-[11px] font-semibold", t.bg, t.fg)}>
-      <span aria-hidden className={cn("size-1.5 rounded-[2px]", t.dot)} />
-      {m?.label ?? humanize(source)}
-    </span>
-  );
+  return <StatusBadge tone={m?.tone ?? "unchecked"}>{m?.label ?? humanize(source)}</StatusBadge>;
 }
 
 function provenanceText(p: Provenance, docName: (id: string) => string): string {
@@ -172,73 +135,64 @@ export function TraceInputs({ inputs, missing }: { inputs: FactInput[]; missing?
   const docName = (id: string) => (docs[id] ? docLabel(docs[id].declared_type) : "a document");
   if (!inputs.length && !missing?.length) return <p className="text-sm text-ink-3">No inputs recorded.</p>;
   return (
-    <ul className="divide-y divide-line overflow-hidden rounded-[10px] border border-line">
+    <ul className="divide-y divide-line border-y border-line">
       {inputs.map((inp, i) => {
         const p = inp.provenance ?? {};
         const canOpen = !!p.document_id && validBox(p.bbox) && !!p.page;
         return (
-          <li key={`${inp.path}-${i}`} className="grid gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_auto]">
-            <div className="min-w-0">
+          <li key={`${inp.path}-${i}`} className="flex flex-wrap items-start gap-x-3 gap-y-1 py-2.5">
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <SourceChip source={inp.source} />
-                <span className="font-mono text-[12px] text-ink-3">{inp.path}</span>
+                <Code className="text-xs text-ink-3">{inp.path}</Code>
               </div>
-              <div className="mt-1 font-mono text-[13px] break-words text-ink">{fmtValue(inp.value)}</div>
+              <div className="mt-1 font-mono text-sm break-words text-ink">{fmtValue(inp.value)}</div>
               <div className="mt-0.5 text-xs text-ink-3">
                 {provenanceText(p, docName)}
-                {p.raw && String(p.raw) !== String(inp.value) && <> , read as "{p.raw}"</>}
+                {p.raw && String(p.raw) !== String(inp.value) && <>, read as "{p.raw}"</>}
               </div>
             </div>
             {canOpen && (
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="ghost"
+                leadingIcon={<SquareDashed />}
                 onClick={() => openDoc({ docId: p.document_id!, page: p.page, bbox: p.bbox, label: pathLabel(inp.path) })}
-                className="inline-flex h-7 items-center gap-1 self-start rounded-[7px] bg-brand-soft px-2 text-xs font-medium text-brand-ink transition-colors hover:bg-brand-100"
               >
-                <SquareDashed aria-hidden className="size-3.5" /> Show on page
-              </button>
+                Show on page
+              </Button>
             )}
           </li>
         );
       })}
       {missing?.map((m) => (
-        <li key={m} className="flex items-center gap-2 px-3 py-2.5 text-sm">
-          <span className="inline-flex h-5 items-center rounded-[5px] bg-mismatch-bg px-1.5 text-[11px] font-semibold text-mismatch-fg">Missing</span>
-          <span className="font-mono text-[12px] text-ink-2">{m}</span>
+        <li key={m} className="flex flex-wrap items-center gap-2 py-2.5 text-sm">
+          <StatusBadge tone="mismatch">Missing</StatusBadge>
+          <Code className="text-xs">{m}</Code>
         </li>
       ))}
     </ul>
   );
 }
 
+/** What a later revision added, and what it was drawn over. */
 export function RevisionDiffView({ diff }: { diff: Pick<RevisionDiff, "added_text" | "removed_text" | "text_underneath" | "from_revision" | "to_revision"> }) {
   const before = diff.text_underneath || diff.removed_text;
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-ink-2">
-        Revision {diff.to_revision} added{" "}
-        <mark className="rounded-[4px] bg-verified-bg px-1 font-mono text-[12.5px] text-verified-fg">{diff.added_text || "content"}</mark>
-        {before ? (
-          <>
-            {" "}over{" "}
-            <span className="rounded-[4px] bg-mismatch-bg px-1 font-mono text-[12.5px] text-mismatch-fg line-through decoration-2">{before}</span>
-          </>
-        ) : null}
-      </p>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-[8px] border border-line bg-surface-2/60 p-2">
-          <div className="eyebrow mb-1">Revision {diff.from_revision}</div>
-          <div className="font-mono text-[12.5px] break-words text-ink">{before || <span className="text-ink-4">empty</span>}</div>
-        </div>
-        <div className="rounded-[8px] border border-verified-dot/30 bg-verified-bg/50 p-2">
-          <div className="eyebrow mb-1">Revision {diff.to_revision}</div>
-          <div className="font-mono text-[12.5px] break-words text-ink">{diff.added_text || <span className="text-ink-4">empty</span>}</div>
-        </div>
+    <dl className="grid min-w-0 gap-x-6 gap-y-2 sm:grid-cols-2">
+      <div className="min-w-0">
+        <dt className="text-xs text-ink-3">Revision {diff.from_revision}</dt>
+        <dd className="mt-0.5 font-mono text-sm break-words text-ink">{before || <span className="font-sans text-ink-4">Empty</span>}</dd>
       </div>
-    </div>
+      <div className="min-w-0">
+        <dt className="text-xs text-ink-3">Revision {diff.to_revision} added</dt>
+        <dd className="mt-0.5 font-mono text-sm break-words text-ink">{diff.added_text || <span className="font-sans text-ink-4">Empty</span>}</dd>
+      </div>
+    </dl>
   );
 }
 
+/** Photo geotag against the campus on record, drawn to scale. */
 export function GeoFigure({ e }: { e: GeoEvidence }) {
   const [plat, plon] = e.photo;
   const [clat, clon] = e.campus;
@@ -251,53 +205,62 @@ export function GeoFigure({ e }: { e: GeoEvidence }) {
   const px = cx + dx * s;
   const py = cy - dy * s;
   return (
-    <svg viewBox="0 0 120 120" className="size-28 shrink-0 rounded-[10px] border border-line bg-surface-2" role="img" aria-label={`Photo geotag ${e.distance_km} km from campus`}>
-      <motion.line x1={cx} y1={cy} x2={px} y2={py} stroke="var(--ink-4)" strokeDasharray="3 3" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur.story, ease: ease.out }} />
+    <svg
+      viewBox="0 0 120 120"
+      className="size-28 shrink-0 rounded-control border border-line bg-surface-2"
+      role="img"
+      aria-label={`Photo geotag ${e.distance_km} km from campus`}
+    >
+      <line x1={cx} y1={cy} x2={px} y2={py} stroke="var(--ink-4)" strokeDasharray="3 3" />
       <circle cx={cx} cy={cy} r="5" fill="var(--verified-dot)" />
       <circle cx={px} cy={py} r="5" fill="var(--mismatch-dot)" />
-      <text x={cx} y={cy + 16} textAnchor="middle" fill="var(--ink-3)" fontSize="9">campus</text>
-      <text x={px} y={py - 9} textAnchor="middle" fill="var(--ink-3)" fontSize="9">photo</text>
+      <text x={cx} y={cy + 16} textAnchor="middle" fill="var(--ink-3)" fontSize="10">
+        campus
+      </text>
+      <text x={px} y={py - 9} textAnchor="middle" fill="var(--ink-3)" fontSize="10">
+        photo
+      </text>
     </svg>
   );
 }
 
 function Item({ icon, title, children, action }: { icon: ReactNode; title: ReactNode; children?: ReactNode; action?: ReactNode }) {
   return (
-    <li className="rounded-[10px] border border-line bg-surface px-3 py-2.5">
-      <div className="flex items-start gap-2.5">
-        <span aria-hidden className="mt-0.5 shrink-0 text-ink-3 [&_svg]:size-4">{icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0 text-sm font-medium text-ink">{title}</div>
-            {action}
-          </div>
-          {children && <div className="mt-1 text-xs text-ink-3">{children}</div>}
+    <li className="flex min-w-0 items-start gap-3 py-3">
+      <span aria-hidden className="mt-0.5 shrink-0 text-ink-4 [&_svg]:size-4">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+          <div className="min-w-0 text-sm font-medium text-ink">{title}</div>
+          {action && <div className="flex shrink-0 flex-wrap items-center gap-1">{action}</div>}
         </div>
+        {children && <div className="mt-1 min-w-0 text-xs text-ink-3">{children}</div>}
       </div>
     </li>
   );
 }
 
-const actionCls =
-  "inline-flex h-7 shrink-0 items-center gap-1 rounded-[7px] bg-brand-soft px-2 text-xs font-medium text-brand-ink transition-colors hover:bg-brand-100";
-
 function Value({ v }: { v: unknown }) {
   if (v === undefined || v === null) return null;
   return (
     <span className="ml-1.5 font-normal text-ink-3">
-      = <span className="font-mono text-[12.5px] text-ink">{fmtValue(v)}</span>
+      = <span className="font-mono text-sm text-ink">{fmtValue(v)}</span>
     </span>
   );
 }
 
-/** Every evidence kind the pipeline emits, with a way to reach the source. */
+const linkAction = buttonStyles("ghost", "sm");
+
+/** Every evidence kind the pipeline emits, each with a way to reach its source. */
 export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]; fallbackDocId: string | null }) {
-  const { openDoc, docs } = useWorkspace();
+  const { app, openDoc, docs } = useWorkspace();
   const docLabel = useDocTypeLabel();
-  const docName = (id: string | null) => (id && docs[id] ? `${docLabel(docs[id].declared_type)} (${docs[id].original_filename})` : "Document");
+  const docName = (id: string | null) => (id && docs[id] ? docLabel(docs[id].declared_type) : "Document");
+  const fileName = (id: string | null) => (id && docs[id] ? docs[id].original_filename : null);
   if (!evidence.length) return <p className="text-sm text-ink-3">No evidence items recorded.</p>;
   return (
-    <ul className="space-y-2">
+    <ul className="divide-y divide-line border-y border-line">
       {evidence.map((raw, i) => {
         const e = raw as Evidence;
         switch (e.kind) {
@@ -316,15 +279,20 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                 }
                 action={
                   docId ? (
-                    <button type="button" className={actionCls} onClick={() => openDoc({ docId, page: e.page, bbox: e.bbox, label: pathLabel(e.label ?? "Region") })}>
-                      <SquareDashed aria-hidden className="size-3.5" />
-                      {located ? `Show on page ${e.page}` : "Open document"}
-                    </button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      leadingIcon={<SquareDashed />}
+                      onClick={() => openDoc({ docId, page: e.page, bbox: e.bbox, label: pathLabel(e.label ?? "Region") })}
+                    >
+                      {located ? "Show on page" : "Open document"}
+                    </Button>
                   ) : undefined
                 }
               >
                 {docName(docId)}
                 {e.page ? `, page ${e.page}` : ""}
+                {fileName(docId) && <span className="ml-1 font-mono">{fileName(docId)}</span>}
                 {e.raw && String(e.raw) !== String(e.value) && <span className="block">Read as "{e.raw}"</span>}
               </Item>
             );
@@ -336,28 +304,39 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                 icon={<FileText />}
                 title={docName(e.document_id)}
                 action={
-                  <button type="button" className={actionCls} onClick={() => openDoc({ docId: e.document_id })}>
-                    <FileText aria-hidden className="size-3.5" /> Open document
-                  </button>
+                  <Button size="sm" variant="ghost" leadingIcon={<FileText />} onClick={() => openDoc({ docId: e.document_id })}>
+                    Open document
+                  </Button>
                 }
-              />
+              >
+                {fileName(e.document_id) && <span className="font-mono">{fileName(e.document_id)}</span>}
+              </Item>
             );
           case "peer_document":
             return (
               <Item
                 key={i}
                 icon={<Link2 />}
-                title={<>Matching document in application {e.application_id}</>}
+                title={
+                  <>
+                    Matching document in <Code>{e.application_id}</Code>
+                  </>
+                }
                 action={
                   <Link
-                    className={actionCls}
-                    to={appPath(e.application_id, "documents", { doc: e.document_id, page: e.page, hl: bboxParam(e.bbox), hlabel: "matched region" })}
+                    className={linkAction}
+                    to={workspacePath(e.application_id, "documents", {
+                      doc: e.document_id,
+                      page: e.page ? String(e.page) : undefined,
+                      hl: bboxParam(e.bbox) ?? undefined,
+                      hlabel: "matched region",
+                    })}
                   >
-                    Open other application <ArrowUpRight aria-hidden className="size-3" />
+                    Open other application <ArrowUpRight aria-hidden />
                   </Link>
                 }
               >
-                Opens the other application's document {e.page ? `at page ${e.page}` : ""} with the matched region highlighted.
+                Opens the other application's document{e.page ? ` at page ${e.page}` : ""} with the matched region highlighted.
               </Item>
             );
           case "reference_record":
@@ -373,7 +352,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                 }
               >
                 {e.source ?? "AICTE reference record"}
-                {e.record_id && <span className="ml-1 font-mono text-[11px]">({e.record_id})</span>}
+                {e.record_id && <span className="ml-1 font-mono">{e.record_id}</span>}
               </Item>
             );
           case "declared":
@@ -397,7 +376,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                 key={i}
                 icon={<ShieldCheck />}
                 title={
-                  <span className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
                     {channelMeta[e.channel]?.label ?? humanize(e.channel)}
                     <SimTag channel={e.channel} simulated={e.simulated} />
                   </span>
@@ -415,10 +394,26 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                 icon={<GitCompareArrows />}
                 title={`Revision ${e.from_revision} to ${e.to_revision}, page ${e.page}`}
                 action={
-                  docId && validBox(e.bbox) ? (
-                    <button type="button" className={actionCls} onClick={() => openDoc({ docId, page: e.page, bbox: e.bbox, label: "Changed in a later revision" })}>
-                      <SquareDashed aria-hidden className="size-3.5" /> Show region
-                    </button>
+                  docId ? (
+                    <>
+                      {validBox(e.bbox) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          leadingIcon={<SquareDashed />}
+                          onClick={() => openDoc({ docId, page: e.page, bbox: e.bbox, label: "Changed in a later revision" })}
+                        >
+                          Show on page
+                        </Button>
+                      )}
+                      <Link
+                        className={linkAction}
+                        to={workspacePath(app.id, "documents", { doc: docId, panel: "revisions", rev: String(e.to_revision) })}
+                      >
+                        <FileClock aria-hidden />
+                        View revisions
+                      </Link>
+                    </>
                   ) : undefined
                 }
               >
@@ -433,7 +428,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
           case "geo":
             return (
               <Item key={i} icon={<MapPin />} title={`Photo geotag ${fmtValue(e.distance_km)} km from the campus on record`}>
-                <div className="mt-1 flex flex-wrap items-center gap-3">
+                <div className="mt-1 flex flex-wrap items-center gap-4">
                   <GeoFigure e={e} />
                   <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
                     <dt>Photo</dt>
@@ -447,7 +442,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
           default:
             return (
               <Item key={i} icon={<FileText />} title={humanize((raw as { kind: string }).kind)}>
-                <pre className="overflow-x-auto font-mono text-[11px] whitespace-pre-wrap">{JSON.stringify(raw, null, 2)}</pre>
+                <pre className="overflow-x-auto font-mono text-xs whitespace-pre-wrap">{JSON.stringify(raw, null, 2)}</pre>
               </Item>
             );
         }
@@ -456,11 +451,11 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
   );
 }
 
-/** Small uppercase label above a group inside a pane. */
+/** Small heading above a group inside a panel. */
 export function PaneLabel({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="mb-2 flex items-center justify-between gap-3">
-      <h4 className="eyebrow">{children}</h4>
+      <h3 className="text-sm font-semibold text-ink">{children}</h3>
       {aside}
     </div>
   );
