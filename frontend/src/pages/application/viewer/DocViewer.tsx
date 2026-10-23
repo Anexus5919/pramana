@@ -1,12 +1,9 @@
 import { ChevronLeft, ChevronRight, Maximize2, ZoomIn, ZoomOut } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent, type ReactNode } from "react";
 import { api } from "../../../api";
 import type { BBox, DocumentDetail, Finding } from "../../../types";
-import { IconButton } from "../../../ui/Button";
-import { cn } from "../../../ui/cn";
-import { dur, ease } from "../../../ui/motion";
-import { Skeleton } from "../../../ui/Skeleton";
+import { cn, dur2, ease2, IconButton, Skeleton } from "../../../ui2";
 import { isLlmMethod, methodLabel } from "../data";
 import { buildOverlays, LAYERS, type LayerId, type OverlayBox } from "./overlays";
 
@@ -19,10 +16,6 @@ export interface Focus {
 const ZMIN = 0.5;
 const ZMAX = 3;
 const ZSTEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
-const SWEEP = 1.1;
-
-// Documents the scan line has already swept in this session
-const swept = new Set<string>();
 
 export const ALL_LAYERS: Record<LayerId, boolean> = { fields: true, findings: true, qr: true, rows: true, instruction: true };
 
@@ -47,17 +40,17 @@ export function LayerToggles({
             title={l.meaning}
             onClick={() => onToggle(l.id)}
             className={cn(
-              "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors duration-200",
-              on ? "border-line-2 bg-surface text-ink" : "border-transparent bg-surface-2 text-ink-4",
+              "inline-flex h-7 items-center gap-1.5 rounded-control border px-2 text-xs font-medium transition-colors duration-150",
+              on ? "border-line-2 bg-surface text-ink" : "border-transparent text-ink-3 hover:bg-surface-2 hover:text-ink",
             )}
           >
             <span
               aria-hidden
-              className="size-2.5 rounded-[3px] border-[1.5px] transition-colors"
+              className="size-2.5 rounded-[2px] border-[1.5px]"
               style={{ borderColor: l.color, background: on ? `color-mix(in oklab, ${l.color} 35%, transparent)` : "transparent" }}
             />
             {l.label}
-            <span className="tabular text-ink-3">{counts[l.id]}</span>
+            <span className="text-ink-3 tabular-nums">{counts[l.id]}</span>
           </button>
         );
       })}
@@ -65,6 +58,10 @@ export function LayerToggles({
   );
 }
 
+/**
+ * A document page with its overlays, in an evidence frame: page navigation, layer
+ * toggles and zoom in the frame header, the page on a neutral stage below.
+ */
 export function DocViewer({
   doc,
   findings,
@@ -78,6 +75,8 @@ export function DocViewer({
   className,
   stageClassName,
   pageUrl,
+  title,
+  meta,
 }: {
   doc: DocumentDetail;
   findings: Finding[];
@@ -93,6 +92,10 @@ export function DocViewer({
   stageClassName?: string;
   /** Page image source for a file that is not stored as an application document */
   pageUrl?: (page: number) => string;
+  /** Frame title, usually the document type */
+  title?: ReactNode;
+  /** One line under the title: filename, pages, text source */
+  meta?: ReactNode;
 }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
@@ -103,7 +106,6 @@ export function DocViewer({
   const [failed, setFailed] = useState(false);
   const [visible, setVisible] = useState(ALL_LAYERS);
   const [hover, setHover] = useState<OverlayBox | null>(null);
-  const [sweeping, setSweeping] = useState(false);
   const drag = useRef<{ x: number; y: number; sl: number; st: number; moved: boolean } | null>(null);
 
   const overlays = useMemo(() => buildOverlays(doc, findings), [doc, findings]);
@@ -125,7 +127,7 @@ export function DocViewer({
   useLayoutEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setFit(Math.max(200, el.clientWidth - 40)));
+    const ro = new ResizeObserver(() => setFit(Math.max(200, el.clientWidth - 32)));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -162,23 +164,10 @@ export function DocViewer({
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  const onLoad = useCallback(
-    (w: number, h: number) => {
-      setNatural({ w, h });
-      setLoaded(true);
-      if (!swept.has(doc.id) && !reduce) {
-        swept.add(doc.id);
-        setSweeping(true);
-      }
-    },
-    [doc.id, reduce],
-  );
-
-  useEffect(() => {
-    if (!sweeping) return;
-    const t = window.setTimeout(() => setSweeping(false), SWEEP * 1000 + 300);
-    return () => window.clearTimeout(t);
-  }, [sweeping]);
+  const onLoad = useCallback((w: number, h: number) => {
+    setNatural({ w, h });
+    setLoaded(true);
+  }, []);
 
   const boxes = overlays.filter((b) => b.page === page && visible[b.layer]).sort((a, b) => a.bbox[1] - b.bbox[1] || a.bbox[0] - b.bbox[0]);
   const zi = ZSTEPS.findIndex((z) => z >= zoom - 0.001);
@@ -212,34 +201,51 @@ export function DocViewer({
     }
   }
 
-  const delayFor = (b: OverlayBox) => (sweeping && unitsH ? (b.bbox[1] / unitsH) * SWEEP : 0);
   const showFocus = !!focus && focus.page === page && loaded && !!unitsW;
 
-  return (
-    <div className={cn("flex min-w-0 flex-col overflow-hidden rounded-card border border-line bg-surface", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line px-3 py-2">
-        <div className="flex items-center gap-1" role="group" aria-label="Pages">
-          <IconButton size="sm" label="Previous page" icon={<ChevronLeft />} disabled={page <= 1} onClick={() => onPage(page - 1)} />
-          <span className="min-w-[78px] text-center text-xs font-medium text-ink-2 tabular" aria-live="polite">
-            Page {page} of {pageCount}
-          </span>
-          <IconButton size="sm" label="Next page" icon={<ChevronRight />} disabled={page >= pageCount} onClick={() => onPage(page + 1)} />
-        </div>
-        <LayerToggles visible={visible} counts={counts} onToggle={(id) => setVisible((v) => ({ ...v, [id]: !v[id] }))} />
-        <div className="flex items-center gap-0.5" role="group" aria-label="Zoom">
-          <IconButton size="sm" label="Zoom out" icon={<ZoomOut />} disabled={zoom <= ZMIN + 0.001} onClick={() => setZoom(ZSTEPS[Math.max(0, zi - 1)])} />
-          <button
-            type="button"
-            onClick={() => setZoom(1)}
-            title="Fit to width"
-            className="inline-flex h-8 min-w-12 items-center justify-center rounded-control text-xs font-medium text-ink-2 tabular hover:bg-surface-2"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-          <IconButton size="sm" label="Zoom in" icon={<ZoomIn />} disabled={zoom >= ZMAX - 0.001} onClick={() => setZoom(ZSTEPS[Math.min(ZSTEPS.length - 1, zi < 0 ? ZSTEPS.length - 1 : zi + 1)])} />
-          <IconButton size="sm" label="Fit to width" icon={<Maximize2 />} onClick={() => setZoom(1)} />
-        </div>
+  const controls = (
+    <>
+      <div className="flex items-center gap-0.5" role="group" aria-label="Pages">
+        <IconButton size="sm" label="Previous page" icon={<ChevronLeft />} disabled={page <= 1} onClick={() => onPage(page - 1)} />
+        <span className="min-w-20 text-center text-xs font-medium text-ink-2 tabular-nums" aria-live="polite">
+          Page {page} of {pageCount}
+        </span>
+        <IconButton size="sm" label="Next page" icon={<ChevronRight />} disabled={page >= pageCount} onClick={() => onPage(page + 1)} />
       </div>
+      <LayerToggles visible={visible} counts={counts} onToggle={(id) => setVisible((v) => ({ ...v, [id]: !v[id] }))} />
+      <div className="flex items-center gap-0.5" role="group" aria-label="Zoom">
+        <IconButton size="sm" label="Zoom out" icon={<ZoomOut />} disabled={zoom <= ZMIN + 0.001} onClick={() => setZoom(ZSTEPS[Math.max(0, zi - 1)])} />
+        <button
+          type="button"
+          onClick={() => setZoom(1)}
+          title="Fit to width"
+          className="inline-flex h-7 min-w-11 items-center justify-center rounded-control text-xs font-medium text-ink-2 tabular-nums hover:bg-surface-2"
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+        <IconButton
+          size="sm"
+          label="Zoom in"
+          icon={<ZoomIn />}
+          disabled={zoom >= ZMAX - 0.001}
+          onClick={() => setZoom(ZSTEPS[Math.min(ZSTEPS.length - 1, zi < 0 ? ZSTEPS.length - 1 : zi + 1)])}
+        />
+        <IconButton size="sm" label="Fit to width" icon={<Maximize2 />} onClick={() => setZoom(1)} />
+      </div>
+    </>
+  );
+
+  return (
+    <figure className={cn("flex min-w-0 flex-col overflow-hidden rounded-card border border-line bg-surface", className)}>
+      <figcaption className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line px-4 py-2">
+        {(title || meta) && (
+          <div className="min-w-0 basis-full 2xl:basis-auto">
+            {title && <div className="truncate text-sm font-medium text-ink">{title}</div>}
+            {meta && <div className="text-xs text-ink-3">{meta}</div>}
+          </div>
+        )}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-2">{controls}</div>
+      </figcaption>
 
       <div
         ref={stage}
@@ -247,10 +253,10 @@ export function DocViewer({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={() => (drag.current = null)}
-        className={cn("relative min-h-0 flex-1 overflow-auto bg-surface-3/60 p-5", pannable && "cursor-grab active:cursor-grabbing", stageClassName)}
+        className={cn("relative min-h-0 flex-1 overflow-auto bg-surface-2 p-4", pannable && "cursor-grab active:cursor-grabbing", stageClassName)}
       >
         {fit > 0 && (
-          <div className="relative mx-auto bg-white shadow-md ring-1 ring-black/5" style={{ width, height }}>
+          <div className="relative mx-auto bg-white shadow-xs ring-1 ring-line" style={{ width, height }}>
             {!loaded && !failed && <Skeleton className="absolute inset-0" rounded="sm" />}
             {failed ? (
               <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-ink-3">The page image could not be rendered.</div>
@@ -262,7 +268,7 @@ export function DocViewer({
                 draggable={false}
                 onLoad={(e) => onLoad(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
                 onError={() => setFailed(true)}
-                className={cn("block size-full select-none transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")}
+                className={cn("block size-full select-none transition-opacity duration-150", loaded ? "opacity-100" : "opacity-0")}
               />
             )}
 
@@ -274,16 +280,13 @@ export function DocViewer({
                   const clickable = !!onBoxClick && isClickable(b);
                   const lit = hover?.key === b.key || peek === b.key;
                   return (
-                    <motion.rect
+                    <rect
                       key={b.key}
                       x={x0 * scale - 2}
                       y={y0 * scale - 2}
                       width={Math.max(4, (x1 - x0) * scale + 4)}
                       height={Math.max(4, (y1 - y0) * scale + 4)}
                       rx={2}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: delayFor(b), duration: dur.ui }}
                       style={{ fill: l.color, fillOpacity: lit ? 0.24 : b.layer === "rows" ? 0.05 : 0.1, stroke: l.color }}
                       strokeWidth={lit ? 2.2 : 1.4}
                       tabIndex={0}
@@ -300,60 +303,48 @@ export function DocViewer({
                           onBoxClick?.(b);
                         }
                       }}
-                      className={cn("outline-none transition-[fill-opacity,stroke-width] duration-150", clickable && "cursor-pointer")}
+                      className={cn("outline-none transition-[fill-opacity,stroke-width] duration-150 focus-visible:[stroke-width:3]", clickable && "cursor-pointer")}
                     />
                   );
                 })}
-                {showFocus && <FocusBox key={`${focus!.page}-${focus!.bbox.join(",")}`} bbox={focus!.bbox} scale={scale} delay={sweeping ? SWEEP * 0.6 : 0.15} />}
+                {showFocus && <FocusBox key={`${focus!.page}-${focus!.bbox.join(",")}`} bbox={focus!.bbox} scale={scale} still={!!reduce} />}
               </svg>
             )}
 
             {showFocus && (
-              <motion.span
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: sweeping ? SWEEP * 0.6 + 0.4 : 0.55, duration: dur.ui, ease: ease.out }}
-                className="pointer-events-none absolute z-10 -translate-y-full rounded-t-[6px] bg-ov-focus px-1.5 py-0.5 text-[11px] font-semibold whitespace-nowrap text-white shadow-sm"
+              <span
+                className="pointer-events-none absolute z-10 -translate-y-full rounded-t-[4px] bg-ov-focus px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-white"
                 style={{ left: focus!.bbox[0] * scale - 4, top: focus!.bbox[1] * scale - 5 }}
               >
                 {focus!.label || "Highlighted region"}
-              </motion.span>
+              </span>
             )}
 
-            <AnimatePresence>
-              {sweeping && loaded && (
-                <motion.div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 -translate-y-full"
-                  initial={{ y: 0 }}
-                  animate={{ y: height + 40 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: SWEEP, ease: ease.inOut }}
-                  style={{ background: "linear-gradient(to bottom, transparent, color-mix(in oklab, var(--brand-400) 18%, transparent))", borderBottom: "1.5px solid var(--brand-400)" }}
-                />
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {hover && unitsW && <BoxTip key={hover.key} box={hover} scale={scale} pageWidth={width} />}
-            </AnimatePresence>
+            {hover && unitsW && <BoxTip key={hover.key} box={hover} scale={scale} pageWidth={width} />}
           </div>
         )}
         {loaded && !info && doc.mime === "application/pdf" && (
           <p className="mt-3 text-center text-xs text-ink-3">Page geometry is not available for this document, so overlays may be offset.</p>
         )}
       </div>
-    </div>
+    </figure>
   );
 }
 
-/** The focus region draws its stroke, then pulses once to pull the eye to it. */
-function FocusBox({ bbox, scale, delay }: { bbox: BBox; scale: number; delay: number }) {
+/** The focus region draws its outline, then pulses once to pull the eye to it. Static under reduced motion. */
+function FocusBox({ bbox, scale, still }: { bbox: BBox; scale: number; still: boolean }) {
   const [x0, y0, x1, y1] = bbox;
   const x = x0 * scale - 5;
   const y = y0 * scale - 5;
   const w = Math.max(8, (x1 - x0) * scale + 10);
   const h = Math.max(8, (y1 - y0) * scale + 10);
+  if (still) {
+    return (
+      <g pointerEvents="none">
+        <rect x={x} y={y} width={w} height={h} rx={3} fill="var(--ov-focus)" fillOpacity={0.16} stroke="var(--ov-focus)" strokeWidth={2.5} />
+      </g>
+    );
+  }
   return (
     <g pointerEvents="none">
       <motion.rect
@@ -365,7 +356,7 @@ function FocusBox({ bbox, scale, delay }: { bbox: BBox; scale: number; delay: nu
         fill="var(--ov-focus)"
         initial={{ fillOpacity: 0 }}
         animate={{ fillOpacity: 0.16 }}
-        transition={{ delay: delay + 0.45, duration: dur.ui }}
+        transition={{ delay: 0.35, duration: dur2.base }}
       />
       <motion.rect
         x={x}
@@ -378,7 +369,7 @@ function FocusBox({ bbox, scale, delay }: { bbox: BBox; scale: number; delay: nu
         strokeWidth={2.5}
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={{ delay, duration: 0.5, ease: ease.out }}
+        transition={{ delay: 0.1, duration: 0.4, ease: ease2 }}
       />
       <motion.rect
         x={x}
@@ -391,8 +382,8 @@ function FocusBox({ bbox, scale, delay }: { bbox: BBox; scale: number; delay: nu
         strokeWidth={2}
         style={{ transformBox: "fill-box", transformOrigin: "center" }}
         initial={{ opacity: 0, scale: 1 }}
-        animate={{ opacity: [0, 0.9, 0], scale: [1, 1, 1.35] }}
-        transition={{ delay: delay + 0.5, duration: 0.7, ease: ease.out, times: [0, 0.15, 1] }}
+        animate={{ opacity: [0, 0.9, 0], scale: [1, 1, 1.3] }}
+        transition={{ delay: 0.5, duration: 0.6, ease: ease2, times: [0, 0.15, 1] }}
       />
     </g>
   );
@@ -404,26 +395,22 @@ function BoxTip({ box, scale, pageWidth }: { box: OverlayBox; scale: number; pag
   const top = box.bbox[3] * scale + 8;
   const llm = isLlmMethod(box.method);
   return (
-    <motion.div
+    <div
       role="tooltip"
-      initial={{ opacity: 0, y: -3 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, transition: { duration: dur.micro } }}
-      transition={{ duration: dur.ui, ease: ease.out }}
-      className="pointer-events-none absolute z-20 w-max max-w-[280px] rounded-[10px] bg-pupil-2 px-3 py-2 text-xs leading-snug text-white shadow-lg"
+      className="pointer-events-none absolute z-20 w-max max-w-[280px] rounded-control border border-line bg-surface px-3 py-2 text-xs text-ink shadow-lg"
       style={{ left, top }}
     >
-      <span className="flex items-center gap-1.5 font-semibold">
+      <span className="flex items-center gap-1.5 font-medium">
         <span aria-hidden className="size-2 rounded-[2px]" style={{ background: l.color }} />
         {box.title}
       </span>
-      {box.value && <span className="mt-1 block font-mono text-[12px] break-words text-white/95">{box.value}</span>}
+      {box.value && <span className="mt-1 block font-mono break-words text-ink-2">{box.value}</span>}
       {box.method && (
-        <span className={cn("mt-1 block", llm ? "text-manual-dot" : "text-white/70")}>
+        <span className={cn("mt-1 block", llm ? "text-manual-fg" : "text-ink-3")}>
           {methodLabel(box.method)}
-          {llm && <span className="block font-mono text-[10.5px] text-white/55">{box.method}</span>}
+          {llm && <span className="block font-mono text-ink-3">{box.method}</span>}
         </span>
       )}
-    </motion.div>
+    </div>
   );
 }
