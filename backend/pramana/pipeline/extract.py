@@ -86,18 +86,58 @@ def extract_fields(pages: list[PageText], spec: dict[str, Any]) -> list[Extracte
     return out
 
 
+# OCR merges and splits words ("FinancialYear: 2024-25") and confuses look-alike characters. On pages read by OCR,
+# a space in a pattern also matches no space, and year ranges such as 2O24-25 are read with the usual
+# confusions fixed. Text layers are matched exactly as written.
+_OCR_DIGITS = str.maketrans({"O": "0", "o": "0", "D": "0", "Q": "0", "I": "1", "l": "1", "|": "1", "S": "5",
+                             "Z": "2", "B": "8", "\u2013": "-", "\u2014": "-", "~": "-"})
+_YEAR_RANGE = re.compile(r"(?<![\w-])[0-9ODQIl|SZB]{4}[-\u2013\u2014~][0-9ODQIl|SZB]{2}(?![\w-])")
+
+
+def ocr_tolerant(pattern: str) -> str:
+    """The pattern with each literal space outside a character class made optional."""
+    out, in_class, escaped = [], False, False
+    for ch in pattern:
+        if escaped:
+            out.append(ch)
+            escaped = False
+        elif ch == "\\":
+            out.append(ch)
+            escaped = True
+        elif ch == "[":
+            in_class = True
+            out.append(ch)
+        elif ch == "]":
+            in_class = False
+            out.append(ch)
+        else:
+            out.append(r"\s*" if ch == " " and not in_class else ch)
+    return "".join(out)
+
+
+def ocr_fixed(text: str) -> str:
+    """Year ranges with look-alike characters repaired, at the same length so offsets still point at the page."""
+    def fix(m: re.Match) -> str:
+        s = m.group(0)
+        return s.translate(_OCR_DIGITS) if sum(ch.isdigit() for ch in s) >= 4 else s
+    return _YEAR_RANGE.sub(fix, text)
+
+
 def _extract_one(pages: list[PageText], f: dict[str, Any]) -> Extracted:
     name, vtype = f["name"], f.get("type", "text")
     for pat in f.get("patterns", []):
         rx = re.compile(pat, re.IGNORECASE)
+        rx_ocr = re.compile(ocr_tolerant(pat), re.IGNORECASE)
         for page in pages:
+            ocr = page.source == "ocr"
             for line in page.lines:
-                m = rx.search(line.text)
+                text = ocr_fixed(line.text) if ocr else line.text
+                m = (rx_ocr if ocr else rx).search(text)
                 if not m:
                     continue
                 g = "v" if "v" in rx.groupindex else 0
-                raw = m.group(g)
-                val = normalise(raw, vtype)
+                raw = line.text[m.start(g):m.end(g)]
+                val = normalise(text[m.start(g):m.end(g)], vtype)
                 words = line.span_words(m.start(g), m.end(g))
                 confs = [w.conf for w in words if w.conf is not None]
                 conf = round(sum(confs) / len(confs), 3) if confs else None
