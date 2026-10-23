@@ -1,5 +1,8 @@
 /** Public scan-to-verify calls. No session and no CSRF token: these endpoints take no account. */
 
+/** Where the check started: a photo of the QR, or the scan link the QR carries ({base}/scan#t=<token>). */
+export type ScanSource = "image" | "link";
+
 export type ScanStatus =
   | "verified"
   | "expired"
@@ -42,13 +45,17 @@ export interface ScanTokenResult {
   registry_available?: boolean;
   text_preview?: string;
   token: string | null;
+  /** Host a scan link points at; shown so a person can judge it, never trusted or contacted */
+  link_host?: string | null;
 }
 
 export interface ScanResponse {
   status: ScanStatus;
+  source?: ScanSource;
   qr_found: number;
   results: ScanTokenResult[];
-  image_sha256: string;
+  image_sha256: string | null;
+  token_sha256?: string;
   checked_at: string;
   stored: boolean;
   detail: string | null;
@@ -131,6 +138,34 @@ export function scanImage(image: Blob, name: string): Promise<ScanResponse> {
   const fd = new FormData();
   fd.append("file", image, name.replace(/\.[^.]+$/, "") + (image.type === "image/png" ? ".png" : ".jpg"));
   return send<ScanResponse>("/scan", { method: "POST", body: fd });
+}
+
+export function scanToken(token: string): Promise<ScanResponse> {
+  return send<ScanResponse>("/scan/token", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+/**
+ * The token a scan link carries: t in the fragment (never sent to any server), else t in the query.
+ * Returns null when the address has no t at all, and "" when t is present but empty.
+ */
+export function linkToken(loc: Pick<Location, "hash" | "search"> = window.location): string | null {
+  for (const part of [loc.hash.replace(/^#/, ""), loc.search.replace(/^\?/, "")]) {
+    const t = new URLSearchParams(part).get("t");
+    if (t !== null) return t.trim();
+  }
+  return null;
+}
+
+/** Drop the token from the address bar once the person moves on, so a reload starts a fresh scan. */
+export function clearLinkToken(): void {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.searchParams.delete("t");
+  window.history.replaceState(window.history.state, "", url.pathname + url.search);
 }
 
 export function registryLookup(token: string): Promise<RegistryResponse> {

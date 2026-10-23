@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     # Re-verification watch: how often issuer-verified certificates are re-queried after a scrutiny outcome
     watch_interval_hours: float = 24.0
     watch_scheduler: bool = True
+    # Where this server's public pages are reached; issuer QR codes link to {public_base_url}/scan#t=<token>.
+    # Fixtures read it when they draw QR codes, so regenerate them after changing it (docs/features/scan-link.md)
+    public_base_url: str = "http://127.0.0.1:8000"
 
     # Platform: background runs, parser sandbox, login throttling, key handling and retention (docs/features/platform.md)
     # Validation leaves the request and streams progress; seed, evaluate and the test suite stay synchronous

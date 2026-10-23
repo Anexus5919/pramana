@@ -1,8 +1,10 @@
-"""Public scan-to-verify: anyone holding a certificate can check its issuer-signed QR from a photo.
+"""Public scan-to-verify: anyone holding a certificate can check its issuer-signed QR from a photo, or by
+opening the scan link the QR carries with any phone camera.
 
 No login. The photo lives only for the request: it is decoded in memory, never stored, and only its
-SHA-256 goes into the audit trail. A verified signature proves that the issuer's key signed the data in
-the QR, nothing about the paper the QR is printed on, and the response says so.
+SHA-256 goes into the audit trail; a link's token is treated the same way. A verified signature proves that
+the issuer's key signed the data in the QR, nothing about the paper the QR is printed on, and the response
+says so.
 """
 
 import hashlib
@@ -12,7 +14,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from .. import audit
@@ -20,11 +22,14 @@ from ..db import get_db
 from ..pipeline import intake  # noqa: F401  sets Pillow's decompression-bomb limit
 from ..ratelimit import limit
 from ..sim import issuers as sim
-from ..verification.signed_qr import decode_qr, verify_token
+from ..verification.signed_qr import decode_qr, link_parts, verify_token
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 
 MAX_BYTES = 10 * 1024 * 1024
+# A signed token is a few hundred characters; anything far larger is not one
+MAX_TOKEN_CHARS = 4096
+MAX_TOKEN_BODY = 8 * 1024
 MAX_SIDE = 2400
 IMAGE_TYPES = {b"\xff\xd8\xff": "image/jpeg", b"\x89PNG\r\n\x1a\n": "image/png"}
 # Labels for the payload keys issuers put in their tokens; anything else is shown with its raw key
@@ -77,13 +82,13 @@ def _load(data: bytes) -> Image.Image:
 
 
 def _decode(im: Image.Image) -> list[str]:
-    """QR texts, trying a few scales as the document pipeline tries a few DPIs."""
+    """QR texts, trying a few scales as the document pipeline tries a few DPIs, then upscaled copies."""
     for scale in (1.0, 0.6, 1.6, 0.35):
         img = im if scale == 1.0 else im.resize((max(1, int(im.width * scale)), max(1, int(im.height * scale))))
-        found = decode_qr(img)
+        found = decode_qr(img, upscale=False)
         if found:
             return list(dict.fromkeys(t for t, _ in found))
-    return []
+    return list(dict.fromkeys(t for t, _ in decode_qr(im)))
 
 
 def _fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -114,10 +119,13 @@ def _validity(payload: dict[str, Any], today: date) -> dict[str, Any]:
             "state": state, "checked_on": today.isoformat()}
 
 
-def assess(token: str, today: date) -> dict[str, Any]:
+def assess(token: str, today: date, source: str = "qr") -> dict[str, Any]:
     """What a single QR token shows, in the words the scan page uses."""
     chk = verify_token(token)
     if chk.payload is None and not chk.ok:
+        if source == "link":
+            return {"status": "not_signed", "detail": "This link does not carry an issuer-signed token, so nothing "
+                    "in it can be verified here.", "text_preview": token[:120]}
         return {"status": "not_signed", "detail": "This QR does not carry an issuer-signed token. It may be a link "
                 "or plain text; nothing in it can be verified here.", "text_preview": token[:120]}
     issuer = {"kid": chk.kid, "name": chk.issuer["issuer"] if chk.issuer else None,
@@ -148,6 +156,13 @@ def assess(token: str, today: date) -> dict[str, Any]:
             "registry_available": chk.kid in REGISTRY}
 
 
+def _result(text: str, today: date, source: str = "qr") -> dict[str, Any]:
+    """assess() plus the bare token (for the registry lookup) and, for a scan link, the host it points at.
+    The host is reported so a person can judge it; it is never contacted and plays no part in the result."""
+    token, host = link_parts(text)
+    return {**assess(text, today, source), "token": token if token.count(".") == 2 else None, "link_host": host}
+
+
 @router.post("/scan")
 async def scan(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
     limit(f"scan:{_client(request)}", 20, 60)
@@ -160,18 +175,66 @@ async def scan(request: Request, file: UploadFile = File(...), db: Session = Dep
     sha = hashlib.sha256(data).hexdigest()
     texts = _decode(_load(data))
     today = datetime.now(UTC).date()
-    results = [{**assess(t, today), "token": t if t.count(".") == 2 else None} for t in texts[:4]]
+    results = [_result(t, today) for t in texts[:4]]
     status = results[0]["status"] if results else "no_qr"
     audit.record(db, actor="public", actor_role="anonymous", action="public.scan", object_type="image",
                  object_id=sha[:16], details={"sha256": sha, "qr_found": len(texts), "status": status,
                                                "kid": next((r["issuer"]["kid"] for r in results if r.get("issuer")),
                                                            None)})
     db.commit()
-    return {"status": status, "qr_found": len(texts), "results": results, "image_sha256": sha,
+    return {"status": status, "source": "image", "qr_found": len(texts), "results": results, "image_sha256": sha,
             "checked_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "stored": False,
             "detail": None if results else "No QR code was found in the photo. Fill the frame with the QR, keep it "
                                            "flat and in focus, avoid glare, and try again."}
+
+
+class TokenQuery(BaseModel):
+    token: str
+
+
+async def _body(request: Request, cap: int) -> bytes:
+    """The request body, refused with 413 as soon as it passes cap bytes."""
+    try:
+        declared = int(request.headers.get("content-length") or 0)
+    except ValueError:
+        declared = 0
+    if declared > cap:
+        raise HTTPException(413, "The link is too long to be a certificate token.")
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > cap:
+            raise HTTPException(413, "The link is too long to be a certificate token.")
+    return bytes(data)
+
+
+@router.post("/scan/token")
+async def scan_token(request: Request, db: Session = Depends(get_db)):
+    """Verify the token from a scan link ({base}/scan#t=<token>) or a bare token: the same answer a photo of
+    the QR gives. The page reads the token from the URL fragment, which never reaches a server log; here only
+    its SHA-256 is recorded."""
+    limit(f"scan-token:{_client(request)}", 30, 60)
+    limit("scan:all", 600, 60)
+    try:
+        text = TokenQuery.model_validate_json(await _body(request, MAX_TOKEN_BODY)).token.strip()
+    except ValidationError as e:
+        raise HTTPException(422, "Send the token as JSON: {\"token\": \"...\"}.") from e
+    if len(text) > MAX_TOKEN_CHARS:
+        raise HTTPException(413, "The link is too long to be a certificate token.")
+    if not text:
+        raise HTTPException(422, "The link does not carry a token.")
+    token, host = link_parts(text)
+    sha = hashlib.sha256(token.encode()).hexdigest()
+    result = _result(text, datetime.now(UTC).date(), "link")
+    audit.record(db, actor="public", actor_role="anonymous", action="public.scan_token", object_type="token",
+                 object_id=sha[:16], details={"sha256": sha, "form": "link" if host else "token",
+                                              "status": result["status"],
+                                              "kid": (result.get("issuer") or {}).get("kid")})
+    db.commit()
+    return {"status": result["status"], "source": "link", "qr_found": 1, "results": [result], "image_sha256": None,
+            "token_sha256": sha, "checked_at": datetime.now(UTC).isoformat(timespec="seconds"), "stored": False,
+            "detail": None}
 
 
 class RegistryQuery(BaseModel):
@@ -183,7 +246,7 @@ def scan_registry(body: RegistryQuery, request: Request, db: Session = Depends(g
     """Look the certificate up in the issuer's registry (SIMULATED). Only a validly signed token is accepted,
     so the endpoint cannot be used to probe reference numbers."""
     limit(f"scan-registry:{_client(request)}", 10, 60)
-    if len(body.token) > 4096:
+    if len(body.token) > MAX_TOKEN_CHARS:
         raise HTTPException(413, "token too long")
     chk = verify_token(body.token)
     if not chk.ok or chk.kid not in REGISTRY:

@@ -38,7 +38,7 @@ from fixture_assets import emblem_png, seal_png  # noqa: E402
 from fixture_hindi import occupancy_hindi  # noqa: E402
 
 from pramana.verification import demo_pki  # noqa: E402
-from pramana.verification.signed_qr import sign_payload  # noqa: E402
+from pramana.verification.signed_qr import scan_link, sign_payload  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "out"
@@ -46,6 +46,11 @@ PHOTOS = ROOT / "fixtures" / "real" / "photos"
 IST = timezone(timedelta(hours=5, minutes=30))
 W, H = A4
 FOOT = "SYNTHETIC TEST DOCUMENT generated for the Pramana prototype. Not a real record."
+# Issuer QR codes carry the scan link {PRAMANA_PUBLIC_BASE_URL}/scan#t=<token> so a phone camera opens the check.
+# The link makes the code denser: error correction M (15%) survives smudges and glare, and the code is printed
+# at 170 pt (about 0.74 mm per module) so blurred photos and small screenshots still decode
+QR_ERROR = "m"
+QR_SIZE = 170
 rng = random.Random(26261)
 
 
@@ -233,14 +238,14 @@ class Doc:
         c.setFont("Helvetica", 8.5)
         c.drawString(x, y - 12, role)
 
-    def qr(self, token: str, x: float, y: float, size: float = 140):
-        qr = segno.make(token, error="l")
+    def qr(self, token: str, x: float, y: float, size: float = QR_SIZE):
+        qr = segno.make(qr_text(token), error=QR_ERROR, micro=False)
         b = io.BytesIO()
         qr.save(b, kind="png", scale=4, border=2)
         b.seek(0)
         self.c.drawImage(ImageReader(b), x, y, size, size)
         self.c.setFont("Helvetica", 6.5)
-        self.c.drawCentredString(x + size / 2, y - 8, "Scan to verify (issuer-signed)")
+        self.c.drawCentredString(x + size / 2, y - 8, "Scan with a phone camera to verify (issuer-signed)")
 
     def table(self, header: list[str], rows: list[list[str]], cols: list[float], size: float = 8.2):
         c = self.c
@@ -265,6 +270,11 @@ class Doc:
     def bytes(self) -> bytes:
         self.c.save()
         return self.buf.getvalue()
+
+
+def qr_text(token: str) -> str:
+    """What an issuer QR encodes: the scan link for a bare token; a ready link or other text as given."""
+    return token if "://" in token else scan_link(token)
 
 
 # ---------------------------------------------------------------- document templates
@@ -309,7 +319,7 @@ def fire_noc(inst: dict, noc: str, issue: date, valid: date, area: int, issued_t
     doc.seal_image(seal or fire_seal(inst), 300, 205)
     doc.emblem()
     if qr_token:
-        doc.qr(qr_token, W - 205, 140)
+        doc.qr(qr_token, W - 50 - QR_SIZE, 140)
     return doc.bytes(), doc.marks
 
 
@@ -515,7 +525,7 @@ def nba_letter(inst: dict, ref: str, prog: dict, vfrom: date, vto: date, token: 
     doc.para("The above programme has been accredited for the period stated, subject to the terms and conditions "
              "of accreditation.")
     if token:
-        doc.qr(token, W - 205, 190)
+        doc.qr(token, W - 50 - QR_SIZE, 190)
     return doc.bytes(), doc.marks
 
 
@@ -775,7 +785,7 @@ def scan_samples(samples: list[tuple[str, str, bytes, str]]) -> None:
     d_.mkdir(exist_ok=True)
     out = pikepdf.new()
     for i, (slug, banner, pdf, token) in enumerate(samples, start=1):
-        segno.make(token, error="l", micro=False).save(d_ / f"{i}_{slug}.png", scale=8, border=4)
+        segno.make(qr_text(token), error=QR_ERROR, micro=False).save(d_ / f"{i}_{slug}.png", scale=8, border=4)
         b = io.BytesIO()
         c = canvas.Canvas(b, pagesize=A4)
         c.setFillColor(HexColor("#fdf4d6"))

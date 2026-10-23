@@ -70,7 +70,7 @@ def op_pages(data: bytes, mime: str):
 
 
 def op_qr(data: bytes, mime: str, page_count: int):
-    from .verification.signed_qr import decode_qr
+    from .verification.signed_qr import decode_pdf_images, decode_qr
 
     out = []
     if mime == "application/pdf":
@@ -79,12 +79,16 @@ def op_qr(data: bytes, mime: str, page_count: int):
         for i in range(min(page_count, 3)):
             # Dense signed tokens need more pixels per module; stop at the first resolution that decodes
             for dpi in (150, 220, 300):
-                found = decode_qr(render_pdf_page(data, i, dpi))
+                found = decode_qr(render_pdf_page(data, i, dpi), upscale=False)
                 if found:
                     scale = dpi / 72
                     out.extend({"page": i + 1, "text": t, "bbox": [round(v / scale, 2) for v in box]}
                                for t, box in found)
                     break
+            else:
+                # A low-resolution image on the page (a screenshot saved as PDF) reads better at its own pixels
+                out.extend({"page": i + 1, "text": t, "bbox": [round(v, 2) for v in box]}
+                           for t, box in decode_pdf_images(data, i))
     else:
         from PIL import Image
 
