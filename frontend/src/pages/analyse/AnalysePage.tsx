@@ -235,8 +235,9 @@ function Report({ e, onForget, forgetting }: { e: Entry; onForget: () => void; f
     (f: Focus) => {
       setPage(f.page);
       setFocus({ ...f });
-      // Below the two-column layout the viewer sits above the sections; bring it into view
-      if (viewer.current && window.innerWidth < 1280) viewer.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      // The viewer is sticky only beside the right-hand sections; from anywhere else, bring it into view
+      const r = viewer.current?.getBoundingClientRect();
+      if (r && (r.top < 0 || r.top > window.innerHeight * 0.5)) viewer.current!.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
     },
     [reduce],
   );

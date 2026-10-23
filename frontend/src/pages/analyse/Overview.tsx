@@ -29,11 +29,11 @@ export function Overview({ items, onJump }: { items: Tile[]; onJump: (id: string
             >
               <StatusCube tone={t.tone} size={16} className="mt-0.5" />
               <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1.5">
-                  <span className="eyebrow truncate">{t.label}</span>
+                <span className="eyebrow block truncate">{t.label}</span>
+                <span className={cn("mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm leading-snug font-semibold", toneClass[t.tone].fg)}>
+                  {t.value}
                   {t.tag && <Tag variant="demo">{t.tag}</Tag>}
                 </span>
-                <span className={cn("mt-0.5 block text-sm leading-snug font-semibold", toneClass[t.tone].fg)}>{t.value}</span>
                 {t.note && <span className="mt-0.5 block text-xs leading-snug text-ink-3">{t.note}</span>}
               </span>
               <ArrowDownRight aria-hidden className="size-3.5 shrink-0 text-ink-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:text-brand-ink" />
