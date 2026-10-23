@@ -28,6 +28,7 @@ import {
   type Column,
 } from "../../ui2";
 import { workspacePath } from "../../shell/nav";
+import { NetworkSummaryBlock } from "../integrity/NetworkSummaryBlock";
 
 /** Category code to its handbook label, without the trailing qualifier in brackets. */
 function useCategoryLabel() {
@@ -279,7 +280,10 @@ export default function DashboardPage() {
             />
           </div>
         </Panel>
-        <AttentionList alerts={data.alerts} />
+        <div className="min-w-0 space-y-6">
+          <NetworkSummaryBlock />
+          <AttentionList alerts={data.alerts} />
+        </div>
       </div>
     </Page>
   );
