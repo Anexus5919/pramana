@@ -470,7 +470,8 @@ def proof_matrix(db: Session, app: Application, run: ValidationRun, rs: Ruleset,
             continue
         out_rows.append(_finish_row(rs, r, required))
     return {"levels": LEVELS, "rows": out_rows, "summary": _summary(out_rows),
-            "groups": [{"id": "checklist", "label": f"{checklist.get('label', 'Checklist')} documents",
+            "groups": [{"id": "checklist", "label": "Checklist documents" + (
+                           f" ({checklist['source']['section']})" if (checklist.get("source") or {}).get("section") else ""),
                         "source": checklist.get("source")},
                        {"id": "claims", "label": "Claims, norms and records", "source": None}]}
 
