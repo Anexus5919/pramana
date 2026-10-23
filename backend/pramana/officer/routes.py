@@ -293,3 +293,28 @@ def download_pack(app_id: str, pack_id: str, user: User = Depends(require_roles(
     return Response(data, media_type="application/zip", headers={
         "Content-Disposition": f'attachment; filename="evidence-pack-{app.id}-{pack_id}.zip"',
         "X-Content-Type-Options": "nosniff"})
+
+
+# ------------------------------------------------------------------ Ask why
+
+
+class AskBody(BaseModel):
+    question: str = Field(min_length=3, max_length=300)
+
+
+@router.post("/applications/{app_id}/ask")
+def ask_why(app_id: str, body: AskBody, user: User = Depends(require_roles("officer")),
+            db: Session = Depends(get_db)):
+    from ..ratelimit import limit
+    from .ask import answer
+
+    app = load_application(db, user, app_id)
+    limit(f"ask:{user.id}", 20, 60)
+    out = answer(db, app, body.question.strip())
+    audit.record(db, actor=user.username, actor_role=user.role, action="ask.answered", object_type="application",
+                 object_id=app.id, application_id=app.id,
+                 details={"question": out["question"], "mode": out["mode"], "provider": out["provider"],
+                          "model": out["model"], "sentences": out["sentences"], "dropped": out["dropped"],
+                          "latency_ms": out["latency_ms"], "run_id": out["run_id"]})
+    db.commit()
+    return out
