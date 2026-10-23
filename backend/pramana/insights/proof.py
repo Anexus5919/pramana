@@ -696,7 +696,8 @@ def _coverage_summary(certs: list[dict[str, Any]], s: dict[str, Any]) -> str:
         parts.append(f"no validity date could be read for the {c['label']}")
     conflicts = [(c, a) for c in certs for a in c["alternatives"] if a["differs"]]
     if not parts:
-        text = (f"All {len(certs)} time-bound certificates stay valid through the assumed {s['label']} session"
+        text = (f"{'Both' if len(certs) == 2 else f'All {len(certs)}'} time-bound certificates stay valid through "
+                f"the assumed {s['label']} session"
                 if len(certs) > 1 else f"The {certs[0]['label']} stays valid through the assumed {s['label']} session")
     else:
         text = _join(parts)

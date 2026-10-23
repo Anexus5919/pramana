@@ -222,7 +222,15 @@ function Timeline({ cov }: { cov: Coverage }) {
                 </span>
                 <span className={cn("text-xs", HEADLINE_TONE[c.status], c.status !== "covers_session" && "font-medium")}>{c.headline}</span>
                 {agree.length > 0 && !c.conflict && (
-                  <span className="truncate text-xs text-ink-3">{agree.map((a) => a.source.replace(/\s*\(.*\)$/, "")).join(" and ")} agree</span>
+                  <span className="text-xs text-ink-3">
+                    {agree
+                      .map((a, i) => {
+                        const name = a.source.replace(/\s*\(.*\)$/, "");
+                        return i === 0 ? name : name.toLowerCase().replace(/^qr/, "QR").replace(/ qr$/, " QR");
+                      })
+                      .join(" and ")}{" "}
+                    agree
+                  </span>
                 )}
                 {c.finding_id && (
                   <Link to={workspacePath(app.id, "findings", { finding: c.finding_id })} className="inline-flex w-fit items-center gap-0.5 rounded text-xs text-ink-2 underline-offset-2 hover:text-ink hover:underline">
