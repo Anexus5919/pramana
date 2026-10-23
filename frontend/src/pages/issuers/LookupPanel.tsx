@@ -85,8 +85,7 @@ function Result({ a, issuer }: { a: Answer; issuer: SimIssuer | undefined }) {
           { label: "Status", value: rec.status ? humanize(rec.status) : null },
           ...fields.map(([k, v]) => ({
             label: humanize(k),
-            value: String(v),
-            mono: true,
+            value: <span className="font-mono">{String(v)}</span>,
             hint: compared.has(k) ? "Compared with the document" : undefined,
           })),
         ]}

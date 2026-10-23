@@ -143,7 +143,7 @@ function Sandbox({ s }: { s: PlatformStatus }) {
           items={[
             { label: "Parses", value: b.stats.calls },
             { label: "Stopped", value: b.stats.unsafe, alert: b.stats.unsafe > 0 },
-            { label: "Workers started", value: b.stats.spawned },
+            { label: "Started", value: b.stats.spawned },
             { label: "Mean time", value: b.stats.mean_ms === null ? "None yet" : `${Math.round(b.stats.mean_ms)} ms` },
           ]}
         />

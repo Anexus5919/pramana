@@ -131,7 +131,7 @@ export default function IssuerSimulatorPage() {
       {
         id: "compares",
         header: "Compares",
-        hideBelow: "md",
+        hideBelow: "2xl",
         cell: (i) =>
           i.compare_fields?.length ? (
             <span className="text-ink-2">{i.compare_fields.map(humanize).join(", ")}</span>
