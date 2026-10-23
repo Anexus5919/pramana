@@ -109,11 +109,13 @@ function Scrubber({ data, value, onChange }: { data: Revisions; value: number; o
               transition={{ duration: dur.story, ease: ease.out, delay: 0.1 + i * 0.1 }}
               className={cn(
                 "flex h-5 origin-left items-center justify-center truncate rounded-full px-2 text-[10.5px] font-semibold",
-                s.status === "verified" || s.status === "mismatch_detected" ? "bg-verified-bg text-verified-fg" : "bg-surface-2 text-ink-2",
+                s.role === "issuer" ? "bg-verified-bg text-verified-fg" : "bg-surface-2 text-ink-2",
               )}
               style={{ gridColumn: `1 / ${s.revision + 1}`, gridRow: i + 1 }}
             >
-              <span className="truncate">Signed bytes: revision 1 to {s.revision}</span>
+              <span className="truncate">
+                {ROLE_LABEL[s.role] ?? "Signer"} signature: revision{s.revision > 1 ? `s 1 to ${s.revision}` : " 1"}
+              </span>
             </motion.div>
           ))}
           {through < n && (
@@ -389,7 +391,7 @@ export function RevisionStage({ doc, className }: { doc: DocumentDetail; classNa
             <IconButton size="sm" label="Next page" icon={<ChevronRight />} disabled={pg >= pageCount} onClick={() => setPage(pg + 1)} />
           </div>
         )}
-        <div className="flex items-center gap-3 text-[11px] text-ink-3" aria-hidden>
+        <div className={cn("flex items-center gap-3 text-[11px] text-ink-3", !data.revisions.some((r) => r.changes.length) && "hidden")} aria-hidden>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded-[3px] border-2 border-ov-focus bg-ov-focus/20" /> Changed in this revision
           </span>
