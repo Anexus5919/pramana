@@ -117,7 +117,7 @@ These are upper bounds on synthetic data; see `docs/evaluation-results.md` for c
   3. Set `PRAMANA_LLM_PROVIDERS=ollama` in `backend/.env`.
   A model value is kept only when it is found on the page.
 - **Ask why** uses `qwen3:4b-instruct-2507-q4_K_M` through Ollama by default. Without a reachable model it answers from templates built from the same evidence.
-- **Groq and Gemini** are optional too. They need `PRAMANA_LLM_ALLOW_EXTERNAL=true`, because document text leaves the machine. The Gemini default is `gemini-flash-latest` with low thinking, because `gemini-2.5-flash` is closed to new API keys.
+- **No cloud models.** Every model runs on this machine, so document text never leaves it. A cloud model (GPT-OSS 20B via Groq) was measured once for comparison and scored below our fine-tuned extractor; see docs/evaluation-results.md.
 
 ## Layout
 
@@ -170,7 +170,7 @@ Environment variables, prefix `PRAMANA_`, in `backend/.env` (see `.env.example`)
 | `MODELS_DIR`, `FETCH_MODELS` | `backend/models`, `true` | Where model weights live, and whether the Devanagari model may be fetched on first use |
 | `MAP_TILE_URL` | OpenStreetMap | Campus map tiles; empty shows a plain plot only |
 | `WATCH_INTERVAL_HOURS` | `24` | Re-verification watch interval |
-| `LLM_PROVIDERS`, `LLM_ALLOW_EXTERNAL` | empty, `false` | Optional extractor providers; external ones need the second switch |
+| `LLM_PROVIDERS`, `OLLAMA_MODEL` | empty, `pramana-extract` | `ollama` turns on the fine-tuned extractor for fields the patterns miss |
 | `ASK_PROVIDERS` | `ollama` | Ask why providers; empty uses templates only |
 
 The full lists are in the settings section of each feature document.

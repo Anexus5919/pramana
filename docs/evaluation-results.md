@@ -86,7 +86,7 @@ By document type, field_exact for the general 4B, the fine-tuned 1.7B and GPT-OS
 
 The fine-tuned model is weakest on audited accounts, which is the next thing to train.
 
-**Gemini.** The provider works: verified live, it returned every field of a held-out example correctly. The free tier allows only 20 requests per day for the current Flash model, so the 200-example benchmark was not possible, and Gemini is not in the table. `gemini-2.5-flash` is closed to new API keys, so the default is now `gemini-flash-latest` with low thinking.
+**Cloud models.** The Groq row was measured on 23 Oct 2026 for comparison only. Gemini answered a held-out example correctly in a live test, but its free tier allows only 20 requests a day for the current Flash model, so it could not be benchmarked. Since the local fine-tuned model scores best overall, leaves documents on the machine and has no quota, both cloud providers were removed from the product.
 
 **On A11, the unfamiliar layout:**
 - **General 4B:** it recovered 4 of 5 fields, and its 5th proposal was the planted "valid until 31/12/2099". Grounding rejected that value because it appears only in the flagged instruction line.

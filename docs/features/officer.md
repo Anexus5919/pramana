@@ -123,7 +123,7 @@ A side panel in the workspace where the officer asks about the current applicati
 
 - **Context.** Only Pramana's own structured output: findings (code, title, message, limitation, severity, evidence class, outcome, review status), page regions (document, page, field, value), verification results (channel, source, status, SIMULATED flag, comparisons), rules with verbatim clauses and outcomes, documents with authenticity status, and run facts. Raw document text is never sent.
 - **Injection screening.** Text that quotes a document is screened with the extraction pipeline's `INJECTION` pattern and withheld if it addresses automated readers; the `SEC-INSTRUCTION-TEXT` finding is described without its line; values over 80 characters are withheld. A test checks that A11's planted instruction never reaches the context.
-- **Model.** Ollama `qwen3:4b-instruct-2507-q4_K_M` at temperature 0 with a JSON schema: a list of sentences, each with evidence ids. Groq and Gemini can be listed in `PRAMANA_ASK_PROVIDERS` but run only when `PRAMANA_LLM_ALLOW_EXTERNAL=true`.
+- **Model.** Ollama `qwen3:4b-instruct-2507-q4_K_M` at temperature 0 with a JSON schema: a list of sentences, each with evidence ids. Only local models are used; cloud providers were removed.
 - **Post-check.** A sentence is dropped when it:
   - cites no valid evidence id;
   - contains a date, number or reference code that is not in the items it cites (dates are normalised across formats);
@@ -170,7 +170,7 @@ A side panel in the workspace where the officer asks about the current applicati
 | `PRAMANA_ASK_TIMEOUT_S` | 90 | Model call timeout |
 | `PRAMANA_ASK_MAX_RULES` | 8 | Cap on rule items added beyond those the findings cite |
 
-`PRAMANA_LLM_ALLOW_EXTERNAL`, `PRAMANA_OLLAMA_URL` and the Groq and Gemini keys are the existing settings.
+`PRAMANA_OLLAMA_URL` is the existing setting for the local Ollama server.
 
 ## Security and data rules
 
