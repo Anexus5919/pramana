@@ -116,7 +116,7 @@ function Lane({ lane, person, axis }: { lane: FacultyLane; person: FacultyPerson
         <div className="truncate text-xs text-ink-3">
           {lane.source === "registry"
             ? "Registry record only, not on a current roster"
-            : `Joined ${fmtDay(lane.joined)}${lane.last_year ? ", on last year's roster too" : ""}`}
+            : `Joined ${fmtDay(lane.joined)}${lane.last_year ? ", listed last year" : ""}`}
         </div>
       </div>
 
