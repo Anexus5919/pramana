@@ -24,11 +24,12 @@ for _n in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "RapidOCR"):
 FIX = ROOT / "fixtures" / "out"
 
 
-def main(validate: bool = True) -> None:
+def main(validate: bool = True, fix: Path = FIX) -> None:
+    """fix: the world to load; random_eval.py passes a randomised world here."""
     from pramana.config import get_settings
 
     s = get_settings()
-    if not (FIX / "manifest.json").exists():
+    if not (fix / "manifest.json").exists():
         sys.exit("fixtures/out/manifest.json missing: run scripts/make_fixtures.py first")
     for sub in ("documents", "cache", "rulesets", "sim"):
         shutil.rmtree(s.data_dir / sub, ignore_errors=True)
@@ -51,18 +52,18 @@ def main(validate: bool = True) -> None:
     from pramana.sim import issuers as sim
     from pramana.verification import signature, signed_qr
 
-    m = json.loads((FIX / "manifest.json").read_text(encoding="utf-8"))
+    m = json.loads((fix / "manifest.json").read_text(encoding="utf-8"))
     (s.data_dir / "sim").mkdir(parents=True, exist_ok=True)
     sim.save(m["issuer_registry"])
     (s.data_dir / "sim" / "issuer_keys.json").write_text(json.dumps(m["issuer_keys"], indent=2))
     demo = s.trust_dir / "demo"
     demo.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(FIX / "trust" / "pramana-demo-root.pem", demo / "pramana-demo-root.pem")
+    shutil.copyfile(fix / "trust" / "pramana-demo-root.pem", demo / "pramana-demo-root.pem")
     from pramana.photos import credentials
 
-    if (FIX / "trust" / credentials.DEMO_CA_FILE).exists():
+    if (fix / "trust" / credentials.DEMO_CA_FILE).exists():
         credentials.demo_ca_path().parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(FIX / "trust" / credentials.DEMO_CA_FILE, credentials.demo_ca_path())
+        shutil.copyfile(fix / "trust" / credentials.DEMO_CA_FILE, credentials.demo_ca_path())
     credentials._trust_pem.cache_clear()
     signed_qr.issuer_keys.cache_clear()
     signature.trust_anchors.cache_clear()
@@ -106,7 +107,7 @@ def main(validate: bool = True) -> None:
         audit.record(db, actor=u.username, actor_role="institution", action="application.created",
                      object_type="application", object_id=app.id, application_id=app.id)
         for f in spec["documents"]:
-            data = (FIX / f["file"]).read_bytes()
+            data = (fix / f["file"]).read_bytes()
             name = Path(f["file"]).name
             res = validate_upload(name, data)
             doc = Document(application_id=app.id, round=1, declared_type=f["declared_type"], original_filename=name,
