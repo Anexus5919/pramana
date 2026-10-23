@@ -329,7 +329,7 @@ function SourcesTable({ cov }: { cov: Coverage }) {
                 <th scope="row" rowSpan={1 + c.alternatives.length} className="px-3 py-2 text-left font-medium text-ink">
                   {c.label}
                 </th>
-                <td className="px-3 py-2 text-ink-2">{c.end.basis === "rule" ? `Document, plus rule ${c.end.rule?.id ?? ""}` : "Document text"}</td>
+                <td className="px-3 py-2 text-ink-2">{c.end.basis === "rule" ? `Issue date plus rule ${c.end.rule?.id ?? ""}` : "Document text, as the checks read it"}</td>
                 <td className="px-3 py-2 font-mono text-ink">{c.start.date ? fmtDate(c.start.date) : "Not read"}</td>
                 <td className="px-3 py-2 font-mono text-ink">{c.end.date ? fmtDate(c.end.date) : "Not read"}</td>
                 <td className={cn("px-3 py-2", HEADLINE_TONE[c.status])}>{STATUS_TEXT[c.status]}</td>

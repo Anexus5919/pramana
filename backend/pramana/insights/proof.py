@@ -670,7 +670,7 @@ def _alternatives(db: Session, app: Application, d: Document, end: date | None,
             if str(e.get("label", "")).startswith("drawn over") and "valid" in str(e.get("label")):
                 v = _parse_date(e.get("value"))
                 if v:
-                    out.append({"source": "Shown on the page", "kind": "page_overlay", "date": v.isoformat(),
+                    out.append({"source": "Shown on the page (drawn over)", "kind": "page_overlay", "date": v.isoformat(),
                                 "simulated": False, "finding_id": f.id, "page": e.get("page"), "bbox": e.get("bbox"),
                                 "note": "Drawn over the original value in a later revision"})
     for a in out:
