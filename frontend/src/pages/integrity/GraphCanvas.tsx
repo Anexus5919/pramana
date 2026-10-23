@@ -236,8 +236,11 @@ function toElements(nodes: GNode[], edges: GEdge[], frames: GFrame[]): ElementDe
   ];
 }
 
+// A stable empty default, so a re-render without frames does not rebuild the graph
+const NO_FRAMES: GFrame[] = [];
+
 /** A deterministic, preset-position graph drawn with Cytoscape.js; layout is the caller's. */
-export function GraphCanvas({ nodes, edges, frames = [], selected, onSelect, hovered, onHover, height, label, className }: Props) {
+export function GraphCanvas({ nodes, edges, frames = NO_FRAMES, selected, onSelect, hovered, onHover, height, label, className }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
   const theme = useGraphTheme();
