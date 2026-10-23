@@ -77,13 +77,13 @@ def _load(data: bytes) -> Image.Image:
 
 
 def _decode(im: Image.Image) -> list[str]:
-    """QR texts, trying a few scales as the document pipeline tries a few DPIs."""
+    """QR texts, trying a few scales as the document pipeline tries a few DPIs, then upscaled copies."""
     for scale in (1.0, 0.6, 1.6, 0.35):
         img = im if scale == 1.0 else im.resize((max(1, int(im.width * scale)), max(1, int(im.height * scale))))
-        found = decode_qr(img)
+        found = decode_qr(img, upscale=False)
         if found:
             return list(dict.fromkeys(t for t, _ in found))
-    return []
+    return list(dict.fromkeys(t for t, _ in decode_qr(im)))
 
 
 def _fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
