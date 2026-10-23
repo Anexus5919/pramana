@@ -8,7 +8,6 @@ import type { DocumentDetail, ExtractedField, TableRow } from "../../../../types
 import {
   Button,
   cn,
-  Code,
   DataTable,
   DescriptionList,
   Digest,
@@ -197,7 +196,7 @@ export function ForensicsPanel({ doc, onFocus }: { doc: DocumentDetail; onFocus:
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-ink">{s.title}</div>
                       <div className="mt-0.5 text-xs text-ink-3">
-                        <MetaList items={[<SeverityIndicator key="sev" severity={s.severity} className="text-xs" />, <Code key="code" className="text-xs">{s.code}</Code>]} />
+                        <MetaList items={[<SeverityIndicator key="sev" severity={s.severity} />, <code key="code" className="font-mono text-xs text-ink-2">{s.code}</code>]} />
                       </div>
                     </div>
                     {region && (

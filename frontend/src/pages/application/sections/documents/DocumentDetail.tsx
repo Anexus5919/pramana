@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { humanize } from "../../../../lib/labels";
 import { workspacePath } from "../../../../shell/nav";
 import type { ExtractedField } from "../../../../types";
-import { Callout, Code, ErrorState, MetaList, Panel, ReviewBadge, SeverityIndicator, Skeleton, TabPanel, Tabs, VerificationBadge, type TabItem } from "../../../../ui2";
+import { Callout, ErrorState, MetaList, Panel, ReviewBadge, SeverityIndicator, Skeleton, Tabs, VerificationBadge, type TabItem } from "../../../../ui2";
 import { useDocTypeLabel, useWorkspace } from "../../context";
 import { bboxParam, llmReportOf, parseBBox, useDocument, useSetParams, validBox } from "../../data";
 import { RevisionPanel, RevisionStage } from "../../history/TimeMachine";
@@ -44,7 +44,8 @@ export function DocumentDetail({ docId }: { docId: string }) {
     ...(hasRevisions ? [{ id: "revisions", label: "Revisions" }] : []),
     { id: "extraction", label: "Extraction" },
   ];
-  const asked = sp.get("panel") as DocPanel | null;
+  const rawPanel = sp.get("panel");
+  const asked = (rawPanel === "model" ? "extraction" : rawPanel === "rows" ? "fields" : rawPanel) as DocPanel | null;
   const panel: DocPanel =
     asked && (DOC_PANELS as readonly string[]).includes(asked) && tabs.some((t) => t.id === asked)
       ? asked
@@ -104,9 +105,9 @@ export function DocumentDetail({ docId }: { docId: string }) {
   const meta = (
     <MetaList
       items={[
-        <Code key="file" className="text-xs">
+        <span key="file" className="font-mono">
           {doc.original_filename}
-        </Code>,
+        </span>,
         `${doc.page_count} ${doc.page_count === 1 ? "page" : "pages"}`,
         textSourceLabel(doc.text_source),
         doc.superseded ? "Earlier version" : null,
@@ -161,7 +162,7 @@ export function DocumentDetail({ docId }: { docId: string }) {
               onChange={(id) => setParams({ panel: id, rev: id === "revisions" ? sp.get("rev") : null })}
               className="px-5"
             />
-            <TabPanel idBase="doc" value={panel} className="pt-0">
+            <div role="tabpanel" id={`doc-panel-${panel}`} aria-labelledby={`doc-tab-${panel}`} className="min-w-0">
               {panel === "fields" && <FieldsPanel doc={doc} onLocate={locate} onFocus={setFocus} flash={flash} />}
               {panel === "verification" && <DocVerificationPanel doc={doc} />}
               {panel === "forensics" && officer && <ForensicsPanel doc={doc} onFocus={setFocus} />}
@@ -180,7 +181,7 @@ export function DocumentDetail({ docId }: { docId: string }) {
                   }}
                 />
               )}
-            </TabPanel>
+            </div>
           </Panel>
 
           <Panel title="Findings on this document" padding="none">
