@@ -13,6 +13,7 @@ from .config import get_settings
 from .db import init_db
 from .history import api as history_api
 from .history.watch import start_scheduler
+from .insights import inspection as insight_inspection
 from .insights import story as insight_story
 from .officer import routes as officer
 from .sandbox_worker import windows_full_speed
@@ -51,6 +52,7 @@ app.include_router(public.router)
 app.include_router(officer.router)
 app.include_router(analyse_api.router)
 app.include_router(insight_story.router)
+app.include_router(insight_inspection.router)
 
 
 @app.middleware("http")
