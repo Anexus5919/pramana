@@ -304,7 +304,7 @@ export function UploadSlot({
             )}
           </div>
         )}
-        {!editable && !has && <span className="shrink-0 pl-7 text-xs text-ink-3 sm:pl-0">Not uploaded</span>}
+        {!editable && !has && <span className="shrink-0 pl-7 text-xs text-ink-3 sm:pt-0.5 sm:pl-0">Not uploaded</span>}
       </div>
       <p className="sr-only" aria-live="polite">
         {announce}
