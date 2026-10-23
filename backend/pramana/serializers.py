@@ -87,6 +87,7 @@ def document(d: Document, *, detail: bool = False) -> dict[str, Any]:
             "rows": an.get("rows"),
             "llm": an.get("llm"),
             "instruction_lines": an.get("instruction_lines", []),
+            "ocr_scripts": an.get("ocr_scripts", []),
             "fingerprints": {k: v for k, v in (d.fingerprints or {}).items() if k != "minhash"},
         })
     return out

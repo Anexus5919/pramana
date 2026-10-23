@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     frontend_dist: Path = REPO_DIR / "frontend" / "dist"
     rulesets_dir: Path = BACKEND_DIR / "rulesets"
     trust_dir: Path = BACKEND_DIR / "trust"
+    # OCR model files beyond RapidOCR's defaults (the Devanagari recogniser), fetched on first use against a
+    # pinned SHA-256; outside data_dir so a fresh data directory does not refetch them
+    models_dir: Path = REPO_DIR / "var" / "models"
+    fetch_models: bool = True
     # Fetch CRL/OCSP for India PKI signatures; off by default so demos work offline
     pki_fetch_revocation: bool = False
     # Optional grounded LLM extraction for fields the patterns miss; the pipeline never requires it.

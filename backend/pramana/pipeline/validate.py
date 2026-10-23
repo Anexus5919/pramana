@@ -353,6 +353,15 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     "message": f"No text layer and OCR produced nothing on pages {unread}. Values on these pages "
                                "were not checked.", "evidence": [{"kind": "document", "document_id": d.id}],
                     "document_id": d.id})
+            for sc in (d.analysis or {}).get("ocr_scripts") or []:
+                if sc.get("read") is False:
+                    findings.append({
+                        "code": "DOC-SCRIPT-NOT-READ", "fingerprint": _fp("script", d.declared_type, sc["page"]),
+                        "category": "completeness", "evidence_class": "structural", "severity": "medium",
+                        "outcome": "manual_review", "title": "Hindi text was not read",
+                        "message": f"Page {sc['page']} carries Devanagari text ({sc.get('reason')}). "
+                                   f"{sc.get('note')} Values printed only in Hindi were not checked.",
+                        "evidence": [{"kind": "document", "document_id": d.id}], "document_id": d.id})
             diffs = ((d.analysis or {}).get("forensic_facts") or {}).get("revision_diffs") or []
             for f in d.fields:
                 hit = next((x for x in diffs if f.bbox and x.get("bbox") and x["page"] == f.page

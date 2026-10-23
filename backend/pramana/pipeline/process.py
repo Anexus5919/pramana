@@ -96,6 +96,8 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         log.warning("QR decode failed for %s: %s", doc.id, e)
         analysis["qr"] = []
     analysis["unreadable_pages"] = [p.page_no for p in pages if p.source == "unreadable"]
+    analysis["ocr_scripts"] = [{"page": p.page_no, **p.ocr} for p in pages
+                               if (p.ocr or {}).get("script") == "devanagari"]
     analysis["instruction_lines"] = injection_lines(pages)
     doc.analysis = analysis
     doc.processing_status = "processed"

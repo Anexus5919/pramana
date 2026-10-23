@@ -123,3 +123,40 @@ def test_same_seal_matches_and_another_issuers_seal_does_not():
     c = image_fingerprints(_with_images((nashik, 260, 180, 80)))[0]
     assert distance(a, b) == 0
     assert distance(a, c) > 8
+
+
+# ---- Hindi OCR
+
+
+def test_text_layer_hint_spots_legacy_and_visual_order_devanagari():
+    from pramana.pipeline.devanagari import text_layer_hint
+
+    assert text_layer_hint(["Certificate", "No.:", "NAS/BP/OC/2010/00941"]) is None
+    assert "Private Use Area" in text_layer_hint(["", "संया:", "NAS/BP/OC/2010/00941"])
+    # The i-sign stored before its consonant, as visual-order text layers do
+    assert "vowel sign" in text_layer_hint(["ि", "दनांक", "ि", "तथि", "प्रमाण", "संख्या"])
+    assert text_layer_hint(["प्रमाणपत्र", "संख्या", "दिनांक", "तिथि"]) is None
+
+
+def test_latin_words_on_a_hindi_line_come_from_the_more_credible_reading():
+    from pramana.pipeline.devanagari import merge
+
+    box = [0.0, 0.0, 400.0, 30.0]
+    dev = [{"box": box, "text": "दिनांक / Date of lssue: 20-02-1991", "score": 0.97, "words": [
+        ("दिनांक", [0, 0, 60, 30], 0.99), ("lssue:", [200, 0, 280, 30], 0.99), ("NAS/BP/0C/1", [290, 0, 400, 30], 1.0)]}]
+    lat = [{"box": box, "text": "fic Issue: NAS/BP/OC/1", "score": 0.9, "words": [
+        ("fic", [5, 0, 55, 30], 0.6), ("Issue:", [201, 0, 279, 30], 0.97), ("NAS/BP/OC/1", [291, 0, 399, 30], 0.82)]}]
+    assert [w[0] for w in merge(dev, lat)] == ["दिनांक", "Issue:", "NAS/BP/OC/1"]
+
+
+def test_without_the_model_the_page_says_hindi_was_not_read(monkeypatch):
+    import numpy as np
+
+    from pramana.pipeline import devanagari
+
+    monkeypatch.setattr(devanagari, "engine", lambda: None)
+    monkeypatch.setitem(devanagari._state, "error", "offline")
+    lines = [{"box": [0, 0, 10, 10], "text": "Main campus", "score": 0.9, "words": [("Main", [0, 0, 5, 10], 0.9)]}]
+    words, info = devanagari.read(np.zeros((10, 10, 3), dtype=np.uint8), lines, "legacy font")
+    assert [w[0] for w in words] == ["Main"]
+    assert info["read"] is False and "not read" in info["note"] and "offline" in info["note"]
