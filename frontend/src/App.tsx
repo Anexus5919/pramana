@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { homePath, useSession } from "./auth/session";
+import AnalysePage from "./pages/analyse/AnalysePage";
 import ApplicationWorkspace from "./pages/application/ApplicationWorkspace";
 import AuditLogPage from "./pages/audit/AuditLogPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
@@ -11,7 +12,6 @@ import InstitutionApplicationPage from "./pages/portal/InstitutionApplicationPag
 import MyApplicationsPage from "./pages/portal/MyApplicationsPage";
 import NewApplicationPage from "./pages/portal/NewApplicationPage";
 import RulesPage from "./pages/rules/RulesPage";
-import VerifyPdfPage from "./pages/verify/VerifyPdfPage";
 import { AppShell, Footer, FullScreenLoader } from "./shell/AppShell";
 import type { Role } from "./types";
 import { ErrorState } from "./ui/States";
@@ -70,7 +70,9 @@ export function App() {
           <Route path="/applications/:appId/:tab?" element={only(OFFICIAL, <ApplicationWorkspace />)} />
           <Route path="/rules" element={only(OFFICIAL, <RulesPage />)} />
           <Route path="/issuers" element={only(OFFICIAL, <IssuerSimulatorPage />)} />
-          <Route path="/verify-pdf" element={only(OFFICIAL, <VerifyPdfPage />)} />
+          <Route path="/analyse" element={only(OFFICIAL, <AnalysePage />)} />
+          {/* Verify a PDF is part of Analyse a document now; old links land there */}
+          <Route path="/verify-pdf" element={<Navigate to="/analyse" replace />} />
           <Route path="/audit" element={only(["officer", "admin"], <AuditLogPage />)} />
           <Route path="/platform" element={only(["officer", "admin"], <PlatformPage />)} />
           <Route path="/portal" element={only(["institution"], <MyApplicationsPage />)} />
