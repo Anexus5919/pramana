@@ -26,9 +26,16 @@ MAX_PAGES = 3
 MAX_AREA_SHARE = 0.12  # larger images are photos, maps or full-page scans, not seals
 MIN_SIDE_PT = 28
 HASH_SIZE = 16
-# Of 256 bits, for both hashes. Seals of one template differ only in their text, so this stays tight:
-# rescaling and recompression move a seal by about 4, different issuers' seals sit 10 or more apart.
-PHASH_MAX_DISTANCE = 8
+# Seals are matched on a finer perceptual hash (32 x 32 DCT, 1024 bits). Many issuers use one template that
+# differs only in the city name; at 16 x 16 such seals came within 4 of 256 bits of each other while harmless
+# copies moved up to 7, so no threshold separated them. At 32 x 32 (scripts/calibrate_seals.py, 143 cities, 40,755
+# pairs of distinct seals, 960 copies): distinct seals of one template sit 50 or more apart, copies re-encoded as
+# JPEG down to quality 50, rescaled or blurred move 30 or less. A printed and rescanned seal moves 270 or more,
+# as far as a different seal, so it is not matched
+FINE_HASH_SIZE = 32
+FINE_BITS = FINE_HASH_SIZE * FINE_HASH_SIZE
+PHASH_MAX_DISTANCE = 40
+NO_MATCH = FINE_BITS + 1
 COMMON_ISSUERS = 3  # an image under this many distinct issuers is shared artwork (an emblem), not a seal
 ISSUER_FIELDS = ("issuing_authority",)
 
@@ -94,6 +101,7 @@ def image_fingerprints(data: bytes) -> list[dict[str, Any]]:
                     "sha256": hashlib.sha256(rgb.tobytes()).hexdigest(),
                     "phash": str(imagehash.phash(gray, hash_size=HASH_SIZE)),
                     "dhash": str(imagehash.dhash(gray, hash_size=HASH_SIZE)),
+                    "phash32": str(imagehash.phash(gray, hash_size=FINE_HASH_SIZE)),
                     "px": list(rgb.size),
                 })
     return out
@@ -121,8 +129,11 @@ def _h(hexstr: str) -> imagehash.ImageHash:
 
 
 def distance(a: dict[str, Any], b: dict[str, Any]) -> int:
-    """The larger of the two perceptual distances, so both hashes must agree before images match."""
+    """Fine perceptual distance in bits of FINE_BITS; 0 for pixel-identical images. Fingerprints stored before the
+    fine hash existed match only when pixel-identical."""
     if a["sha256"] == b["sha256"]:
         return 0
+    if not (a.get("phash32") and b.get("phash32")):
+        return NO_MATCH
     # imagehash returns a numpy integer, which the finding's JSON evidence cannot hold
-    return int(max(_h(a["phash"]) - _h(b["phash"]), _h(a["dhash"]) - _h(b["dhash"])))
+    return int(_h(a["phash32"]) - _h(b["phash32"]))
