@@ -123,8 +123,9 @@ export function layoutNetwork(data: NetworkPayload, mode: "evidence" | "applicat
     }
 
     // Centre the cluster on the canvas column and stack it under the previous one
-    const ys = [...pos.values()].map((p) => p.y);
-    const top = Math.min(...ys);
+    // Only what is drawn counts: applications alone in the applications-only view
+    const drawn = mode === "evidence" ? [...pos.values()] : c.applications.map((a) => pos.get(a)!);
+    const top = Math.min(...drawn.map((p) => p.y));
     const dy = y - top + 20;
     const dx = -width / 2;
     for (const a of c.applications) {
@@ -139,7 +140,7 @@ export function layoutNetwork(data: NetworkPayload, mode: "evidence" | "applicat
       }
     }
     maxW = Math.max(maxW, width);
-    y += Math.max(height, 160) + CLUSTER_GAP;
+    y += (mode === "evidence" ? Math.max(height, 160) : order ? 90 : height) + CLUSTER_GAP;
   }
 
   if (mode === "evidence") {
@@ -158,7 +159,15 @@ export function layoutNetwork(data: NetworkPayload, mode: "evidence" | "applicat
       const its = p.items.map((i) => itemById.get(i)!).filter(Boolean);
       const counts = new Map<string, number>();
       for (const it of its) counts.set(it.kind, (counts.get(it.kind) ?? 0) + 1);
-      const label = [...counts].map(([k, n]) => `${n} ${k === "faculty" ? "faculty" : k === "certificate" ? "cert. no." : k === "details" ? "details" : k}`).join(", ");
+      const word: Record<string, [string, string]> = {
+        faculty: ["faculty ID", "faculty IDs"],
+        certificate: ["cert. no.", "cert. nos."],
+        file: ["file", "files"],
+        photo: ["photo", "photos"],
+        seal: ["seal", "seals"],
+        details: ["details match", "details matches"],
+      };
+      const label = [...counts].map(([k, n]) => `${n} ${word[k][n === 1 ? 0 : 1]}`).join(", ");
       edges.push({ id: `${p.a}--${p.b}`, source: p.a, target: p.b, kind: "application", label, weight: its.length, bend: 0 });
     }
   }

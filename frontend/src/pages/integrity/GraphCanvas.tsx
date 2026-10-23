@@ -258,7 +258,6 @@ export function GraphCanvas({ nodes, edges, frames = [], selected, onSelect, hov
       boxSelectionEnabled: false,
       autoungrabify: true,
       autounselectify: true,
-      wheelSensitivity: 0.2,
     });
     cy.on("tap", "node", (ev) => {
       const id = ev.target.id();
