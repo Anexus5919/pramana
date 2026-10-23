@@ -28,6 +28,7 @@ const SHORT: Record<string, string> = {
   applicant_signature: "Applicant sig.",
   signed_qr: "Signed QR",
   issuer_registry: "Registry",
+  content_credentials: "C2PA",
   manual_confirmation: "Manual",
 };
 const SPLIT_AT = 900;
