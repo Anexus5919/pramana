@@ -70,7 +70,11 @@ function DocumentsPanel({
       padding="none"
       description={
         <>
-          {editable ? "PDF, JPG or PNG. A new upload replaces the earlier file." : "Documents are locked while AICTE reviews the application."}
+          {editable
+            ? "PDF, JPG or PNG. A new upload replaces the earlier file."
+            : app.status === "closed" || app.status === "withdrawn"
+              ? `This application is ${app.status}, so its documents can no longer change.`
+              : "Documents are locked while AICTE reviews the application."}
           {source && <span className="mt-1 block text-xs">{source}</span>}
         </>
       }

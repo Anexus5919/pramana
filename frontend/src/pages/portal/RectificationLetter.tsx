@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { ArrowDown, Download } from "lucide-react";
 import { fmtDate, pluralize } from "../../lib/format";
 import type { Rectification, RectificationItem } from "../../types";
 import { Button, DescriptionList, Digest, Panel, PanelDivider, buttonStyles } from "../../ui2";
@@ -39,14 +39,14 @@ export function DeficiencyLetterPanel({
     .map((i) => i.respond_by)
     .filter(Boolean)
     .sort()[0];
-  // The letter is what AICTE formally sent, so its numbering wins when there is one
-  const typeOf = (findingIds: string[]) =>
-    findingIds
-      .map((id) => rect.items.find((r) => r.finding_id === id))
-      .map((r) => (r ? itemDocType(r) : null))
-      .find(Boolean) ?? null;
+  // The letter is what AICTE formally sent, so its numbering wins when there is one.
+  // Institutions receive the letter without finding ids, so items are matched to the request by title, then by position
+  const typeOf = (title: string, i: number) => {
+    const same = rect.items.find((r) => r.title === title) ?? (letter && letter.items.length === rect.items.length ? rect.items[i] : undefined);
+    return same ? itemDocType(same) : null;
+  };
   const items: Item[] = letter
-    ? letter.items.map((it, i) => ({ key: `l${i}`, title: it.title, message: it.description, docType: typeOf(it.finding_ids) }))
+    ? letter.items.map((it, i) => ({ key: `l${i}`, title: it.title, message: it.description, docType: typeOf(it.title, i) }))
     : rect.items.map((it) => ({ key: it.finding_id, title: it.title, message: it.message, docType: itemDocType(it) }));
   const issued = letter?.finalised_at ?? rect.created_at;
 
@@ -54,7 +54,7 @@ export function DeficiencyLetterPanel({
     <Panel
       id="letter"
       title={letter ? "Deficiency letter" : "Corrections requested"}
-      description={`Round ${rect.round}, issued ${fmtDate(issued)}`}
+      description={letter ? `Round ${rect.round}` : `Round ${rect.round}, issued ${fmtDate(issued)}`}
       actions={
         letter ? (
           <a href={officerApi.letterPdfUrl(letter.id)} download className={buttonStyles("secondary", "md")}>
@@ -68,6 +68,7 @@ export function DeficiencyLetterPanel({
         <DescriptionList
           layout="stacked"
           columns={4}
+          className="grid-cols-2"
           items={[
             { label: "Issued", value: fmtDate(letter.finalised_at) },
             { label: "Respond by", value: due ? fmtDate(due) : null },
@@ -94,7 +95,13 @@ export function DeficiencyLetterPanel({
               <h3 className="text-sm font-medium text-ink">{it.title}</h3>
               {it.message && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{it.message}</p>}
               {it.docType && docLabel(it.docType) && (
-                <Button size="sm" variant="ghost" className="mt-1 -ml-2.5" onClick={() => onShowDocument(it.docType as string)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-1 -ml-2.5"
+                  trailingIcon={<ArrowDown aria-hidden />}
+                  onClick={() => onShowDocument(it.docType as string)}
+                >
                   Go to {docLabel(it.docType)}
                 </Button>
               )}
