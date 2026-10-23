@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { Check, CircleCheck, CircleMinus, Database, Minus, X } from "lucide-react";
+import { Check, CircleCheck, CircleMinus, Database, Link2, Minus, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Tag } from "../../ui/Badge";
@@ -198,6 +198,44 @@ function Registry({ token }: { token: string }) {
   );
 }
 
+/**
+ * Where the data came from when a link was involved. The link only transports the token; the signature is the
+ * proof, and since a link can point anywhere the person is told to check the page they are on.
+ */
+function LinkNote({ data, r }: { data: ScanResponse; r?: ScanTokenResult }) {
+  const fromLink = data.source === "link";
+  if (!fromLink && !r?.link_host) return null;
+  return (
+    <section aria-labelledby="link-title" className="flex gap-3 rounded-card border border-line bg-surface-2/60 p-3.5">
+      <span className="grid size-8 shrink-0 place-items-center rounded-[9px] bg-surface text-ink-2 shadow-xs">
+        <Link2 className="size-4" aria-hidden />
+      </span>
+      <div className="min-w-0 text-sm text-ink-2 text-pretty">
+        <h3 id="link-title" className="font-semibold text-ink">
+          {fromLink ? "The link only carries the data" : "This QR is a link"}
+        </h3>
+        {fromLink ? (
+          <p className="mt-0.5">
+            The issuer&apos;s signature, checked against its published key, is what proves it. A link can point anywhere, so in production make sure this page
+            is on the issuer&apos;s or AICTE&apos;s official domain.
+          </p>
+        ) : (
+          <p className="mt-0.5">
+            It points to <span className="font-mono text-[13px] break-all text-ink">{r?.link_host}</span>. Pramana read the signed data from the code and did not
+            open the link; only the signature counts, wherever a link points.
+          </p>
+        )}
+        {fromLink && (
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
+            This page is on <span className="rounded-[6px] bg-surface px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{window.location.host}</span>
+            <Tag variant="demo">Prototype server</Tag>
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function Lists({ r }: { r: ScanTokenResult }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -233,7 +271,7 @@ function Lists({ r }: { r: ScanTokenResult }) {
 
 export function ScanResult({ data }: { data: ScanResponse }) {
   const r = data.results[0];
-  const view = statusView(data.status, r);
+  const view = statusView(data.status, r, data.source);
   const tone = toneClass[view.tone];
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [data.checked_at]);
@@ -269,6 +307,7 @@ export function ScanResult({ data }: { data: ScanResponse }) {
       </header>
 
       <div className="space-y-6 px-4 py-5 sm:px-5">
+        <LinkNote data={data} r={r} />
         {r?.signed && r.fields && r.fields.length > 0 && <Compare fields={r.fields} />}
         {unsigned && (
           <section>
@@ -295,9 +334,19 @@ export function ScanResult({ data }: { data: ScanResponse }) {
         {data.qr_found > 1 && <p className="text-xs text-ink-3">{data.qr_found} QR codes were found; the first is shown.</p>}
 
         <footer className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line pt-3 text-xs text-ink-3">
-          <span>Image fingerprint</span>
-          <Digest value={data.image_sha256} label="SHA-256 of the checked image" />
-          <span>{data.stored ? "Photo stored" : "Photo not stored"}</span>
+          {data.source === "link" ? (
+            <>
+              <span>Token fingerprint</span>
+              {data.token_sha256 && <Digest value={data.token_sha256} label="SHA-256 of the checked token" />}
+              <span>Link not stored</span>
+            </>
+          ) : (
+            <>
+              <span>Image fingerprint</span>
+              {data.image_sha256 && <Digest value={data.image_sha256} label="SHA-256 of the checked image" />}
+              <span>{data.stored ? "Photo stored" : "Photo not stored"}</span>
+            </>
+          )}
         </footer>
       </div>
     </motion.article>

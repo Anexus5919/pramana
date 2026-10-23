@@ -1,0 +1,1221 @@
+{
+  "generated_before": "2026-10-23T07:58:55+00:00",
+  "generated_after": "2026-10-23T08:30:45+00:00",
+  "rows": [
+    {
+      "id": "fire_clean",
+      "method": "Clean issuer copy re-uploaded (control)",
+      "tool": "none",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": null,
+      "control": true,
+      "file": "fire_clean.pdf",
+      "before": {
+        "caught": null,
+        "shows_edit": null,
+        "text_source": "digital",
+        "new_codes": [],
+        "codes_beyond_clean_copy": {
+          "FX-SEAL-REUSED-LATER": "low"
+        },
+        "issuer_signature": "verified",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": null,
+        "shows_edit": null,
+        "text_source": "digital",
+        "new_codes": [],
+        "codes_beyond_clean_copy": {
+          "FX-SEAL-REUSED-LATER": "low"
+        },
+        "issuer_signature": "verified",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_edge_add_text",
+      "method": "Edge Add text: FreeText annotation over the date, incremental save",
+      "tool": "Microsoft Edge, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_edge_add_text.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_edge_add_text_full",
+      "method": "Edge Add text, the whole file rewritten on save",
+      "tool": "Microsoft Edge, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_edge_add_text_full.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_box_and_text",
+      "method": "White filled rectangle (Square) over the date plus a text box with the new date",
+      "tool": "Acrobat Reader comment tools, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_box_and_text.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_white_ink_and_text",
+      "method": "Edge Draw in white over the date plus Add text",
+      "tool": "Microsoft Edge, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_white_ink_and_text.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_stamp",
+      "method": "Custom stamp made from an image of the new date, placed over the date",
+      "tool": "Acrobat Reader Stamp tool, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_stamp.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_ink_scribble",
+      "method": "Ink scribble over the date",
+      "tool": "Microsoft Edge Draw, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_ink_scribble.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_form_field",
+      "method": "Text form field (Widget with an appearance) over the date",
+      "tool": "form editor, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_form_field.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "verified",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2027",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_word",
+      "method": "Word round-trip: open the PDF in Word, change the date, save as PDF",
+      "tool": "Microsoft Word, real",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_word.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "mixed",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "mixed",
+        "new_codes": [
+          "VER-ISSUER-SIGNATURE-ABSENT",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER-SIGNATURE-ABSENT": "medium",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_libreoffice",
+      "method": "LibreOffice-style edit: full rewrite, date replaced, new Producer, signature dropped",
+      "tool": "LibreOffice, reproduced (not installed here)",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_libreoffice.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER-SIGNATURE-ABSENT",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER-SIGNATURE-ABSENT": "medium",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_content_incremental",
+      "method": "Direct content edit: date replaced in the content stream, incremental save",
+      "tool": "PDF editor Edit text, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_content_incremental.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-FIELD-OVERWRITTEN",
+          "FX-PDF-REVISION-TEXT-CHANGE",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-FIELD-OVERWRITTEN": "high",
+          "FX-PDF-REVISION-TEXT-CHANGE": "high",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-FIELD-OVERWRITTEN",
+          "FX-PDF-REVISION-TEXT-CHANGE",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-FIELD-OVERWRITTEN": "high",
+          "FX-PDF-REVISION-TEXT-CHANGE": "high",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_content_full",
+      "method": "Direct content edit: date replaced in the content stream, full save",
+      "tool": "PDF editor Edit text, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_content_full.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_print_to_pdf",
+      "method": "Box and text edit, then printed to an image-only PDF",
+      "tool": "Microsoft Print to PDF, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_print_to_pdf.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "ocr",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "ocr",
+        "new_codes": [
+          "FX-IMAGE-ONLY-ISSUER-DOC",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-IMAGE-ONLY-ISSUER-DOC": "medium",
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": "12-03-2025",
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "fire_photo",
+      "method": "Box and text edit, printed and photographed (perspective, blur, JPEG noise)",
+      "tool": "phone camera, reproduced",
+      "app": "A1",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "11-03-2027",
+      "new": "11-03-2029",
+      "control": false,
+      "file": "fire_photo.jpg",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "ocr",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-IMG-NO-CAPTURE-METADATA": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": null,
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "ocr",
+        "new_codes": [
+          "FX-IMAGE-ONLY-ISSUER-DOC",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-SIGNED_QR-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-IMAGE-ONLY-ISSUER-DOC": "medium",
+          "FX-IMG-NO-CAPTURE-METADATA": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-SIGNED_QR-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "mismatch",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "noc_number": "FES/PUN/2025/04417",
+          "issue_date": null,
+          "valid_until": "11-03-2029",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "issuing_authority": "Chief Fire Officer, Pune Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "oc_clean",
+      "method": "Clean issuer copy re-uploaded (control)",
+      "tool": "none",
+      "app": "A1",
+      "declared_type": "occupancy_certificate",
+      "field": "built_up_area_sqm",
+      "printed": "14,650",
+      "new": null,
+      "control": true,
+      "file": "oc_clean.pdf",
+      "before": {
+        "caught": null,
+        "shows_edit": null,
+        "text_source": "digital",
+        "new_codes": [],
+        "codes_beyond_clean_copy": {},
+        "issuer_signature": "verified",
+        "signed_qr": "not found",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "14,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      },
+      "after": {
+        "caught": null,
+        "shows_edit": null,
+        "text_source": "digital",
+        "new_codes": [],
+        "codes_beyond_clean_copy": {},
+        "issuer_signature": "verified",
+        "signed_qr": "not found",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "14,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      }
+    },
+    {
+      "id": "oc_edge_add_text",
+      "method": "Edge Add text: FreeText annotation over the built-up area, incremental save",
+      "tool": "Microsoft Edge, reproduced",
+      "app": "A1",
+      "declared_type": "occupancy_certificate",
+      "field": "built_up_area_sqm",
+      "printed": "14,650",
+      "new": "18,650",
+      "control": false,
+      "file": "oc_edge_add_text.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "not found",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "14,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "not found",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "14,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      }
+    },
+    {
+      "id": "oc_box_and_text",
+      "method": "White filled rectangle over the area plus a text box with the new area",
+      "tool": "Acrobat Reader comment tools, reproduced",
+      "app": "A1",
+      "declared_type": "occupancy_certificate",
+      "field": "built_up_area_sqm",
+      "printed": "14,650",
+      "new": "18,650",
+      "control": false,
+      "file": "oc_box_and_text.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "not found",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "14,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "not found",
+        "issuer_registry": "verified",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "14,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      }
+    },
+    {
+      "id": "oc_content_full",
+      "method": "Direct content edit of the area, full save",
+      "tool": "PDF editor Edit text, reproduced",
+      "app": "A1",
+      "declared_type": "occupancy_certificate",
+      "field": "built_up_area_sqm",
+      "printed": "14,650",
+      "new": "18,650",
+      "control": false,
+      "file": "oc_content_full.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "not found",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "18,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "not found",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "18,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      }
+    },
+    {
+      "id": "oc_print_to_pdf",
+      "method": "Box and text edit of the area, then printed to an image-only PDF",
+      "tool": "Microsoft Print to PDF, reproduced",
+      "app": "A1",
+      "declared_type": "occupancy_certificate",
+      "field": "built_up_area_sqm",
+      "printed": "14,650",
+      "new": "18,650",
+      "control": false,
+      "file": "oc_print_to_pdf.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "ocr",
+        "new_codes": [
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "not found",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "18,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "ocr",
+        "new_codes": [
+          "FX-IMAGE-ONLY-ISSUER-DOC",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-IMAGE-ONLY-ISSUER-DOC": "medium",
+          "FX-PDF-EDITOR-PRODUCER": "low",
+          "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "none",
+        "signed_qr": "not found",
+        "issuer_registry": "mismatch",
+        "fields_read": {
+          "certificate_no": "PUN/BP/OC/2009/00913",
+          "issue_date": "15-06-2011",
+          "institution_name": "Shree Dnyaneshwar Institute of Technology",
+          "built_up_area_sqm": "18,650",
+          "certificate_type": "Full",
+          "issuing_authority": "City Engineer, Pune Municipal Corporation"
+        }
+      }
+    },
+    {
+      "id": "expired_clean",
+      "method": "Clean, expired issuer copy re-uploaded (control)",
+      "tool": "none",
+      "app": "A3",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "30-09-2025",
+      "new": null,
+      "control": true,
+      "file": "expired_clean.pdf",
+      "before": {
+        "caught": null,
+        "shows_edit": null,
+        "text_source": "digital",
+        "new_codes": [],
+        "codes_beyond_clean_copy": {
+          "APH-617I-FIRE-VALID": "high",
+          "VER-ISSUER_REGISTRY-EXPIRED": "high",
+          "VER-SIGNED_QR-EXPIRED": "high"
+        },
+        "issuer_signature": "verified",
+        "signed_qr": "expired",
+        "issuer_registry": "expired",
+        "fields_read": {
+          "noc_number": "FES/RAT/2025/04451",
+          "issue_date": "01-10-2023",
+          "valid_until": "30-09-2025",
+          "institution_name": "Konkan Institute of Engineering and Management",
+          "issuing_authority": "Chief Fire Officer, Ratnagiri Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": null,
+        "shows_edit": null,
+        "text_source": "digital",
+        "new_codes": [],
+        "codes_beyond_clean_copy": {
+          "APH-617I-FIRE-VALID": "high",
+          "VER-ISSUER_REGISTRY-EXPIRED": "high",
+          "VER-SIGNED_QR-EXPIRED": "high"
+        },
+        "issuer_signature": "verified",
+        "signed_qr": "expired",
+        "issuer_registry": "expired",
+        "fields_read": {
+          "noc_number": "FES/RAT/2025/04451",
+          "issue_date": "01-10-2023",
+          "valid_until": "30-09-2025",
+          "institution_name": "Konkan Institute of Engineering and Management",
+          "issuing_authority": "Chief Fire Officer, Ratnagiri Fire Brigade"
+        }
+      }
+    },
+    {
+      "id": "expired_edge_add_text",
+      "method": "Expired certificate: Edge Add text puts a later date over the expiry, incremental save",
+      "tool": "Microsoft Edge, reproduced",
+      "app": "A3",
+      "declared_type": "fire_noc",
+      "field": "valid_until",
+      "printed": "30-09-2025",
+      "new": "30-09-2027",
+      "control": false,
+      "file": "expired_edge_add_text.pdf",
+      "before": {
+        "caught": true,
+        "shows_edit": false,
+        "text_source": "digital",
+        "new_codes": [
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "expired",
+        "issuer_registry": "expired",
+        "fields_read": {
+          "noc_number": "FES/RAT/2025/04451",
+          "issue_date": "01-10-2023",
+          "valid_until": "30-09-2025",
+          "institution_name": "Konkan Institute of Engineering and Management",
+          "issuing_authority": "Chief Fire Officer, Ratnagiri Fire Brigade"
+        }
+      },
+      "after": {
+        "caught": true,
+        "shows_edit": true,
+        "text_source": "digital",
+        "new_codes": [
+          "FX-ANNOT-OVER-FIELD",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"
+        ],
+        "codes_beyond_clean_copy": {
+          "FX-ANNOT-OVER-FIELD": "high",
+          "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": "high"
+        },
+        "issuer_signature": "mismatch",
+        "signed_qr": "expired",
+        "issuer_registry": "expired",
+        "fields_read": {
+          "noc_number": "FES/RAT/2025/04451",
+          "issue_date": "01-10-2023",
+          "valid_until": "30-09-2025",
+          "institution_name": "Konkan Institute of Engineering and Management",
+          "issuing_authority": "Chief Fire Officer, Ratnagiri Fire Brigade"
+        }
+      }
+    }
+  ]
+}

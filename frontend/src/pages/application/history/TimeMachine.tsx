@@ -275,10 +275,17 @@ interface Shown {
   src: string;
 }
 
-export function RevisionStage({ doc, className }: { doc: DocumentDetail; className?: string }) {
+/** Revisions handed in directly, for a file analysed outside any application. */
+export interface RevisionSource {
+  data: Revisions;
+  pageUrl: (n: number, page: number) => string;
+}
+
+export function RevisionStage({ doc, className, source }: { doc: DocumentDetail; className?: string; source?: RevisionSource }) {
   const reduce = useReducedMotion();
-  const q = useRevisions(doc.id);
-  const data = q.data;
+  const q = useRevisions(doc.id, !source);
+  const data = source?.data ?? q.data;
+  const pageUrl = source?.pageUrl ?? ((n: number, p: number) => historyApi.revisionPageUrl(doc.id, n, p));
   const count = data?.revision_count ?? 0;
   const [rev, setRev] = useRevParam(count);
   const firstChangePage = data?.revisions.flatMap((r) => r.changes).find((c) => c.page)?.page ?? 1;
@@ -303,7 +310,7 @@ export function RevisionStage({ doc, className }: { doc: DocumentDetail; classNa
   // Load the target render first, then swap it in, so the crossfade never shows a blank page
   useEffect(() => {
     if (!count) return;
-    const src = historyApi.revisionPageUrl(doc.id, rev, pg);
+    const src = pageUrl(rev, pg);
     let live = true;
     const img = new Image();
     img.onload = () => {
@@ -322,19 +329,19 @@ export function RevisionStage({ doc, className }: { doc: DocumentDetail; classNa
   // Warm the cache for every revision of this page so scrubbing feels instant
   useEffect(() => {
     if (!count) return;
-    for (let n = 1; n <= Math.min(count, 12); n++) new Image().src = historyApi.revisionPageUrl(doc.id, n, pg);
+    for (let n = 1; n <= Math.min(count, 12); n++) new Image().src = pageUrl(n, pg);
   }, [doc.id, count, pg]);
 
   useEffect(() => {
     const el = stage.current;
-    const d = q.data;
+    const d = data;
     if (!el || !shown || !d || !fit) return;
     const info = d.pages?.find((p) => p.page_no === shown.page) ?? d.pages?.[0];
     const c = d.revisions[shown.rev - 1]?.changes.find((x) => x.page === shown.page && validBox(x.bbox));
     if (!info || !c) return;
     const y = c.bbox![1] * (Math.max(200, fit) / info.width);
     if (y < el.scrollTop + 40 || y > el.scrollTop + el.clientHeight - 80) el.scrollTo({ top: Math.max(0, y - el.clientHeight / 3), behavior: reduce ? "auto" : "smooth" });
-  }, [arrive, shown, q.data, fit, reduce]);
+  }, [arrive, shown, data, fit, reduce]);
 
   useEffect(() => {
     const on = (e: Event) => {
@@ -346,8 +353,8 @@ export function RevisionStage({ doc, className }: { doc: DocumentDetail; classNa
     return () => window.removeEventListener(FOCUS_EVENT, on);
   }, []);
 
-  if (q.isPending) return <Skeleton className={cn("h-[640px]", className)} rounded="lg" />;
-  if (q.error || !data) return <ErrorState error={q.error} title="Could not load the revisions" onRetry={() => void q.refetch()} className={className} />;
+  if (!source && q.isPending) return <Skeleton className={cn("h-[640px]", className)} rounded="lg" />;
+  if ((!source && q.error) || !data) return <ErrorState error={q.error} title="Could not load the revisions" onRetry={() => void q.refetch()} className={className} />;
   if (!data.supported || !count) return <EmptyState title="No revisions to show" description="Only PDF files keep saved revisions." className={className} />;
 
   const info = data.pages?.find((p) => p.page_no === pg) ?? data.pages?.[0];
@@ -574,13 +581,13 @@ function RevisionItem({ r, selected, onSelect, docId }: { r: Revision; selected:
   );
 }
 
-export function RevisionPanel({ doc }: { doc: DocumentDetail }) {
-  const q = useRevisions(doc.id);
-  const data = q.data;
+export function RevisionPanel({ doc, source }: { doc: DocumentDetail; source?: RevisionSource }) {
+  const q = useRevisions(doc.id, !source);
+  const data = source?.data ?? q.data;
   const [rev, setRev] = useRevParam(data?.revision_count ?? 0);
   const summary = useMemo(() => (data?.supported ? summaryOf(data) : ""), [data]);
-  if (q.isPending) return <Skeleton className="h-64" rounded="lg" />;
-  if (q.error || !data) return <ErrorState compact error={q.error} title="Could not load the revisions" onRetry={() => void q.refetch()} />;
+  if (!source && q.isPending) return <Skeleton className="h-64" rounded="lg" />;
+  if ((!source && q.error) || !data) return <ErrorState compact error={q.error} title="Could not load the revisions" onRetry={() => void q.refetch()} />;
   if (!data.supported) return <EmptyState compact title="Not a PDF" description="Images have no saved revisions." />;
   return (
     <div className="space-y-4">
@@ -616,7 +623,7 @@ export function RevisionPanel({ doc }: { doc: DocumentDetail }) {
   );
 }
 
-const TIME_MACHINE_CODES = new Set(["FX-PDF-REVISION-TEXT-CHANGE", "FX-FIELD-OVERWRITTEN", "FX-PDF-INCREMENTAL-UPDATE", "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"]);
+const TIME_MACHINE_CODES = new Set(["FX-PDF-REVISION-TEXT-CHANGE", "FX-FIELD-OVERWRITTEN", "FX-PDF-INCREMENTAL-UPDATE", "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED", "FX-ANNOT-OVER-FIELD", "FX-ANNOT-OVER-TEXT"]);
 
 /** From a revision finding straight to the revision that introduced the change. */
 export function TimeMachineLink({ finding }: { finding: Finding }) {

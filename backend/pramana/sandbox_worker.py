@@ -70,7 +70,7 @@ def op_pages(data: bytes, mime: str):
 
 
 def op_qr(data: bytes, mime: str, page_count: int):
-    from .verification.signed_qr import decode_qr
+    from .verification.signed_qr import decode_pdf_images, decode_qr
 
     out = []
     if mime == "application/pdf":
@@ -79,12 +79,16 @@ def op_qr(data: bytes, mime: str, page_count: int):
         for i in range(min(page_count, 3)):
             # Dense signed tokens need more pixels per module; stop at the first resolution that decodes
             for dpi in (150, 220, 300):
-                found = decode_qr(render_pdf_page(data, i, dpi))
+                found = decode_qr(render_pdf_page(data, i, dpi), upscale=False)
                 if found:
                     scale = dpi / 72
                     out.extend({"page": i + 1, "text": t, "bbox": [round(v / scale, 2) for v in box]}
                                for t, box in found)
                     break
+            else:
+                # A low-resolution image on the page (a screenshot saved as PDF) reads better at its own pixels
+                out.extend({"page": i + 1, "text": t, "bbox": [round(v, 2) for v in box]}
+                           for t, box in decode_pdf_images(data, i))
     else:
         from PIL import Image
 
@@ -125,6 +129,13 @@ def op_font_check(data: bytes, fields: list[dict[str, Any]], facts: dict[str, An
 
     signals = fonts.font_mismatches(data, [SimpleNamespace(**f) for f in fields], facts)
     return [asdict(s) for s in signals], None
+
+
+def op_annotations(data: bytes, fields: list[dict[str, Any]]):
+    from .forensics import annotations
+
+    res = annotations.scan(data, fields)
+    return {**res, "signals": [asdict(s) for s in res["signals"]]}, None
 
 
 def op_render(data: bytes, mime: str, page_index: int, dpi: int):
@@ -183,6 +194,7 @@ OPS = {
     "forensics": op_forensics,
     "seal_images": op_seal_images,
     "font_check": op_font_check,
+    "annotations": op_annotations,
     "render": op_render,
     "intake": op_intake,
     "selftest_sleep": op_selftest_sleep,

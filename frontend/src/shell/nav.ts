@@ -26,7 +26,7 @@ const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
 
 export const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: OFFICIAL, group: "Review", keywords: "queue triage alerts home" },
-  { to: "/verify-pdf", label: "Verify a PDF", icon: FileSearch, roles: OFFICIAL, group: "Review", keywords: "signature check upload tool" },
+  { to: "/analyse", label: "Analyse a document", icon: FileSearch, roles: OFFICIAL, group: "Review", keywords: "verify pdf signature check upload tool photo ocr hindi forensics revisions" },
   { to: "/rules", label: "Rules", icon: ScrollText, roles: OFFICIAL, group: "System", keywords: "ruleset handbook impact" },
   { to: "/issuers", label: "Issuer simulator", icon: FlaskConical, roles: OFFICIAL, group: "System", keywords: "registry simulated demo" },
   { to: "/audit", label: "Audit log", icon: ShieldCheck, roles: ["officer", "admin"], group: "System", keywords: "chain hash checkpoint" },

@@ -1,5 +1,5 @@
 import type { Tone } from "../../ui/tone";
-import type { ScanStatus, ScanTokenResult } from "./scanApi";
+import type { ScanSource, ScanStatus, ScanTokenResult } from "./scanApi";
 
 export interface StatusView {
   tone: Tone;
@@ -15,7 +15,7 @@ export function fmtDay(iso: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? iso : fmt.format(d);
 }
 
-export function statusView(status: ScanStatus, r?: ScanTokenResult): StatusView {
+export function statusView(status: ScanStatus, r?: ScanTokenResult, source: ScanSource = "image"): StatusView {
   const issuer = r?.issuer?.name ?? "the issuer";
   switch (status) {
     case "verified":
@@ -39,7 +39,9 @@ export function statusView(status: ScanStatus, r?: ScanTokenResult): StatusView 
     case "unsupported":
       return { tone: "manual", title: "Token could not be checked", lede: r?.detail ?? "The QR token uses a format this service does not check." };
     case "not_signed":
-      return { tone: "unchecked", title: "Not an issuer-signed QR", lede: r?.detail ?? "This QR carries no signed token." };
+      return source === "link"
+        ? { tone: "unchecked", title: "Nothing signed in this link", lede: r?.detail ?? "This link carries no signed token." }
+        : { tone: "unchecked", title: "Not an issuer-signed QR", lede: r?.detail ?? "This QR carries no signed token." };
     case "no_qr":
     default:
       return {

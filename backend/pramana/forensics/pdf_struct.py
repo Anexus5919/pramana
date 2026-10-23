@@ -7,6 +7,7 @@ append revisions (signing, form filling) and re-save files. They tell a reviewer
 
 import io
 import re
+import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -23,7 +24,20 @@ EDITOR_HINTS = [
     "ilovepdf", "smallpdf", "sejda", "pdf-xchange", "foxit phantompdf", "foxit pdf editor", "nitro",
     "pdfescape", "pdffiller", "acrobat pro", "adobe acrobat", "microsoft: print to pdf", "canva", "photoshop",
     "wondershare", "pdfelement", "libreoffice", "pikepdf", "pypdf",
+    # Word writes "Microsoft® Word ..."; matching ignores punctuation and symbols
+    "microsoft word", "microsoft office word", "openoffice", "wps office", "pdf24", "online2pdf", "pdfcandy",
+    "soda pdf", "pdf2go", "docfly",
 ]
+
+
+def _plain(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
+
+
+def editors_named(text: str) -> list[str]:
+    """Editor hints found in a Producer or Creator string, ignoring case, punctuation and symbols."""
+    t = _plain(text)
+    return [h for h in EDITOR_HINTS if _plain(h) in t]
 
 
 @dataclass
@@ -76,6 +90,10 @@ def _intersects(c: dict, box: list[float]) -> bool:
     return box[0] <= cx <= box[2] and box[1] <= cy <= box[3]
 
 
+def _word_hits(w: Word, box: list[float]) -> bool:
+    return w.x0 < box[2] and w.x1 > box[0] and w.top < box[3] and w.bottom > box[1]
+
+
 def _word_chars(w: Word, chars: list[dict]) -> list[dict]:
     return [c for c in chars if c["x0"] >= w.x0 - 0.01 and c["x1"] <= w.x1 + 0.01 and abs(c["top"] - w.top) < 2]
 
@@ -119,6 +137,9 @@ def diff_revisions(data: bytes) -> list[dict[str, Any]]:
                 # Earlier text still present underneath the new text: the cover-and-overwrite pattern
                 kept = chars_to_words([c for c in b if _ckey(c) in ak])
                 under = [w for w in kept if box and any(_intersects(c, box) for c in _word_chars(w, b))]
+                # Whole words at the changed spot, so a value edited in place reads as before and after
+                before = [w for w in chars_to_words(b) if box and _word_hits(w, box)]
+                after = [w for w in chars_to_words(a) if box and _word_hits(w, box)]
                 out.append({
                     "from_revision": i,
                     "to_revision": i + 1,
@@ -126,19 +147,60 @@ def diff_revisions(data: bytes) -> list[dict[str, Any]]:
                     "added_text": " ".join(ln.text for ln in group_lines(aw)),
                     "removed_text": " ".join(ln.text for ln in group_lines(rw)),
                     "text_underneath": " ".join(ln.text for ln in group_lines(under)),
+                    "before_text": " ".join(ln.text for ln in group_lines(before)),
+                    "after_text": " ".join(ln.text for ln in group_lines(after)),
                     "bbox": box,
                 })
         prev = cur if cur is not None else prev
     return out
 
 
+# A glyph narrower than this share of its font size is a mark drawn on its base letter (legacy Hindi fonts
+# give vowel signs almost no advance), not a letter that could hide another
+MIN_GLYPH_SHARE = 0.1
+# Glyphs of one shaped Devanagari cluster are drawn one after another; an overwrite is drawn elsewhere in the page
+CLUSTER_SPAN = 4
+
+
+def _in_order(page) -> tuple[list[dict], list[dict]]:
+    """Characters and rectangles with their position in the page's drawing order (later ones paint on top)."""
+    chars, rects = [], []
+    for i, o in enumerate(page.iter_layout_objects(page.layout._objs)):
+        if o["object_type"] == "char" and o["text"].strip():
+            chars.append({**o, "seq": i})
+        elif o["object_type"] == "rect":
+            rects.append({**o, "seq": i})
+    return chars, rects
+
+
+def _mark(c: dict) -> bool:
+    """A combining sign (a Devanagari matra or virama), or a glyph with almost no advance."""
+    if any(unicodedata.category(ch) in ("Mn", "Mc", "Me") for ch in c["text"]):
+        return True
+    return (c["x1"] - c["x0"]) < MIN_GLYPH_SHARE * (c.get("size") or 0)
+
+
+def _devanagari_letter(c: dict) -> bool:
+    return all(0x0900 <= ord(ch) <= 0x097F and unicodedata.category(ch) != "Nd" for ch in c["text"])
+
+
+def _shaping(a: dict, b: dict) -> bool:
+    """Overlaps that typesetting produces on its own: marks on their base, and parts of one Devanagari cluster."""
+    if _mark(a) or _mark(b):
+        return True
+    return _devanagari_letter(a) and _devanagari_letter(b) and abs(a["seq"] - b["seq"]) <= CLUSTER_SPAN
+
+
 def overlapping_text(data: bytes) -> list[dict[str, Any]]:
-    """Glyphs drawn on top of different glyphs: the signature of cover-and-overwrite edits."""
+    """Glyphs drawn on top of different glyphs: the signature of cover-and-overwrite edits.
+
+    The same glyph redrawn at almost the same spot (fake bold, shadow text) is not counted, nor are
+    marks sitting on their base letter or the parts of one shaped Devanagari cluster."""
     hits = []
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
             # Rotated glyphs (circular seals, stamps) crowd each other legitimately; compare upright text only
-            chars = [c for c in page.chars if c["text"].strip() and _horizontal(c)]
+            chars = [c for c in _in_order(page)[0] if _horizontal(c)]
             chars.sort(key=lambda c: (round(c["top"]), c["x0"]))
             clusters: list[list[dict]] = []
             for i, a in enumerate(chars):
@@ -148,7 +210,7 @@ def overlapping_text(data: bytes) -> list[dict[str, Any]]:
                     ox = min(a["x1"], b["x1"]) - max(a["x0"], b["x0"])
                     oy = min(a["bottom"], b["bottom"]) - max(a["top"], b["top"])
                     wa = a["x1"] - a["x0"]
-                    if ox > 0.5 * wa and oy > 0.5 * (a["bottom"] - a["top"]) and a["text"] != b["text"]:
+                    if ox > 0.5 * wa and oy > 0.5 * (a["bottom"] - a["top"]) and a["text"] != b["text"]                             and not _shaping(a, b):
                         clusters.append([a, b])
             if clusters:
                 xs0 = min(min(a["x0"], b["x0"]) for a, b in clusters)
@@ -166,21 +228,23 @@ def _horizontal(c: dict) -> bool:
 
 
 def covered_text(data: bytes) -> list[dict[str, Any]]:
-    """Text that sits under an opaque white rectangle drawn later in the page."""
+    """Text hidden under an opaque white rectangle painted after it.
+
+    A white panel painted before its text is a background, as forms and mastheads use; only characters drawn
+    before the rectangle and inside it are hidden by it."""
     hits = []
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            whites = [r for r in page.rects if r.get("fill") and _is_white(r.get("non_stroking_color"))
+            chars, rects = _in_order(page)
+            whites = [r for r in rects if r.get("fill") and _is_white(r.get("non_stroking_color"))
                       and (r["x1"] - r["x0"]) < page.width * 0.9]
-            if not whites:
-                continue
             for r in whites:
-                inside = [c for c in page.chars if c["x0"] >= r["x0"] - 1 and c["x1"] <= r["x1"] + 1
-                          and c["top"] >= r["top"] - 1 and c["bottom"] <= r["bottom"] + 1]
-                if inside:
+                hidden = [c for c in chars if c["seq"] < r["seq"] and c["x0"] >= r["x0"] - 1
+                          and c["x1"] <= r["x1"] + 1 and c["top"] >= r["top"] - 1 and c["bottom"] <= r["bottom"] + 1]
+                if hidden:
                     hits.append({"page": pno, "bbox": [round(r["x0"], 2), round(r["top"], 2),
                                                        round(r["x1"], 2), round(r["bottom"], 2)],
-                                 "text_under_or_over": "".join(c["text"] for c in inside)})
+                                 "text_under_or_over": "".join(c["text"] for c in hidden)})
     return hits
 
 
@@ -246,7 +310,10 @@ def analyse(data: bytes, doc_issue_date: datetime | None = None) -> tuple[list[S
                     "Visible text changed in a later revision",
                     f"Revision {d['to_revision']} changed text on page {d['page']}: added '{d['added_text']}'"
                     + (f" over existing text '{d['text_underneath']}'" if d["text_underneath"] else "")
-                    + (f", removed '{d['removed_text']}'" if d["removed_text"] else "") + ".",
+                    + (f", removed '{d['removed_text']}'" if d["removed_text"] else "") + "."
+                    + (f" The value there read '{d['before_text']}' before and reads '{d['after_text']}' after."
+                       if d["removed_text"] and not d["text_underneath"] and d["before_text"] and d["after_text"]
+                       and d["before_text"] != d["after_text"] else ""),
                     "high",
                     [{"kind": "region", "page": d["page"], "bbox": d["bbox"], "label": "changed in later revision"},
                      {"kind": "revision_diff", **d}],
@@ -280,14 +347,14 @@ def analyse(data: bytes, doc_issue_date: datetime | None = None) -> tuple[list[S
         signals.append(Signal(
             "FX-PDF-WHITEOUT",
             "Opaque white box overlaps text",
-            f"A white filled rectangle on page {c['page']} overlaps characters '{c['text_under_or_over']}'.",
+            f"A white filled rectangle on page {c['page']} is painted over the characters "
+            f"'{c['text_under_or_over']}', which were drawn before it and are hidden by it.",
             "medium",
             [{"kind": "region", "page": c["page"], "bbox": c["bbox"], "label": "white box over text"}],
             "Templates also use white boxes as backgrounds; meaningful mainly together with other signals.",
         ))
 
-    producer = (meta["info"].get("Producer", "") + " " + meta["info"].get("Creator", "")).lower()
-    editors = [h for h in EDITOR_HINTS if h in producer]
+    editors = editors_named(meta["info"].get("Producer", "") + " " + meta["info"].get("Creator", ""))
     created = parse_pdf_date(meta["info"].get("CreationDate"))
     modified = parse_pdf_date(meta["info"].get("ModDate"))
     facts["created"] = created.isoformat() if created else None

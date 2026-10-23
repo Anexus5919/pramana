@@ -426,6 +426,14 @@ def font_check(data: bytes, fields: list[dict[str, Any]], facts: dict[str, Any] 
     return [Signal(**s) for s in call("font_check", fields, facts, data=data)[0]]
 
 
+def annotations(data: bytes, fields: list[dict[str, Any]]):
+    """Annotations drawn over key values or printed text: (signals, facts with each annotation found)."""
+    from .forensics.pdf_struct import Signal
+
+    res = call("annotations", fields, data=data)[0]
+    return [Signal(**s) for s in res.pop("signals")], res
+
+
 def render_png(data: bytes, mime: str, page_index: int, dpi: int) -> bytes:
     _, png = call("render", mime, page_index, dpi, data=data)
     if not png:

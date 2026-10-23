@@ -71,7 +71,7 @@ function Signals({ data }: { data: PdfVerifyResult }) {
   );
 }
 
-function Revisions({ count }: { count: number | null }) {
+export function Revisions({ count }: { count: number | null }) {
   const n = Math.max(1, count ?? 1);
   const shown = Math.min(n, 8);
   return (
@@ -106,7 +106,7 @@ function Revisions({ count }: { count: number | null }) {
   );
 }
 
-function Metadata({ meta }: { meta: Record<string, string> }) {
+export function Metadata({ meta }: { meta: Record<string, string> }) {
   const rows = Object.entries(meta).filter(([, v]) => v !== "" && v != null);
   const created = meta.CreationDate ? pdfDateIso(meta.CreationDate) : null;
   const modified = meta.ModDate ? pdfDateIso(meta.ModDate) : null;

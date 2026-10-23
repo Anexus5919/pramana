@@ -1,17 +1,42 @@
-import { FileUp, Fingerprint, Layers, ShieldCheck } from "lucide-react";
+import { FileUp, Fingerprint, Layers, ShieldCheck, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
 import { useId, useRef, useState, type DragEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { cn } from "../../ui/cn";
 import { dur, ease } from "../../ui/motion";
 
-const CHECKS = [
-  { icon: Fingerprint, label: "Fingerprint", hint: "SHA-256 in your browser" },
-  { icon: ShieldCheck, label: "Signatures", hint: "Chain to a trust anchor" },
-  { icon: Layers, label: "Structure", hint: "Revisions and overlays" },
-];
+/** Words and accepted types, so the same zone serves each page that takes a dropped file. */
+export interface DropZoneCopy {
+  accept: string;
+  kind: string;
+  title: string;
+  dragging: string;
+  hint: string;
+  compactTitle: string;
+  compactHint: string;
+  preview: string;
+  ariaLabel: string;
+  checks: { icon: LucideIcon; label: string; hint: string }[];
+}
+
+export const PDF_COPY: DropZoneCopy = {
+  accept: ".pdf,application/pdf",
+  kind: "PDF",
+  title: "Drop a PDF to check it",
+  dragging: "Release to check this file",
+  hint: "Or click anywhere here to choose one. Up to 15 MB. Nothing is stored; the check itself is recorded in the audit log.",
+  compactTitle: "Check another PDF",
+  compactHint: "Drop a file here or click to choose. Each check is added to this session's history.",
+  preview: "Drop to check signatures and structure",
+  ariaLabel: "Choose a PDF to check, or drop one here",
+  checks: [
+    { icon: Fingerprint, label: "Fingerprint", hint: "SHA-256 in your browser" },
+    { icon: ShieldCheck, label: "Signatures", hint: "Chain to a trust anchor" },
+    { icon: Layers, label: "Structure", hint: "Revisions and overlays" },
+  ],
+};
 
 /** The page sketch: a PDF sheet whose lines are blocks; it lifts while a file hovers over the zone. */
-function Sheet({ lifted }: { lifted: boolean }) {
+function Sheet({ lifted, kind }: { lifted: boolean; kind: string }) {
   return (
     <motion.div
       aria-hidden
@@ -30,7 +55,7 @@ function Sheet({ lifted }: { lifted: boolean }) {
         ))}
       </span>
       <span className="absolute -bottom-2 left-3 rounded-[5px] bg-mismatch-dot px-1.5 py-px font-mono text-[10px] font-semibold text-white">
-        PDF
+        {kind}
       </span>
     </motion.div>
   );
@@ -40,9 +65,10 @@ export interface DropZoneProps {
   onFile: (file: File) => void;
   busy?: boolean;
   compact?: boolean;
+  copy?: DropZoneCopy;
 }
 
-export function DropZone({ onFile, busy = false, compact = false }: DropZoneProps) {
+export function DropZone({ onFile, busy = false, compact = false, copy = PDF_COPY }: DropZoneProps) {
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
   const depth = useRef(0);
@@ -89,7 +115,7 @@ export function DropZone({ onFile, busy = false, compact = false }: DropZoneProp
       tabIndex={busy ? -1 : 0}
       aria-disabled={busy || undefined}
       aria-describedby={`${inputId}-hint`}
-      aria-label="Choose a PDF to check, or drop one here"
+      aria-label={copy.ariaLabel}
       onClick={() => !busy && input.current?.click()}
       onKeyDown={onKey}
       onPointerEnter={(e: PointerEvent<HTMLDivElement>) => {
@@ -125,7 +151,7 @@ export function DropZone({ onFile, busy = false, compact = false }: DropZoneProp
         ref={input}
         id={inputId}
         type="file"
-        accept=".pdf,application/pdf"
+        accept={copy.accept}
         className="sr-only"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
@@ -141,25 +167,24 @@ export function DropZone({ onFile, busy = false, compact = false }: DropZoneProp
             <FileUp className="size-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-ink">Check another PDF</div>
+            <div className="text-sm font-semibold text-ink">{copy.compactTitle}</div>
             <div id={`${inputId}-hint`} className="text-xs text-ink-3">
-              Drop a file here or click to choose. Each check is added to this session's history.
+              {copy.compactHint}
             </div>
           </div>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-8 md:flex-row md:justify-center md:gap-12">
-          <Sheet lifted={dragging} />
+          <Sheet lifted={dragging} kind={copy.kind} />
           <div className="min-w-0 max-w-md text-center md:text-left">
             <h2 className="font-display text-xl font-semibold tracking-title text-ink sm:text-2xl">
-              {dragging ? "Release to check this file" : "Drop a PDF to check it"}
+              {dragging ? copy.dragging : copy.title}
             </h2>
             <p id={`${inputId}-hint`} className="mt-2 text-sm text-ink-3 text-pretty">
-              Or click anywhere here to choose one. Up to 15 MB. Nothing is stored; the check itself is recorded in the audit
-              log.
+              {copy.hint}
             </p>
             <ol className="mt-5 grid gap-2 sm:grid-cols-3" aria-label="What happens to the file">
-              {CHECKS.map((c, i) => (
+              {copy.checks.map((c, i) => (
                 <motion.li
                   key={c.label}
                   animate={dragging ? { y: [0, -3, 0] } : { y: 0 }}
@@ -195,7 +220,7 @@ export function DropZone({ onFile, busy = false, compact = false }: DropZoneProp
             className="pointer-events-none absolute top-0 left-0 z-10 hidden items-center gap-1.5 rounded-full bg-pupil-2 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-lg sm:inline-flex dark:bg-surface-3 dark:text-ink"
           >
             <span className="size-1.5 rounded-full bg-brand-300" />
-            Drop to check signatures and structure
+            {copy.preview}
           </motion.div>
         )}
       </AnimatePresence>

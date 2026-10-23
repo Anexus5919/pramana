@@ -24,9 +24,19 @@ def _qr_tokens(data: bytes, doc: Document) -> list[dict[str, Any]]:
     return sandbox.qr_tokens(data, doc.mime, doc.page_count)
 
 
+def _unread_annotations(error: str):
+    from ..forensics.pdf_struct import Signal
+
+    return Signal("FX-ANNOT-UNREAD", "Annotations could not be checked",
+                  f"The file's annotations could not be analysed ({error[:200]}), so values drawn over the page "
+                  "by comment tools were not compared with the printed text. Open the file and compare.", "low")
+
+
 def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[float, float] | None,
-                     progress: Callable[..., None] | None = None) -> None:
-    """Untrusted parsing runs in the parser sandbox; a crash or timeout there raises sandbox.SandboxUnsafe."""
+                     progress: Callable[..., None] | None = None, data: bytes | None = None) -> None:
+    """Untrusted parsing runs in the parser sandbox; a crash or timeout there raises sandbox.SandboxUnsafe.
+
+    `data` passes the file's bytes directly, for a file that is analysed without being stored."""
     t0 = time.perf_counter()
 
     def step(name: str, **info: Any) -> None:
@@ -36,7 +46,8 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
                      ms=round((time.perf_counter() - t0) * 1000), **info)
         t0 = time.perf_counter()
 
-    data = load_document(doc.storage_name)
+    if data is None:
+        data = load_document(doc.storage_name)
     doc.pages.clear()
     doc.fields.clear()
     db.flush()
@@ -84,8 +95,19 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         signals, facts = sandbox.forensics(data, doc.mime, issue_date, campus)
         if doc.mime == "application/pdf":
             doc.fingerprints = {**doc.fingerprints, "images": sandbox.seal_images(data)}
-            signals += sandbox.font_check(data, [{"name": e.name, "raw": e.raw, "page": e.page, "bbox": e.bbox,
-                                                  "method": e.method} for e in extracted], facts)
+            values = [{"name": e.name, "raw": e.raw, "page": e.page, "bbox": e.bbox, "method": e.method}
+                      for e in extracted]
+            signals += sandbox.font_check(data, values, facts)
+            # Comment tools draw over a value without changing the text the checks read (docs/features/edits.md)
+            try:
+                found, notes = sandbox.annotations(data, values)
+            except sandbox.SandboxUnsafe:
+                raise
+            except sandbox.SandboxError as e:
+                log.warning("annotation check failed for %s: %s", doc.id, e)
+                found, notes = [_unread_annotations(str(e))], {"annotations": []}
+            signals += found
+            facts["annotations"] = notes["annotations"]
         analysis["forensic_signals"] = [asdict(s) for s in signals]
         analysis["forensic_facts"] = facts
         if doc.mime != "application/pdf":
