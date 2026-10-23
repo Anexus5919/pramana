@@ -63,7 +63,7 @@ const DOC_SHORT: Record<string, string> = { fire_noc: "fire NOC", occupancy_cert
 /** The document type a cross-application finding names, such as fire_noc in "fire_noc number '...'". */
 function docTypeOf(related: Finding[]): string | null {
   for (const f of related) {
-    const m = /([a-z]+(?:_[a-z0-9]+)+) (?:number|submitted)/.exec(f.message) ?? /identical to a ([a-z_0-9]+)/.exec(f.message);
+    const m = /([a-z]+(?:_[a-z0-9]+)+) (?:number|submitted)/.exec(f.message) ?? /identical to a ([a-z_0-9]+)/.exec(f.message);
     if (m) return m[1];
   }
   return null;
