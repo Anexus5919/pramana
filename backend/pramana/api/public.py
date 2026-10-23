@@ -101,7 +101,8 @@ def _validity(payload: dict[str, Any], today: date) -> dict[str, Any]:
         except ValueError:
             return None
 
-    frm, until = parse("valid_from"), parse("valid_until")
+    # Certificates without a separate start date are in force from their date of issue
+    frm, until = parse("valid_from") or parse("issue_date"), parse("valid_until")
     state = "none"
     if until and until < today:
         state = "expired"
@@ -137,8 +138,8 @@ def assess(token: str, today: date) -> dict[str, Any]:
     status = {"expired": "expired", "not_yet_valid": "not_yet_valid"}.get(validity["state"], "verified")
     window = (f" The validity it states runs from {validity['from'] or 'an unstated date'} to "
               f"{validity['until'] or 'an unstated date'}.") if validity["state"] != "none" else ""
-    proves = [f"The data below was signed with the published key of {issuer['name']} (key '{chk.kid}') and has "
-              f"not been changed since.{window}"]
+    proves = [f"The values shown here were signed with the published key of {issuer['name']} (key '{chk.kid}') "
+              f"and have not been changed since.{window}"]
     if issuer["simulated"]:
         proves.append("This issuer key is SIMULATED for the prototype, so the check shows how verification works, "
                       "not that a real authority issued anything.")
