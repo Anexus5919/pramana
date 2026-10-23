@@ -696,7 +696,7 @@ function EventDetail({ e, onOpen, linkLabel }: { e: StoryEvent } & LifeStoryProp
         </dd>
         {e.time.raw && (
           <>
-            <dt className="text-ink-3">As written</dt>
+            <dt className="text-ink-3">{["signer", "device", "tsa"].includes(e.time.source) ? "As recorded" : "As written"}</dt>
             <dd className="font-mono text-xs leading-5 break-all text-ink-2">{e.time.raw}</dd>
           </>
         )}

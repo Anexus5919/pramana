@@ -126,7 +126,7 @@ def test_edit_after_the_issuer_signed_is_told_from_structure_with_every_time_lab
                               "through_revision": 2, "revision_count": 3, "event": signed["id"],
                               "from_event": created["id"]}]
     words = " ".join([e["title"] + e["detail"] for e in s["events"]] + [a["title"] + a["detail"] for a in s["anomalies"]])
-    for banned in ("forged", "fake", "fraud", "genuine", "—"):
+    for banned in ("forged", "fake", "fraud", "genuine", chr(0x2014)):
         assert banned not in words.lower()
 
 
@@ -215,3 +215,39 @@ def test_word_made_issuer_document_and_dates_that_disagree():
     assert pdf_date("garbage") == (None, False)
     assert span(1) == "1 second" and span(41 * 86400) == "41 days" and span(400 * 86400) == "13 months"
     assert span(3.4 * 365.25 * 86400) == "3 years 5 months"
+
+
+# ---- inspection brief
+
+
+def test_inspection_brief_lists_originals_retakes_and_questions_and_is_audited(app):
+    from pramana.db import SessionLocal
+    from pramana.models import AuditEvent
+
+    c = _login(app, "officer")
+    r = c.post(f"/api/applications/{A7}/inspection-brief", json={})
+    assert r.status_code == 200, r.text
+    b = r.json()
+    (noc,) = [o for o in b["originals"] if o["filename"] == "fire_noc.pdf"]
+    assert noc["severity"] in ("critical", "high") and len(noc["findings"]) >= 3 and "certified by the issuer" in noc["ask"]
+    assert any("Content Credentials" in w for x in b["retake"] for w in x["why"])
+    assert any("changed after it was signed" in q["question"] for q in b["questions"])
+    assert b["gps"]["record"]["lat"] and b["footer"] == "Prepared with the Pramana prototype. Synthetic demo data."
+    assert {x["what"] for x in b["count"]} >= {"Laboratories", "Faculty", "Built-up area"}
+
+    pdf = c.get(f"/api/applications/{A7}/inspection-brief.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    assert pdf.headers["content-type"] == "application/pdf"
+    db = SessionLocal()
+    try:
+        fmts = [e.details["format"] for e in db.query(AuditEvent).filter(
+            AuditEvent.action == "inspection_brief.generated", AuditEvent.application_id == A7)]
+    finally:
+        db.close()
+    assert {"view", "pdf"} <= set(fmts)
+
+    words = " ".join([b["summary"]] + [q["question"] for q in b["questions"]] + [o["ask"] for o in b["originals"]])
+    for banned in ("forged", "fake", "fraud", "genuine", "approve", "reject", chr(0x2014)):
+        assert banned not in words.lower()
+    assert _login(app, "inst7").post(f"/api/applications/{A7}/inspection-brief", json={}).status_code == 403
+    assert _login(app, "verifier").get(f"/api/applications/{A7}/inspection-brief.pdf").status_code == 403
