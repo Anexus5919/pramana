@@ -132,7 +132,7 @@ function ReportHeader({ e, onForget, forgetting }: { e: Entry; onForget: () => v
           { label: "File", value: <span className="break-all">{a.filename}</span> },
           { label: "Size", value: fmtBytes(a.size_bytes) },
           { label: "Pages", value: a.page_count },
-          { label: "Ruleset", value: <Code>{`${a.ruleset.id} v${a.ruleset.version}`}</Code> },
+          { label: "Ruleset", value: <Code>{`${a.ruleset.id}@${a.ruleset.version}`}</Code> },
           { label: "SHA-256", value: <Digest value={a.sha256} head={10} tail={8} /> },
           {
             label: "Hash matches your browser",

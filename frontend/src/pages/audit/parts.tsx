@@ -44,7 +44,7 @@ export function EventDrawer({ event, check, onClose }: { event: AuditEvent | nul
       description={e ? actionLabel(e.action) : undefined}
     >
       {e && (
-        <div className="space-y-6">
+        <div className="space-y-6 p-5">
           {check && check.state !== "ok" && (
             <Callout tone="danger" title={check.state === "hash" ? "Stored hash does not match its content" : "Does not point at the previous event"}>
               {check.state === "hash"

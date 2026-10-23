@@ -104,8 +104,7 @@ function VerifyResult({
   return (
     <Callout tone="success" role="status" title="Chain intact">
       <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1">
-        {pluralize(server.events_checked, "event")}, head hash <Digest value={server.head_hash} label="Head hash" />, verified in the browser and on
-        the server.
+        {pluralize(server.events_checked, "event")} verified in the browser and on the server. Head hash <Digest value={server.head_hash} label="Head hash" />
       </span>
     </Callout>
   );
