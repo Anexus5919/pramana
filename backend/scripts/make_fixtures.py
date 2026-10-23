@@ -14,6 +14,7 @@ import math
 import random
 import shutil
 import sys
+import time
 from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -705,6 +706,8 @@ def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: flo
     res = generic.DictionaryObject({generic.NameObject("/Font"): generic.DictionaryObject({
         generic.NameObject("/FX1"): font})})
     w.add_stream_to_page(0, ref, resources=res)
+    # pyHanko stamps ModDate with the current second; the edit must carry its own time after the signature's
+    time.sleep(1.1)
     out = io.BytesIO()
     w.write(out)
     return out.getvalue()
