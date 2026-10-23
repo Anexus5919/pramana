@@ -7,6 +7,7 @@ append revisions (signing, form filling) and re-save files. They tell a reviewer
 
 import io
 import re
+import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -154,13 +155,52 @@ def diff_revisions(data: bytes) -> list[dict[str, Any]]:
     return out
 
 
+# A glyph narrower than this share of its font size is a mark drawn on its base letter (legacy Hindi fonts
+# give vowel signs almost no advance), not a letter that could hide another
+MIN_GLYPH_SHARE = 0.1
+# Glyphs of one shaped Devanagari cluster are drawn one after another; an overwrite is drawn elsewhere in the page
+CLUSTER_SPAN = 4
+
+
+def _in_order(page) -> tuple[list[dict], list[dict]]:
+    """Characters and rectangles with their position in the page's drawing order (later ones paint on top)."""
+    chars, rects = [], []
+    for i, o in enumerate(page.iter_layout_objects(page.layout._objs)):
+        if o["object_type"] == "char" and o["text"].strip():
+            chars.append({**o, "seq": i})
+        elif o["object_type"] == "rect":
+            rects.append({**o, "seq": i})
+    return chars, rects
+
+
+def _mark(c: dict) -> bool:
+    """A combining sign (a Devanagari matra or virama), or a glyph with almost no advance."""
+    if any(unicodedata.category(ch) in ("Mn", "Mc", "Me") for ch in c["text"]):
+        return True
+    return (c["x1"] - c["x0"]) < MIN_GLYPH_SHARE * (c.get("size") or 0)
+
+
+def _devanagari_letter(c: dict) -> bool:
+    return all(0x0900 <= ord(ch) <= 0x097F and unicodedata.category(ch) != "Nd" for ch in c["text"])
+
+
+def _shaping(a: dict, b: dict) -> bool:
+    """Overlaps that typesetting produces on its own: marks on their base, and parts of one Devanagari cluster."""
+    if _mark(a) or _mark(b):
+        return True
+    return _devanagari_letter(a) and _devanagari_letter(b) and abs(a["seq"] - b["seq"]) <= CLUSTER_SPAN
+
+
 def overlapping_text(data: bytes) -> list[dict[str, Any]]:
-    """Glyphs drawn on top of different glyphs: the signature of cover-and-overwrite edits."""
+    """Glyphs drawn on top of different glyphs: the signature of cover-and-overwrite edits.
+
+    The same glyph redrawn at almost the same spot (fake bold, shadow text) is not counted, nor are
+    marks sitting on their base letter or the parts of one shaped Devanagari cluster."""
     hits = []
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
             # Rotated glyphs (circular seals, stamps) crowd each other legitimately; compare upright text only
-            chars = [c for c in page.chars if c["text"].strip() and _horizontal(c)]
+            chars = [c for c in _in_order(page)[0] if _horizontal(c)]
             chars.sort(key=lambda c: (round(c["top"]), c["x0"]))
             clusters: list[list[dict]] = []
             for i, a in enumerate(chars):
@@ -170,7 +210,7 @@ def overlapping_text(data: bytes) -> list[dict[str, Any]]:
                     ox = min(a["x1"], b["x1"]) - max(a["x0"], b["x0"])
                     oy = min(a["bottom"], b["bottom"]) - max(a["top"], b["top"])
                     wa = a["x1"] - a["x0"]
-                    if ox > 0.5 * wa and oy > 0.5 * (a["bottom"] - a["top"]) and a["text"] != b["text"]:
+                    if ox > 0.5 * wa and oy > 0.5 * (a["bottom"] - a["top"]) and a["text"] != b["text"]                             and not _shaping(a, b):
                         clusters.append([a, b])
             if clusters:
                 xs0 = min(min(a["x0"], b["x0"]) for a, b in clusters)
@@ -188,21 +228,23 @@ def _horizontal(c: dict) -> bool:
 
 
 def covered_text(data: bytes) -> list[dict[str, Any]]:
-    """Text that sits under an opaque white rectangle drawn later in the page."""
+    """Text hidden under an opaque white rectangle painted after it.
+
+    A white panel painted before its text is a background, as forms and mastheads use; only characters drawn
+    before the rectangle and inside it are hidden by it."""
     hits = []
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            whites = [r for r in page.rects if r.get("fill") and _is_white(r.get("non_stroking_color"))
+            chars, rects = _in_order(page)
+            whites = [r for r in rects if r.get("fill") and _is_white(r.get("non_stroking_color"))
                       and (r["x1"] - r["x0"]) < page.width * 0.9]
-            if not whites:
-                continue
             for r in whites:
-                inside = [c for c in page.chars if c["x0"] >= r["x0"] - 1 and c["x1"] <= r["x1"] + 1
-                          and c["top"] >= r["top"] - 1 and c["bottom"] <= r["bottom"] + 1]
-                if inside:
+                hidden = [c for c in chars if c["seq"] < r["seq"] and c["x0"] >= r["x0"] - 1
+                          and c["x1"] <= r["x1"] + 1 and c["top"] >= r["top"] - 1 and c["bottom"] <= r["bottom"] + 1]
+                if hidden:
                     hits.append({"page": pno, "bbox": [round(r["x0"], 2), round(r["top"], 2),
                                                        round(r["x1"], 2), round(r["bottom"], 2)],
-                                 "text_under_or_over": "".join(c["text"] for c in inside)})
+                                 "text_under_or_over": "".join(c["text"] for c in hidden)})
     return hits
 
 
@@ -305,7 +347,8 @@ def analyse(data: bytes, doc_issue_date: datetime | None = None) -> tuple[list[S
         signals.append(Signal(
             "FX-PDF-WHITEOUT",
             "Opaque white box overlaps text",
-            f"A white filled rectangle on page {c['page']} overlaps characters '{c['text_under_or_over']}'.",
+            f"A white filled rectangle on page {c['page']} is painted over the characters "
+            f"'{c['text_under_or_over']}', which were drawn before it and are hidden by it.",
             "medium",
             [{"kind": "region", "page": c["page"], "bbox": c["bbox"], "label": "white box over text"}],
             "Templates also use white boxes as backgrounds; meaningful mainly together with other signals.",

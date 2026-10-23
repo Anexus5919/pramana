@@ -124,8 +124,9 @@ def main() -> None:
     for c in controls:
         if c["kind"].startswith("everyday-editor"):
             continue
+        expected = "skipped" if c["as_expected"] is None else "yes" if c["as_expected"] else "NO"
         print(f"| {c['name']} | {c['kind']} | {', '.join(c['signals']) or '-'} | {c['signature'] or '-'} | "
-              f"{'yes' if c['as_expected'] else 'NO'} |")
+              f"{expected} |" + (f" {c['note']}" if c.get("note") and c["as_expected"] is None else ""))
     editors = [c for c in controls if c["kind"].startswith("everyday-editor")]
     if editors:
         print("\n| Everyday editor | Signals fired (medium or high, beyond the clean copy) | Caught | Shows the new value "
@@ -229,6 +230,41 @@ def benign_and_adversarial_controls() -> list[dict]:
                 "as_expected": True,
                 "note": "No file-level trace exists; only the issuer registry, cross-application links or a "
                         "reviewer can catch it (see A8)."})
+    return out + real_document_controls()
+
+
+def real_document_controls() -> list[dict]:
+    """Real, untouched, DSC-signed Government e-Gazette PDFs: no medium or high indicator is expected.
+
+    Each file gets the file-level checks the pipeline runs (structure, annotations, signatures) and the same
+    rule for patterns the whole-file signature already covers."""
+    from types import SimpleNamespace
+
+    from pramana.forensics.annotations import scan
+    from pramana.forensics.pdf_struct import analyse
+    from pramana.forensics.signed_content import AT_SIGNING, at_signing, signer_of_whole_file
+    from pramana.pipeline.validate import _classify_signatures
+    from pramana.verification.signature import validate_signatures
+
+    files = sorted((ROOT / "fixtures" / "real").glob("egazette_*.pdf"))
+    if not files:
+        return [{"name": "Real signed e-Gazette PDFs, untouched", "kind": "benign-real", "signals": [],
+                 "signature": None, "as_expected": None,
+                 "note": "skipped: no fixtures/real/egazette_*.pdf (scripts/fetch_real_samples.py fetches one)"}]
+    nobody = SimpleNamespace(attributes={}, name="", society_name="")
+    out = []
+    for f in files:
+        data = f.read_bytes()
+        signals = analyse(data)[0] + scan(data, [])["signals"]
+        results = _classify_signatures(validate_signatures(data), {}, nobody)
+        signer = signer_of_whole_file(results)
+        sevs = [(s.code, at_signing(s.code, signer, {"severity": s.severity, "title": s.title,
+                                                     "message": s.detail})["severity"]) for s in signals]
+        found = sorted({c for c, sev in sevs if sev in ("medium", "high")})
+        out.append({"name": f"Real e-Gazette {f.name}, DSC-signed, untouched", "kind": "benign-real",
+                    "signals": found, "signature": "whole file, India PKI" if signer else results[0].status,
+                    "as_expected": not found,
+                    "present_at_signing": sorted({c for c, sev in sevs if sev == "info" and c in AT_SIGNING})})
     return out
 
 

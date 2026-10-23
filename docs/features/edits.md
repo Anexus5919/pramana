@@ -228,6 +228,34 @@ removed and nothing lies underneath (an edit in place, not a cover-and-overwrite
 "Revision 3 changed the valid until in place: it read '11-03-2027' and now reads '11-03-2029'", and
 `FX-PDF-REVISION-TEXT-CHANGE` adds the same before and after. The A7 cover-and-overwrite message is unchanged.
 
+## 6. Real documents: overlays and white boxes that were never edits
+
+Nine real, untouched Government e-Gazette PDFs (one revision each, signed by the Government of India Press
+under the CCA India roots, signature valid over the whole file) raised false indicators:
+`FX-PDF-OVERLAID-TEXT` on 8 files (10 times) and `FX-PDF-WHITEOUT` on 8 files (14 times), 24 medium or high
+indicators in all, mostly on the masthead. Three causes, each checked in the files:
+
+| Cause | What the file does | Fix |
+|---|---|---|
+| Background panels | White filled rectangles painted *before* their text: behind "प्राधिकार से प्रकाशित" in eight of the mastheads, behind "अधिसूचना" in one, and behind five paragraph lines in one notification. | The white box check now uses the page's drawing order and counts only characters painted before the box and inside it, which the box hides. A panel under its text hides nothing. |
+| Legacy Hindi fonts | Kruti Dev and Vivek map vowel signs to ASCII codes with almost no advance (0.05 pt at 11 pt) and step the pen back, so a sign and its letter share a spot. | Glyphs narrower than a tenth of their font size are not counted as letters that hide others. As a precaution for Unicode Hindi text (not seen in these files, reproduced on a synthetic page), neither are combining signs (matras, virama) nor parts of one shaped cluster: Devanagari letters, not digits, drawn within four glyphs of each other. Fake bold (the same glyph drawn twice) was already excluded. |
+| The masthead template | The template prints placeholders `xxxGIDHxxx` and `xxxGIDExxx`, paints an image strip over them and prints the registration number on top. | This is a real cover-and-overwrite, made by the issuer before signing, and the file alone cannot tell it from an edit, so the detector keeps it. In validation, an overlay or white box in a file whose intact, trusted signature covers every byte, by the issuer or (under the India PKI roots only) by a signer the document type does not name, is reported as information: "present when the document was signed". `forensics/signed_content.py`. |
+
+Result on the nine gazettes: the file-level checks now raise 8 overlays (the masthead template) and no white
+box; with the signature rule, as the pipeline reports them, 0 medium or high indicators and 8 information
+notes. `scripts/evaluate.py` runs them as a "real document" control when `fixtures/real/egazette_*.pdf` exist
+(fetched for testing, never committed) and says it skipped them otherwise.
+
+The true positives stay: A7's cover-and-overwrite (the old date is painted before the white box, so it is
+hidden by it, and the new date lies over it), the flattened A7 control, and every tamper lab variant. A pattern
+added after a signature, in a file signed only by the applicant, or under a DEMO anchor by an unexpected signer,
+keeps its severity. Tests reproduce each cause with a small synthetic PDF and fail on the previous detectors.
+
+What this does not cover: an unsigned real document with a template like the gazette masthead still raises the
+overlay, because nothing in the file shows who painted it; and a person who edits a document and re-signs the
+whole file with their own India PKI certificate gets the overlay as information, while the signature check
+reports the unexpected signer for manual review.
+
 ## Evaluation
 
 `scripts/evaluate.py` on a fresh `make_fixtures.py` and `seed.py`, deterministic mode, 23 Oct 2026:
@@ -237,10 +265,11 @@ removed and nothing lies underneath (an edit in place, not a cover-and-overwrite
 | Planted conditions found | 51 of 51 | 53 of 53 (adds `VER-ISSUER-SIGNATURE-ABSENT` on A5 and A8) |
 | False positives | 0 | 0; no annotation, image-only or editor finding on any seeded document |
 | Fields extracted | 323 of 328 | 323 of 328 |
-| Validation time per application | mean 1.09 s | mean 1.16 s, max 1.34 s (shared laptop) |
+| Validation time per application | mean 1.09 s | mean 1.16 to 1.38 s, max 1.68 s over two runs (shared laptop) |
 | Benign controls | 5, all clean | 8, all clean: the original five plus a link over a value, a highlight over a value and a comment away from the values |
 | Everyday-editor controls | none | 18 edits, all caught; 17 of 18 state the new value (the ink scribble has none); the 3 clean copies stay clean |
-| Automated tests | 73 | 86: the 73 existing ones and 13 in `tests/test_edits.py` |
+| Real documents (9 signed e-Gazette PDFs, section 6) | 24 medium or high indicators on 9 of 9 files | 0; 8 masthead overlays reported as information, present when the document was signed |
+| Automated tests | 73 | 92: the 73 existing ones and 19 in `tests/test_edits.py` |
 
 The everyday-editor controls run the whole tamper lab matrix (about 1 minute 45 seconds including the Word
 round-trip); `--skip-editors` leaves them out. The annotation scan costs nothing on a file without annotations
@@ -301,11 +330,12 @@ annotation's own text is used and the page image would not show it.
 
 ## Files
 
-- New: `backend/pramana/forensics/annotations.py`, `backend/pramana/verification/issuer_copy.py`,
+- New: `backend/pramana/forensics/annotations.py`, `backend/pramana/forensics/signed_content.py`,
+  `backend/pramana/verification/issuer_copy.py`,
   `backend/scripts/tamper_lab.py`, `backend/tests/test_edits.py`, `docs/features/edits.md`,
   `docs/features/edits-matrix.json`.
 - Shared files, small additive edits: `pramana/sandbox.py` and `sandbox_worker.py` (the `annotations`
-  operation), `pipeline/process.py` (calls it), `pipeline/validate.py` (calls `issuer_copy`, in-place wording),
-  `pipeline/text.py` (renders initialise forms), `forensics/pdf_struct.py` (editor names, before and after
-  words), `scripts/make_fixtures.py` (A5 and A8 expect the new indicator), `scripts/evaluate.py` (controls),
+  operation), `pipeline/process.py` (calls it), `pipeline/validate.py` (calls `issuer_copy` and
+  `signed_content`, in-place wording), `pipeline/text.py` (renders initialise forms), `forensics/pdf_struct.py`
+  (editor names, before and after words, drawing order and shaping in the overlay and white box checks), `scripts/make_fixtures.py` (A5 and A8 expect the new indicator), `scripts/evaluate.py` (controls),
   `frontend/src/pages/application/history/TimeMachine.tsx` (time machine link).

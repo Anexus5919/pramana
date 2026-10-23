@@ -16,6 +16,7 @@ from ..config import get_settings
 from ..consistency.cross import cross_checks, relationship_graph
 from ..consistency.seal_reuse import seal_reuse
 from ..crypto import digest, load_document, sha256_hex
+from ..forensics import signed_content
 from ..history.yoy import findings as yoy_findings
 from ..models import (
     Application,
@@ -425,6 +426,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
 
         t0 = time.perf_counter()
         doc_status: dict[str, str] = {}
+        signed_all: dict[str, str | None] = {}
         ver_facts: dict[str, dict[str, tuple]] = {}
         latest = latest_by_type(docs)
         for d in docs:
@@ -466,6 +468,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                   "simulated": v.simulated, "comparisons": [c.as_dict() for c in v.comparisons]}],
                     "document_id": d.id})
             doc_status[d.id] = document_status(vres)
+            signed_all[d.id] = signed_content.signer_of_whole_file(vres)
             # Issuer documents without the issuer's signature, or as images (docs/features/edits.md)
             copy = issuer_copy.findings(d, spec, vres, _fp)
             findings += copy if d is latest.get(d.declared_type) else [{**f, "severity": "low"} for f in copy]
@@ -493,13 +496,14 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     continue
                 evs = [{**e, "document_id": d.id} for e in s.get("evidence", [])] or [{"kind": "document",
                                                                                          "document_id": d.id}]
-                findings.append({
+                # A cover-and-overwrite pattern the whole-file signature already covered is information only
+                findings.append(signed_content.at_signing(s["code"], signed_all.get(d.id), {
                     "code": s["code"], "fingerprint": _fp("fx", d.declared_type, s["code"]),
                     "category": "forensic", "evidence_class": s.get("evidence_class") or (
                         "structural" if s["code"].startswith("FX-PDF-") and s["severity"] in ("high", "medium")
                         else "heuristic"),
                     "severity": s["severity"], "outcome": "indicator", "title": s["title"], "message": s["detail"],
-                    "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id})
+                    "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id}))
         # Content Credentials and room indicators for photos
         findings += photo_stage(db, app, run, docs, doc_status)
         stage("forensics", t0)

@@ -302,3 +302,130 @@ def test_edge_edited_expired_certificate_uploaded_in_rectification_is_caught(wor
     assert "shows '30-09-2027'" in over["message"] and "printed '30-09-2025'" in over["message"]
     # The institution sees the deficiency it must fix, never the forensic indicator
     assert "FX-ANNOT-OVER-FIELD" not in {f["code"] for f in inst.get(f"/api/applications/{aid}/findings").json()}
+
+
+# ---- patterns real documents contain: fake bold, Devanagari shaping, background panels, signed templates
+
+DEVA_FONT = ROOT / "var" / "fonts" / "NotoSansDevanagari-Regular.ttf"
+
+
+def _page(draw) -> bytes:
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf)
+    draw(c)
+    c.save()
+    return buf.getvalue()
+
+
+def _codes(data: bytes) -> list[str]:
+    from pramana.forensics.pdf_struct import analyse
+
+    return sorted({s.code for s in analyse(data)[0] if s.severity in ("medium", "high")})
+
+
+def test_fake_bold_text_drawn_twice_is_not_an_overlay():
+    def draw(c):
+        for dx in (0, 0.4):
+            c.setFont("Helvetica", 12)
+            c.drawString(72 + dx, 700, "Valid Up To: 11-03-2027")
+    assert _codes(_page(draw)) == []
+
+
+def test_devanagari_matras_and_clusters_are_not_overlays_but_a_redrawn_value_is():
+    if not DEVA_FONT.exists():
+        pytest.skip("Noto Sans Devanagari not fetched (scripts/fetch_assets.py)")
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    pdfmetrics.registerFont(TTFont("NotoDevaTest", str(DEVA_FONT)))
+
+    def shaped(c):
+        c.setFont("NotoDevaTest", 20)
+        # An i-matra with its consonant pulled over it, and a conjunct's parts drawn one over the next
+        c.drawString(100, 700, "ि")
+        c.drawString(100.5, 700, "क")
+        c.drawString(160, 700, "क")
+        c.drawString(162, 700, "ष")
+
+    assert _codes(_page(shaped)) == []
+
+    def overwritten(c):
+        c.setFont("NotoDevaTest", 20)
+        c.drawString(100, 700, "२०२५")
+        c.drawString(100, 650, "कार्यालय")
+        c.drawString(100, 700, "२०२७")
+
+    assert _codes(_page(overwritten)) == ["FX-PDF-OVERLAID-TEXT"]
+
+
+def test_legacy_font_vowel_signs_with_almost_no_width_are_not_overlays():
+    import pikepdf
+
+    pdf = pikepdf.new()
+    widths = [600] * 95
+    # A legacy Hindi font maps vowel signs to ASCII codes ('z', 'S') with almost no advance
+    widths[ord("z") - 32], widths[ord("S") - 32] = 5, 6
+    font = pdf.make_indirect(pikepdf.Dictionary(
+        Type=pikepdf.Name.Font, Subtype=pikepdf.Name.Type1, BaseFont=pikepdf.Name("/KrutiDev010"),
+        FirstChar=32, LastChar=126, Widths=pikepdf.Array(widths), Encoding=pikepdf.Name.WinAnsiEncoding))
+    page = pdf.add_blank_page(page_size=(595, 842))
+    page.obj.Resources = pikepdf.Dictionary(Font=pikepdf.Dictionary(F1=font))
+    # Each sign is drawn, then the pen steps back so the letter starts where the signs did
+    page.obj.Contents = pdf.make_stream(b"BT /F1 11.28 Tf 100 700 Td [(z) 5 (S) 6 (y)] TJ ET")
+    buf = io.BytesIO()
+    pdf.save(buf)
+    assert _codes(buf.getvalue()) == []
+
+
+def test_white_background_panel_is_not_a_white_box_but_a_box_over_text_is():
+    def panel(c):
+        c.setFillColorRGB(1, 1, 1)
+        c.rect(60, 690, 300, 20, fill=1, stroke=0)
+        c.setFillColorRGB(0, 0, 0)
+        c.setFont("Helvetica", 12)
+        c.drawString(72, 695, "Published by authority")
+    assert _codes(_page(panel)) == []
+
+    def cover(c):
+        c.setFont("Helvetica", 12)
+        c.drawString(72, 695, "Valid Up To: 11-03-2027")
+        c.setFillColorRGB(1, 1, 1)
+        c.rect(140, 690, 66, 18, fill=1, stroke=0)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(141.4, 695, "11-03-2029")
+    data = _page(cover)
+    assert "FX-PDF-WHITEOUT" in _codes(data)
+    from pramana.forensics.pdf_struct import covered_text
+
+    assert covered_text(data)[0]["text_under_or_over"] == "11-03-2027"
+
+
+def _sig(role, coverage="ENTIRE_FILE", demo=False, channel="issuer_signature"):
+    return vb.VerificationResult(channel, vb.VERIFIED if role != "unknown" else vb.MANUAL_REVIEW, "pyHanko", demo,
+                                 "detail", response={"signer": "Government of India Press", "signer_role": role,
+                                                     "coverage": coverage, "intact": True, "valid": True,
+                                                     "trusted": True, "revoked": False, "demo_anchor": demo})
+
+
+def test_patterns_the_whole_file_signature_covers_are_information():
+    from pramana.forensics.signed_content import at_signing, signer_of_whole_file
+
+    overlay = {"severity": "high", "title": "Different characters drawn on top of each other", "message": "m"}
+    signer = signer_of_whole_file([_sig("unknown")])
+    out = at_signing("FX-PDF-OVERLAID-TEXT", signer, overlay)
+    assert out["severity"] == "info" and "present when the document was signed" in out["title"]
+    assert "Government of India Press" in out["message"]
+    assert signer_of_whole_file([_sig("issuer", demo=True)]) == "Government of India Press"
+    # Signed only by the applicant, under a DEMO anchor by someone unexpected, or with later revisions: unchanged
+    assert signer_of_whole_file([_sig("applicant", channel="applicant_signature")]) is None
+    assert signer_of_whole_file([_sig("unknown", demo=True)]) is None
+    assert signer_of_whole_file([_sig("issuer", coverage="ENTIRE_REVISION")]) is None
+    assert at_signing("FX-FONT-MISMATCH", signer, overlay) is overlay
+
+
+def test_real_signed_gazettes_raise_no_medium_or_high_indicator():
+    evaluate = _script("evaluate")
+    rows = evaluate.real_document_controls()
+    if rows[0]["as_expected"] is None:
+        pytest.skip(rows[0]["note"])
+    assert all(r["signals"] == [] for r in rows), [(r["name"], r["signals"]) for r in rows]
