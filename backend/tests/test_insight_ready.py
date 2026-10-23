@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import re
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -24,16 +25,43 @@ def _load(name):
     return mod
 
 
+def _copy_db(src: Path, dst: Path) -> None:
+    # SQLite's backup API copies a consistent image, write-ahead log included
+    s, d = sqlite3.connect(src), sqlite3.connect(dst)
+    with d:
+        s.backup(d)
+    s.close()
+    d.close()
+
+
 @pytest.fixture(scope="module")
 def world():
-    if not (FIX / "manifest.json").exists():
-        _load("make_fixtures").main()
-    # Documents stay unprocessed, as an institution's draft uploads are
-    _load("seed").main(validate=False)
+    """Reuse the world test_e2e seeded (seed it when this module runs alone), and put the database back
+    afterwards: these tests open rectification rounds and add drafts that later modules must not see."""
+    from pramana.config import get_settings
+    from pramana.db import SessionLocal, engine, init_db
+    from pramana.models import ValidationRun
+
+    init_db()
+    db = SessionLocal()
+    seeded = db.scalar(select(func.count()).select_from(ValidationRun)) > 0
+    db.close()
+    engine.dispose()
+    if not seeded:
+        if not (FIX / "manifest.json").exists():
+            _load("make_fixtures").main()
+        _load("seed").main(validate=True)
     from pramana.main import app
 
+    live = get_settings().data_dir / "pramana.db"
+    saved = live.with_name("pramana.readiness-tests.db")
+    engine.dispose()
+    _copy_db(live, saved)
     manifest = json.loads((FIX / "manifest.json").read_text(encoding="utf-8"))
-    return {a["key"]: a for a in manifest["applications"]}, app
+    yield {a["key"]: a for a in manifest["applications"]}, app
+    engine.dispose()
+    _copy_db(saved, live)
+    saved.unlink()
 
 
 def _login(app, user):
@@ -135,25 +163,21 @@ def test_old_building_needs_the_structural_stability_certificate(world):
 
 
 def test_rectification_round_marks_what_aicte_asked_for(world):
-    from pramana.db import SessionLocal
-    from pramana.models import Application
-    from pramana.pipeline.validate import run_validation
-
     apps, app = world
-    aid = apps["A3"]["id"]
-    db = SessionLocal()
-    run_validation(db, db.get(Application, aid), "system", "system")
-    db.close()
+    # A7's fire certificate expired; the end-to-end module already corrected A3's
+    aid = apps["A7"]["id"]
     officer = _login(app, "officer")
     fire = next(f for f in officer.get(f"/api/applications/{aid}/findings").json()
                 if f["code"] == "APH-617I-FIRE-VALID")
     assert officer.post(f"/api/applications/{aid}/rectification",
                         json={"finding_ids": [fire["id"]], "message": "Upload a valid certificate"}).status_code == 200
-    inst = _login(app, "inst3")
+    inst = _login(app, "inst7")
     res = inst.post(f"/api/applications/{aid}/readiness").json()
     assert res["resubmission"] and res["counts"]["requested_fix"] >= 1
     item = _by_title(res, "Fire Safety Certificate has expired")
     assert item["requested"] and item["action"].endswith("30 June 2027.")
+    assert res["counts"]["requested"] >= 1 and not any(i["requested"] for i in _items(res).values()
+                                                        if i["group"] == "norms")
     renewed = (FIX / "rectification" / "A3_fire_noc_renewed.pdf").read_bytes()
     inst.post(f"/api/applications/{aid}/documents", data={"declared_type": "fire_noc"},
               files={"file": ("fire_noc_renewed.pdf", renewed, "application/pdf")})
@@ -165,6 +189,7 @@ def test_rectification_round_marks_what_aicte_asked_for(world):
 def test_no_forensic_consistency_or_verification_output(world):
     """Applications planted with forensic, cross-application and issuer conditions: the institution's check
     carries none of them, by code, title or wording."""
+    from pramana.api.applications import latest_run
     from pramana.db import SessionLocal
     from pramana.models import Application, Finding
     from pramana.officer.common import FORBIDDEN_WORDS, RECTIFIABLE_CATEGORIES
@@ -176,7 +201,7 @@ def test_no_forensic_consistency_or_verification_output(world):
         spec = apps[key]
         db = SessionLocal()
         a = db.get(Application, spec["id"])
-        run = run_validation(db, a, "system", "system")
+        run = latest_run(db, a.id) or run_validation(db, a, "system", "system")
         hidden = [f for f in db.scalars(select(Finding).where(Finding.run_id == run.id))
                   if f.category not in RECTIFIABLE_CATEGORIES]
         seen_hidden += len(hidden)
