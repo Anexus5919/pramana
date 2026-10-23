@@ -1,26 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, CircleAlert, FileText, RefreshCw, Upload } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AlertTriangle, CheckCircle2, Circle, RefreshCw, Upload } from "lucide-react";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { qk } from "../../api";
 import { useAuth } from "../../auth/session";
-import { fmtBytes, fmtRelative } from "../../lib/format";
+import { fmtBytes, fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
 import type { ChecklistSlot, DocumentSummary } from "../../types";
-import { Tag } from "../../ui/Badge";
-import { BlockLoader, Button } from "../../ui/Button";
-import { cn } from "../../ui/cn";
-import { Digest } from "../../ui/Digest";
-import { dur, ease, spring } from "../../ui/motion";
+import { Button, Callout, Digest, MetaList, cn } from "../../ui2";
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png";
-const SEGMENTS = 24;
 
 type Phase =
   | { kind: "idle" }
   | { kind: "uploading"; pct: number; name: string; size: number }
   | { kind: "processing"; name: string; size: number }
-  | { kind: "rejected"; name: string; detail: string }
-  | { kind: "done" };
+  | { kind: "rejected"; name: string; detail: string };
 
 function describe(xhr: XMLHttpRequest): string {
   try {
@@ -32,6 +25,21 @@ function describe(xhr: XMLHttpRequest): string {
   }
   if (xhr.status === 0) return "The upload did not reach the server. Check the connection and try again.";
   return `${xhr.status} ${xhr.statusText || "Upload failed"}`;
+}
+
+class Cancelled extends Error {}
+
+/** The server's rejection reason in words a college office can act on. */
+function plainReason(detail: string): string {
+  const d = detail.trim();
+  const ext = /extension \.?(\w+)/i.exec(d)?.[1]?.toUpperCase();
+  if (/does not match extension/i.test(d)) return `the file is not really a ${ext ?? "PDF"}. Save or scan it again as a PDF, JPG or PNG`;
+  if (/not allowed/i.test(d)) return "only PDF, JPG and PNG files are accepted";
+  if (/^empty file$/i.test(d)) return "the file is empty";
+  const mb = /exceeds (\d+) ?MB/i.exec(d)?.[1];
+  if (mb) return `the file is larger than ${mb} MB. Scan it at a lower resolution and try again`;
+  if (/malformed PDF|unreadable|could not be read/i.test(d)) return "the file could not be opened. It may be damaged; export or scan it again";
+  return d.replace(/\.$/, "");
 }
 
 /** Real upload progress from XMLHttpRequest, so the bar reflects bytes sent rather than a guess. */
@@ -63,6 +71,7 @@ function sendFile(
       } else reject(new Error(describe(xhr)));
     };
     xhr.onerror = () => reject(new Error(describe(xhr)));
+    xhr.onabort = () => reject(new Cancelled("cancelled"));
     const fd = new FormData();
     fd.append("declared_type", docType);
     fd.append("file", file, file.name);
@@ -71,50 +80,57 @@ function sendFile(
   return { promise, abort: () => xhr.abort() };
 }
 
-function Segments({ pct, processing }: { pct: number; processing: boolean }) {
-  const filled = Math.round((pct / 100) * SEGMENTS);
-  return (
-    <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${SEGMENTS}, minmax(0, 1fr))` }} aria-hidden>
-      {Array.from({ length: SEGMENTS }, (_, i) => (
-        <span
-          key={i}
-          className={cn(
-            "relative h-2 overflow-hidden rounded-[2px] transition-colors duration-150",
-            i < filled ? "bg-brand-500" : "bg-surface-3",
-          )}
-        >
-          {processing && <span className="absolute inset-0 shimmer-bg animate-shimmer" style={{ animationDelay: `${(i % 6) * 0.08}s` }} />}
-        </span>
-      ))}
-    </div>
-  );
+type SlotState = "uploaded" | "unreadable" | "flagged" | "missing";
+
+function SlotIcon({ state }: { state: SlotState }) {
+  if (state === "uploaded") return <CheckCircle2 aria-hidden className="size-4 text-verified-fg" />;
+  if (state === "unreadable" || state === "flagged") return <AlertTriangle aria-hidden className="size-4 text-manual-fg" />;
+  return <Circle aria-hidden className="size-4 text-ink-4" />;
 }
 
+const STATE_TEXT: Record<SlotState, string> = {
+  uploaded: "Uploaded",
+  unreadable: "Uploaded, could not be read",
+  flagged: "Uploaded, AICTE asked for a correction",
+  missing: "Not uploaded",
+};
+
+/**
+ * One checklist row: what the document is, what was uploaded, and one action.
+ * Drop a file on the row or choose one; a new upload replaces the earlier file.
+ */
 export function UploadSlot({
   appId,
   slot,
   doc,
   editable,
-  index,
+  emphasis = false,
+  flag,
 }: {
   appId: string;
   slot: ChecklistSlot;
   doc: DocumentSummary | undefined;
   editable: boolean;
-  index: number;
+  /** The first missing required slot carries the screen's upload action */
+  emphasis?: boolean;
+  /** AICTE asked for a correction to this document: still to do, or a new copy is uploaded */
+  flag?: "requested" | "replaced";
 }) {
   const qc = useQueryClient();
   const { session } = useAuth();
   const input = useRef<HTMLInputElement>(null);
   const abortRef = useRef<(() => void) | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const [announce, setAnnounce] = useState("");
   const [over, setOver] = useState(false);
   const busy = phase.kind === "uploading" || phase.kind === "processing";
-  const has = !!doc;
+  const has = !!doc || slot.uploaded;
+  const unreadable = doc?.processing_status === "failed";
+  const state: SlotState = !has ? "missing" : unreadable ? "unreadable" : flag === "requested" ? "flagged" : "uploaded";
 
   useEffect(() => () => abortRef.current?.(), []);
 
-  // A mutation so the global eye shows activity while the upload runs
+  // A mutation so the global activity mark shows while the upload runs
   const mut = useMutation({
     mutationFn: (file: File) => {
       const job = sendFile(
@@ -128,19 +144,26 @@ export function UploadSlot({
       abortRef.current = job.abort;
       return job.promise;
     },
-    onSuccess: async () => {
+    onSuccess: async (saved) => {
       abortRef.current = null;
       await qc.invalidateQueries({ queryKey: qk.application(appId) });
-      setPhase({ kind: "done" });
+      setPhase({ kind: "idle" });
+      setAnnounce(`Uploaded ${saved.original_filename} as ${slot.label}`);
     },
     onError: (e: unknown, file) => {
       abortRef.current = null;
+      if (e instanceof Cancelled) {
+        setPhase({ kind: "idle" });
+        setAnnounce(`Upload of ${file.name} cancelled`);
+        return;
+      }
       setPhase({ kind: "rejected", name: file.name, detail: e instanceof Error ? e.message : String(e) });
     },
   });
 
   function start(file: File) {
     if (!editable || busy) return;
+    setAnnounce("");
     setPhase({ kind: "uploading", pct: 0, name: file.name, size: file.size });
     mut.mutate(file);
   }
@@ -152,13 +175,11 @@ export function UploadSlot({
     if (f) start(f);
   }
 
-  const status = busy ? "busy" : phase.kind === "rejected" ? "rejected" : has ? "received" : "empty";
+  const choose = () => input.current?.click();
 
   return (
-    <motion.li
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index, 10) * 0.04, duration: dur.panel, ease: ease.out }}
+    <li
+      id={`slot-${slot.doc_type}`}
       onDragOver={(e) => {
         if (!editable || busy) return;
         e.preventDefault();
@@ -169,127 +190,90 @@ export function UploadSlot({
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false);
       }}
       onDrop={onDrop}
-      id={`slot-${slot.doc_type}`}
-      className={cn(
-        "relative scroll-mt-24 overflow-hidden rounded-card border bg-surface transition-[border-color,box-shadow,background-color] duration-200",
-        over ? "border-brand-400 shadow-glow" : status === "rejected" ? "border-mismatch-dot/40" : "border-line shadow-xs",
-      )}
+      className={cn("relative scroll-mt-24 px-5 py-4 transition-colors duration-150", over && "bg-brand-soft")}
     >
-      <AnimatePresence>
-        {over && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: dur.micro }}
-            className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-2 bg-brand-soft/90 text-sm font-semibold text-brand-ink backdrop-blur-[2px]"
-          >
-            <Upload className="size-4" aria-hidden /> Drop to upload as {slot.label}
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <span
-            className={cn(
-              "relative mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-300",
-              status === "received" ? "bg-verified-bg text-verified-fg" : status === "rejected" ? "bg-mismatch-bg text-mismatch-fg" : "bg-surface-2 text-ink-3",
-            )}
-          >
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={status}
-                initial={{ scale: 0.4, opacity: 0, rotate: status === "received" ? -30 : 0 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                exit={{ scale: 0.4, opacity: 0 }}
-                transition={spring.snappy}
-                className="inline-flex"
-              >
-                {status === "received" ? (
-                  <Check className="size-[18px]" strokeWidth={2.6} />
-                ) : status === "rejected" ? (
-                  <CircleAlert className="size-[18px]" />
-                ) : (
-                  <FileText className="size-[18px]" />
-                )}
-              </motion.span>
-            </AnimatePresence>
+      {over && (
+        <div aria-hidden className="pointer-events-none absolute inset-1 flex items-center justify-center rounded-control border border-dashed border-brand-ink bg-brand-soft text-sm font-medium text-brand-ink">
+          Drop to upload as {slot.label}
+        </div>
+      )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <div className="flex min-w-0 flex-1 gap-3">
+          <span className="mt-0.5 shrink-0">
+            <SlotIcon state={state} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <h3 className="text-sm font-semibold text-ink">{slot.label}</h3>
-              {slot.required ? <Tag variant={has ? "neutral" : "brand"}>Required</Tag> : <Tag>Optional</Tag>}
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <h3 className="text-sm font-medium text-ink">{slot.label}</h3>
+              <span className="text-xs text-ink-3">{slot.required ? "Required" : "Optional"}</span>
+              {flag === "requested" && <span className="text-xs font-medium text-manual-fg">Correction requested</span>}
+              {flag === "replaced" && <span className="text-xs font-medium text-verified-fg">New copy uploaded</span>}
+              <span className="sr-only">, {STATE_TEXT[state]}</span>
             </div>
-            {slot.description && <p className="mt-0.5 text-xs leading-relaxed text-ink-3 text-pretty">{slot.description}</p>}
+            {/* Once the documents are locked the row is a record, so the guidance is left out */}
+            {editable && slot.description && <p className="mt-0.5 text-sm text-ink-3 text-pretty">{slot.description}</p>}
 
-            <AnimatePresence mode="wait" initial={false}>
-              {busy && (
-                <motion.div
-                  key="busy"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: dur.ui, ease: ease.out }}
-                  className="overflow-hidden"
+            {phase.kind === "uploading" && (
+              <div className="mt-3 max-w-md">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="min-w-0 truncate font-mono text-ink-2">{phase.name}</span>
+                  <span className="shrink-0 text-ink-3">Uploading, {phase.pct} percent</span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-label={`Uploading ${phase.name}`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={phase.pct}
+                  className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-3"
                 >
-                  <div className="mt-3 rounded-control bg-surface-2 px-3 py-2.5" aria-live="polite">
-                    <div className="mb-2 flex items-center justify-between gap-3 text-xs">
-                      <span className="min-w-0 truncate font-medium text-ink-2">{"name" in phase ? phase.name : ""}</span>
-                      <span className="shrink-0 font-mono text-ink-3 tabular">
-                        {phase.kind === "uploading" ? (
-                          `${phase.pct}% of ${fmtBytes(phase.size)}`
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5">
-                            <BlockLoader className="text-brand-500" /> Checking file type and hashing
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <Segments pct={phase.kind === "uploading" ? phase.pct : 100} processing={phase.kind === "processing"} />
-                  </div>
-                </motion.div>
-              )}
-              {!busy && phase.kind === "rejected" && (
-                <motion.div
-                  key="rejected"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: dur.ui }}
-                  role="alert"
-                  className="mt-3 rounded-control border border-mismatch-dot/25 bg-mismatch-bg px-3 py-2 text-xs"
-                >
-                  <span className="font-semibold text-mismatch-fg">Not accepted: </span>
-                  <span className="text-ink-2">{phase.detail}</span>
-                  <span className="mt-0.5 block font-mono text-[11px] text-ink-3">{phase.name}</span>
-                </motion.div>
-              )}
-              {!busy && phase.kind !== "rejected" && doc && (
-                <motion.div
-                  key={doc.id}
-                  initial={phase.kind === "done" ? { opacity: 0, y: -4 } : false}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: dur.ui, ease: ease.out }}
-                  className="mt-3 rounded-control border border-line bg-canvas px-3 py-2"
-                >
-                  <div className="flex min-w-0 items-center justify-between gap-3">
-                    <span className="min-w-0 truncate font-mono text-xs font-medium text-ink" title={doc.original_filename}>
+                  <div className="h-full rounded-full bg-brand-solid transition-[width] duration-150" style={{ width: `${phase.pct}%` }} />
+                </div>
+              </div>
+            )}
+            {phase.kind === "processing" && (
+              <p className="mt-3 text-sm text-ink-2">
+                <span className="font-mono text-xs">{phase.name}</span>: checking file type
+              </p>
+            )}
+            {phase.kind === "rejected" && (
+              <Callout
+                tone="danger"
+                className="mt-3"
+                title={`Not accepted: ${plainReason(phase.detail)}.`}
+                action={
+                  <Button size="sm" onClick={choose}>
+                    Try another file
+                  </Button>
+                }
+              >
+                <span className="font-mono text-xs">{phase.name}</span>
+              </Callout>
+            )}
+            {!busy && phase.kind !== "rejected" && doc && (
+              <div className="mt-2 text-xs text-ink-3">
+                <MetaList
+                  items={[
+                    <span key="f" className="font-mono text-ink-2">
                       {doc.original_filename}
-                    </span>
-                    <Digest value={doc.sha256} label="SHA-256" head={6} tail={4} className="shrink-0" />
-                  </div>
-                  <div className="mt-0.5 text-xs text-ink-3 tabular">
-                    {fmtBytes(doc.size_bytes)}, {doc.page_count} {doc.page_count === 1 ? "page" : "pages"}
-                    {doc.uploaded_at ? `, uploaded ${fmtRelative(doc.uploaded_at)}` : ""}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    </span>,
+                    fmtBytes(doc.size_bytes),
+                    doc.mime === "application/pdf" ? pluralize(doc.page_count, "page") : null,
+                    doc.uploaded_at ? <span title={fmtDateTime(doc.uploaded_at)}>uploaded {fmtRelative(doc.uploaded_at)}</span> : null,
+                    <Digest key="d" value={doc.sha256} label="SHA-256" head={8} tail={6} />,
+                  ]}
+                />
+              </div>
+            )}
+            {!busy && phase.kind !== "rejected" && unreadable && (
+              <Callout tone="warning" className="mt-3">
+                This file could not be read{doc?.processing_error ? `: ${doc.processing_error.replace(/\.$/, "")}` : ""}. Upload a clearer copy.
+              </Callout>
+            )}
           </div>
         </div>
         {editable && (
-          <div className="flex shrink-0 items-center gap-2 sm:pt-0.5">
+          <div className="flex shrink-0 items-center gap-2 pl-7 sm:pl-0">
             <input
               ref={input}
               type="file"
@@ -297,26 +281,34 @@ export function UploadSlot({
               className="sr-only"
               tabIndex={-1}
               aria-label={`Choose a file for ${slot.label}`}
-              data-upload={slot.doc_type}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 e.target.value = "";
                 if (f) start(f);
               }}
             />
-            <Button
-              size="sm"
-              variant={has ? "ghost" : "secondary"}
-              leadingIcon={has ? <RefreshCw /> : <Upload />}
-              disabled={busy}
-              onClick={() => input.current?.click()}
-            >
-              {has ? "Replace" : phase.kind === "rejected" ? "Try another file" : "Choose file"}
-            </Button>
+            {busy ? (
+              <Button size="md" variant="secondary" onClick={() => abortRef.current?.()} disabled={phase.kind !== "uploading"}>
+                Cancel
+              </Button>
+            ) : phase.kind === "rejected" ? null : (
+              <Button
+                data-upload={slot.doc_type}
+                variant={!has && emphasis ? "primary" : "secondary"}
+                leadingIcon={has ? <RefreshCw /> : <Upload />}
+                onClick={choose}
+                aria-label={`${has ? "Replace" : "Upload"} ${slot.label}`}
+              >
+                {has ? "Replace" : "Upload"}
+              </Button>
+            )}
           </div>
         )}
-        {!editable && !has && <span className="shrink-0 text-xs text-ink-4">Not uploaded</span>}
+        {!editable && !has && <span className="shrink-0 pl-7 text-xs text-ink-3 sm:pt-0.5 sm:pl-0">Not uploaded</span>}
       </div>
-    </motion.li>
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
+    </li>
   );
 }

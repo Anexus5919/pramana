@@ -1,40 +1,114 @@
-import { Download, FileText } from "lucide-react";
-import { motion } from "motion/react";
+import { ArrowDown, Download } from "lucide-react";
 import { fmtDate, pluralize } from "../../lib/format";
-import { buttonClasses } from "../../ui/Button";
-import { Digest } from "../../ui/Digest";
-import { dur, ease } from "../../ui/motion";
+import type { Rectification, RectificationItem } from "../../types";
+import { Button, DescriptionList, Digest, Panel, PanelDivider, buttonStyles } from "../../ui2";
 import { officerApi, useLetters } from "../application/officer/officerApi";
 
-/** The finalised deficiency notice attached to a rectification request, for the institution to download. */
-export function RectificationLetter({ appId, rectificationId }: { appId: string; rectificationId: string }) {
+interface Item {
+  key: string;
+  title: string;
+  message: string;
+  docType: string | null;
+}
+
+/** The backend records the document type of each requested item; the shared type does not declare it. */
+export function itemDocType(it: RectificationItem): string | null {
+  const t = (it as RectificationItem & { document_type?: unknown }).document_type;
+  return typeof t === "string" && t ? t : null;
+}
+
+/**
+ * The open rectification request in one panel: the deficiency letter (PDF and digest) when AICTE issued one,
+ * the officer's message, and the numbered items with title and message only. No codes, no severity.
+ */
+export function DeficiencyLetterPanel({
+  appId,
+  rect,
+  docLabel,
+  onShowDocument,
+}: {
+  appId: string;
+  rect: Rectification;
+  /** Checklist label of a document type, when the type is on this application's checklist */
+  docLabel: (docType: string) => string | undefined;
+  onShowDocument: (docType: string) => void;
+}) {
   const q = useLetters(appId);
-  const letter = q.data?.find((l) => l.rectification_id === rectificationId && l.status === "final");
-  if (!letter) return null;
-  const due = letter.items.map((i) => i.respond_by).sort()[0];
+  const letter = q.data?.find((l) => l.rectification_id === rect.id && l.status === "final");
+  const due = letter?.items
+    .map((i) => i.respond_by)
+    .filter(Boolean)
+    .sort()[0];
+  // The letter is what AICTE formally sent, so its numbering wins when there is one.
+  // Institutions receive the letter without finding ids, so items are matched to the request by title, then by position
+  const typeOf = (title: string, i: number) => {
+    const same = rect.items.find((r) => r.title === title) ?? (letter && letter.items.length === rect.items.length ? rect.items[i] : undefined);
+    return same ? itemDocType(same) : null;
+  };
+  const items: Item[] = letter
+    ? letter.items.map((it, i) => ({ key: `l${i}`, title: it.title, message: it.description, docType: typeOf(it.title, i) }))
+    : rect.items.map((it) => ({ key: it.finding_id, title: it.title, message: it.message, docType: itemDocType(it) }));
+  const issued = letter?.finalised_at ?? rect.created_at;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: dur.panel, ease: ease.out }}
-      className="mt-3 flex flex-wrap items-center gap-3 rounded-control border border-line bg-surface px-3 py-2.5"
+    <Panel
+      id="letter"
+      title={letter ? "Deficiency letter" : "Corrections requested"}
+      description={letter ? `Round ${rect.round}` : `Round ${rect.round}, issued ${fmtDate(issued)}`}
+      actions={
+        letter ? (
+          <a href={officerApi.letterPdfUrl(letter.id)} download className={buttonStyles("secondary", "md")}>
+            <Download aria-hidden />
+            Download PDF
+          </a>
+        ) : undefined
+      }
     >
-      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-brand-soft text-brand-ink">
-        <FileText aria-hidden className="size-4" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-ink">Deficiency notice</span>
-        <span className="block text-xs text-ink-3">
-          {pluralize(letter.items.length, "item")}, issued {fmtDate(letter.finalised_at)}
-          {due ? `, respond by ${fmtDate(due)}` : ""}
-        </span>
-        <span className="mt-1 flex items-center gap-1.5 text-[11px] text-ink-4">
-          SHA-256 <Digest value={letter.final_sha256} label="Notice SHA-256" head={10} tail={6} />
-        </span>
-      </span>
-      <a href={officerApi.letterPdfUrl(letter.id)} download className={buttonClasses("secondary", "sm")}>
-        <Download aria-hidden /> Download PDF
-      </a>
-    </motion.div>
+      {letter && (
+        <DescriptionList
+          layout="stacked"
+          columns={4}
+          className="grid-cols-2"
+          items={[
+            { label: "Issued", value: fmtDate(letter.finalised_at) },
+            { label: "Respond by", value: due ? fmtDate(due) : null },
+            { label: "Items", value: pluralize(letter.items.length, "item") },
+            { label: "Notice SHA-256", value: <Digest value={letter.final_sha256} label="Notice SHA-256" head={8} tail={6} /> },
+          ]}
+        />
+      )}
+      {rect.message && (
+        <>
+          {letter && <PanelDivider label="Message from AICTE" />}
+          {!letter && <h3 className="mb-1 text-xs font-medium text-ink-3">Message from AICTE</h3>}
+          <p className="text-sm whitespace-pre-line text-ink-2 text-pretty">{rect.message}</p>
+        </>
+      )}
+      {(letter || rect.message) && <PanelDivider label="What to correct" />}
+      <ol className="space-y-4">
+        {items.map((it, i) => (
+          <li key={it.key} className="flex gap-3">
+            <span className="w-5 shrink-0 text-sm font-medium text-ink-3 tabular-nums">
+              {i + 1}.
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-medium text-ink">{it.title}</h3>
+              {it.message && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{it.message}</p>}
+              {it.docType && docLabel(it.docType) && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-1 -ml-2.5"
+                  trailingIcon={<ArrowDown aria-hidden />}
+                  onClick={() => onShowDocument(it.docType as string)}
+                >
+                  Go to {docLabel(it.docType)}
+                </Button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </Panel>
   );
 }
