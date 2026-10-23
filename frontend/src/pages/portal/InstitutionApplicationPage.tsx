@@ -27,7 +27,7 @@ import { DeclaredFigures, INTAKE_HELP, NumbersEditor, ProgrammesEditor, Programm
 import { fieldErrors, fromDraft, programmeErrors, toDraft, type DeclaredDraft } from "./declared";
 import { NextStepPanel } from "./NextStep";
 import { EDITABLE, checklistSourceText, currentDocs, missingRequired, openRectification, portalStage, progressSteps } from "./progress";
-import { DeficiencyLetterPanel } from "./RectificationLetter";
+import { DeficiencyLetterPanel, itemDocType } from "./RectificationLetter";
 import { RunHistoryPanel } from "./RunHistory";
 import { SubmitDialog } from "./SubmitDialog";
 import { UploadSlot } from "./UploadSlot";
@@ -48,7 +48,19 @@ function PageSkeleton() {
   );
 }
 
-function DocumentsPanel({ app, docs, editable, firstMissing }: { app: ApplicationDetail; docs: Map<string, DocumentSummary>; editable: boolean; firstMissing?: string }) {
+function DocumentsPanel({
+  app,
+  docs,
+  editable,
+  firstMissing,
+  flagged,
+}: {
+  app: ApplicationDetail;
+  docs: Map<string, DocumentSummary>;
+  editable: boolean;
+  firstMissing?: string;
+  flagged: Set<string>;
+}) {
   const slots = [...app.document_checklist].sort((a, b) => Number(b.required) - Number(a.required));
   const source = checklistSourceText(app.checklist_source);
   return (
@@ -65,7 +77,15 @@ function DocumentsPanel({ app, docs, editable, firstMissing }: { app: Applicatio
     >
       <ul className="divide-y divide-line border-t border-line">
         {slots.map((s) => (
-          <UploadSlot key={s.doc_type} appId={app.id} slot={s} doc={docs.get(s.doc_type)} editable={editable} emphasis={s.doc_type === firstMissing} />
+          <UploadSlot
+            key={s.doc_type}
+            appId={app.id}
+            slot={s}
+            doc={docs.get(s.doc_type)}
+            editable={editable}
+            emphasis={s.doc_type === firstMissing}
+            flagged={flagged.has(s.doc_type)}
+          />
         ))}
       </ul>
     </Panel>
@@ -266,13 +286,15 @@ export default function InstitutionApplicationPage() {
   const listed = new Set(rect?.items.map((i) => i.finding_id) ?? []);
   const asked = askedEnabled ? (findings.data ?? []).filter((f) => f.review_status === "evidence_requested" && !listed.has(f.id)) : [];
 
-  function goToDocuments() {
-    const first = missing[0];
-    if (!first) return;
-    const row = document.getElementById(`slot-${first.doc_type}`);
+  const flagged = new Set((rect?.items ?? []).map(itemDocType).filter((t): t is string => !!t));
+  const docLabel = (t: string) => app.document_checklist.find((s) => s.doc_type === t)?.label;
+
+  /** Scrolls a checklist row into view and puts the keyboard on its upload button. */
+  function showSlot(docType: string) {
+    const row = document.getElementById(`slot-${docType}`);
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     row?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
-    row?.querySelector<HTMLButtonElement>(`[data-upload="${first.doc_type}"]`)?.focus({ preventScroll: true });
+    row?.querySelector<HTMLButtonElement>(`[data-upload="${docType}"]`)?.focus({ preventScroll: true });
   }
 
   return (
@@ -302,7 +324,7 @@ export default function InstitutionApplicationPage() {
         itemCount={itemCount}
         liveRun={liveRun}
         onRunDone={runDone}
-        onGoToDocuments={goToDocuments}
+        onGoToDocuments={() => missing[0] && showSlot(missing[0].doc_type)}
         onSubmit={() => {
           submit.reset();
           setConfirm(true);
@@ -310,10 +332,10 @@ export default function InstitutionApplicationPage() {
         editing={editing}
       />
 
-      {rect && <DeficiencyLetterPanel appId={app.id} rect={rect} />}
+      {rect && <DeficiencyLetterPanel appId={app.id} rect={rect} docLabel={docLabel} onShowDocument={showSlot} />}
       <AskedAboutPanel findings={asked} rectifying={!!rect} />
 
-      <DocumentsPanel app={app} docs={docs} editable={editable} firstMissing={missing[0]?.doc_type} />
+      <DocumentsPanel app={app} docs={docs} editable={editable} firstMissing={missing[0]?.doc_type} flagged={flagged} />
       <DeclaredPanel app={app} editable={editable} onEditing={setEditing} />
       <RunHistoryPanel appId={app.id} />
 

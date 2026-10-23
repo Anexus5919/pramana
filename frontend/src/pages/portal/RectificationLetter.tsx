@@ -1,20 +1,38 @@
 import { Download } from "lucide-react";
 import { fmtDate, pluralize } from "../../lib/format";
-import type { Rectification } from "../../types";
-import { DescriptionList, Digest, Panel, PanelDivider, buttonStyles } from "../../ui2";
+import type { Rectification, RectificationItem } from "../../types";
+import { Button, DescriptionList, Digest, Panel, PanelDivider, buttonStyles } from "../../ui2";
 import { officerApi, useLetters } from "../application/officer/officerApi";
 
 interface Item {
   key: string;
   title: string;
   message: string;
+  docType: string | null;
+}
+
+/** The backend records the document type of each requested item; the shared type does not declare it. */
+export function itemDocType(it: RectificationItem): string | null {
+  const t = (it as RectificationItem & { document_type?: unknown }).document_type;
+  return typeof t === "string" && t ? t : null;
 }
 
 /**
  * The open rectification request in one panel: the deficiency letter (PDF and digest) when AICTE issued one,
  * the officer's message, and the numbered items with title and message only. No codes, no severity.
  */
-export function DeficiencyLetterPanel({ appId, rect }: { appId: string; rect: Rectification }) {
+export function DeficiencyLetterPanel({
+  appId,
+  rect,
+  docLabel,
+  onShowDocument,
+}: {
+  appId: string;
+  rect: Rectification;
+  /** Checklist label of a document type, when the type is on this application's checklist */
+  docLabel: (docType: string) => string | undefined;
+  onShowDocument: (docType: string) => void;
+}) {
   const q = useLetters(appId);
   const letter = q.data?.find((l) => l.rectification_id === rect.id && l.status === "final");
   const due = letter?.items
@@ -22,9 +40,14 @@ export function DeficiencyLetterPanel({ appId, rect }: { appId: string; rect: Re
     .filter(Boolean)
     .sort()[0];
   // The letter is what AICTE formally sent, so its numbering wins when there is one
+  const typeOf = (findingIds: string[]) =>
+    findingIds
+      .map((id) => rect.items.find((r) => r.finding_id === id))
+      .map((r) => (r ? itemDocType(r) : null))
+      .find(Boolean) ?? null;
   const items: Item[] = letter
-    ? letter.items.map((it, i) => ({ key: `l${i}`, title: it.title, message: it.description }))
-    : rect.items.map((it) => ({ key: it.finding_id, title: it.title, message: it.message }));
+    ? letter.items.map((it, i) => ({ key: `l${i}`, title: it.title, message: it.description, docType: typeOf(it.finding_ids) }))
+    : rect.items.map((it) => ({ key: it.finding_id, title: it.title, message: it.message, docType: itemDocType(it) }));
   const issued = letter?.finalised_at ?? rect.created_at;
 
   return (
@@ -70,6 +93,11 @@ export function DeficiencyLetterPanel({ appId, rect }: { appId: string; rect: Re
             <div className="min-w-0">
               <h3 className="text-sm font-medium text-ink">{it.title}</h3>
               {it.message && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{it.message}</p>}
+              {it.docType && docLabel(it.docType) && (
+                <Button size="sm" variant="ghost" className="mt-1 -ml-2.5" onClick={() => onShowDocument(it.docType as string)}>
+                  Go to {docLabel(it.docType)}
+                </Button>
+              )}
             </div>
           </li>
         ))}

@@ -29,6 +29,19 @@ function describe(xhr: XMLHttpRequest): string {
 
 class Cancelled extends Error {}
 
+/** The server's rejection reason in words a college office can act on. */
+function plainReason(detail: string): string {
+  const d = detail.trim();
+  const ext = /extension \.?(\w+)/i.exec(d)?.[1]?.toUpperCase();
+  if (/does not match extension/i.test(d)) return `the file is not really a ${ext ?? "PDF"}. Save or scan it again as a PDF, JPG or PNG`;
+  if (/not allowed/i.test(d)) return "only PDF, JPG and PNG files are accepted";
+  if (/^empty file$/i.test(d)) return "the file is empty";
+  const mb = /exceeds (\d+) ?MB/i.exec(d)?.[1];
+  if (mb) return `the file is larger than ${mb} MB. Scan it at a lower resolution and try again`;
+  if (/malformed PDF|unreadable|could not be read/i.test(d)) return "the file could not be opened. It may be damaged; export or scan it again";
+  return d.replace(/\.$/, "");
+}
+
 /** Real upload progress from XMLHttpRequest, so the bar reflects bytes sent rather than a guess. */
 function sendFile(
   appId: string,
@@ -67,13 +80,20 @@ function sendFile(
   return { promise, abort: () => xhr.abort() };
 }
 
-function SlotIcon({ state }: { state: "uploaded" | "unreadable" | "missing" }) {
+type SlotState = "uploaded" | "unreadable" | "flagged" | "missing";
+
+function SlotIcon({ state }: { state: SlotState }) {
   if (state === "uploaded") return <CheckCircle2 aria-hidden className="size-4 text-verified-fg" />;
-  if (state === "unreadable") return <AlertTriangle aria-hidden className="size-4 text-manual-fg" />;
+  if (state === "unreadable" || state === "flagged") return <AlertTriangle aria-hidden className="size-4 text-manual-fg" />;
   return <Circle aria-hidden className="size-4 text-ink-4" />;
 }
 
-const STATE_TEXT = { uploaded: "Uploaded", unreadable: "Uploaded, could not be read", missing: "Not uploaded" } as const;
+const STATE_TEXT: Record<SlotState, string> = {
+  uploaded: "Uploaded",
+  unreadable: "Uploaded, could not be read",
+  flagged: "Uploaded, AICTE asked for a correction",
+  missing: "Not uploaded",
+};
 
 /**
  * One checklist row: what the document is, what was uploaded, and one action.
@@ -85,6 +105,7 @@ export function UploadSlot({
   doc,
   editable,
   emphasis = false,
+  flagged = false,
 }: {
   appId: string;
   slot: ChecklistSlot;
@@ -92,6 +113,8 @@ export function UploadSlot({
   editable: boolean;
   /** The first missing required slot carries the screen's upload action */
   emphasis?: boolean;
+  /** AICTE asked for a correction to this document in the open rectification request */
+  flagged?: boolean;
 }) {
   const qc = useQueryClient();
   const { session } = useAuth();
@@ -103,7 +126,7 @@ export function UploadSlot({
   const busy = phase.kind === "uploading" || phase.kind === "processing";
   const has = !!doc || slot.uploaded;
   const unreadable = doc?.processing_status === "failed";
-  const state = !has ? "missing" : unreadable ? "unreadable" : "uploaded";
+  const state: SlotState = !has ? "missing" : unreadable ? "unreadable" : flagged ? "flagged" : "uploaded";
 
   useEffect(() => () => abortRef.current?.(), []);
 
@@ -183,9 +206,11 @@ export function UploadSlot({
             <div className="flex flex-wrap items-baseline gap-x-2">
               <h3 className="text-sm font-medium text-ink">{slot.label}</h3>
               <span className="text-xs text-ink-3">{slot.required ? "Required" : "Optional"}</span>
+              {flagged && <span className="text-xs font-medium text-manual-fg">Correction requested</span>}
               <span className="sr-only">, {STATE_TEXT[state]}</span>
             </div>
-            {slot.description && <p className="mt-0.5 text-sm text-ink-3 text-pretty">{slot.description}</p>}
+            {/* Once the documents are locked the row is a record, so the guidance is left out */}
+            {editable && slot.description && <p className="mt-0.5 text-sm text-ink-3 text-pretty">{slot.description}</p>}
 
             {phase.kind === "uploading" && (
               <div className="mt-3 max-w-md">
@@ -214,7 +239,7 @@ export function UploadSlot({
               <Callout
                 tone="danger"
                 className="mt-3"
-                title={`Not accepted: ${phase.detail}`}
+                title={`Not accepted: ${plainReason(phase.detail)}.`}
                 action={
                   <Button size="sm" onClick={choose}>
                     Try another file
@@ -232,7 +257,7 @@ export function UploadSlot({
                       {doc.original_filename}
                     </span>,
                     fmtBytes(doc.size_bytes),
-                    pluralize(doc.page_count, "page"),
+                    doc.mime === "application/pdf" ? pluralize(doc.page_count, "page") : null,
                     doc.uploaded_at ? <span title={fmtDateTime(doc.uploaded_at)}>uploaded {fmtRelative(doc.uploaded_at)}</span> : null,
                     <Digest key="d" value={doc.sha256} label="SHA-256" head={8} tail={6} />,
                   ]}
