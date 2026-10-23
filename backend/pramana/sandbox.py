@@ -167,8 +167,7 @@ class _Worker:
         env = {"OPENBLAS_NUM_THREADS": "1", **os.environ, "PRAMANA_SANDBOX_MEMORY_MB": str(mem_mb)}
         exe, flags = sys.executable, 0
         if os.name == "nt":
-            # No console window, and below-normal priority so the server stays responsive while a file parses
-            flags = subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS
+            flags = subprocess.CREATE_NO_WINDOW
             base = getattr(sys, "_base_executable", exe)
             if base and os.path.normcase(base) != os.path.normcase(exe):
                 # A venv's python.exe is a launcher that starts a second process, which the one-process job

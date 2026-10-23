@@ -203,7 +203,24 @@ def _posix_limits(mem_mb: int) -> None:
         ctypes.CDLL(None).prctl(1, signal.SIGKILL)
 
 
+def _windows_full_speed() -> None:
+    """Opt out of EcoQoS power throttling, which Windows applies to windowless background processes."""
+    import ctypes
+    from ctypes import wintypes
+
+    class _Throttle(ctypes.Structure):
+        _fields_ = [("Version", wintypes.ULONG), ("ControlMask", wintypes.ULONG), ("StateMask", wintypes.ULONG)]
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.GetCurrentProcess.restype = wintypes.HANDLE
+    k32.SetProcessInformation.argtypes = [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD]
+    state = _Throttle(1, 0x1, 0)  # version 1, control EXECUTION_SPEED, state off
+    k32.SetProcessInformation(k32.GetCurrentProcess(), 4, ctypes.byref(state), ctypes.sizeof(state))
+
+
 def main() -> None:
+    if os.name == "nt":
+        _windows_full_speed()
     ipc = os.fdopen(os.dup(sys.stdout.fileno()), "wb", buffering=0)
     # Libraries that print would corrupt the reply channel, so ordinary stdout goes to stderr from here on
     os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
