@@ -16,7 +16,8 @@ import { AppShell, Footer, FullScreenLoader } from "./shell/AppShell";
 import type { Role } from "./types";
 import { ErrorState } from "./ui/States";
 
-const LandingPage = lazy(() => import("./landing/LandingPage"));
+// The v3 landing (block ground hero); three.js loads in a further lazy chunk inside it
+const LandingPage = lazy(() => import("./landing-v3/LandingV3"));
 const LoginPage = lazy(() => import("./pages/login/LoginPage"));
 const ScanPage = lazy(() => import("./pages/scan/ScanPage"));
 const UiKit = import.meta.env.DEV ? lazy(() => import("./ui/Showcase")) : null;
