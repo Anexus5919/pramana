@@ -66,7 +66,7 @@ export function SealCompare({ e }: { e: ImageMatchEvidence }) {
         </motion.figure>
       </div>
       <p className="mt-2 text-xs text-ink-3">
-        {e.exact ? "The embedded images are pixel-identical." : `Perceptual hash distance ${e.distance} of 256 bits.`} {e.peer_institution} submitted the other document.
+        {e.exact ? "The embedded images are pixel-identical." : `Perceptual hash distance ${e.distance} of ${e.bits ?? 256} bits.`} {e.peer_institution} submitted the other document.
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         <button
