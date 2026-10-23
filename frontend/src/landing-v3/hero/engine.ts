@@ -86,8 +86,8 @@ export function computeLayout(w: number, h: number, cardRatio: number): Layout {
     const horizonY = ((1 + shift) / 2) * h;
     const left = Math.max(28, (w - 1152) / 2 + 24);
     // the copy column is as wide as the headline, which scales like the h1 clamp in HeroStory
-    const fs = clamp(Math.min(w * 0.043, h * 0.074), 38, 78);
-    const copyW = Math.max(460, fs * 7.3);
+    const fs = clamp(Math.min(w * 0.046, h * 0.082), 40, 92);
+    const copyW = Math.max(470, fs * 7.3);
     const groundY = h * 0.82;
     let s = clamp(h / 1040, 0.54, 0.98);
     const cx = Math.min(w * 0.72, w - 360 * s - 40);

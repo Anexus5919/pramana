@@ -71,7 +71,7 @@ function Sky({ engine }: { engine: Engine }) {
     mat.uniforms.uHorizon.value = -L.shift;
     (mat.uniforms.uAspect.value as THREE.Vector2).set(L.w / L.h, 1);
     const gx = L.wide ? ((L.copy.x + L.copy.w * 0.42) / L.w) * 2 - 1 : 0;
-    const gy = L.wide ? 0.3 : 0.45;
+    const gy = L.wide ? -0.02 : 0.4;
     (mat.uniforms.uGlowAt.value as THREE.Vector2).set(gx, gy);
   });
   return (
