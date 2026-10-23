@@ -2,8 +2,10 @@
 
 Uses plain transformers + PEFT + bitsandbytes (fp16 compute, fp32 LoRA weights), which behave predictably
 on T4s that lack bf16. Input: train.jsonl and val.jsonl from training/make_dataset.py attached as a Kaggle
-dataset. Output in /kaggle/working: pramana-extract-q4_k_m.gguf (or pramana-extract-f16.gguf when the
-quantiser cannot be built) and train_log.json.
+dataset. Output in /kaggle/working: adapter/ (final LoRA weights), adapter_epoch1/ and train_log.json.
+
+The adapter is merged and converted to GGUF on the laptop with training/merge_adapter.py, because the
+runner's library set broke the merge step in version 1.
 
 The text format is written out by hand so it matches training/Modelfile exactly: system, user, then an
 assistant turn with an empty think block; loss is computed on the JSON answer only.
@@ -18,29 +20,35 @@ import subprocess
 import sys
 import time
 
-# PRAMANA_DRYRUN=1 runs the same code path on CPU with a tiny Qwen3 model and two steps, to catch
-# library and config errors locally before spending GPU time
+# PRAMANA_DRYRUN=1 runs the same code path on CPU with a tiny Qwen3 model and a few steps over two epochs,
+# to catch library and config errors locally before spending GPU time
 DRY = os.environ.get("PRAMANA_DRYRUN") == "1"
 # One process, one GPU: SFTTrainer refuses nn.DataParallel when two T4s are visible
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# Versions the CPU dry run was checked with, pinned so a new release cannot change the run
+PINS = ["peft==0.21.2", "trl==1.16.0", "transformers==5.20.2", "accelerate==1.15.0"]
 if not DRY:
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "peft", "trl", "bitsandbytes", "accelerate"],
-                   check=False)
-    # The image ships an old torchao that newer PEFT rejects when merging; LoRA does not need it
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", *PINS, "bitsandbytes==0.50.2"], check=False)
+    # The image ships an old torchao that newer PEFT rejects when loading adapters; LoRA does not need it
     subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "-q", "torchao"], check=False)
 
+import peft  # noqa: E402
 import torch  # noqa: E402
+import transformers  # noqa: E402
+import trl  # noqa: E402
 from datasets import Dataset  # noqa: E402
-from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training  # noqa: E402
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
+from peft import LoraConfig, prepare_model_for_kbit_training  # noqa: E402
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback  # noqa: E402
 from trl import SFTConfig, SFTTrainer  # noqa: E402
 
 BASE = "trl-internal-testing/tiny-Qwen3ForCausalLM" if DRY else "Qwen/Qwen3-1.7B"
 MAX_LEN = 1536
+EPOCHS = 2
 OUT = os.environ.get("PRAMANA_OUT", "/kaggle/working")
-TMP = os.environ.get("PRAMANA_TMP", "/tmp")
 data_dir = os.environ.get("PRAMANA_DATA") or os.path.dirname(
     next(iter(glob.glob("/kaggle/input/**/train.jsonl", recursive=True))))
+print("versions: torch", torch.__version__, "transformers", transformers.__version__, "trl", trl.__version__,
+      "peft", peft.__version__)
 
 
 def to_pc(row):
@@ -64,6 +72,9 @@ print("examples", len(train), len(val), "device", torch.cuda.get_device_name(0) 
 tok = AutoTokenizer.from_pretrained(BASE)
 if tok.pad_token is None:
     tok.pad_token = tok.eos_token
+lengths = [len(tok(p + c)["input_ids"]) for p, c in zip(train["prompt"], train["completion"], strict=True)]
+print("tokens per example: max", max(lengths), "mean", round(sum(lengths) / len(lengths)), "over", MAX_LEN,
+      sum(n > MAX_LEN for n in lengths))
 bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_use_double_quant=True,
                          bnb_4bit_compute_dtype=torch.float16)
 if DRY:
@@ -75,19 +86,31 @@ else:
 lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
                   target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"])
 
-steps = len(train) // (4 * 4)
+steps = EPOCHS * (len(train) // (4 * 4))
 cfg = dict(output_dir=f"{OUT}/ckpt", per_device_train_batch_size=4, gradient_accumulation_steps=4,
-           num_train_epochs=1, learning_rate=2e-4, warmup_steps=max(1, steps // 20), lr_scheduler_type="cosine",
+           num_train_epochs=EPOCHS, learning_rate=2e-4, warmup_steps=max(1, steps // 20), lr_scheduler_type="cosine",
            logging_steps=1 if DRY else 10, eval_strategy="epoch", save_strategy="no",
            optim="adamw_torch" if DRY else "paged_adamw_8bit", weight_decay=0.01, seed=26261, report_to="none",
            max_length=MAX_LEN, completion_only_loss=True, fp16=not DRY, bf16=False,
-           gradient_checkpointing=True, max_grad_norm=1.0, **({"max_steps": 2} if DRY else {}))
+           gradient_checkpointing=True, max_grad_norm=1.0)
 # Library versions on the runner move; keep only arguments this SFTConfig accepts
 accepted = inspect.signature(SFTConfig.__init__).parameters
 print("dropping unsupported SFTConfig args:", [k for k in cfg if k not in accepted])
 args = SFTConfig(**{k: v for k, v in cfg.items() if k in accepted})
+
+
+class SaveEachEpoch(TrainerCallback):
+    """Keep the adapter after every epoch but the last, so an earlier epoch can be inspected later."""
+
+    def on_epoch_end(self, args, state, control, model=None, **kwargs):
+        epoch = round(state.epoch or 0)
+        if model is not None and epoch < EPOCHS:
+            model.save_pretrained(f"{OUT}/adapter_epoch{epoch}")
+            print(f"saved adapter_epoch{epoch} at step {state.global_step}, {round((time.time() - t0) / 60, 1)} min")
+
+
 trainer = SFTTrainer(model=model, processing_class=tok, train_dataset=train, eval_dataset=val, args=args,
-                     peft_config=lora)
+                     peft_config=lora, callbacks=[SaveEachEpoch()])
 # The fp16 grad scaler needs fp32 trainable weights
 for _, prm in trainer.model.named_parameters():
     if prm.requires_grad and prm.dtype != torch.float32:
@@ -97,9 +120,12 @@ print("trainable dtypes:", sorted({str(p.dtype) for p in trainer.model.parameter
 t0 = time.time()
 res = trainer.train()
 ev = trainer.evaluate()
-log = {"base": BASE, "method": "QLoRA r16 (transformers+peft+bitsandbytes), fp16", "train_examples": len(train),
-       "val_examples": len(val), "train_loss": res.training_loss, "eval": ev,
+log = {"base": BASE, "method": "QLoRA r16 (transformers+peft+bitsandbytes), fp16", "epochs": EPOCHS,
+       "train_examples": len(train), "val_examples": len(val), "train_loss": res.training_loss, "eval": ev,
+       "eval_loss_per_epoch": [h["eval_loss"] for h in trainer.state.log_history if "eval_loss" in h][:EPOCHS],
        "minutes": round((time.time() - t0) / 60, 1), "log_history": trainer.state.log_history}
+adapter = f"{OUT}/adapter"
+trainer.model.save_pretrained(adapter)
 json.dump(log, open(f"{OUT}/train_log.json", "w"), indent=2)
 print(json.dumps({k: v for k, v in log.items() if k != "log_history"}, indent=2))
 
@@ -107,38 +133,8 @@ trainer.model.eval()
 for i in range(3):
     ids = tok(val[i]["prompt"], return_tensors="pt").to(DEVICE)
     with torch.no_grad():
-        out = trainer.model.generate(**ids, max_new_tokens=20 if DRY else 200, do_sample=False)
+        out = trainer.model.generate(**ids, max_new_tokens=20 if DRY else 300, do_sample=False)
     print("GOT ", tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True))
     print("WANT", val[i]["completion"])
-
-adapter = f"{OUT}/adapter"
-trainer.model.save_pretrained(adapter)
-del trainer, model
-torch.cuda.empty_cache()
-
-# Merge the adapter into fp16 base weights, convert with llama.cpp, quantise if the tool builds
-base = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.float16, device_map={"": "cpu"})
-merged = PeftModel.from_pretrained(base, adapter).merge_and_unload()
-merged.save_pretrained(f"{OUT}/merged", safe_serialization=True)
-tok.save_pretrained(f"{OUT}/merged")
-del base, merged
-
-if not os.path.exists(f"{TMP}/llama.cpp"):
-    subprocess.run(["git", "clone", "--depth", "1", "https://github.com/ggml-org/llama.cpp", f"{TMP}/llama.cpp"],
-                   check=True)
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "gguf", "sentencepiece", "protobuf"], check=True)
-f16 = f"{OUT}/pramana-extract-f16.gguf"
-subprocess.run([sys.executable, f"{TMP}/llama.cpp/convert_hf_to_gguf.py", f"{OUT}/merged", "--outtype", "f16",
-                "--outfile", f16], check=True)
-shutil.rmtree(f"{OUT}/merged", ignore_errors=True)
-try:
-    subprocess.run(["cmake", "-S", f"{TMP}/llama.cpp", "-B", f"{TMP}/llama.cpp/build", "-DGGML_CUDA=OFF",
-                    "-DLLAMA_CURL=OFF"], check=True)
-    subprocess.run(["cmake", "--build", f"{TMP}/llama.cpp/build", "--target", "llama-quantize", "-j", "4"], check=True)
-    qbin = next(iter(glob.glob(f"{TMP}/llama.cpp/build/bin/**/llama-quantize*", recursive=True)))
-    subprocess.run([qbin, f16, f"{OUT}/pramana-extract-q4_k_m.gguf", "Q4_K_M"], check=True)
-    os.remove(f16)
-except Exception as e:  # noqa: BLE001
-    print("quantise step failed, keeping F16 GGUF:", e)
 shutil.rmtree(f"{OUT}/ckpt", ignore_errors=True)
 print("outputs:", sorted(os.listdir(OUT)))
