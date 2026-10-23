@@ -19,6 +19,9 @@ from ..models import Application, Document, ReferenceRecord
 PHASH_MAX_DISTANCE = 18  # of 256 bits, photos only; tuned on fixtures, see docs/evaluation-results.md
 FIELD_OVERLAP_MIN = 0.6
 NAME_FIELDS = {"institution_name", "entity_name", "deponent_name", "holder_name"}
+# Values different holders legitimately share: the issuing office, a status, a certificate type, a programme
+# code; amounts (fees, stamp duty) follow a schedule. None of them is a detail of one holder's certificate
+COMMON_VALUE_FIELDS = {"issuing_authority", "payment_status", "certificate_type", "programme_code"}
 
 
 @dataclass
@@ -39,11 +42,18 @@ def norm_id(s: str | None) -> str:
     return re.sub(r"[^A-Z0-9]", "", (s or "").upper())
 
 
-def _shared_values(a: Document, b: Document) -> tuple[int, int]:
-    va = {f.name: norm_id(f.value) for f in a.fields if f.value and f.name not in NAME_FIELDS}
-    vb = {f.name: norm_id(f.value) for f in b.fields if f.value and f.name not in NAME_FIELDS}
+def _variable_values(d: Document) -> dict[str, tuple[str, str]]:
+    return {f.name: (norm_id(f.value), f.value_type) for f in d.fields if f.value and f.value_type != "amount"
+            and f.name not in NAME_FIELDS | COMMON_VALUE_FIELDS}
+
+
+def _shared_values(a: Document, b: Document) -> tuple[int, int, bool]:
+    """(values shared, values compared, whether a shared value is more than a date). Dates alone coincide
+    legitimately: one accreditation cycle, fees paid on the same day."""
+    va, vb = _variable_values(a), _variable_values(b)
     common = va.keys() & vb.keys()
-    return sum(1 for k in common if va[k] == vb[k]), len(common)
+    same = [k for k in common if va[k][0] == vb[k][0]]
+    return len(same), len(common), any(va[k][1] != "date" for k in same)
 
 
 def _submitted_before(other: Application, app: Application) -> bool:
@@ -112,17 +122,18 @@ def cross_checks(db: Session, app: Application, docs: list[Document], ref_fields
                         "Very similar scenes (e.g. identical stock layouts) can collide; compare the images.",
                     ))
             elif d.declared_type == pd.declared_type and d.mime == "application/pdf" == pd.mime:
-                shared, total = _shared_values(d, pd)
-                if total >= 3 and shared / total >= FIELD_OVERLAP_MIN:
+                shared, total, beyond_dates = _shared_values(d, pd)
+                if total >= 3 and shared / total >= FIELD_OVERLAP_MIN and beyond_dates:
                     links.append(Link(
                         "XA-NEAR-DUPLICATE-DETAILS", "Same certificate details in another institution's document",
-                        f"{shared} of {total} extracted values in '{d.original_filename}' (numbers, dates, issuer) are "
+                        f"{shared} of {total} extracted values in '{d.original_filename}' (numbers and dates) are "
                         f"identical to a {pd.declared_type} submitted by {inst} ({papp.id}).", "medium", "record",
                         f"fields:{d.declared_type}:{pd.id}", papp.id, inst,
                         [{"kind": "document", "document_id": d.id}, {"kind": "peer_document", "document_id": pd.id,
                                                                        "application_id": papp.id}],
                         "Compares variable fields only, since page images and boilerplate of one issuer's template "
-                        "look alike for every holder.",
+                        "look alike for every holder. The issuing office, amounts, statuses and types are left out, "
+                        "and matching dates alone are not enough.",
                     ))
 
         rf = ref_fields.get(d.declared_type)
