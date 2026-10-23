@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -6,6 +7,10 @@ from pathlib import Path
 # Isolate every test session from the developer's var/ directory before pramana is imported
 _TMP = Path(tempfile.mkdtemp(prefix="pramana-test-"))
 os.environ["PRAMANA_DATA_DIR"] = str(_TMP)
+# Tests write demo trust anchors; use a copy so a running demo server keeps the anchor its documents chain to
+shutil.copytree(Path(__file__).resolve().parents[1] / "trust", _TMP / "trust", dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns("demo"))
+os.environ["PRAMANA_TRUST_DIR"] = str(_TMP / "trust")
 # Tests are deterministic: no language model, whatever backend/.env enables for demos
 os.environ["PRAMANA_LLM_PROVIDERS"] = ""
 # The API tests assert on finished runs, so validation stays synchronous here; test_platform turns it on
