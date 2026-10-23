@@ -8,6 +8,7 @@ import { Callout, ErrorState, MetaList, Panel, ReviewBadge, SeverityIndicator, S
 import { useDocTypeLabel, useWorkspace } from "../../context";
 import { bboxParam, llmReportOf, parseBBox, useDocument, useSetParams, validBox } from "../../data";
 import { RevisionPanel, RevisionStage } from "../../history/TimeMachine";
+import { DocumentStory } from "../../insights/DocumentStory";
 import { DocViewer, type Focus } from "../../viewer/DocViewer";
 import type { OverlayBox } from "../../viewer/overlays";
 import { DocVerificationPanel, ExtractionPanel, FieldsPanel, ForensicsPanel } from "./panels";
@@ -131,7 +132,9 @@ export function DocumentDetail({ docId }: { docId: string }) {
         )
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      {officer && <DocumentStory doc={doc} onFocus={setFocus} />}
+
+      <div id="doc-stage" className="grid scroll-mt-20 items-start gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="min-w-0 xl:sticky xl:top-20">
           {panel === "revisions" ? (
             <RevisionStage doc={doc} className={FRAME_HEIGHT} />

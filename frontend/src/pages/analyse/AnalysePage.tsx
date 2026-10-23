@@ -20,6 +20,7 @@ import {
   cn,
 } from "../../ui2";
 import { DocViewer, type Focus } from "../application/viewer/DocViewer";
+import { AnalyseStory } from "../application/insights/AnalyseStory";
 import { DropZone } from "../verify/DropZone";
 import { sha256Hex } from "../verify/pdf";
 import { ACCEPT, analyseApi, type Analysis } from "./analyseApi";
@@ -235,6 +236,17 @@ function Report({ e, onForget, forgetting }: { e: Entry; onForget: () => void; f
             and still ran.
           </Callout>
         )}
+
+        <AnalyseStory
+          a={a}
+          onShow={(p, bbox, label) => {
+            if (bbox) show({ page: p, bbox, label });
+            else {
+              setPage(p);
+              viewer.current?.scrollIntoView({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+            }
+          }}
+        />
 
         <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <div ref={viewer} className="min-w-0 scroll-mt-20 xl:sticky xl:top-20">

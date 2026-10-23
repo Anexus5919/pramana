@@ -1,1 +1,1 @@
-"""Insights: per-application proof and coverage, cycle-wide integrity links, and the institution readiness check."""
+"""Insights: proof and coverage, cycle-wide integrity links, document life stories, inspection briefs and the institution readiness check."""

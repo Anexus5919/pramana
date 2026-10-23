@@ -123,12 +123,19 @@ def programmes(codes: list[str], intake: int = 60) -> list[dict]:
 # ---------------------------------------------------------------- drawing helpers
 
 
+def pdf_local_date(y: int, mo: int, d: int, h: int, mi: int, s: int) -> str:
+    """PDF date with the full local zone offset; ReportLab drops the minutes of half-hour zones such as IST."""
+    off = int((datetime.now().astimezone().utcoffset() or timedelta(0)).total_seconds() // 60)
+    return f"D:{y:04d}{mo:02d}{d:02d}{h:02d}{mi:02d}{s:02d}{'+' if off >= 0 else '-'}{abs(off) // 60:02d}'{abs(off) % 60:02d}'"
+
+
 class Doc:
     def __init__(self):
         self.buf = io.BytesIO()
         self.c = canvas.Canvas(self.buf, pagesize=A4)
         self.c.setAuthor("Pramana fixture generator")
         self.c.setCreator("Pramana fixture generator")
+        self.c.setDateFormatter(pdf_local_date)
         self.y = H - 70
         self.marks: dict[str, tuple[float, float, str, float]] = {}
 
