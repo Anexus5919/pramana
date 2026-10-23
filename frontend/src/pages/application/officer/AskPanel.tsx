@@ -1,17 +1,12 @@
-import { BookOpen, ChevronDown, FileText, History, ListChecks, MessageCircleQuestion, SendHorizontal, ShieldCheck, SquareDashed, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { BookOpen, FileText, History, ListChecks, SendHorizontal, ShieldCheck, SquareDashed } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { errorMessage } from "../../../api";
 import { fmtMs, pluralize } from "../../../lib/format";
-import { Tag } from "../../../ui/Badge";
-import { EvidenceClassChip } from "../../../ui/Blocks";
-import { BlockLoader, IconButton } from "../../../ui/Button";
-import { cn } from "../../../ui/cn";
-import { dur, ease, fadeUp, spring, stagger } from "../../../ui/motion";
+import { workspacePath } from "../../../shell/nav";
+import { Button, Callout, cn, Drawer } from "../../../ui2";
 import { useWorkspace } from "../context";
-import { appPath, validBox } from "../data";
+import { validBox } from "../data";
 import { CitationCard } from "../parts";
 import { useAsk, type AskAnswer, type AskEvidence } from "./officerApi";
 
@@ -33,144 +28,127 @@ interface Turn {
   error?: string;
 }
 
-function Elapsed() {
-  const [s, setS] = useState(0);
-  useEffect(() => {
-    const t0 = Date.now();
-    const t = window.setInterval(() => setS(Math.floor((Date.now() - t0) / 1000)), 500);
-    return () => window.clearInterval(t);
-  }, []);
-  return <span className="font-mono text-xs text-ink-3 tabular">{s} s</span>;
-}
-
 function Chip({ ev, onOpen, pressed, related }: { ev: AskEvidence; onOpen: () => void; pressed?: boolean; related?: boolean }) {
   return (
-    <motion.button
+    <button
       type="button"
-      whileTap={{ scale: 0.97 }}
       onClick={onOpen}
       aria-pressed={ev.kind === "rule" ? pressed : undefined}
       title={related ? `Linked to the cited finding. ${ev.text}` : ev.text}
       className={cn(
-        "inline-flex h-6 max-w-[220px] items-center gap-1 rounded-[6px] border px-1.5 align-middle text-[11.5px] font-medium transition-colors duration-200 [&_svg]:size-3 [&_svg]:shrink-0",
+        "inline-flex h-6 max-w-[220px] items-center gap-1 rounded-[5px] border px-1.5 align-middle text-xs font-medium transition-colors duration-150 [&_svg]:size-3 [&_svg]:shrink-0",
         related && "border-dashed",
-        pressed ? "border-brand-400 bg-brand-soft text-brand-ink" : "border-line bg-surface text-ink-2 hover:border-brand-300 hover:bg-brand-soft hover:text-brand-ink",
+        pressed ? "border-line-2 bg-brand-soft text-brand-ink" : "border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink",
       )}
     >
       {KIND_ICON[ev.kind]}
-      <span className="font-mono text-[10.5px] text-ink-3">{ev.id}</span>
+      <span className="font-mono text-ink-3">{ev.id}</span>
       <span className="truncate">{ev.label}</span>
-    </motion.button>
+    </button>
   );
 }
 
-function Answer({ a, fresh }: { a: AskAnswer; fresh: boolean }) {
+function modeLabel(a: AskAnswer): string {
+  if (a.mode === "model") return `Local model ${a.model ?? ""}`.trim();
+  if (a.model) return "Template answer; the model sentences failed the evidence check";
+  return "Template answer; no model reachable";
+}
+
+function Answer({ a, onLeave }: { a: AskAnswer; onLeave: () => void }) {
   const { app, openDoc } = useWorkspace();
   const navigate = useNavigate();
   const [rule, setRule] = useState<string | null>(null);
-  const [showDropped, setShowDropped] = useState(false);
 
   const open = (ev: AskEvidence) => {
     const t = ev.target;
-    if (t.type === "finding") navigate(appPath(app.id, "findings", { finding: t.finding_id }));
+    if (t.type === "rule") {
+      setRule((r) => (r === ev.id ? null : ev.id));
+      return;
+    }
+    onLeave();
+    if (t.type === "finding") navigate(workspacePath(app.id, "findings", { finding: t.finding_id }));
     else if (t.type === "region" && validBox(t.bbox)) openDoc({ docId: t.document_id, page: t.page, bbox: t.bbox, label: t.label });
-    else if (t.type === "document") openDoc({ docId: t.document_id });
-    else if (t.type === "verification") navigate(appPath(app.id, "verification", { attempt: t.attempt_id }));
-    else if (t.type === "run") navigate(appPath(app.id, "runs"));
-    else if (t.type === "rule") setRule((r) => (r === ev.id ? null : ev.id));
+    else if (t.type === "region" || t.type === "document") openDoc({ docId: t.document_id });
+    else if (t.type === "verification") navigate(workspacePath(app.id, "documents", { view: "verification", attempt: t.attempt_id }));
+    else if (t.type === "run") navigate(workspacePath(app.id, "activity", { view: "runs" }));
   };
   const ruleEv = rule ? a.evidence[rule] : null;
 
   return (
-    <div className="space-y-2.5">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {a.mode === "model" ? (
-          <Tag variant="neutral" title={a.provider ?? undefined}>
-            Local model {a.model}
-          </Tag>
-        ) : a.model ? (
-          <Tag variant="neutral" title={a.fallback ?? undefined}>
-            Template answer, model sentences failed the check
-          </Tag>
-        ) : (
-          <Tag variant="neutral">Template answer, no model reachable</Tag>
-        )}
-        <span className="text-[11px] text-ink-4">{fmtMs(a.latency_ms)}</span>
-      </div>
+    <div className="space-y-3">
       {a.sentences.length === 0 ? (
-        <p className="text-sm text-ink-3">No sentence passed the evidence check, so nothing is shown. Rephrase the question or open the Findings tab.</p>
+        <p className="text-sm text-ink-3">No sentence passed the evidence check, so nothing is shown. Rephrase the question or open Findings.</p>
       ) : (
-        <motion.ol variants={stagger(0.08)} initial={fresh ? "hidden" : false} animate="show" className="space-y-2">
+        <ol className="space-y-2">
           {a.sentences.map((s, i) => (
-            <motion.li key={i} variants={fadeUp} className="text-[14px] leading-relaxed text-ink text-pretty">
+            <li key={i} className="text-base text-ink text-pretty">
               {s.text}{" "}
               <span className="inline-flex flex-wrap gap-1 align-middle">
                 {s.cites.map((c) => a.evidence[c] && <Chip key={c} ev={a.evidence[c]} pressed={rule === c} onOpen={() => open(a.evidence[c])} />)}
-                {(s.related ?? []).map((c) => a.evidence[c] && <Chip key={c} related ev={a.evidence[c]} pressed={rule === c} onOpen={() => open(a.evidence[c])} />)}
+                {(s.related ?? []).map(
+                  (c) => a.evidence[c] && <Chip key={`r-${c}`} related ev={a.evidence[c]} pressed={rule === c} onOpen={() => open(a.evidence[c])} />,
+                )}
               </span>
-            </motion.li>
+            </li>
           ))}
-        </motion.ol>
+        </ol>
       )}
-      <AnimatePresence initial={false}>
-        {ruleEv && ruleEv.target.type === "rule" && (
-          <motion.div key={ruleEv.id} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: dur.ui, ease: ease.out }} className="overflow-hidden">
-            <CitationCard
-              ruleId={ruleEv.target.rule_id}
-              citation={{ doc: ruleEv.target.doc ?? undefined, doc_title: ruleEv.target.doc_title, section: ruleEv.target.section ?? undefined, page: ruleEv.target.page ?? undefined, quote: ruleEv.target.quote ?? undefined }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <div className="text-xs text-ink-3">
-        {pluralize(a.sentences.length, "sentence")} shown,{" "}
-        {a.dropped_count > 0 ? (
-          <button type="button" onClick={() => setShowDropped((v) => !v)} aria-expanded={showDropped} className="inline-flex items-center gap-0.5 font-medium text-brand-ink hover:underline">
-            {a.dropped_count} dropped by the evidence check
-            <ChevronDown aria-hidden className={cn("size-3 transition-transform duration-200", showDropped && "rotate-180")} />
-          </button>
-        ) : (
-          "0 dropped by the evidence check"
-        )}
-      </div>
-      <AnimatePresence initial={false}>
-        {showDropped && (
-          <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: dur.ui, ease: ease.out }} className="space-y-1.5 overflow-hidden">
+      {ruleEv && ruleEv.target.type === "rule" && (
+        <CitationCard
+          ruleId={ruleEv.target.rule_id}
+          citation={{
+            doc: ruleEv.target.doc ?? undefined,
+            doc_title: ruleEv.target.doc_title,
+            section: ruleEv.target.section ?? undefined,
+            page: ruleEv.target.page ?? undefined,
+            quote: ruleEv.target.quote ?? undefined,
+          }}
+        />
+      )}
+      <p className="text-xs text-ink-3" title={a.mode === "model" ? (a.provider ?? undefined) : (a.fallback ?? undefined)}>
+        {modeLabel(a)}, {fmtMs(a.latency_ms)}, {pluralize(a.sentences.length, "sentence")} shown
+      </p>
+      {a.dropped_count > 0 && (
+        <details className="text-xs">
+          <summary className="cursor-pointer rounded text-ink-2 hover:text-ink">{pluralize(a.dropped_count, "sentence")} dropped by the evidence check</summary>
+          <ul className="mt-2 space-y-2 border-l-2 border-line-2 pl-3">
             {a.dropped.map((d, i) => (
-              <li key={i} className="rounded-[8px] bg-surface-2 px-2.5 py-1.5 text-xs">
-                <span className="text-ink-3 line-through decoration-ink-4">{d.text || "(empty)"}</span>
-                <span className="mt-0.5 block font-medium text-mismatch-fg">{d.reason}</span>
+              <li key={i}>
+                <span className="block text-ink-3">{d.text || "(empty)"}</span>
+                <span className="block font-medium text-ink-2">{d.reason}</span>
               </li>
             ))}
-          </motion.ul>
-        )}
-      </AnimatePresence>
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
 
-/** Docked, non-modal panel: chips open findings and page regions in the workspace while the panel stays open. */
-export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** Ask why: questions about this application, answered only from cited evidence of the latest run. */
+export function AskPanel({ open, onClose, prefill }: { open: boolean; onClose: () => void; prefill?: { question: string; key: number } }) {
   const { app } = useWorkspace();
   const ask = useAsk(app.id);
   const [q, setQ] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
-  const seen = useRef<Set<number>>(new Set());
   const input = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
-  const panel = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setTurns([]);
-    seen.current = new Set();
   }, [app.id]);
 
+  const prefillKey = prefill?.key;
   useEffect(() => {
-    if (open) requestAnimationFrame(() => input.current?.focus({ preventScroll: true }));
-  }, [open]);
+    if (!prefill) return;
+    setQ(prefill.question);
+    requestAnimationFrame(() => input.current?.focus({ preventScroll: true }));
+    // react only to a new prefill
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillKey]);
 
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    end.current?.scrollIntoView({ block: "end" });
   }, [turns]);
 
   const submit = (question: string) => {
@@ -185,110 +163,85 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
     });
   };
 
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <motion.aside
-          ref={panel}
-          key="ask"
-          role="complementary"
-          aria-label="Ask why"
-          initial={{ x: "100%" }}
-          animate={{ x: 0, transition: spring.soft }}
-          exit={{ x: "100%", transition: { duration: dur.panel, ease: ease.inOut } }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") onClose();
+  const newest = turns[turns.length - 1];
+  const announce = newest?.answer
+    ? `Answer: ${newest.answer.sentences.map((s) => s.text).join(" ") || "no sentence passed the evidence check."}`
+    : newest?.error
+      ? `The question was not answered: ${newest.error}`
+      : "";
+
+  return (
+    <Drawer
+      open={open}
+      onClose={onClose}
+      width={440}
+      title="Ask why"
+      description={<span className="text-xs">Answers cite the latest run only. Model output, evidence class E7.</span>}
+      footer={
+        <form
+          className="flex w-full items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit(q);
           }}
-          className="fixed top-16 right-0 bottom-0 z-[60] flex w-[min(440px,100vw)] flex-col border-l border-line bg-surface shadow-lg"
         >
-          <header className="border-b border-line px-4 pt-3.5 pb-3">
-            <div className="flex items-start gap-2">
-              <MessageCircleQuestion aria-hidden className="mt-0.5 size-5 shrink-0 text-brand-500" />
-              <div className="min-w-0 flex-1">
-                <h2 className="font-display text-md font-semibold tracking-title text-ink">Ask why</h2>
-                <p className="text-xs text-ink-3">{app.id}, latest run only</p>
-              </div>
-              <IconButton size="sm" label="Close Ask why" icon={<X />} onClick={onClose} />
+          <label htmlFor="ask-why-input" className="sr-only">
+            Question about this application
+          </label>
+          <input
+            id="ask-why-input"
+            ref={input}
+            data-autofocus
+            value={q}
+            maxLength={300}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Ask about a finding or a document"
+            className="h-8 min-w-0 flex-1 rounded-control border border-line-2 bg-surface px-3 text-sm text-ink shadow-xs outline-none placeholder:text-ink-4 hover:border-ink-4 focus-visible:border-brand-500 focus-visible:outline-2 focus-visible:outline-offset-0"
+          />
+          <Button type="submit" variant="secondary" leadingIcon={<SendHorizontal />} disabled={q.trim().length < 3} loading={ask.isPending}>
+            Ask
+          </Button>
+        </form>
+      }
+    >
+      <div className="space-y-6 px-5 py-5">
+        <p className="sr-only" aria-live="polite">
+          {announce}
+        </p>
+        <p className="text-sm text-ink-3 text-pretty">
+          Explains existing findings and decides nothing. Answers use Pramana's findings, verification results, rule clauses and run facts, never document text. A
+          sentence without evidence is dropped and counted.
+        </p>
+        {turns.length === 0 && (
+          <div>
+            <h3 className="mb-2 text-sm font-medium text-ink">Suggested questions</h3>
+            <div className="flex flex-col items-start gap-1">
+              {SUGGESTIONS.map((s) => (
+                <Button key={s} size="sm" variant="ghost" onClick={() => submit(s)} className="-ml-2.5">
+                  {s}
+                </Button>
+              ))}
             </div>
-            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-[10px] border border-line bg-surface-2/60 px-2.5 py-2">
-              <EvidenceClassChip cls="model" />
-              <span className="text-xs font-medium text-ink-2">Explains existing findings, decides nothing.</span>
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-ink-4">
-              Answers use only Pramana's findings, verification results, rule clauses and run facts, never document text. Each sentence must cite evidence; sentences that do not hold up are dropped and counted. Dashed chips link a cited finding to its rule and page region.
-            </p>
-          </header>
-
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4" aria-live="polite">
-            {turns.length === 0 && (
-              <div className="space-y-2">
-                <p className="eyebrow">Try</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {SUGGESTIONS.map((s) => (
-                    <motion.button
-                      key={s}
-                      type="button"
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => submit(s)}
-                      className="rounded-full border border-line bg-surface px-3 py-1.5 text-left text-xs font-medium text-ink-2 transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-ink"
-                    >
-                      {s}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {turns.map((t) => {
-              const fresh = !seen.current.has(t.id) && !!t.answer;
-              if (t.answer) seen.current.add(t.id);
-              return (
-                <motion.section key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: dur.panel, ease: ease.out }} className="space-y-2.5">
-                  <p className="ml-auto w-fit max-w-[90%] rounded-[12px] rounded-br-[4px] bg-brand-soft px-3 py-2 text-sm font-medium text-brand-ink">{t.question}</p>
-                  {t.answer ? (
-                    <Answer a={t.answer} fresh={fresh} />
-                  ) : t.error ? (
-                    <p className="rounded-[8px] bg-mismatch-bg px-3 py-2 text-sm text-mismatch-fg" role="alert">
-                      {t.error}
-                    </p>
-                  ) : (
-                    <div role="status" className="flex items-center gap-2.5 rounded-[10px] bg-surface-2 px-3 py-2.5 text-sm text-ink-2">
-                      <BlockLoader className="text-brand-500" />
-                      <span className="flex-1">Reading the findings and checking each sentence against its evidence</span>
-                      <Elapsed />
-                    </div>
-                  )}
-                </motion.section>
-              );
-            })}
-            <div ref={end} />
           </div>
-
-          <form
-            className="border-t border-line p-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit(q);
-            }}
-          >
-            <label htmlFor="ask-why-input" className="sr-only">
-              Question about this application
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="ask-why-input"
-                ref={input}
-                value={q}
-                maxLength={300}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Why is the fire NOC flagged?"
-                className="h-10 min-w-0 flex-1 rounded-control border border-line-2 bg-surface px-3 text-[14px] text-ink shadow-xs outline-none placeholder:text-ink-4 focus-visible:border-brand-400 focus-visible:ring-4 focus-visible:ring-brand-400/20"
-              />
-              <IconButton type="submit" variant="primary" label="Ask" icon={<SendHorizontal />} disabled={q.trim().length < 3 || ask.isPending} loading={ask.isPending} />
-            </div>
-          </form>
-        </motion.aside>
-      )}
-    </AnimatePresence>,
-    document.body,
+        )}
+        {turns.map((t) => (
+          <section key={t.id} className="space-y-2 border-t border-line pt-4 first:border-t-0 first:pt-0">
+            <p className="text-sm text-ink-3">{t.question}</p>
+            {t.answer ? (
+              <Answer a={t.answer} onLeave={onClose} />
+            ) : t.error ? (
+              <Callout tone="danger" title="Not answered">
+                {t.error}
+              </Callout>
+            ) : (
+              <p role="status" className="text-sm text-ink-2">
+                Reading the findings and checking each sentence against its evidence.
+              </p>
+            )}
+          </section>
+        ))}
+        <div ref={end} />
+      </div>
+    </Drawer>
   );
 }
