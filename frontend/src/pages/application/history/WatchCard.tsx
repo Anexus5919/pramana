@@ -1,34 +1,43 @@
-import { ArrowUpRight, Eye, Gavel, RefreshCw } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useId, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../../api";
-import { useAuth } from "../../../auth/session";
 import { fmtDate, fmtDateTime, fmtRelative, pluralize } from "../../../lib/format";
-import { SeverityMeter, StatusCube } from "../../../ui/Blocks";
-import { Button } from "../../../ui/Button";
-import { SectionCard } from "../../../ui/Card";
-import { cn } from "../../../ui/cn";
-import { Dialog } from "../../../ui/Dialog";
-import { Field, Textarea } from "../../../ui/Field";
-import { dur, ease, fadeUp, stagger } from "../../../ui/motion";
-import { Skeleton } from "../../../ui/Skeleton";
-import { ErrorState } from "../../../ui/States";
-import { useToast } from "../../../ui/Toast";
-import { Tooltip } from "../../../ui/Tooltip";
+import { workspacePath } from "../../../shell/nav";
+import {
+  Button,
+  Callout,
+  Code,
+  DataTable,
+  DescriptionList,
+  Dialog,
+  Drawer,
+  ErrorState,
+  Field,
+  Panel,
+  Select,
+  SeverityIndicator,
+  SimulatedTag,
+  Skeleton,
+  StatusBadge,
+  Textarea,
+  Tooltip,
+  useToast,
+  type Column,
+} from "../../../ui2";
+import type { Tone } from "../../../lib/labels";
 import { useWorkspace } from "../context";
-import { appPath, useVerifications } from "../data";
-import { SimTag } from "../parts";
+import { useVerifications } from "../data";
 import { useRecordOutcome, useRunWatch, useWatch, type ApplicationWatch, type WatchItem } from "./api";
 
-const STATE: Record<string, { status: string; label: string }> = {
-  ok: { status: "verified", label: "Confirmed by the issuer" },
-  revoked: { status: "mismatch_detected", label: "Revoked by the issuer" },
-  suspended: { status: "mismatch_detected", label: "Suspended by the issuer" },
-  not_found: { status: "mismatch_detected", label: "No longer in the issuer registry" },
-  record_changed: { status: "mismatch_detected", label: "Issuer record now differs" },
-  expired: { status: "expired", label: "Expired since the outcome" },
-  source_unavailable: { status: "source_unavailable", label: "Registry did not respond" },
+const STATE: Record<string, { tone: Tone; label: string }> = {
+  ok: { tone: "verified", label: "Confirmed" },
+  revoked: { tone: "mismatch", label: "Revoked" },
+  suspended: { tone: "mismatch", label: "Suspended" },
+  not_found: { tone: "mismatch", label: "Not in registry" },
+  record_changed: { tone: "mismatch", label: "Record differs" },
+  expired: { tone: "expired", label: "Expired" },
+  source_unavailable: { tone: "unavail", label: "No response" },
 };
 const CHANGE: Record<string, string> = {
   revoked: "revoked by the issuer",
@@ -39,7 +48,6 @@ const CHANGE: Record<string, string> = {
   source_unavailable: "issuer registry did not respond",
   restored: "confirmed by the issuer again",
 };
-const TRIGGER: Record<string, string> = { scheduler: "scheduled run", manual: "run on request", baseline: "baseline at the outcome" };
 
 export function fmtIn(v: string | null | undefined): string {
   if (!v) return "not scheduled";
@@ -55,97 +63,35 @@ function issuerName(s: string): string {
   return s.replace(/\s*\(SIMULATED\)\s*/i, "");
 }
 
-/** Twelve blocks for one watch interval: filled blocks are the time already elapsed since the last check. */
-function IntervalBlocks({ last, next }: { last: string | null | undefined; next: string | null | undefined }) {
-  if (!next) return null;
-  const end = new Date(next).getTime();
-  const start = last ? new Date(last).getTime() : end - 24 * 3600_000;
-  const frac = Math.min(1, Math.max(0, (Date.now() - start) / Math.max(1, end - start)));
-  const filled = Math.round(frac * 12);
-  return (
-    <span className="inline-flex items-end gap-[3px]" role="img" aria-label={`${Math.round(frac * 100)}% of the interval to the next check has passed`}>
-      {Array.from({ length: 12 }, (_, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: 3 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 + i * 0.025, duration: dur.ui, ease: ease.out }}
-          className={cn("h-3 w-2 rounded-[2px] border", i < filled ? "border-brand-500 bg-brand-500" : "border-line-2 bg-transparent")}
-        />
-      ))}
-    </span>
-  );
-}
-
-function ItemRow({ i, simLink }: { i: WatchItem; simLink: boolean }) {
-  const st = STATE[i.state] ?? { status: "not_checked", label: i.state };
-  const changed = i.state !== "ok";
-  return (
-    <motion.li variants={fadeUp} layout="position" className={cn("relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 px-3 py-2.5", changed && "bg-mismatch-bg/40")}>
-      <span className="mt-0.5">
-        <StatusCube status={st.status} size={16} explain />
-      </span>
-      <span className="min-w-0">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-sm font-medium text-ink">{i.label}</span>
-          <span className="font-mono text-[12px] break-all text-ink-2">{i.ref_no}</span>
-        </span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-          <span>{issuerName(i.issuer)}</span>
-          <SimTag simulated />
-          {i.valid_until && <span>valid until {fmtDate(i.valid_until)}</span>}
-        </span>
-        {changed && i.detail && <span className="mt-1 block text-xs text-mismatch-fg text-pretty">{i.detail}</span>}
-      </span>
-      <span className="text-right">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={i.state}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: dur.ui, ease: ease.out }}
-            className={cn("block text-xs font-medium", changed ? "text-mismatch-fg" : "text-verified-fg")}
-          >
-            {st.label}
-          </motion.span>
-        </AnimatePresence>
-        <span className="block text-[11px] text-ink-4">{i.last_checked_at ? `checked ${fmtRelative(i.last_checked_at)}` : "not checked yet"}</span>
-        {simLink && (
-          <Link
-            to={`/issuers?code=${encodeURIComponent(i.issuer_code)}&ref=${encodeURIComponent(i.ref_no)}`}
-            className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-brand-ink hover:underline"
-          >
-            Issuer simulator <ArrowUpRight aria-hidden className="size-3" />
-          </Link>
-        )}
-      </span>
-    </motion.li>
-  );
-}
+const MIN_REASON = 10;
 
 export function OutcomeDialog({ open, onClose, watch }: { open: boolean; onClose: () => void; watch: ApplicationWatch | undefined }) {
   const { app } = useWorkspace();
   const toast = useToast();
   const m = useRecordOutcome(app.id);
   const ver = useVerifications(app.id, open);
-  const name = useId();
   const options = watch?.outcomes ?? [];
   const [outcome, setOutcome] = useState("");
   const [reason, setReason] = useState("");
+  const [tried, setTried] = useState(false);
   const watchable = (ver.data ?? []).filter((a) => a.run_id === app.latest_run?.id && a.channel === "issuer_registry" && a.status === "verified").length;
 
   useEffect(() => {
     if (open) {
       setOutcome("");
       setReason("");
+      setTried(false);
       m.reset();
     }
     // reset only when the dialog opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const short = reason.trim().length < 10;
-  const submit = () =>
+  const reasonError = tried && reason.trim().length < MIN_REASON ? `Write a reason of at least ${MIN_REASON} characters.` : undefined;
+  const outcomeError = tried && !outcome ? "Choose the outcome the authority decided." : undefined;
+  const submit = () => {
+    setTried(true);
+    if (!outcome || reason.trim().length < MIN_REASON) return;
     m.mutate(
       { outcome, reason: reason.trim() },
       {
@@ -155,70 +101,120 @@ export function OutcomeDialog({ open, onClose, watch }: { open: boolean; onClose
         },
       },
     );
+  };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      size="lg"
       title="Record scrutiny outcome"
-      description="Record the outcome you have decided, with your reason. Pramana keeps it in the audit trail; it does not approve, reject or penalise."
+      description="Record the outcome the authority decided, with the reason. Pramana keeps it in the audit trail; it does not approve or reject."
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={!outcome || short} loading={m.isPending} leadingIcon={<Gavel />}>
+          <Button variant="primary" onClick={submit} loading={m.isPending}>
             Record outcome
           </Button>
         </>
       }
     >
       <div className="space-y-4">
-        {m.error && <ErrorState compact error={m.error} title="The outcome was not recorded" />}
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-ink-2">Outcome</legend>
-          <div className="grid gap-2 sm:grid-cols-3" role="radiogroup">
-            {options.map((o) => {
-              const on = outcome === o.value;
-              return (
-                <label
-                  key={o.value}
-                  className={cn(
-                    "relative flex cursor-pointer rounded-[12px] border p-3 text-sm transition-colors duration-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-400",
-                    on ? "border-brand-400 bg-brand-soft text-brand-ink" : "border-line bg-surface text-ink-2 hover:border-line-2",
-                  )}
-                >
-                  <input type="radio" name={name} value={o.value} checked={on} onChange={() => setOutcome(o.value)} className="sr-only" />
-                  {o.label}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-        <Field label="Reason" required hint={short ? "A written reason of at least 10 characters is required." : `${reason.trim().length} characters`}>
-          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder="Why this outcome, in a sentence the next reviewer can follow." />
+        {m.error && (
+          <Callout tone="danger" role="alert" title="The outcome was not recorded">
+            {errorMessage(m.error)}
+          </Callout>
+        )}
+        <Field label="Outcome" required error={outcomeError}>
+          <Select value={outcome} onChange={(e) => setOutcome(e.target.value)}>
+            <option value="">Choose an outcome</option>
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
         </Field>
-        <div className="flex items-start gap-2.5 rounded-[12px] border border-line bg-surface-2/60 p-3 text-sm text-ink-2">
-          <Eye aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-500" />
-          <p className="text-pretty">
-            {ver.isPending
-              ? "Counting the certificates that issuer registries confirmed on the latest run."
-              : `After you record it, the ${pluralize(watchable, "certificate")} confirmed by an issuer registry on the latest run ${watchable === 1 ? "is" : "are"} re-checked every ${watch?.interval_hours ?? 24} h. A revocation, expiry or missing record raises an alert and a finding; it never changes the outcome you recorded.`}
-          </p>
-        </div>
+        <Field label="Reason" required error={reasonError} hint="A sentence the next reviewer can follow. It is kept in the audit trail.">
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} />
+        </Field>
+        <p className="text-sm text-ink-3 text-pretty">
+          {ver.isPending
+            ? "Counting the certificates that issuer registries confirmed on the latest run."
+            : `After you record it, the ${pluralize(watchable, "certificate")} confirmed by an issuer registry on the latest run ${watchable === 1 ? "is" : "are"} rechecked every ${watch?.interval_hours ?? 24} h. A revocation, expiry or missing record raises a finding; it never changes the recorded outcome.`}
+        </p>
       </div>
     </Dialog>
   );
 }
 
+function WatchedDrawer({ open, onClose, items }: { open: boolean; onClose: () => void; items: WatchItem[] }) {
+  const columns: Column<WatchItem>[] = [
+    {
+      id: "label",
+      header: "Certificate",
+      cell: (i) => (
+        <span className="block min-w-0">
+          <span className="block text-sm font-medium text-ink">{i.label}</span>
+          <Code className="text-xs break-all">{i.ref_no}</Code>
+        </span>
+      ),
+      sortValue: (i) => i.label,
+    },
+    {
+      id: "issuer",
+      header: "Issuer",
+      cell: (i) => (
+        <span className="inline-flex flex-wrap items-center gap-1.5 text-sm text-ink-2">
+          {issuerName(i.issuer)}
+          <SimulatedTag />
+        </span>
+      ),
+    },
+    { id: "valid", header: "Valid until", cell: (i) => (i.valid_until ? fmtDate(i.valid_until) : <span className="text-ink-4">Not given</span>) },
+    {
+      id: "state",
+      header: "State",
+      cell: (i) => {
+        const st = STATE[i.state] ?? { tone: "unchecked" as Tone, label: i.state };
+        return (
+          <StatusBadge tone={st.tone} title={i.detail ?? undefined}>
+            {st.label}
+          </StatusBadge>
+        );
+      },
+      sortValue: (i) => i.state,
+    },
+    {
+      id: "checked",
+      header: "Last checked",
+      cell: (i) => <span title={i.last_checked_at ? fmtDateTime(i.last_checked_at) : undefined}>{i.last_checked_at ? fmtRelative(i.last_checked_at) : "Not yet"}</span>,
+    },
+    {
+      id: "open",
+      header: <span className="sr-only">Issuer record</span>,
+      cell: (i) => (
+        <Link to={`/issuers?code=${encodeURIComponent(i.issuer_code)}&ref=${encodeURIComponent(i.ref_no)}`} className="text-sm whitespace-nowrap text-ink underline-offset-2 hover:underline">
+          Open record
+        </Link>
+      ),
+    },
+  ];
+  return (
+    <Drawer open={open} onClose={onClose} width={760} title="Watched certificates" description="Rechecked with the issuer registries on a schedule. The registries are simulated in this prototype.">
+      <DataTable rows={items} columns={columns} rowKey={(i) => i.id} label="Watched certificates" density="compact" />
+    </Drawer>
+  );
+}
+
+/** After the decision: the recorded scrutiny outcome and the re-verification watch it started. */
 export function WatchCard() {
   const { app } = useWorkspace();
-  const { is } = useAuth();
   const toast = useToast();
   const q = useWatch(app.id);
   const run = useRunWatch();
-  const [dialog, setDialog] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const w = q.data;
 
   const runNow = () =>
@@ -226,118 +222,97 @@ export function WatchCard() {
       onSuccess: (r) => {
         const mine = r.changes.filter((c) => c.application_id === app.id);
         if (mine.length) toast.info(`Watch found ${pluralize(mine.length, "change")} here`, mine.map((c) => `${c.label}: ${CHANGE[c.change] ?? c.change}`).join(". "));
-        else toast.success("Watch run complete", `${pluralize(r.run.checked, "certificate")} checked across all watched applications${r.changes.length ? `, ${pluralize(r.changes.length, "change")} elsewhere` : ", no changes"}.`);
+        else
+          toast.success(
+            "Watch run complete",
+            `${pluralize(r.run.checked, "certificate")} checked across all watched applications${r.changes.length ? `, ${pluralize(r.changes.length, "change")} elsewhere` : ", no changes"}.`,
+          );
       },
       onError: (e) => toast.error("The watch did not run", errorMessage(e)),
     });
 
   return (
-    <SectionCard
-      eyebrow="After the scrutiny outcome"
-      title="Re-verification watch"
-      description="Certificates that issuer registries confirmed are asked again on a schedule. A change raises an alert and a finding for an official; it never changes a recorded outcome."
+    <Panel
+      title="After the decision"
       actions={
-        <>
-          {w?.outcome && (
-            <Button variant="ghost" size="sm" leadingIcon={<RefreshCw />} loading={run.isPending} onClick={runNow}>
-              Run watch now
-            </Button>
-          )}
-          {is("officer") && (
-            <Button variant={w?.outcome ? "secondary" : "primary"} size="sm" leadingIcon={<Gavel />} onClick={() => setDialog(true)} disabled={!app.latest_run}>
-              {w?.outcome ? "Record new outcome" : "Record scrutiny outcome"}
-            </Button>
-          )}
-        </>
+        w?.outcome ? (
+          <Button size="sm" variant="secondary" leadingIcon={<RefreshCw />} loading={run.isPending} onClick={runNow}>
+            Run watch now
+          </Button>
+        ) : undefined
       }
     >
       {q.isPending ? (
-        <Skeleton className="h-40" rounded="lg" />
+        <div role="status">
+          <span className="sr-only">Loading the watch</span>
+          <Skeleton className="h-24" />
+        </div>
       ) : q.error || !w ? (
         <ErrorState compact error={q.error} title="Could not load the watch" onRetry={() => void q.refetch()} />
+      ) : !w.outcome ? (
+        <p className="text-sm text-ink-2 text-pretty">
+          No scrutiny outcome recorded yet. Use Decide to record one; certificates confirmed by issuers are then rechecked every {w.interval_hours} h.
+        </p>
       ) : (
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          <div className="min-w-0 space-y-4">
-            {w.outcome ? (
-              <div className="rounded-[12px] border border-line bg-surface-2/50 p-3">
-                <div className="eyebrow mb-1">Scrutiny outcome recorded</div>
-                <div className="flex items-start gap-2">
-                  <Gavel aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-500" />
-                  <span className="text-sm font-semibold text-ink">{w.outcome.label}</span>
-                </div>
-                <blockquote className="mt-2 border-l-2 border-brand-300 pl-3 text-sm text-ink-2 text-pretty">{w.outcome.reason}</blockquote>
-                <p className="mt-2 text-xs text-ink-3">
-                  Recorded by {w.outcome.recorded_by ?? "an official"} on {fmtDateTime(w.outcome.created_at)}, round {w.outcome.round}. Pramana recorded this decision; it did not make it.
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-[12px] border border-dashed border-line-2 p-4 text-sm text-ink-3 text-pretty">
-                No scrutiny outcome has been recorded, so nothing is watched yet. {is("officer") ? "Record one when scrutiny is complete." : "A scrutiny officer records it."}
-              </div>
-            )}
-            <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-sm">
-              <dt className="text-ink-3">Last checked</dt>
-              <dd className="text-ink-2">{w.last_run ? `${fmtRelative(w.last_run.finished_at)} (${TRIGGER[w.last_run.trigger] ?? w.last_run.trigger})` : "never"}</dd>
-              <dt className="text-ink-3">Next check</dt>
-              <dd className="flex flex-wrap items-center gap-2 text-ink-2">
-                <Tooltip content={w.next_check ? fmtDateTime(w.next_check) : "Starts when an outcome is recorded"}>
-                  <span tabIndex={0}>{w.scheduler_enabled ? fmtIn(w.next_check) : "scheduler off; run on request"}</span>
-                </Tooltip>
-                <IntervalBlocks last={w.last_run?.finished_at} next={w.next_check} />
-              </dd>
-              <dt className="text-ink-3">Schedule</dt>
-              <dd className="text-ink-2">every {w.interval_hours} h, {pluralize(w.active_items, "certificate")} watched in all</dd>
-            </dl>
-          </div>
-
-          <div className="min-w-0 space-y-4">
+        <div className="space-y-5">
+          <DescriptionList
+            items={[
+              { label: "Outcome", value: <span className="font-medium">{w.outcome.label}</span> },
+              { label: "Reason", value: w.outcome.reason },
+              { label: "Recorded by", value: w.outcome.recorded_by ?? "An official" },
+              { label: "Date", value: fmtDateTime(w.outcome.created_at) },
+              { label: "Round", value: String(w.outcome.round) },
+              {
+                label: "Next check",
+                value: w.scheduler_enabled ? (
+                  <Tooltip content={w.next_check ? fmtDateTime(w.next_check) : "Not scheduled"}>
+                    <span tabIndex={0} className="rounded">
+                      {fmtIn(w.next_check)}
+                    </span>
+                  </Tooltip>
+                ) : (
+                  "Scheduler off; run on request"
+                ),
+                hint: w.last_run ? `Last checked ${fmtRelative(w.last_run.finished_at)}` : undefined,
+              },
+              {
+                label: "Watched certificates",
+                value: w.items.length ? (
+                  <button type="button" onClick={() => setListOpen(true)} className="rounded text-left text-ink underline underline-offset-2 hover:text-ink-2">
+                    View {pluralize(w.items.length, "watched certificate")}
+                  </button>
+                ) : (
+                  "None confirmed by an issuer on the run the outcome was recorded against"
+                ),
+              },
+            ]}
+          />
+          {w.events.length > 0 && (
             <div>
-              <div className="eyebrow mb-2">Watched here ({w.items.length})</div>
-              {w.items.length === 0 ? (
-                <p className="rounded-[12px] border border-dashed border-line-2 p-4 text-sm text-ink-3">
-                  {w.outcome ? "No certificate was confirmed by an issuer registry on the run the outcome was recorded against." : "Nothing yet."}
-                </p>
-              ) : (
-                <motion.ul variants={stagger(0.04)} initial="hidden" animate="show" className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
-                  {w.items.map((i) => (
-                    <ItemRow key={i.id} i={i} simLink={is("officer", "admin")} />
-                  ))}
-                </motion.ul>
-              )}
+              <h3 className="mb-1 text-sm font-semibold text-ink">Events</h3>
+              <ul className="divide-y divide-line">
+                {w.events.map((e) => (
+                  <li key={e.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 text-sm">
+                    <SeverityIndicator severity={e.severity} />
+                    <span className={e.change === "restored" ? "min-w-0 flex-1 text-ink-3" : "min-w-0 flex-1 text-ink"}>
+                      {e.label}: {CHANGE[e.change] ?? e.change}
+                    </span>
+                    <span className="text-xs text-ink-3" title={fmtDateTime(e.created_at)}>
+                      {fmtRelative(e.created_at)}
+                    </span>
+                    {e.finding_id && (
+                      <Link to={workspacePath(app.id, "findings", { finding: e.finding_id })} className="text-sm text-ink underline-offset-2 hover:underline">
+                        Open finding
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-            {w.events.length > 0 && (
-              <div>
-                <div className="eyebrow mb-2">Changes the watch has seen</div>
-                <ul className="space-y-1.5">
-                  <AnimatePresence initial={false}>
-                    {w.events.map((e) => (
-                      <motion.li
-                        key={e.id}
-                        layout="position"
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0, transition: { duration: dur.panel, ease: ease.out } }}
-                        className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-sm"
-                      >
-                        <SeverityMeter severity={e.severity} />
-                        <span className={cn("min-w-0 flex-1", e.change === "restored" ? "text-ink-3" : "text-ink")}>
-                          {e.label}: {CHANGE[e.change] ?? e.change}
-                          <span className="ml-2 text-xs text-ink-4">{fmtDateTime(e.created_at)}</span>
-                        </span>
-                        {e.finding_id && (
-                          <Link to={appPath(app.id, "findings", { finding: e.finding_id })} className="inline-flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline">
-                            Open finding <ArrowUpRight aria-hidden className="size-3" />
-                          </Link>
-                        )}
-                      </motion.li>
-                    ))}
-                  </AnimatePresence>
-                </ul>
-              </div>
-            )}
-          </div>
+          )}
+          <WatchedDrawer open={listOpen} onClose={() => setListOpen(false)} items={w.items} />
         </div>
       )}
-      <OutcomeDialog open={dialog} onClose={() => setDialog(false)} watch={w} />
-    </SectionCard>
+    </Panel>
   );
 }
