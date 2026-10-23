@@ -27,6 +27,8 @@ from ..models import (
     VerificationAttempt,
     utcnow,
 )
+from ..officer.common import FORBIDDEN_WORDS, RECTIFIABLE_CATEGORIES
+from ..officer.letter import item_wording
 from ..pipeline.intake import UploadRejected, validate_upload
 from ..pipeline.validate import ruleset_by_hash, run_validation
 from ..rules.engine import active_ruleset
@@ -92,12 +94,14 @@ def get_application(app_id: str, user: User = Depends(current_user), db: Session
                 for t in cl.get("required", []) + cl.get("optional", [])]
     rect = db.scalars(select(RectificationRequest).where(RectificationRequest.application_id == app.id)
                       .order_by(RectificationRequest.created_at.desc())).all()
-    return {**ser.application(app, latest_run(db, app.id), for_institution=user.role == "institution"),
+    inst = user.role == "institution"
+    return {**ser.application(app, latest_run(db, app.id), for_institution=inst),
             "category_label": cl.get("label", app.category), "checklist_source": cl.get("source"),
             "document_checklist": required,
             "documents": [ser.document(d) for d in docs],
-            "rectifications": [{"id": r.id, "round": r.round, "items": r.items, "message": r.message,
-                                "status": r.status, "created_at": r.created_at.isoformat(),
+            "rectifications": [{"id": r.id, "round": r.round,
+                                "items": [institution_item(db, i, rs) for i in r.items] if inst else r.items,
+                                "message": r.message, "status": r.status, "created_at": r.created_at.isoformat(),
                                 "responded_at": r.responded_at.isoformat() if r.responded_at else None}
                                for r in rect]}
 
@@ -370,39 +374,82 @@ def finding_history(finding_id: str, user: User = Depends(require_roles(*OFFICIA
 
 
 class RectifyBody(BaseModel):
-    finding_ids: list[str]
+    finding_ids: list[str] = []
     message: str | None = None
 
 
-@router.post("/applications/{app_id}/rectification")
-def request_rectification(app_id: str, body: RectifyBody, user: User = Depends(require_roles("officer")),
-                          db: Session = Depends(get_db)):
-    app = load_application(db, user, app_id)
-    if not body.finding_ids:
-        raise HTTPException(400, "select at least one finding")
+def institution_item(db: Session, item: dict, rs) -> dict:
+    """One rectification item as the institution reads it: a title and a plain message, never a rule or detector
+    code, a fact path or an indicator's own wording."""
+    out = {"finding_id": item.get("finding_id"), "title": item.get("title"), "message": item.get("message"),
+           "document_type": item.get("document_type")}
+    if item.get("neutral"):
+        return out
+    f = db.get(Finding, item["finding_id"]) if item.get("finding_id") else None
+    if f is None:
+        return {**out, "title": "Item to correct", "message": "Details are in the deficiency letter."}
+    title, message = item_wording(db, f, rs)
+    return {**out, "title": title, "message": message}
+
+
+def open_rectification(db: Session, app: Application, findings: list[Finding], message: str | None, user: User,
+                       wording: dict[str, tuple[str, str]] | None = None) -> RectificationRequest:
+    """Open a rectification round: mark the findings as asked about, snapshot the application and start the next round.
+
+    `wording` maps finding ids to the institution-facing title and message (the deficiency letter's text); items
+    without it are stored with their finding's text for officials and reworded when an institution reads them."""
     items = []
-    for fid in body.finding_ids:
-        f = db.get(Finding, fid)
-        if not f or f.application_id != app.id:
-            raise HTTPException(400, f"finding {fid} does not belong to this application")
+    for f in findings:
         f.review_status = "evidence_requested"
         doc = db.get(Document, f.document_id) if f.document_id else None
         paths = sorted({i.get("path") for i in (f.trace or {}).get("inputs", []) if i.get("path")})
-        items.append({"finding_id": f.id, "code": f.code, "title": f.title, "message": f.message,
-                      "document_type": doc.declared_type if doc else None, "fact_paths": paths})
+        item = {"finding_id": f.id, "code": f.code, "title": f.title, "message": f.message,
+                "document_type": doc.declared_type if doc else None, "fact_paths": paths}
+        if wording and f.id in wording:
+            item.update(title=wording[f.id][0], message=wording[f.id][1], neutral=True)
+        items.append(item)
     current = db.scalars(select(Document).where(Document.application_id == app.id,
                                                 Document.superseded.is_(False))).all()
     snapshot = {"declared": app.declared, "documents": {d.declared_type: d.sha256 for d in current}}
-    r = RectificationRequest(application_id=app.id, round=app.round, items=items, message=body.message,
+    r = RectificationRequest(application_id=app.id, round=app.round, items=items, message=message,
                              created_by=user.id, snapshot=snapshot)
     db.add(r)
+    db.flush()
     app.round += 1
     app.status = "rectification_requested"
     audit.record(db, actor=user.username, actor_role=user.role, action="rectification.requested",
                  object_type="application", object_id=app.id, application_id=app.id,
                  details={"items": [i["code"] for i in items], "new_round": app.round})
+    return r
+
+
+@router.post("/applications/{app_id}/rectification")
+def request_rectification(app_id: str, body: RectifyBody, user: User = Depends(require_roles("officer")),
+                          db: Session = Depends(get_db)):
+    """Ask the institution to correct deficiencies. Only completeness, compliance and validity findings can be sent:
+    forensic, cross-application and issuer-verification findings stay with officials (a deficiency letter words
+    them neutrally), so the institution never learns what a detector saw."""
+    app = load_application(db, user, app_id)
+    message = (body.message or "").strip() or None
+    if message and FORBIDDEN_WORDS.search(message):
+        raise HTTPException(400, "Message: describe the issue neutrally (for example 'could not be confirmed') "
+                                 "instead of judging the document")
+    if not body.finding_ids and not message:
+        raise HTTPException(400, "select at least one finding or write a message")
+    findings = []
+    for fid in dict.fromkeys(body.finding_ids):
+        f = db.get(Finding, fid)
+        if not f or f.application_id != app.id:
+            raise HTTPException(400, f"finding {fid} does not belong to this application")
+        findings.append(f)
+    held = [f for f in findings if f.category not in RECTIFIABLE_CATEGORIES]
+    if held:
+        raise HTTPException(422, "Forensic, cross-application and issuer-verification findings stay with officials "
+                                 "and cannot be sent to the institution (" + ", ".join(f.code for f in held) + "). "
+                                 "Describe what to correct in the message, or draft a deficiency letter.")
+    r = open_rectification(db, app, findings, message, user)
     db.commit()
-    return {"id": r.id, "round": app.round, "items": items}
+    return {"id": r.id, "round": app.round, "items": r.items}
 
 
 class ManualVerification(BaseModel):
