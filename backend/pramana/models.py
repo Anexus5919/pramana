@@ -316,3 +316,27 @@ class RunEvent(Base):
     # "all" events are safe to show the applicant; "official" events carry checks and finding counts
     audience: Mapped[str] = mapped_column(String(20), default="official")
     data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+
+class DeficiencyLetter(Base):
+    """Deficiency notice drafted from findings. Finalising stores the PDF and records its SHA-256 in the audit chain."""
+
+    __tablename__ = "deficiency_letters"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True, default=lambda: new_id("ltr"))
+    application_id: Mapped[str] = mapped_column(ForeignKey("applications.id"), index=True)
+    round: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    subject: Mapped[str] = mapped_column(String(300))
+    intro: Mapped[str] = mapped_column(Text, default="")
+    # Structured items only: finding, title, description, what to submit, cited rule and response date
+    items: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finalised_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    finalised_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    final_reason: Mapped[str | None] = mapped_column(Text)
+    final_sha256: Mapped[str | None] = mapped_column(String(64))
+    storage_name: Mapped[str | None] = mapped_column(String(120))
+    rectification_id: Mapped[str | None] = mapped_column(ForeignKey("rectification_requests.id"), index=True)

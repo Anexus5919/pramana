@@ -1,5 +1,6 @@
 import { FileWarning, History, Play } from "lucide-react";
 import { motion } from "motion/react";
+import type { ReactNode } from "react";
 import { appStatusMeta, humanize } from "../../lib/labels";
 import { fmtDate, fmtRelative } from "../../lib/format";
 import type { ApplicationDetail } from "../../types";
@@ -33,6 +34,7 @@ export function WorkspaceHeader({
   onValidate,
   onReplay,
   onRectify,
+  extra,
 }: {
   app: ApplicationDetail;
   canValidate: boolean;
@@ -42,6 +44,8 @@ export function WorkspaceHeader({
   onValidate: () => void;
   onReplay: () => void;
   onRectify: () => void;
+  /** Role-specific actions shown before the standard ones */
+  extra?: ReactNode;
 }) {
   const run = app.latest_run;
   return (
@@ -83,6 +87,7 @@ export function WorkspaceHeader({
           transition={{ duration: dur.panel, ease: ease.out, delay: 0.1 }}
           className="flex flex-wrap items-center gap-2"
         >
+          {extra}
           {canRectify && (
             <Button variant="ghost" leadingIcon={<FileWarning />} onClick={onRectify}>
               Request rectification

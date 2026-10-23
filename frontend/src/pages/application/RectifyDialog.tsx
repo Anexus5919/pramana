@@ -9,6 +9,7 @@ import { Checkbox, Field, Textarea } from "../../ui/Field";
 import { ErrorState } from "../../ui/States";
 import { useToast } from "../../ui/Toast";
 import { useRectification } from "./data";
+import { useLetters } from "./officer/officerApi";
 
 const OPEN = new Set(["open", "acknowledged", "accepted", "evidence_requested", "escalated"]);
 
@@ -18,12 +19,15 @@ export function RectifyDialog({
   onClose,
   findings,
   preselect,
+  onDraftLetter,
 }: {
   appId: string;
   open: boolean;
   onClose: () => void;
   findings: Finding[];
   preselect?: string[];
+  /** Opens the deficiency letter editor for the picked findings, or resumes a saved draft */
+  onDraftLetter?: (findingIds: string[], resumeId?: string | null) => void;
 }) {
   const toast = useToast();
   const m = useRectification(appId);
@@ -33,6 +37,7 @@ export function RectifyDialog({
   );
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
+  const draft = useLetters(appId, open && !!onDraftLetter).data?.find((l) => l.status === "draft");
 
   useEffect(() => {
     if (open) {
@@ -63,6 +68,18 @@ export function RectifyDialog({
       description="The institution sees each selected finding as a deficiency to correct, with your message. Selected findings move to evidence requested."
       footer={
         <>
+          {onDraftLetter && (
+            <span className="mr-auto flex flex-wrap items-center gap-2">
+              <Button variant="secondary" onClick={() => onDraftLetter([...picked])} disabled={!picked.size}>
+                Draft deficiency letter
+              </Button>
+              {draft && (
+                <button type="button" onClick={() => onDraftLetter([], draft.id)} className="text-xs font-medium text-brand-ink hover:underline">
+                  Resume saved draft
+                </button>
+              )}
+            </span>
+          )}
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>

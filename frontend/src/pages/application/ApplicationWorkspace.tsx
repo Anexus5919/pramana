@@ -28,6 +28,10 @@ import { WorkspaceProvider, type DocTarget, type WorkspaceCtx } from "./context"
 import { appPath, isTab, useApplication, useFindings, useInvalidateApp, useRun, useVerifications, type WorkspaceTab } from "./data";
 import { HeaderTitle, WorkspaceHeader } from "./Header";
 import { SinceLastYearTab } from "./history/SinceLastYearTab";
+import { AskPanel } from "./officer/AskPanel";
+import { EvidencePackDialog } from "./officer/EvidencePackDialog";
+import { LetterEditor } from "./officer/LetterEditor";
+import { OfficerActions } from "./officer/OfficerActions";
 import { RectifyDialog } from "./RectifyDialog";
 import { ReplayDialog } from "./ReplayDialog";
 import { RunPanel, useValidation } from "./RunPanel";
@@ -98,6 +102,9 @@ export default function ApplicationWorkspace() {
   const [replayOpen, setReplayOpen] = useState(false);
   const [rectify, setRectify] = useState<{ open: boolean; preselect?: string[] }>({ open: false });
   const [viewer, setViewer] = useState<DocTarget | null>(null);
+  const [letter, setLetter] = useState<{ open: boolean; findingIds?: string[]; resumeId?: string | null }>({ open: false });
+  const [packOpen, setPackOpen] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
 
   const docs = useMemo(() => {
     const m: Record<string, DocumentSummary> = {};
@@ -158,7 +165,7 @@ export default function ApplicationWorkspace() {
 
   return (
     <WorkspaceProvider value={ctx}>
-      <div className="min-w-0">
+      <div className={askOpen ? "min-w-0 transition-[padding] duration-300 2xl:pr-[440px]" : "min-w-0 transition-[padding] duration-300"}>
         <WorkspaceHeader
           app={app}
           canValidate={is("officer", "verifier", "admin")}
@@ -168,6 +175,7 @@ export default function ApplicationWorkspace() {
           onValidate={() => void validation.start()}
           onReplay={startReplay}
           onRectify={() => setRectify({ open: true })}
+          extra={is("officer") ? <OfficerActions askOpen={askOpen} onAsk={() => setAskOpen((v) => !v)} onPack={() => setPackOpen(true)} /> : undefined}
         />
         <RunPanel appId={app.id} v={validation} />
 
@@ -228,7 +236,18 @@ export default function ApplicationWorkspace() {
           preselect={rectify.preselect}
           findings={findings}
           onClose={() => setRectify({ open: false })}
+          onDraftLetter={(ids, resumeId) => {
+            setRectify({ open: false });
+            setLetter({ open: true, findingIds: ids, resumeId });
+          }}
         />
+        {is("officer") && (
+          <>
+            <LetterEditor appId={app.id} open={letter.open} findingIds={letter.findingIds} resumeId={letter.resumeId} onClose={() => setLetter({ open: false })} />
+            <EvidencePackDialog appId={app.id} open={packOpen} onClose={() => setPackOpen(false)} />
+            <AskPanel open={askOpen} onClose={() => setAskOpen(false)} />
+          </>
+        )}
       </div>
     </WorkspaceProvider>
   );

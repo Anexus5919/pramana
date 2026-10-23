@@ -12,6 +12,7 @@ from .config import get_settings
 from .db import init_db
 from .history import api as history_api
 from .history.watch import start_scheduler
+from .officer import routes as officer
 from .sandbox_worker import windows_full_speed
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -45,6 +46,7 @@ app.include_router(history_api.router)
 app.include_router(live.router)
 app.include_router(ops.router)
 app.include_router(public.router)
+app.include_router(officer.router)
 
 
 @app.middleware("http")
