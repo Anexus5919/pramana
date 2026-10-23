@@ -52,8 +52,23 @@ function regionBoxes(evidence: Evidence[], docId: string, ownerDoc: string | nul
   return out;
 }
 
+/** Lines on the page that address an automated reader; the API returns them for officials. */
+export interface InstructionLine {
+  page: number;
+  bbox: BBox;
+  text: string;
+}
+
+export function instructionLinesOf(doc: DocumentDetail): InstructionLine[] {
+  const raw = (doc as DocumentDetail & { instruction_lines?: unknown }).instruction_lines;
+  return Array.isArray(raw) ? (raw as InstructionLine[]).filter((l) => l && typeof l.text === "string" && !!l.page && validBox(l.bbox)) : [];
+}
+
 export function buildOverlays(doc: DocumentDetail, findings: Finding[]): OverlayBox[] {
   const boxes: OverlayBox[] = [];
+  instructionLinesOf(doc).forEach((l, i) => {
+    boxes.push({ key: `instr-${i}`, layer: "instruction", page: l.page, bbox: l.bbox, title: "Text addressed to an automated reader", value: l.text });
+  });
   for (const f of doc.fields ?? []) {
     if (f.page && validBox(f.bbox)) {
       boxes.push({ key: `field-${f.id}`, layer: "fields", page: f.page, bbox: f.bbox, title: humanize(f.name), value: f.value ?? f.raw, method: f.method });

@@ -72,6 +72,9 @@ export function DocViewer({
   onPage,
   focus,
   onBoxClick,
+  isClickable = (b) => !!b.findingId,
+  peek,
+  onHover,
   className,
   stageClassName,
 }: {
@@ -81,6 +84,10 @@ export function DocViewer({
   onPage: (p: number) => void;
   focus: Focus | null;
   onBoxClick?: (b: OverlayBox) => void;
+  isClickable?: (b: OverlayBox) => boolean;
+  /** Overlay key to emphasise, for a hover preview from outside the viewer */
+  peek?: string | null;
+  onHover?: (b: OverlayBox | null) => void;
   className?: string;
   stageClassName?: string;
 }) {
@@ -125,6 +132,10 @@ export function DocViewer({
     setFailed(false);
     setHover(null);
   }, [doc.id, page]);
+
+  useEffect(() => {
+    onHover?.(hover);
+  }, [hover, onHover]);
 
   // Scroll the focused region into view once the page has rendered
   useEffect(() => {
@@ -257,7 +268,8 @@ export function DocViewer({
                 {boxes.map((b) => {
                   const l = LAYERS.find((x) => x.id === b.layer)!;
                   const [x0, y0, x1, y1] = b.bbox;
-                  const clickable = !!onBoxClick && !!b.findingId;
+                  const clickable = !!onBoxClick && isClickable(b);
+                  const lit = hover?.key === b.key || peek === b.key;
                   return (
                     <motion.rect
                       key={b.key}
@@ -269,8 +281,8 @@ export function DocViewer({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: delayFor(b), duration: dur.ui }}
-                      style={{ fill: l.color, fillOpacity: hover?.key === b.key ? 0.22 : b.layer === "rows" ? 0.05 : 0.1, stroke: l.color }}
-                      strokeWidth={hover?.key === b.key ? 2 : 1.4}
+                      style={{ fill: l.color, fillOpacity: lit ? 0.24 : b.layer === "rows" ? 0.05 : 0.1, stroke: l.color }}
+                      strokeWidth={lit ? 2.2 : 1.4}
                       tabIndex={0}
                       role={clickable ? "button" : "img"}
                       aria-label={`${b.title}${b.value ? `: ${b.value}` : ""}`}
