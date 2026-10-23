@@ -51,7 +51,8 @@ from pramana.photos.credentials import DEMO_CA_FILE  # noqa: E402
 from pramana.verification import demo_pki  # noqa: E402
 from pramana.verification.signed_qr import sign_payload  # noqa: E402
 
-VERSION = 1
+# 2: genuine issuer documents are always DSC-signed, and an unsigned one is a condition, as main reports it
+VERSION = 2
 CLEAN_SHARE = (0.25, 0.30)
 CONDITIONS_PER_APP = ([1, 2, 3], [0.5, 0.35, 0.15])
 INCREASE_SHARE = 0.2
@@ -259,8 +260,11 @@ def render(w: World, out: Path) -> dict[str, Any]:
                                               "issue_date": oc["registry"]["issue"].isoformat(),
                                               "built_up_area_sqm": str(oc["registry"]["area"])})
         pdf, _ = mf.occupancy(ib, oc["number"], oc["issue"], oc["area"], name=oc["name"])
-        docs["occupancy_certificate"] = demo_pki.sign_pdf(pdf, signer("muni", i.key), chain, reason="OC issued",
-                                                          location=i.city) if oc["sign"] else pdf
+        if oc["sign"] == "applicant":
+            pdf = demo_pki.sign_pdf(pdf, signer("applicant", i.key), chain, reason="Uploaded", location=i.city)
+        elif oc["sign"]:
+            pdf = demo_pki.sign_pdf(pdf, signer("muni", i.key), chain, reason="OC issued", location=i.city)
+        docs["occupancy_certificate"] = pdf
         if a.ssc:
             record("SE-REGISTRY", a.ssc["reg"], {})
             docs["structural_stability"] = mf.structural(ib, a.ssc["number"], a.ssc["issue"], a.ssc["reg"])[0]
@@ -369,8 +373,7 @@ def answer_key(w: World, planted: list[Planted]) -> dict[str, Any]:
                  "partner: the finding the condition causes on the other application; side_effect: a consequence "
                  "fixed by the plan before any run. An application with no expected item is clean.",
         "world": {"fire_number_format": w.fire_fmt, "occupancy_number_format": w.oc_fmt, "nba_format": w.nba_fmt,
-                  "fire_qr_by_state": w.fire_qr, "fire_issuer_signs_by_state": w.fire_signs,
-                  "municipal_issuer_signs_by_state": w.muni_signs, "nba_qr": w.nba_qr},
+                  "fire_qr_by_state": w.fire_qr, "nba_qr": w.nba_qr},
         "applications": [{"key": a.key, "id": a.id, "institution": a.inst.name, "city": a.inst.city,
                           "state": a.inst.state, "category": a.category, "submitted": a.submitted.isoformat(),
                           "clean": a.key not in by_app, "conditions": [p.id for p in a.conds],

@@ -128,8 +128,6 @@ class World:
     oc_fmt: dict[str, str] = field(default_factory=dict)
     nba_fmt: str = ""
     fire_qr: dict[str, bool] = field(default_factory=dict)
-    fire_signs: dict[str, bool] = field(default_factory=dict)
-    muni_signs: dict[str, bool] = field(default_factory=dict)
     nba_qr: bool = True
     engineers: dict[str, list[str]] = field(default_factory=dict)
     photo_seeds: set[int] = field(default_factory=set)
@@ -161,8 +159,6 @@ def new_world(seed: int) -> World:
         w.fire_fmt[st] = rng.choice(FIRE_FORMATS)
         w.oc_fmt[st] = rng.choice(OC_FORMATS)
         w.fire_qr[st] = rng.random() < 0.7
-        w.fire_signs[st] = rng.random() < 0.8
-        w.muni_signs[st] = rng.random() < 0.7
     w.nba_fmt = rng.choice(NBA_FORMATS)
     w.nba_qr = rng.random() < 0.8
     return w
@@ -250,7 +246,7 @@ def fire_spec(w: World, a: App, g: dict) -> dict:
             "issued_to": i.name, "office": i.key, "seal_of": i.key,
             "qr": ({"number": g["number"], "name": i.name, "issue": g["issue"], "valid": g["valid"]}
                    if w.fire_qr[st] else None),
-            "sign": "issuer" if w.fire_signs[st] else None,
+            "sign": "issuer",
             "registry": {"number": g["number"], "name": i.name, "issue": g["issue"], "valid": g["valid"]},
             "tamper": None, "injection": None, "genuine": dict(g), "readable": True}
 
@@ -271,7 +267,7 @@ def base_app(w: World, key: str, inst: Inst, category: str, submitted: date, cle
     inst.est = max(1960, oc_issue.year - r.randint(0, 2))
     oc_area = r.randint(600, 3200) * 10
     a.oc = {"number": ids.number(w.oc_fmt[inst.st], inst.city, inst.st, oc_issue.year), "issue": oc_issue,
-            "area": oc_area, "name": inst.name, "sign": w.muni_signs[inst.st]}
+            "area": oc_area, "name": inst.name, "sign": True}
     a.oc["registry"] = {"name": inst.name, "issue": oc_issue, "area": oc_area}
 
     a.fire = fire_spec(w, a, genuine_fire(w, a))

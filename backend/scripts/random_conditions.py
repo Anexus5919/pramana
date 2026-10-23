@@ -88,7 +88,7 @@ def overwritten(other_font: bool):
 def fire_unknown_number(w, a, b):
     _fire(w, a, genuine_fire(w, a))
     a.fire.update(registry=None, qr=None, sign="applicant", genuine=None)
-    return [E(a, "VER-ISSUER_REGISTRY-MISMATCH_DETECTED")]
+    return [E(a, "VER-ISSUER_REGISTRY-MISMATCH_DETECTED"), E(a, "VER-ISSUER-SIGNATURE-ABSENT")]
 
 
 def copied_ok(w, a, b):
@@ -105,7 +105,8 @@ def fire_copied(w, a, b):
               "injection": None, "genuine": None, "readable": True}
     a.decl["fire_noc_number"] = s["number"]
     out = [E(a, "VER-ISSUER_REGISTRY-MISMATCH_DETECTED"), E(a, "XA-SHARED-CERTIFICATE-NUMBER"),
-           E(a, "XA-NEAR-DUPLICATE-DETAILS"), E(b, "XA-SHARED-CERTIFICATE-NUMBER", "partner"),
+           E(a, "XA-NEAR-DUPLICATE-DETAILS"), E(a, "VER-ISSUER-SIGNATURE-ABSENT"),
+           E(b, "XA-SHARED-CERTIFICATE-NUMBER", "partner"),
            E(b, "XA-NEAR-DUPLICATE-DETAILS", "partner")]
     return out + ([E(a, "VER-SIGNED_QR-MISMATCH_DETECTED")] if s["qr"] else [])
 
@@ -118,7 +119,8 @@ def fire_qr_mismatch(w, a, b):
     while add_years(g["valid"], k) < a.as_of + timedelta(days=30):
         k += 1
     a.fire.update(valid=add_years(g["valid"], k + w.rng.choice([0, 1])), sign="applicant")
-    return [E(a, "VER-SIGNED_QR-MISMATCH_DETECTED"), E(a, "VER-ISSUER_REGISTRY-MISMATCH_DETECTED")]
+    return [E(a, "VER-SIGNED_QR-MISMATCH_DETECTED"), E(a, "VER-ISSUER_REGISTRY-MISMATCH_DETECTED"),
+            E(a, "VER-ISSUER-SIGNATURE-ABSENT")]
 
 
 def fire_after_submission(w, a, b):
@@ -158,7 +160,7 @@ def seal_ok(w, a, b):
 def seal_other_issuer(w, a, b):
     _fire(w, a, genuine_fire(w, a))
     a.fire.update(seal_of=b.inst.key, sign="applicant")
-    return pair(a, b, "FX-SEAL-REUSED", "FX-SEAL-REUSED-LATER")
+    return pair(a, b, "FX-SEAL-REUSED", "FX-SEAL-REUSED-LATER") + [E(a, "VER-ISSUER-SIGNATURE-ABSENT")]
 
 
 def yoy_cert_reused(w, a, b):
@@ -390,6 +392,23 @@ def registry_outage(w, a, b):
     return [E(a, "VER-ISSUER_REGISTRY-SOURCE_UNAVAILABLE", why=f"{code} did not respond during validation")]
 
 
+def unsigned_ok(w, a):
+    return "fire" not in a.slots or "oc" not in a.slots
+
+
+def issuer_unsigned(w, a, b):
+    """A genuine fire NOC or occupancy certificate uploaded without the issuer's signature: unsigned, or signed only
+    with the applicant's DSC, as a re-saved or printed-to-PDF copy would be."""
+    slot = w.rng.choice([s for s in ("fire", "oc") if s not in a.slots])
+    a.slots.add(slot)
+    sign = w.rng.choice([None, "applicant"])
+    if slot == "fire":
+        a.fire["sign"] = sign
+    else:
+        a.oc["sign"] = False if sign is None else "applicant"
+    return [E(a, "VER-ISSUER-SIGNATURE-ABSENT", why=f"{slot} uploaded {'unsigned' if sign is None else 'with the applicant DSC only'}")]
+
+
 def late_submission(w, a, b):
     return [E(a, "PN2627-DEADLINE")]
 
@@ -466,6 +485,8 @@ KINDS = [
          photo_c2pa_edited),
     Kind("registry_outage", "Issuer registry unavailable during validation", ("registry",), registry_outage,
          eligible=outage_ok),
+    Kind("issuer_unsigned", "Fire NOC or occupancy certificate without the issuer's signature", ("unsigned",),
+         issuer_unsigned, eligible=unsigned_ok),
     Kind("late_submission", "Application submitted after the deadline", ("date",), late_submission,
          eligible=lambda w, a: a.submitted > DEADLINE),
 ]
