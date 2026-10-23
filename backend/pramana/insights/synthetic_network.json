@@ -1,0 +1,681 @@
+{
+ "dataset": "synthetic",
+ "synthetic": true,
+ "academic_year": "2026-27",
+ "applications": [
+  {
+   "id": "APP-2026-012283",
+   "institution_id": "inst_i022",
+   "institution": "Prabhat Institute of Technology and Research",
+   "short_name": "Prabhat",
+   "district": "Nagpur",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-030861",
+   "institution_id": "inst_i029",
+   "institution": "Warangal Institute of Technology and Research",
+   "short_name": "Warangal",
+   "district": "Warangal",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-046883",
+   "institution_id": "inst_i020",
+   "institution": "Kamadhenu Institute of Engineering and Management",
+   "short_name": "Kamadhenu",
+   "district": "Visakhapatnam",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-066505",
+   "institution_id": "inst_i015",
+   "institution": "Godavari College of Engineering and Technology",
+   "short_name": "Godavari",
+   "district": "Ahilyanagar",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-112301",
+   "institution_id": "inst_i018",
+   "institution": "Maharshi Vaigai College of Engineering",
+   "short_name": "Maharshi Vaigai",
+   "district": "Lucknow",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-119567",
+   "institution_id": "inst_i006",
+   "institution": "Savitribai College of Engineering",
+   "short_name": "Savitribai",
+   "district": "Chennai",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-198022",
+   "institution_id": "inst_i019",
+   "institution": "Dr. Vindhya Engineering College",
+   "short_name": "Dr. Vindhya Engineering",
+   "district": "Kochi",
+   "status": "under_review",
+   "cluster": "C1",
+   "degree": 1
+  },
+  {
+   "id": "APP-2026-204285",
+   "institution_id": "inst_i030",
+   "institution": "Sri Aravali Institute of Engineering and Management",
+   "short_name": "Sri Aravali",
+   "district": "Kanpur",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-228873",
+   "institution_id": "inst_i009",
+   "institution": "Nilgiri Institute of Engineering and Management",
+   "short_name": "Nilgiri",
+   "district": "Kota",
+   "status": "under_review",
+   "cluster": "C2",
+   "degree": 1
+  },
+  {
+   "id": "APP-2026-302769",
+   "institution_id": "inst_i011",
+   "institution": "Panchganga Institute of Technology and Research",
+   "short_name": "Panchganga",
+   "district": "Jalgaon",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-335386",
+   "institution_id": "inst_i001",
+   "institution": "Maharshi Vindhya Institute of Engineering and Management",
+   "short_name": "Maharshi Vindhya",
+   "district": "Belagavi",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-373039",
+   "institution_id": "inst_i010",
+   "institution": "Solapur Institute of Engineering and Management",
+   "short_name": "Solapur",
+   "district": "Solapur",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-395026",
+   "institution_id": "inst_i004",
+   "institution": "Savitribai Institute of Engineering and Management",
+   "short_name": "Savitribai",
+   "district": "Kolkata",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-486273",
+   "institution_id": "inst_i012",
+   "institution": "Shri Navodaya Institute of Technology",
+   "short_name": "Shri Navodaya",
+   "district": "Mumbai",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-521696",
+   "institution_id": "inst_i016",
+   "institution": "Sri Dnyaneshwar School of Engineering",
+   "short_name": "Sri Dnyaneshwar",
+   "district": "Kolkata",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-583800",
+   "institution_id": "inst_i007",
+   "institution": "Dr. Vaigai School of Engineering",
+   "short_name": "Dr. Vaigai",
+   "district": "Kozhikode",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-606855",
+   "institution_id": "inst_i005",
+   "institution": "Sri Konkan School of Engineering",
+   "short_name": "Sri Konkan",
+   "district": "Solapur",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-607598",
+   "institution_id": "inst_i002",
+   "institution": "Shri Shatabdi Institute of Technology",
+   "short_name": "Shri Shatabdi",
+   "district": "Jalgaon",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-625205",
+   "institution_id": "inst_i027",
+   "institution": "Rajarshi Periyar Institute of Engineering and Management",
+   "short_name": "Rajarshi Periyar",
+   "district": "Satara",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-672800",
+   "institution_id": "inst_i008",
+   "institution": "Sant Ramanujan School of Engineering",
+   "short_name": "Sant Ramanujan",
+   "district": "Lucknow",
+   "status": "under_review",
+   "cluster": "C1",
+   "degree": 1
+  },
+  {
+   "id": "APP-2026-689324",
+   "institution_id": "inst_i014",
+   "institution": "Abhyudaya College of Engineering and Technology",
+   "short_name": "Abhyudaya",
+   "district": "Satara",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-714154",
+   "institution_id": "inst_i023",
+   "institution": "Malwa Engineering College",
+   "short_name": "Malwa Engineering",
+   "district": "Davanagere",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-731679",
+   "institution_id": "inst_i028",
+   "institution": "Tungabhadra Institute of Engineering and Management",
+   "short_name": "Tungabhadra",
+   "district": "Udaipur",
+   "status": "under_review",
+   "cluster": "C2",
+   "degree": 1
+  },
+  {
+   "id": "APP-2026-757230",
+   "institution_id": "inst_i021",
+   "institution": "Maharshi Chambal Institute of Engineering and Management",
+   "short_name": "Maharshi Chambal",
+   "district": "Nagpur",
+   "status": "under_review",
+   "cluster": "C1",
+   "degree": 2
+  },
+  {
+   "id": "APP-2026-766877",
+   "institution_id": "inst_i024",
+   "institution": "Late Shri Panchganga College of Engineering",
+   "short_name": "Late Shri Panchganga",
+   "district": "Jaipur",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-767336",
+   "institution_id": "inst_i026",
+   "institution": "Hyderabad Institute of Engineering Studies",
+   "short_name": "Hyderabad",
+   "district": "Hyderabad",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-912608",
+   "institution_id": "inst_i025",
+   "institution": "Annamacharya Institute of Engineering and Management",
+   "short_name": "Annamacharya",
+   "district": "Noida",
+   "status": "under_review",
+   "cluster": "C2",
+   "degree": 2
+  },
+  {
+   "id": "APP-2026-958820",
+   "institution_id": "inst_i013",
+   "institution": "Shree Savitribai Technical Campus",
+   "short_name": "Shree Savitribai",
+   "district": "Udaipur",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-968956",
+   "institution_id": "inst_i017",
+   "institution": "Late Shri Yamuna Institute of Engineering Studies",
+   "short_name": "Late Shri Yamuna",
+   "district": "Nashik",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  },
+  {
+   "id": "APP-2026-998220",
+   "institution_id": "inst_i003",
+   "institution": "Kalinga College of Engineering and Technology",
+   "short_name": "Kalinga",
+   "district": "Bengaluru",
+   "status": "under_review",
+   "cluster": null,
+   "degree": 0
+  }
+ ],
+ "items": [
+  {
+   "id": "faculty:FID63016862",
+   "kind": "faculty",
+   "label": "FID-63016862",
+   "detail": "Anitha Jagtap",
+   "doc_type": "faculty_list",
+   "doc_label": null,
+   "relation": "lists faculty",
+   "applications": [
+    "APP-2026-228873",
+    "APP-2026-912608"
+   ]
+  },
+  {
+   "id": "ref:DFSLUC2024099627",
+   "kind": "certificate",
+   "label": "DFS-LUC-2024-099627",
+   "detail": "fire NOC",
+   "doc_type": "fire_noc",
+   "doc_label": "fire NOC",
+   "relation": "carries NOC no.",
+   "applications": [
+    "APP-2026-672800",
+    "APP-2026-757230"
+   ]
+  },
+  {
+   "id": "photo:doc_a3805c05b1d3439d",
+   "kind": "photo",
+   "label": "Campus photo",
+   "detail": "lab_photo.jpg",
+   "doc_type": "infrastructure_photo",
+   "doc_label": null,
+   "relation": "same photo",
+   "applications": [
+    "APP-2026-198022",
+    "APP-2026-757230"
+   ]
+  },
+  {
+   "id": "photo:doc_5d841657247a4a53",
+   "kind": "photo",
+   "label": "Campus photo",
+   "detail": "computer_lab.jpg",
+   "doc_type": "infrastructure_photo",
+   "doc_label": null,
+   "relation": "same photo",
+   "applications": [
+    "APP-2026-731679",
+    "APP-2026-912608"
+   ]
+  },
+  {
+   "id": "details:doc_965ab8429a2e448b",
+   "kind": "details",
+   "label": "Same fire NOC details",
+   "detail": null,
+   "doc_type": "fire_noc",
+   "doc_label": null,
+   "relation": "same details",
+   "applications": [
+    "APP-2026-672800",
+    "APP-2026-757230"
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "source": "APP-2026-228873",
+   "target": "faculty:FID63016862",
+   "kind": "faculty",
+   "relation": "lists faculty",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-FACULTY-MULTIPLE-INSTITUTIONS",
+     "title": "Faculty member listed by two institutions",
+     "severity": "high",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-912608",
+   "target": "faculty:FID63016862",
+   "kind": "faculty",
+   "relation": "lists faculty",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-FACULTY-MULTIPLE-INSTITUTIONS",
+     "title": "Faculty member listed by two institutions",
+     "severity": "high",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-672800",
+   "target": "ref:DFSLUC2024099627",
+   "kind": "certificate",
+   "relation": "carries NOC no.",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "title": "Certificate number also used by another institution",
+     "severity": "high",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-757230",
+   "target": "ref:DFSLUC2024099627",
+   "kind": "certificate",
+   "relation": "carries NOC no.",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "title": "Certificate number also used by another institution",
+     "severity": "high",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-198022",
+   "target": "photo:doc_a3805c05b1d3439d",
+   "kind": "photo",
+   "relation": "same photo",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-PHOTO-REUSED",
+     "title": "Same photo appears in another institution's application",
+     "severity": "high",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-757230",
+   "target": "photo:doc_a3805c05b1d3439d",
+   "kind": "photo",
+   "relation": "same photo",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-PHOTO-REUSED-LATER",
+     "title": "This photo also appears in a later application",
+     "severity": "low",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-731679",
+   "target": "photo:doc_5d841657247a4a53",
+   "kind": "photo",
+   "relation": "same photo",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-PHOTO-REUSED",
+     "title": "Same photo appears in another institution's application",
+     "severity": "high",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-912608",
+   "target": "photo:doc_5d841657247a4a53",
+   "kind": "photo",
+   "relation": "same photo",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-PHOTO-REUSED-LATER",
+     "title": "This photo also appears in a later application",
+     "severity": "low",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-672800",
+   "target": "details:doc_965ab8429a2e448b",
+   "kind": "details",
+   "relation": "same details",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "title": "Same certificate details in another institution's document",
+     "severity": "medium",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  },
+  {
+   "source": "APP-2026-757230",
+   "target": "details:doc_965ab8429a2e448b",
+   "kind": "details",
+   "relation": "same details",
+   "findings": [
+    {
+     "id": "",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "title": "Same certificate details in another institution's document",
+     "severity": "medium",
+     "review_status": "open"
+    }
+   ],
+   "document_id": null,
+   "page": null,
+   "bbox": null
+  }
+ ],
+ "pairs": [
+  {
+   "a": "APP-2026-198022",
+   "b": "APP-2026-757230",
+   "items": [
+    "photo:doc_a3805c05b1d3439d"
+   ]
+  },
+  {
+   "a": "APP-2026-228873",
+   "b": "APP-2026-912608",
+   "items": [
+    "faculty:FID63016862"
+   ]
+  },
+  {
+   "a": "APP-2026-672800",
+   "b": "APP-2026-757230",
+   "items": [
+    "ref:DFSLUC2024099627",
+    "details:doc_965ab8429a2e448b"
+   ]
+  },
+  {
+   "a": "APP-2026-731679",
+   "b": "APP-2026-912608",
+   "items": [
+    "photo:doc_5d841657247a4a53"
+   ]
+  }
+ ],
+ "clusters": [
+  {
+   "id": "C1",
+   "applications": [
+    "APP-2026-198022",
+    "APP-2026-672800",
+    "APP-2026-757230"
+   ],
+   "items": [
+    "ref:DFSLUC2024099627",
+    "photo:doc_a3805c05b1d3439d",
+    "details:doc_965ab8429a2e448b"
+   ],
+   "summary": "Dr. Vindhya Engineering, Sant Ramanujan and Maharshi Chambal are linked through 1 fire NOC number, 1 photo and 1 set of certificate details",
+   "pairs": [
+    {
+     "a": "APP-2026-198022",
+     "b": "APP-2026-757230",
+     "items": [
+      "photo:doc_a3805c05b1d3439d"
+     ],
+     "summary": "Dr. Vindhya Engineering and Maharshi Chambal share 1 photo"
+    },
+    {
+     "a": "APP-2026-672800",
+     "b": "APP-2026-757230",
+     "items": [
+      "ref:DFSLUC2024099627",
+      "details:doc_965ab8429a2e448b"
+     ],
+     "summary": "Sant Ramanujan and Maharshi Chambal share 1 fire NOC number and 1 set of certificate details"
+    }
+   ],
+   "findings": 6,
+   "high_findings": 3,
+   "kinds": {
+    "certificate": 1,
+    "photo": 1,
+    "details": 1
+   }
+  },
+  {
+   "id": "C2",
+   "applications": [
+    "APP-2026-228873",
+    "APP-2026-731679",
+    "APP-2026-912608"
+   ],
+   "items": [
+    "faculty:FID63016862",
+    "photo:doc_5d841657247a4a53"
+   ],
+   "summary": "Nilgiri, Tungabhadra and Annamacharya are linked through 1 faculty ID and 1 photo",
+   "pairs": [
+    {
+     "a": "APP-2026-228873",
+     "b": "APP-2026-912608",
+     "items": [
+      "faculty:FID63016862"
+     ],
+     "summary": "Nilgiri and Annamacharya share 1 faculty ID"
+    },
+    {
+     "a": "APP-2026-731679",
+     "b": "APP-2026-912608",
+     "items": [
+      "photo:doc_5d841657247a4a53"
+     ],
+     "summary": "Tungabhadra and Annamacharya share 1 photo"
+    }
+   ],
+   "findings": 4,
+   "high_findings": 3,
+   "kinds": {
+    "faculty": 1,
+    "photo": 1
+   }
+  }
+ ],
+ "stats": {
+  "applications": 30,
+  "linked_applications": 6,
+  "clusters": 2,
+  "shared_items": 5,
+  "by_kind": {
+   "faculty": 1,
+   "certificate": 1,
+   "file": 0,
+   "photo": 2,
+   "seal": 0,
+   "details": 1
+  }
+ },
+ "note": "Synthetic random world from the evaluation generator, seed 4242, 30 applications. Not real institutions; findings open only in that run's own database."
+}
