@@ -213,7 +213,11 @@ def list_runs(app_id: str, user: User = Depends(current_user), db: Session = Dep
     app = load_application(db, user, app_id)
     runs = db.scalars(select(ValidationRun).where(ValidationRun.application_id == app.id)
                       .order_by(ValidationRun.started_at.desc())).all()
-    return [ser.run_brief(r) for r in runs]
+    briefs = [ser.run_brief(r) for r in runs]
+    if user.role == "institution":
+        # Institutions see when a check ran, not its severity or evidence-class counts
+        return [{k: b[k] for k in ser.INSTITUTION_RUN_KEYS} for b in briefs]
+    return briefs
 
 
 @router.get("/runs/{run_id}")

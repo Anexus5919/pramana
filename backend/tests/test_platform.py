@@ -421,7 +421,9 @@ def test_retention_purge_deletes_bytes_of_closed_applications_and_keeps_the_reco
     doc_id = mine[0]["document_id"]
     assert officer.get(f"/api/documents/{doc_id}/file").status_code == 200
 
-    done = admin.post("/api/admin/retention/purge", json={"dry_run": False}).json()
+    assert admin.post("/api/admin/retention/purge", json={"dry_run": False}).status_code == 422
+    done = admin.post("/api/admin/retention/purge",
+                      json={"dry_run": False, "reason": "Retention period ended for closed applications"}).json()
     assert done["documents_purged"] >= len(mine)
     r = officer.get(f"/api/documents/{doc_id}/file")
     assert r.status_code == 410
@@ -434,7 +436,12 @@ def test_retention_purge_deletes_bytes_of_closed_applications_and_keeps_the_reco
     assert audit.verify_chain(db)["intact"]
     db.close()
     assert len(officer.get(f"/api/applications/{A11}/findings").json()) == n_findings
-    assert admin.post("/api/admin/retention/purge", json={"dry_run": False}).json()["documents_purged"] == 0
+    assert admin.post("/api/admin/retention/purge",
+                      json={"dry_run": False, "reason": "Second pass finds nothing left"}).json()["documents_purged"] == 0
+    inst = _login(app, "inst10")
+    runs = inst.get("/api/applications/APP-2026-000110/runs").json()
+    assert runs and all(set(r) <= {"id", "status", "round", "started_at", "finished_at", "as_of", "ruleset_id"}
+                        for r in runs)
 
 
 def test_withdraw_needs_a_reason_and_only_the_owner(app):
