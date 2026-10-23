@@ -2,6 +2,9 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/inter-tight";
 @import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/ibm-plex-sans";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -94,6 +97,10 @@
   --sh-lg: 0 24px 60px -20px rgb(60 20 110 / 0.28), 0 6px 16px -6px rgb(28 22 34 / 0.08);
   --sh-glow: 0 0 0 1px rgb(139 61 255 / 0.12), 0 12px 40px -10px rgb(139 61 255 / 0.45);
 
+  --ff-display: "Inter Tight Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --ff-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ff-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Code", Consolas, monospace;
+
   color-scheme: light;
 }
 
@@ -171,6 +178,220 @@
   --sh-glow: 0 0 0 1px rgb(158 109 255 / 0.25), 0 12px 40px -10px rgb(139 61 255 / 0.55);
 
   color-scheme: dark;
+}
+
+/*
+ * Design system v2: the signed-in app surface.
+ * AppShell sets data-surface="app" on <html> while it is mounted, so these tokens
+ * never reach the landing pages, the login page or /scan. See frontend/DESIGN-v2.md.
+ */
+html[data-surface="app"] {
+  --ff-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ff-display: var(--ff-sans);
+  --ff-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  --canvas: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f3f3f5;
+  --surface-3: #e9e9ed;
+
+  --ink: #17171c;
+  --ink-2: #3d3d47;
+  --ink-3: #5c5c68;
+  --ink-4: #73737f;
+
+  --line: #e6e6ea;
+  --line-2: #d5d5dc;
+
+  --brand-50: #f6f3ff;
+  --brand-100: #ede7fe;
+  --brand-200: #ddd0fd;
+  --brand-300: #c2abfb;
+  --brand-400: #9f7af5;
+  --brand-500: #7c4dea;
+  --brand-600: #6a35dc;
+  --brand-700: #5a28c0;
+  --brand-800: #47209a;
+  --brand-900: #2f1566;
+  --brand-solid: #6a35dc;
+  --brand-solid-hover: #5a28c0;
+  --brand-ink: #5a28c0;
+  --brand-soft: #f3effe;
+
+  /* the landing sky is not part of the app: gradients built from it render flat */
+  --peach: #f3f3f5;
+  --apricot: #f3f3f5;
+  --rose: #f3f3f5;
+  --lilac: #f3f3f5;
+  --pupil: #18181b;
+  --pupil-2: #222227;
+
+  --verified-fg: #146c3a;
+  --verified-bg: #ebf6ef;
+  --verified-dot: #22a05a;
+  --mismatch-fg: #b42318;
+  --mismatch-bg: #fdeeec;
+  --mismatch-dot: #e5484d;
+  --expired-fg: #9a4508;
+  --expired-bg: #fdf1e7;
+  --expired-dot: #e8701a;
+  --pending-fg: #2950b8;
+  --pending-bg: #eef2fd;
+  --pending-dot: #3e63dd;
+  --unavail-fg: #4b4b55;
+  --unavail-bg: #f1f1f4;
+  --unavail-dot: #80808c;
+  --manual-fg: #7f5800;
+  --manual-bg: #fbf4dc;
+  --manual-dot: #d9a106;
+  --unchecked-fg: #5c5c68;
+  --unchecked-bg: #f3f3f5;
+  --unchecked-dot: #b4b4bd;
+
+  --sev-critical: #9f1239;
+  --sev-high: #d92d20;
+  --sev-medium: #dc6803;
+  --sev-low: #8a8a96;
+  --sev-info: #c0c0c8;
+
+  --overlay: rgb(15 15 20 / 0.4);
+  --glass-border: var(--line);
+
+  --sh-xs: 0 1px 2px rgb(16 16 24 / 0.05);
+  --sh-sm: 0 1px 2px rgb(16 16 24 / 0.06), 0 1px 3px rgb(16 16 24 / 0.04);
+  --sh-md: 0 4px 12px -2px rgb(16 16 24 / 0.08), 0 2px 4px -2px rgb(16 16 24 / 0.04);
+  --sh-lg: 0 16px 40px -12px rgb(16 16 24 / 0.22), 0 4px 10px -4px rgb(16 16 24 / 0.08);
+  --sh-glow: 0 0 0 1px var(--line-2);
+
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-panel: 8px;
+  --radius-hero: 8px;
+
+  /* type scale: 12, 13, 14, 16, 20, 24, 30 */
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-md: 16px;
+  --text-md--line-height: 24px;
+  --text-lg: 20px;
+  --text-lg--line-height: 28px;
+  --text-xl: 24px;
+  --text-xl--line-height: 32px;
+  --text-2xl: 30px;
+  --text-2xl--line-height: 36px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+
+  --focus: var(--brand-500);
+}
+
+html.dark[data-surface="app"] {
+  --canvas: #111114;
+  --surface: #18181c;
+  --surface-2: #1f1f24;
+  --surface-3: #28282e;
+
+  --ink: #f2f2f4;
+  --ink-2: #d0d0d6;
+  --ink-3: #a3a3ad;
+  --ink-4: #8a8a94;
+
+  --line: #2a2a31;
+  --line-2: #3a3a42;
+
+  --brand-50: #1d1733;
+  --brand-100: #251d44;
+  --brand-200: #33285e;
+  --brand-300: #5b45a8;
+  --brand-400: #9d80f7;
+  --brand-500: #a68bff;
+  --brand-600: #b49dff;
+  --brand-700: #c7b6ff;
+  --brand-800: #dcd1ff;
+  --brand-900: #efeaff;
+  --brand-solid: #6f45e6;
+  --brand-solid-hover: #7d56ee;
+  --brand-ink: #b8a4ff;
+  --brand-soft: #231c3d;
+
+  --peach: #1f1f24;
+  --apricot: #1f1f24;
+  --rose: #1f1f24;
+  --lilac: #1f1f24;
+  --pupil: #0c0c0f;
+  --pupil-2: #26262c;
+
+  --verified-fg: #5fcf8f;
+  --verified-bg: rgb(34 160 90 / 0.14);
+  --verified-dot: #34b26b;
+  --mismatch-fg: #ff8f8a;
+  --mismatch-bg: rgb(229 72 77 / 0.14);
+  --mismatch-dot: #f0605f;
+  --expired-fg: #f7a35c;
+  --expired-bg: rgb(232 112 26 / 0.14);
+  --expired-dot: #f08a3c;
+  --pending-fg: #9db4ff;
+  --pending-bg: rgb(62 99 221 / 0.16);
+  --pending-dot: #6a8bf0;
+  --unavail-fg: #c0c0ca;
+  --unavail-bg: rgb(128 128 140 / 0.16);
+  --unavail-dot: #8a8a96;
+  --manual-fg: #f0c454;
+  --manual-bg: rgb(217 161 6 / 0.14);
+  --manual-dot: #e0b02c;
+  --unchecked-fg: #aeaeb8;
+  --unchecked-bg: rgb(180 180 189 / 0.1);
+  --unchecked-dot: #6e6e78;
+
+  --sev-critical: #f0517a;
+  --sev-high: #f2685e;
+  --sev-medium: #f59a4a;
+  --sev-low: #8a8a96;
+  --sev-info: #55555f;
+
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --sh-xs: 0 1px 2px rgb(0 0 0 / 0.5);
+  --sh-sm: 0 1px 2px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.3);
+  --sh-md: 0 4px 12px -2px rgb(0 0 0 / 0.55), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --sh-lg: 0 16px 40px -12px rgb(0 0 0 / 0.7), 0 4px 10px -4px rgb(0 0 0 / 0.4);
+}
+
+html[data-surface="app"] body {
+  font-size: 14px;
+  line-height: 20px;
+  font-feature-settings: normal;
+  font-variant-numeric: tabular-nums;
+}
+html[data-surface="app"] :is(h1, h2, h3, h4) {
+  letter-spacing: -0.005em;
+}
+html[data-surface="app"] :focus-visible {
+  outline-color: var(--focus);
+  border-radius: 4px;
+}
+/* legacy decoration neutralised on the app surface until each page is rebuilt */
+html[data-surface="app"] .eyebrow {
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+html[data-surface="app"] :is(.tracking-title, .tracking-display) {
+  letter-spacing: -0.005em;
+}
+html[data-surface="app"] .glass {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-surface="app"] .grain::after {
+  display: none;
 }
 
 @theme inline {
@@ -256,9 +477,9 @@
   --shadow-lg: var(--sh-lg);
   --shadow-glow: var(--sh-glow);
 
-  --font-display: "Inter Tight Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --font-display: var(--ff-display);
+  --font-sans: var(--ff-sans);
+  --font-mono: var(--ff-mono);
 }
 
 @theme {
@@ -332,7 +553,7 @@
   body {
     background: var(--canvas);
     color: var(--ink);
-    font-family: var(--font-sans);
+    font-family: var(--ff-sans);
     font-size: 15px;
     line-height: 1.55;
     font-feature-settings: "cv11", "ss01";
@@ -342,7 +563,7 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-display);
+    font-family: var(--ff-display);
     letter-spacing: -0.02em;
     text-wrap: balance;
     color: var(--ink);
@@ -395,7 +616,7 @@
   kbd,
   samp,
   pre {
-    font-family: var(--font-mono);
+    font-family: var(--ff-mono);
   }
 }
 
