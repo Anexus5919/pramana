@@ -89,6 +89,10 @@ def _intersects(c: dict, box: list[float]) -> bool:
     return box[0] <= cx <= box[2] and box[1] <= cy <= box[3]
 
 
+def _word_hits(w: Word, box: list[float]) -> bool:
+    return w.x0 < box[2] and w.x1 > box[0] and w.top < box[3] and w.bottom > box[1]
+
+
 def _word_chars(w: Word, chars: list[dict]) -> list[dict]:
     return [c for c in chars if c["x0"] >= w.x0 - 0.01 and c["x1"] <= w.x1 + 0.01 and abs(c["top"] - w.top) < 2]
 
@@ -132,6 +136,9 @@ def diff_revisions(data: bytes) -> list[dict[str, Any]]:
                 # Earlier text still present underneath the new text: the cover-and-overwrite pattern
                 kept = chars_to_words([c for c in b if _ckey(c) in ak])
                 under = [w for w in kept if box and any(_intersects(c, box) for c in _word_chars(w, b))]
+                # Whole words at the changed spot, so a value edited in place reads as before and after
+                before = [w for w in chars_to_words(b) if box and _word_hits(w, box)]
+                after = [w for w in chars_to_words(a) if box and _word_hits(w, box)]
                 out.append({
                     "from_revision": i,
                     "to_revision": i + 1,
@@ -139,6 +146,8 @@ def diff_revisions(data: bytes) -> list[dict[str, Any]]:
                     "added_text": " ".join(ln.text for ln in group_lines(aw)),
                     "removed_text": " ".join(ln.text for ln in group_lines(rw)),
                     "text_underneath": " ".join(ln.text for ln in group_lines(under)),
+                    "before_text": " ".join(ln.text for ln in group_lines(before)),
+                    "after_text": " ".join(ln.text for ln in group_lines(after)),
                     "bbox": box,
                 })
         prev = cur if cur is not None else prev
@@ -259,7 +268,10 @@ def analyse(data: bytes, doc_issue_date: datetime | None = None) -> tuple[list[S
                     "Visible text changed in a later revision",
                     f"Revision {d['to_revision']} changed text on page {d['page']}: added '{d['added_text']}'"
                     + (f" over existing text '{d['text_underneath']}'" if d["text_underneath"] else "")
-                    + (f", removed '{d['removed_text']}'" if d["removed_text"] else "") + ".",
+                    + (f", removed '{d['removed_text']}'" if d["removed_text"] else "") + "."
+                    + (f" The value there read '{d['before_text']}' before and reads '{d['after_text']}' after."
+                       if d["removed_text"] and not d["text_underneath"] and d["before_text"] and d["after_text"]
+                       and d["before_text"] != d["after_text"] else ""),
                     "high",
                     [{"kind": "region", "page": d["page"], "bbox": d["bbox"], "label": "changed in later revision"},
                      {"kind": "revision_diff", **d}],

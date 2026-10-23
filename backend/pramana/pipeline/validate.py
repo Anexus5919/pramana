@@ -393,13 +393,18 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                             and _overlap(f.bbox, x["bbox"])), None)
                 if hit:
                     label = f.name.replace("_", " ")
+                    message = (f"The text layer reads '{f.raw}' for {label}, but revision {hit['to_revision']} "
+                               f"drew '{hit['added_text']}' over that position. A reader sees "
+                               f"'{hit['added_text']}'; checks in this report use the original '{f.raw}'.")
+                    if hit.get("removed_text") and not hit.get("text_underneath") and hit.get("before_text"):
+                        # Edited in place: the old glyphs are gone, so the checks read the new value
+                        message = (f"Revision {hit['to_revision']} changed the {label} in place: it read "
+                                   f"'{hit['before_text']}' and now reads '{f.raw}'. The checks in this report "
+                                   "use the new value, as a reader sees it.")
                     findings.append({
                         "code": "FX-FIELD-OVERWRITTEN", "fingerprint": _fp("fxf", d.declared_type, f.name),
                         "category": "forensic", "evidence_class": "structural", "severity": "high",
-                        "outcome": "indicator", "title": f"{label.capitalize()} was overwritten",
-                        "message": f"The text layer reads '{f.raw}' for {label}, but revision {hit['to_revision']} "
-                                   f"drew '{hit['added_text']}' over that position. A reader sees "
-                                   f"'{hit['added_text']}'; checks in this report use the original '{f.raw}'.",
+                        "outcome": "indicator", "title": f"{label.capitalize()} was overwritten", "message": message,
                         "limitation": "Issuers rarely amend a signed certificate in place; confirm with the issuer.",
                         "evidence": [{"kind": "region", "document_id": d.id, "page": f.page, "bbox": hit["bbox"],
                                       "label": f"drawn over {label}", "value": hit["added_text"]},
