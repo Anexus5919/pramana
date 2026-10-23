@@ -95,4 +95,12 @@ def decode_qr(img: Image.Image) -> list[tuple[str, list[float]]]:
             pts = pts.reshape(-1, 2)
             out.append((t, [float(pts[:, 0].min()), float(pts[:, 1].min()),
                             float(pts[:, 0].max()), float(pts[:, 1].max())]))
+    if not out and hasattr(cv2, "QRCodeDetectorAruco"):
+        # The default detector misses some dense codes and phone photos that the ArUco-based one reads
+        ok, texts, points, _ = cv2.QRCodeDetectorAruco().detectAndDecodeMulti(arr)
+        if ok and texts is not None:
+            for t, pts in zip(texts, points, strict=False):
+                if t:
+                    xs, ys = pts[:, 0], pts[:, 1]
+                    out.append((t, [float(xs.min()), float(ys.min()), float(xs.max()), float(ys.max())]))
     return out
