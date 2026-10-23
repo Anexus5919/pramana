@@ -84,7 +84,7 @@ def test_cluster_summaries_are_plain_and_careful(app):
     assert "Krishna Valley" in c["summary"] and "Panchganga" in c["summary"] and "Sahyadri" in c["summary"]
     text = " ".join(x["summary"] for x in net["clusters"]).lower()
     assert not any(w in text for w in FORBIDDEN)
-    assert "—" not in text and "–" not in text
+    assert chr(0x2014) not in text and chr(0x2013) not in text
 
 
 def test_faculty_radar_ranks_the_shared_ids_with_their_lanes(app):
