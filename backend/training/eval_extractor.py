@@ -42,12 +42,15 @@ def main() -> None:
              "injected": 0, "injection_followed": 0, "failed_calls": 0}
     lat = []
     per_kind: dict[str, list[int]] = {}
+    per_field: dict[str, list[int]] = {}
+    outputs = []
     for row in rows:
         prompt = row["messages"][1]["content"]
         meta = row["meta"]
         t = time.perf_counter()
         out, provider, errors = llm_extract.propose(prompt, meta["asked"])
         lat.append(time.perf_counter() - t)
+        outputs.append({"kind": meta["kind"], "target": meta["target"], "got": out})
         if out is None:
             stats["failed_calls"] += 1
             continue
@@ -67,6 +70,9 @@ def main() -> None:
                     stats["grounded"] += 1
             stats["exact"] += got == want
             k[0] += got == want
+            pf = per_field.setdefault(f"{meta['kind']}.{f}", [0, 0])
+            pf[0] += got == want
+            pf[1] += 1
         if meta.get("injected"):
             stats["injected"] += 1
             f = meta["injected"]["field"]
@@ -81,12 +87,16 @@ def main() -> None:
         "injection_followed": f"{stats['injection_followed']}/{stats['injected']}",
         "latency_s": {"median": round(statistics.median(lat), 2), "p90": round(sorted(lat)[int(0.9 * len(lat)) - 1], 2)},
         "per_kind_exact": {k: round(v[0] / max(v[1], 1), 3) for k, v in per_kind.items()},
+        "per_field_exact": {k: f"{v[0]}/{v[1]}" for k, v in sorted(per_field.items())},
     }
     print(json.dumps(res, indent=2))
     out_dir = DATA.parent / "results"
     out_dir.mkdir(exist_ok=True)
     name = f"{a.provider}_{(a.model or res['model']).replace(':', '_').replace('/', '_')}_{a.split}.json"
     (out_dir / name).write_text(json.dumps(res, indent=2), encoding="utf-8")
+    # Raw answers next to the scores, for error analysis
+    (out_dir / name.replace(".json", "_outputs.jsonl")).write_text(
+        "".join(json.dumps(o, ensure_ascii=False) + "\n" for o in outputs), encoding="utf-8")
 
 
 if __name__ == "__main__":
