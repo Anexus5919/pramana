@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, Search, X } from "lucide-react";
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 
 /* Callout ---------------------------------------------------------------- */
 
@@ -106,9 +106,9 @@ export function DescriptionList({ items, layout = "inline", columns = 2, labelWi
         {shown.map((it, i) => (
           <div key={i} className="min-w-0">
             <dt className="text-xs text-ink-3">{it.label}</dt>
-            <dd className={cn("mt-0.5 text-sm break-words text-ink", it.mono && "font-mono text-sm")}>
-              {val(it)}
-              {it.hint && <div className="mt-0.5 text-xs text-ink-3">{it.hint}</div>}
+            <dd className="mt-0.5 text-sm break-words text-ink">
+              <span className={cn(it.mono && "font-mono")}>{val(it)}</span>
+              {it.hint && <div className="mt-0.5 font-sans text-xs text-ink-3">{it.hint}</div>}
             </dd>
           </div>
         ))}
@@ -124,9 +124,9 @@ export function DescriptionList({ items, layout = "inline", columns = 2, labelWi
           style={{ ["--dl-label" as string]: `${labelWidth}px` }}
         >
           <dt className="text-sm text-ink-3">{it.label}</dt>
-          <dd className={cn("min-w-0 text-sm break-words text-ink", it.mono && "font-mono text-sm")}>
-            {val(it)}
-            {it.hint && <div className="mt-0.5 text-xs text-ink-3">{it.hint}</div>}
+          <dd className="min-w-0 text-sm break-words text-ink">
+            <span className={cn(it.mono && "font-mono")}>{val(it)}</span>
+            {it.hint && <div className="mt-0.5 font-sans text-xs text-ink-3">{it.hint}</div>}
           </dd>
         </div>
       ))}

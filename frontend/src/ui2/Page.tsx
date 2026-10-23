@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { createContext, useContext, type HTMLAttributes, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { cn } from "../ui/cn";
+import { cn } from "./cn";
 import { ActionMenu, type ActionMenuItem } from "./ActionMenu";
 
 const WIDTH = {
@@ -61,7 +61,8 @@ export function PageHeader({ title, context, status, back, primary, secondary, m
         </Link>
       )}
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0 flex-1">
+        {/* The title keeps a readable minimum width, so on phones the actions wrap below it */}
+        <div className="min-w-[min(100%,18rem)] flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <h1 className="min-w-0 text-xl font-semibold text-ink">{title}</h1>
             {status}
@@ -112,7 +113,7 @@ export function Panel({ title, description, actions, footer, padding = "md", as 
       >
         {hasHeader && (
           <div className={cn("flex flex-wrap items-start justify-between gap-x-4 gap-y-2", nested ? "pb-3" : "px-5 pt-4 pb-3")}>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}
               {description && <p className="mt-0.5 text-sm text-ink-3 text-pretty">{description}</p>}
             </div>
