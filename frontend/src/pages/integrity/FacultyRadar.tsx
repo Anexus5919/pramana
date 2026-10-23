@@ -8,12 +8,19 @@ import { Callout, cn, Code, EmptyState, ErrorState, Panel, SeverityIndicator, Sk
 import type { FacultyLane, FacultyOverlapPayload, FacultyPerson } from "./types";
 
 const DAY = 86_400_000;
-const monthYear = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
-const fullDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const toMs = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
-const fmtMonth = (iso: string | null) => (iso ? monthYear.format(toMs(iso)) : "Not given");
-const fmtDay = (iso: string | null) => (iso ? fullDate.format(toMs(iso)) : "Not given");
+const fmtMonth = (iso: string | null) => {
+  if (!iso) return "Not given";
+  const d = new Date(toMs(iso));
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+};
+const fmtDay = (iso: string | null) => {
+  if (!iso) return "Not given";
+  const d = new Date(toMs(iso));
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+};
 
 export function fmtSpan(days: number): string {
   const months = Math.max(0, Math.round(days / 30.44));
@@ -108,8 +115,8 @@ function Lane({ lane, person, axis }: { lane: FacultyLane; person: FacultyPerson
         </div>
         <div className="truncate text-xs text-ink-3">
           {lane.source === "registry"
-            ? "Registry record only"
-            : `${lane.designation ?? "Faculty"}, joined ${fmtMonth(lane.joined)}${lane.last_year ? ", also on last year's roster" : ""}`}
+            ? "Registry record only, not on a current roster"
+            : `Joined ${fmtDay(lane.joined)}${lane.last_year ? ", on last year's roster too" : ""}`}
         </div>
       </div>
 
@@ -128,7 +135,7 @@ function Lane({ lane, person, axis }: { lane: FacultyLane; person: FacultyPerson
             className="group absolute top-1/2 flex h-3 -translate-y-1/2 overflow-hidden rounded-full outline-offset-2"
             style={{ left: pct(axis, joined), width: span(axis, joined, end) }}
           >
-            <span className="h-full bg-ink-3 transition-colors duration-150 group-hover:bg-ink-2" style={{ width: ov !== null ? `${((ov - joined) / Math.max(1, end - joined)) * 100}%` : "100%" }} />
+            <span className="h-full bg-ink-4 transition-colors duration-150 group-hover:bg-ink-3" style={{ width: ov !== null ? `${((ov - joined) / Math.max(1, end - joined)) * 100}%` : "100%" }} />
             {ov !== null && ov < end && <span className="h-full flex-1 bg-manual-dot" />}
           </Link>
         ) : (
@@ -162,6 +169,20 @@ function Lane({ lane, person, axis }: { lane: FacultyLane; person: FacultyPerson
   );
 }
 
+/** One neutral sentence on what the rosters and the registry say, for the official to confirm. */
+function reading(p: FacultyPerson): string {
+  const roster = p.lanes.filter((l) => l.source === "roster");
+  const reg = roster.find((l) => l.registry);
+  const parts = roster
+    .filter((l) => l !== reg)
+    .map((l) => `${l.short_name} lists this ID from ${fmtDay(l.joined)}`);
+  if (reg) parts.unshift(`${reg.short_name}, where the AICTE registry records this ID, lists it from ${fmtDay(reg.joined)}${reg.last_year ? " and did last year" : ""}`);
+  const only = p.lanes.find((l) => l.source === "registry");
+  if (only) parts.push(`the registry records it at ${only.short_name}, which does not list it this year`);
+  const s = parts.join("; ");
+  return `${s.charAt(0).toUpperCase()}${s.slice(1)}.`;
+}
+
 function PersonBlock({ p, axis, rank }: { p: FacultyPerson; axis: Axis; rank: number }) {
   const roster = p.lanes.filter((l) => l.source === "roster");
   const names = roster.map((l) => l.short_name);
@@ -188,6 +209,7 @@ function PersonBlock({ p, axis, rank }: { p: FacultyPerson; axis: Axis; rank: nu
           {p.overlap_days > 0 && <span className="text-ink-3">, {fmtSpan(p.overlap_days)}</span>}
         </div>
       </div>
+      <p className="mt-1 text-sm text-ink-3">{reading(p)}</p>
       <div className="relative mt-1">
         {ovLeft !== null && (
           <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden lg:grid lg:grid-cols-[240px_minmax(0,1fr)_200px] lg:gap-x-4">
@@ -248,7 +270,7 @@ export function FacultyRadar({ query }: { query: UseQueryResult<FacultyOverlapPa
         footer={
           <ul className="flex w-full flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-ink-3" aria-label="Legend">
             <li className="flex items-center gap-2">
-              <span aria-hidden className="h-2.5 w-6 rounded-full bg-ink-3" />
+              <span aria-hidden className="h-2.5 w-6 rounded-full bg-ink-4" />
               Listed on the roster
             </li>
             <li className="flex items-center gap-2">
