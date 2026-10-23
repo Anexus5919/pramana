@@ -127,7 +127,7 @@ A side panel in the workspace where the officer asks about the current applicati
 - **Post-check.** A sentence is dropped when it:
   - cites no valid evidence id;
   - contains a date, number or reference code that is not in the items it cites (dates are normalised across formats);
-  - uses a status word its cited items contradict (for example "verified" when none of them is verified, "expired" when none is expired, "not verified" when all are verified);
+  - uses a status word its cited items contradict (for example "verified" when none of them is verified, "expired" when none is expired, "not verified" when all are verified), unless it repeats the cited item's own words;
   - uses the banned judgemental vocabulary about a document (`FORBIDDEN_WORDS`);
   - states or recommends a decision on the application.
 - **Fallback.** Without a reachable model, template answers are assembled from the same items for the common questions (why flagged, still unverified, which rule needs a document, what changed after signing) and go through the same post-check. When every model sentence fails the check, the template answer is shown instead, labelled "Template answer, model sentences failed the check", and the dropped model sentences stay visible with their reasons.
@@ -141,22 +141,22 @@ A side panel in the workspace where the officer asks about the current applicati
 
 ### Evaluation
 
-`scripts/eval_ask.py` asks 27 questions across all 11 seeded applications and records every proposed sentence. "Expected evidence" means a kept sentence cites at least one item a reviewer would point to for that question. Model figures score the model's own sentences, before any template fallback.
+`scripts/eval_ask.py` asks 27 questions across all 11 seeded applications and records every proposed sentence. "Expected evidence" means a kept sentence cites at least one item a reviewer would point to for that question. Model figures score the model's own sentences, before any template fallback. Measured on the seeded data after merging the photo, history and platform work.
 
 | Metric | Local model (qwen3:4b-instruct-2507, Q4_K_M) | Template answers only |
 |---|---|---|
 | Questions | 27 | 27 |
-| Sentences proposed | 27 | 86 |
-| Citation-valid (cite at least one real evidence id) | 27 (100%) | 86 (100%) |
-| Kept after the post-check | 25 (92.6%) | 86 (100%) |
-| Dropped by the post-check | 2 (7.4%) | 0 |
-| Answers citing expected evidence | 23 of 27 | 24 of 27 |
-| Answers where every model sentence was dropped (template fallback shown instead) | 2 | not applicable |
-| Latency mean / median / p90 / max, model already loaded | 2.5 / 2.2 / 3.8 / 4.3 s | 9 / 5 / 9 / 81 ms |
+| Sentences proposed | 27 | 87 |
+| Citation-valid (cite at least one real evidence id) | 27 (100%) | 87 (100%) |
+| Kept after the post-check | 24 (88.9%) | 87 (100%) |
+| Dropped by the post-check | 3 (11.1%) | 0 |
+| Answers citing expected evidence | 22 of 27 | 24 of 27 |
+| Answers where every model sentence was dropped (template fallback shown instead) | 3 | not applicable |
+| Latency mean / median / p90 / max, model already loaded | 2.1 / 2.1 / 2.7 / 5.2 s | 47 / 4 / 5 / 1155 ms (the first call loads the ruleset) |
 
-- Both drops were real errors the check caught: a date taken from a different finding than the one cited, and "as verified by the signed QR" citing a QR result whose status is expired.
-- The four misses: two "What is still unverified?" answers explained a finding instead of listing documents (the template answer lists them), and the two dropped answers.
-- Two earlier runs, before linked rule and region items counted as support and before the prompt asked to use status words as stated, kept 24 and 22 of 27 sentences. The extra drops were a page number taken from the finding's own region and numbers the model added from outside the context.
+- All three drops were real errors the check caught: a date taken from a different finding than the one cited, "as verified by the signed QR" citing a QR result whose status is expired, and "verified by an expert visit" attached to a finding that does not say it.
+- The five misses: those three dropped answers, and two "What is still unverified?" answers that explained a finding instead of listing documents (the template answer lists them).
+- Across five runs while the check was being tuned, the model kept between 22 and 25 of 27 sentences. The changes were: a finding's own rule and page region count as support for numbers and dates, the prompt asks for status words as the items state them, and a status word followed by the same three words as in a cited item counts as quoting it.
 - The 4B model nearly always answers in one sentence even when asked for two to four. The first question after Ollama unloads the model pays about 10 s of load time, which is not in the table.
 - These are numbers on synthetic data and a 27-question set; they are indicative, not a benchmark.
 

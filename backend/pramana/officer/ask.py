@@ -343,6 +343,17 @@ def _strip(text: str) -> str:
     return ID_RE.sub(" ", text)
 
 
+def _quoted(text: str, pat: re.Pattern, cited_text: str) -> bool:
+    """The status word and the three words after it appear verbatim in a cited item, so it repeats the evidence."""
+    norm = " ".join(cited_text.lower().split())
+    for m in pat.finditer(text):
+        window = " ".join(text[m.start():].lower().split()[:4]).rstrip(".,;:")
+        if len(window.split()) >= 3 and window in norm:
+            continue
+        return False
+    return True
+
+
 def check_sentence(text: str, cites: list[str], items: dict[str, dict[str, Any]]) -> tuple[list[str], str | None]:
     """Returns (valid cites, reason to drop or None)."""
     valid = [c for c in dict.fromkeys(cites or []) if isinstance(c, str) and c in items]
@@ -381,6 +392,8 @@ def check_sentence(text: str, cites: list[str], items: dict[str, dict[str, Any]]
         if statuses & support:
             continue
         if text_hint and re.search(text_hint, cited_text, re.I):
+            continue
+        if _quoted(low, pat, cited_text):
             continue
         return valid, f"says '{pat.search(low).group(0)}', which the cited items do not support"
     return valid, None
