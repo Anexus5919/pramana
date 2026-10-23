@@ -282,9 +282,11 @@ def test_edge_edited_expired_certificate_uploaded_in_rectification_is_caught(wor
     _, app = world
     aid = "APP-2026-000103"
     officer = _login(app, "officer")
-    finding = officer.get(f"/api/applications/{aid}/findings").json()[0]
+    # Only deficiencies the institution can correct go into a request; with none left, the message carries the ask
+    ids = [f["id"] for f in officer.get(f"/api/applications/{aid}/findings").json()
+           if f["category"] in ("completeness", "compliance", "validity")][:1]
     assert officer.post(f"/api/applications/{aid}/rectification",
-                        json={"finding_ids": [finding["id"]], "message": "Upload a valid fire certificate"}
+                        json={"finding_ids": ids, "message": "Upload a valid fire certificate"}
                         ).status_code == 200
     src = lab.SOURCES["a3_fire"]
     original = (ROOT / "fixtures" / "out" / src["file"]).read_bytes()

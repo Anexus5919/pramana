@@ -11,6 +11,25 @@ export interface DocTarget {
   label?: string | null;
 }
 
+/**
+ * Workspace-level actions that sections can trigger. Each is undefined when the
+ * signed-in role may not use it, so a section can simply hide the control.
+ */
+export interface WorkspaceActions {
+  /** Opens the Ask why drawer; a question prefills the input (officer) */
+  ask?: (question?: string) => void;
+  /** Opens the rectification dialog, optionally with findings preselected (officer) */
+  rectify?: (preselect?: string[]) => void;
+  /** Replays a run under its pinned ruleset and opens the replay dialog; default the latest run (officer, admin) */
+  replay?: (runId?: string) => void;
+  /** Opens the evidence pack dialog (officer) */
+  exportPack?: () => void;
+  /** Opens the scrutiny outcome dialog (officer) */
+  recordOutcome?: () => void;
+  /** Starts a new validation run (officer, verifier, admin) */
+  validate?: () => void;
+}
+
 export interface WorkspaceCtx {
   app: ApplicationDetail;
   run: RunFull | undefined;
@@ -19,6 +38,7 @@ export interface WorkspaceCtx {
   docs: Record<string, DocumentSummary>;
   role: Role | undefined;
   openDoc: (t: DocTarget) => void;
+  actions: WorkspaceActions;
 }
 
 const Ctx = createContext<WorkspaceCtx | null>(null);

@@ -1,14 +1,13 @@
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Sheet } from "../../../ui/Dialog";
-import { ErrorState } from "../../../ui/States";
-import { Skeleton } from "../../../ui/Skeleton";
+import { workspacePath } from "../../../shell/nav";
+import { Drawer, ErrorState, MetaList, Skeleton } from "../../../ui2";
 import { useDocTypeLabel, useWorkspace, type DocTarget } from "../context";
-import { appPath, bboxParam, useDocument, validBox } from "../data";
+import { bboxParam, useDocument, validBox } from "../data";
 import { DocViewer } from "./DocViewer";
 
-/** Document opened from a finding or rule: the page slides in from the side of the evidence that opened it. */
+/** A document page opened from a finding or rule, at the region the evidence points to. */
 export function ViewerSheet({ target, onClose, onFinding }: { target: DocTarget | null; onClose: () => void; onFinding?: (id: string) => void }) {
   const { app, findings } = useWorkspace();
   const docLabel = useDocTypeLabel();
@@ -19,37 +18,45 @@ export function ViewerSheet({ target, onClose, onFinding }: { target: DocTarget 
     if (target) setPage(target.page ?? 1);
   }, [target]);
 
-  const doc = q.data;
+  const doc = q.data && q.data.id === target?.docId ? q.data : undefined;
   const focus = target && target.page && validBox(target.bbox) ? { page: target.page, bbox: target.bbox, label: target.label } : null;
-  const title = doc ? docLabel(doc.declared_type) : "Document";
 
   return (
-    <Sheet
+    <Drawer
       open={!!target}
       onClose={onClose}
-      title={title}
+      title={doc ? docLabel(doc.declared_type) : "Document"}
       description={doc ? doc.original_filename : undefined}
-      width="min(1040px, 94vw)"
+      width={880}
       footer={
         target ? (
           <Link
-            to={appPath(app.id, "documents", { doc: target.docId, page: target.page, hl: bboxParam(target.bbox), hlabel: target.label })}
+            to={workspacePath(app.id, "documents", {
+              doc: target.docId,
+              page: target.page ? String(target.page) : undefined,
+              hl: bboxParam(target.bbox) ?? undefined,
+              hlabel: target.label ?? undefined,
+            })}
             onClick={onClose}
-            className="inline-flex items-center gap-1 text-sm font-medium text-brand-ink hover:underline"
+            className="inline-flex items-center gap-1 rounded text-sm font-medium text-ink hover:underline"
           >
-            Open in the Documents tab with fields, forensics and verification <ArrowUpRight aria-hidden className="size-3.5" />
+            Open in Documents <ArrowUpRight aria-hidden className="size-3.5" />
           </Link>
         ) : null
       }
     >
       <div className="flex h-full min-h-[480px] flex-col p-4">
         {q.isPending ? (
-          <Skeleton className="h-full min-h-[480px] w-full" rounded="lg" />
+          <div role="status" className="h-full min-h-[480px]">
+            <span className="sr-only">Loading the document</span>
+            <Skeleton className="h-full min-h-[480px] w-full" />
+          </div>
         ) : q.error || !doc ? (
           <ErrorState error={q.error} title="Could not load the document" onRetry={() => void q.refetch()} />
         ) : (
           <DocViewer
             doc={doc}
+            meta={<MetaList items={[`${doc.page_count} ${doc.page_count === 1 ? "page" : "pages"}`, focus?.label ? `Showing: ${focus.label}` : null]} />}
             findings={(findings ?? []).filter((f) => f.document_id === doc.id || f.evidence.some((e) => "document_id" in e && e.document_id === doc.id))}
             page={page}
             onPage={setPage}
@@ -59,6 +66,6 @@ export function ViewerSheet({ target, onClose, onFinding }: { target: DocTarget 
           />
         )}
       </div>
-    </Sheet>
+    </Drawer>
   );
 }

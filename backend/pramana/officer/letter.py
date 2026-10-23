@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Application, DeficiencyLetter, Finding, User
 from ..rules.engine import Ruleset
-from .common import citation, doc_label, finding_doc_type, presence_rule, rules_by_id
+from .common import RECTIFIABLE_CATEGORIES, citation, doc_label, finding_doc_type, presence_rule, rules_by_id
 from .settings import officer_settings
 
 FOOTER = "Prepared with the Pramana prototype. Synthetic demo data."
@@ -98,6 +98,24 @@ def _required(f: Finding, rs: Ruleset, doc_type: str | None, label: str) -> str:
     return "Corrected figures in the application form, with supporting documents for each change."
 
 
+def _title(f: Finding, doc_type: str | None, label: str) -> str:
+    """Rule findings keep their handbook title; anything else is named by the document it concerns."""
+    if f.rule:
+        return f.title
+    return f"{label[0].upper()}{label[1:]} needs to be resubmitted" if doc_type else "Declared value needs clarification"
+
+
+def item_wording(db: Session, f: Finding, rs: Ruleset) -> tuple[str, str]:
+    """Title and description an institution may read for one finding, worded as the deficiency letter words it."""
+    doc_type = finding_doc_type(db, f, rs)
+    label = doc_label(rs, doc_type)
+    if f.category in RECTIFIABLE_CATEGORIES:
+        return _title(f, doc_type, label)[:300], _description(f, label)[:2000]
+    # Indicators under review never reach the institution by name: only the document and a neutral request
+    title = f"{label[0].upper()}{label[1:]} needs to be resubmitted" if doc_type else "Declared value needs clarification"
+    return title, _description(f, label)[:2000]
+
+
 def draft_items(db: Session, findings: list[Finding], rs: Ruleset, respond_by: date) -> list[dict[str, Any]]:
     """One numbered item per document (or per finding without a document), so related findings read as one ask."""
     groups: dict[str, list[tuple[Finding, str | None]]] = {}
@@ -112,8 +130,7 @@ def draft_items(db: Session, findings: list[Finding], rs: Ruleset, respond_by: d
         f, doc_type = members[0]
         label = doc_label(rs, doc_type)
         rule = rules.get((f.rule or {}).get("id", "")) or presence_rule(rs, doc_type)
-        title = f.title if f.rule else (f"{label[0].upper()}{label[1:]} needs to be resubmitted" if doc_type
-                                        else "Declared value needs clarification")
+        title = _title(f, doc_type, label)
         desc = list(dict.fromkeys(_description(m, label) for m, _ in members))
         items.append({"finding_ids": [m.id for m, _ in members], "codes": [m.code for m, _ in members],
                       "title": title[:300], "description": " ".join(desc)[:2000],

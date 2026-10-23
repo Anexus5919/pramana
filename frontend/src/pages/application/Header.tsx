@@ -1,137 +1,122 @@
-import { FileWarning, History, Play } from "lucide-react";
-import { motion } from "motion/react";
-import type { ReactNode } from "react";
-import { appStatusMeta, humanize } from "../../lib/labels";
-import { fmtDate, fmtRelative } from "../../lib/format";
+import { FileArchive, FileWarning, Gavel, History, MessageSquareText, Play, ScrollText } from "lucide-react";
+import { WORKSPACE_SECTIONS, workspacePath, type WorkspaceSection } from "../../shell/nav";
 import type { ApplicationDetail } from "../../types";
-import { Tag } from "../../ui/Badge";
-import { StatusPill } from "../../ui/Blocks";
-import { Button } from "../../ui/Button";
-import { Digest } from "../../ui/Digest";
-import { dur, ease } from "../../ui/motion";
-import { appTitleLayoutId } from "../../ui/shared";
-import { Skeleton } from "../../ui/Skeleton";
-import { appStatusTone } from "../../ui/tone";
-import { Tooltip } from "../../ui/Tooltip";
+import { ActionMenu, ApplicationStatusBadge, Button, Code, MetaList, PageHeader, Skeleton, Tabs, type ActionMenuItem } from "../../ui2";
 
-export function HeaderTitle({ appId, name }: { appId: string; name: string | undefined }) {
+export interface HeaderProps {
+  app: ApplicationDetail;
+  section: WorkspaceSection;
+  /** Open findings for the Findings tab count; undefined while findings load */
+  openCount: number | undefined;
+  /** Any open finding is high or critical */
+  openHigh: boolean;
+  validating: boolean;
+  askOpen: boolean;
+  onValidate?: () => void;
+  onReplay?: () => void;
+  onPack?: () => void;
+  onAsk?: () => void;
+  onRectify?: () => void;
+  onOutcome?: () => void;
+}
+
+/** Institution, one status, one context line, Ask why, More actions and the one primary action: Decide. */
+export function WorkspaceHeader({
+  app,
+  section,
+  openCount,
+  openHigh,
+  validating,
+  askOpen,
+  onValidate,
+  onReplay,
+  onPack,
+  onAsk,
+  onRectify,
+  onOutcome,
+}: HeaderProps) {
+  const inst = app.institution;
+  const menu: ActionMenuItem[] = [
+    {
+      id: "validate",
+      label: validating ? "Validation is running" : "Run validation again",
+      icon: <Play />,
+      onSelect: onValidate,
+      disabled: validating,
+      hidden: !onValidate,
+    },
+    { id: "replay", label: "Replay latest run", icon: <History />, onSelect: onReplay, hidden: !onReplay || !app.latest_run },
+    { id: "pack", label: "Export evidence pack", icon: <FileArchive />, onSelect: onPack, hidden: !onPack },
+    { id: "audit", label: "View audit trail", icon: <ScrollText />, to: workspacePath(app.id, "activity", { view: "audit" }), separated: true },
+  ];
+  const decide: ActionMenuItem[] = [
+    {
+      id: "rectify",
+      label: "Request rectification",
+      description: "Send a deficiency letter. The institution corrects and resubmits.",
+      icon: <FileWarning />,
+      onSelect: onRectify,
+    },
+    {
+      id: "outcome",
+      label: "Record scrutiny outcome",
+      description: "Record the authority's decision with a reason. Starts the re-verification watch.",
+      icon: <Gavel />,
+      onSelect: onOutcome,
+      disabled: !app.latest_run,
+    },
+  ];
+
   return (
-    <motion.h1
-      layoutId={appTitleLayoutId(appId)}
-      className="font-display text-2xl leading-tight font-semibold tracking-title text-ink text-balance sm:text-[32px] sm:tracking-[-0.025em]"
+    <PageHeader
+      title={inst.name}
+      status={<ApplicationStatusBadge status={app.status} />}
+      context={
+        <MetaList
+          items={[
+            <Code key="aicte">{inst.aicte_id}</Code>,
+            <Code key="id">{app.id}</Code>,
+            // Same short label as the review queue; the bracketed qualifier made the line wrap at 1280
+            <span key="cat" title={app.category_label}>
+              {app.category_label.replace(/\s*\(.*\)$/, "")}
+            </span>,
+            `AY ${app.academic_year}, round ${app.round}`,
+            [inst.district, inst.state].filter(Boolean).join(", "),
+          ]}
+        />
+      }
+      secondary={
+        onAsk && (
+          <Button variant="secondary" leadingIcon={<MessageSquareText />} aria-expanded={askOpen} onClick={onAsk}>
+            Ask why
+          </Button>
+        )
+      }
+      menu={menu}
+      primary={onRectify && onOutcome ? <ActionMenu trigger="button" variant="primary" label="Decide" width={300} items={decide} /> : undefined}
     >
-      {name ?? <Skeleton className="h-9 w-80 max-w-full" />}
-    </motion.h1>
+      <Tabs
+        label="Application sections"
+        value={section}
+        items={WORKSPACE_SECTIONS.map((s) => ({
+          id: s.id,
+          label: s.label,
+          href: workspacePath(app.id, s.id),
+          count: s.id === "findings" ? openCount : undefined,
+          attention: s.id === "findings" ? openHigh : undefined,
+        }))}
+      />
+    </PageHeader>
   );
 }
 
-export function WorkspaceHeader({
-  app,
-  canValidate,
-  canReplay,
-  canRectify,
-  validating,
-  onValidate,
-  onReplay,
-  onRectify,
-  extra,
-}: {
-  app: ApplicationDetail;
-  canValidate: boolean;
-  canReplay: boolean;
-  canRectify: boolean;
-  validating: boolean;
-  onValidate: () => void;
-  onReplay: () => void;
-  onRectify: () => void;
-  /** Role-specific actions shown before the standard ones */
-  extra?: ReactNode;
-}) {
-  const run = app.latest_run;
+/** Header-shaped placeholder while the application loads. */
+export function HeaderSkeleton({ name }: { name?: string }) {
   return (
-    <header className="mb-5">
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-        <div className="min-w-0 flex-1 basis-[420px]">
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: dur.panel, ease: ease.out }}
-            className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-ink-3"
-          >
-            <span className="font-mono text-ink-2">{app.institution.aicte_id}</span>
-            <span aria-hidden className="text-ink-4">/</span>
-            <span className="font-mono">{app.id}</span>
-            <span aria-hidden className="text-ink-4">/</span>
-            <span>
-              {app.institution.district}, {app.institution.state}
-            </span>
-          </motion.div>
-          <HeaderTitle appId={app.id} name={app.institution.name} />
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: dur.panel, ease: ease.out, delay: 0.06 }}
-            className="mt-3 flex flex-wrap items-center gap-2"
-          >
-            <StatusPill status={app.status} tone={appStatusTone(app.status)} label={appStatusMeta[app.status]?.label ?? humanize(app.status)} explain={false} size="md" />
-            <span className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-sm text-ink-2">{app.category_label}</span>
-            <span className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-sm text-ink-2">
-              AY {app.academic_year}
-            </span>
-            <span className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-sm text-ink-2">Round {app.round}</span>
-          </motion.div>
-        </div>
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: dur.panel, ease: ease.out, delay: 0.1 }}
-          className="flex flex-wrap items-center gap-2"
-        >
-          {extra}
-          {canRectify && (
-            <Button variant="ghost" leadingIcon={<FileWarning />} onClick={onRectify}>
-              Request rectification
-            </Button>
-          )}
-          {canReplay && run && (
-            <Tooltip content="Re-run the latest run under its pinned ruleset and as-of date, then compare digests.">
-              <Button variant="secondary" leadingIcon={<History />} onClick={onReplay}>
-                Replay
-              </Button>
-            </Tooltip>
-          )}
-          {canValidate && (
-            <Button magnetic leadingIcon={<Play />} loading={validating} onClick={onValidate}>
-              {validating ? "Validating" : "Run validation"}
-            </Button>
-          )}
-        </motion.div>
-      </div>
-
-      {run && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: dur.panel, delay: 0.14 }}
-          className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[12px] border border-line bg-surface/70 px-3.5 py-2 text-xs text-ink-3"
-        >
-          <span className="inline-flex items-center gap-1.5">
-            <span className="eyebrow">Latest run</span>
-            <Tag variant="mono">{run.ruleset_id}</Tag>
-          </span>
-          <span className="inline-flex min-w-0 items-center gap-1.5">
-            Report <Digest value={run.report_digest} label="report digest" head={10} tail={6} />
-          </span>
-          <span>
-            As of <span className="font-medium text-ink-2">{fmtDate(run.as_of)}</span>
-          </span>
-          <span>
-            Triggered by <span className="font-medium text-ink-2">{run.triggered_by ?? "system"}</span>
-            {run.finished_at && <span className="text-ink-4">, {fmtRelative(run.finished_at)}</span>}
-          </span>
-          {run.replay_of && <Tag variant="brand">Replay</Tag>}
-        </motion.div>
-      )}
-    </header>
+    <div className="space-y-3">
+      {name ? <h1 className="text-xl font-semibold text-ink">{name}</h1> : <Skeleton className="h-8 w-96 max-w-full" />}
+      <Skeleton className="h-4 w-[28rem] max-w-full" />
+      <Skeleton className="mt-5 h-10 w-full" />
+    </div>
   );
 }

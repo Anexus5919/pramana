@@ -1,22 +1,75 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, qk } from "../../api";
+import type { WorkspaceSection } from "../../shell/nav";
 import type { BBox, DocumentDetail, Evidence, Finding, ReviewAction } from "../../types";
 
-export const TABS = ["overview", "documents", "findings", "checklist", "verification", "relationships", "campus", "since-last-year", "runs", "audit"] as const;
-export type WorkspaceTab = (typeof TABS)[number];
+/** Section ids that appear in the URL path; Summary is the bare /applications/:id. */
+const PATH_SECTIONS: readonly WorkspaceSection[] = ["findings", "documents", "comparisons", "activity"];
 
-export function isTab(s: string | undefined): s is WorkspaceTab {
-  return !!s && (TABS as readonly string[]).includes(s);
+export function isPathSection(s: string | undefined): s is WorkspaceSection {
+  return !!s && (PATH_SECTIONS as readonly string[]).includes(s);
 }
 
-export function appPath(appId: string, tab?: WorkspaceTab, params?: Record<string, string | number | null | undefined>): string {
-  const base = `/applications/${encodeURIComponent(appId)}${tab && tab !== "overview" ? `/${tab}` : ""}`;
-  if (!params) return base;
-  const p = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined && v !== "") p.set(k, String(v));
-  const s = p.toString();
-  return s ? `${base}?${s}` : base;
+/** The one definition of an open finding: still waiting for an official's review. */
+export const OPEN_REVIEW = new Set(["open", "acknowledged", "evidence_requested"]);
+
+export function isOpenFinding(f: Pick<Finding, "review_status">): boolean {
+  return OPEN_REVIEW.has(f.review_status);
+}
+
+/**
+ * Finding categories that may go to an institution in a rectification request. Forensic,
+ * cross-application (consistency) and issuer-verification findings stay with officials;
+ * the server refuses them too.
+ */
+export const RECTIFIABLE_CATEGORIES = new Set(["completeness", "compliance", "validity"]);
+
+export function isRectifiable(f: Pick<Finding, "category">): boolean {
+  return RECTIFIABLE_CATEGORIES.has(f.category);
+}
+
+/**
+ * One URL search parameter as state. Setting it replaces the history entry and keeps
+ * every other parameter; null or "" removes it.
+ */
+export function useParam(name: string): [string | null, (v: string | null) => void] {
+  const [sp, setSp] = useSearchParams();
+  const set = useCallback(
+    (v: string | null) =>
+      setSp(
+        (prev) => {
+          const n = new URLSearchParams(prev);
+          if (v === null || v === "") n.delete(name);
+          else n.set(name, v);
+          return n;
+        },
+        { replace: true },
+      ),
+    [setSp, name],
+  );
+  return [sp.get(name), set];
+}
+
+/** Patch several search parameters at once (null removes). Replaces the history entry unless push is set. */
+export function useSetParams() {
+  const [, setSp] = useSearchParams();
+  return useCallback(
+    (patch: Record<string, string | number | null | undefined>, opts?: { push?: boolean }) =>
+      setSp(
+        (prev) => {
+          const n = new URLSearchParams(prev);
+          for (const [k, v] of Object.entries(patch)) {
+            if (v === null || v === undefined || v === "") n.delete(k);
+            else n.set(k, String(v));
+          }
+          return n;
+        },
+        { replace: !opts?.push },
+      ),
+    [setSp],
+  );
 }
 
 export function bboxParam(b: BBox | null | undefined): string | null {
