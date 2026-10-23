@@ -179,7 +179,7 @@ def test_watch_checks_validity_against_today_and_keeps_a_schedule(world):
     _, app = world
     from pramana.history import watch
 
-    later = watch.run_watch("manual", "test", today=date(2027, 3, 12))
+    later = watch.run_watch("manual", "test", today=date(2028, 3, 12))
     expired = {(x["application_id"], x["change"]) for x in later["changes"]}
     assert (A6, "expired") in expired and (A1, "expired") in expired
     again = watch.run_watch("manual", "test")

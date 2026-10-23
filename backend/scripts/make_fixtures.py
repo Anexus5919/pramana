@@ -715,7 +715,7 @@ COMMON_LABS = ["Engineering Physics Lab", "Engineering Chemistry Lab", "Language
 # Year-over-year conditions planted through the previous year's application (code, what differs)
 YOY_PLANTED = {
     "A2": ("YOY-CERT-REUSED-NEW-VALIDITY", "Last year's application carried the same fire NOC number with validity to "
-                                           "11-03-2026; this year the number shows validity to 11-03-2027."),
+                                           "11-03-2026; this year the number shows validity to 11-03-2028."),
     "A4": ("YOY-INTAKE-JUMP", "Last year's application had 60 approved CE seats; this EoA proposes 120."),
     "A8": ("YOY-FACULTY-TURNOVER", "22 of the 36 faculty IDs on last year's roster are gone this year."),
     "A10": ("YOY-LAND-AREA-DECREASED", "Last year's application declared 12.5 acres of land; this year 10.5."),
@@ -921,7 +921,7 @@ def main() -> None:
         return sign_payload({"noc": noc, "issued_to": issued_to, "issue_date": issue.isoformat(),
                              "valid_until": valid.isoformat()}, qr_keys["fire-sim-2025"], "fire-sim-2025")
 
-    def standard_docs(k: str, *, fire_issue=d("2025-03-12"), fire_valid=d("2027-03-11"), oc_issue=d("2011-06-15"),
+    def standard_docs(k: str, *, fire_issue=d("2025-03-12"), fire_valid=d("2028-03-11"), oc_issue=d("2011-06-15"),
                       sign_fire=True, sign_oc=True) -> dict[str, bytes]:
         inst, b = INST[k], base[k]
         docs = {}
@@ -1067,8 +1067,8 @@ def main() -> None:
     # A5 fire NOC retyped from A6's with the name changed, A6's QR pasted on, signed with the applicant's own DSC
     docs = standard_docs("I5")
     b6 = base["I6"]
-    tok6 = fire_qr("I6", b6["noc"], d("2025-03-12"), d("2027-03-11"), INST["I6"]["name"])
-    pdf, _ = fire_noc(INST["I6"], b6["noc"], d("2025-03-12"), d("2027-03-11"), base["I5"]["area"],
+    tok6 = fire_qr("I6", b6["noc"], d("2025-03-12"), d("2028-03-11"), INST["I6"]["name"])
+    pdf, _ = fire_noc(INST["I6"], b6["noc"], d("2025-03-12"), d("2028-03-11"), base["I5"]["area"],
                       issued_to=INST["I5"]["name"], qr_token=tok6)
     docs["fire_noc"] = demo_pki.sign_pdf(pdf, applicant["I5"], chain, reason="Uploaded", location="Satara")
     b5 = base["I5"]
@@ -1105,7 +1105,7 @@ def main() -> None:
 
     # A8 fabricated fire NOC: no issuer signature or QR, number unknown to the issuer, applicant DSC only
     docs = standard_docs("I8")
-    pdf, _ = fire_noc(INST["I8"], "FES/HYD/2025/07734", d("2025-05-02"), d("2027-05-01"), base["I8"]["area"],
+    pdf, _ = fire_noc(INST["I8"], "FES/HYD/2025/07734", d("2025-05-02"), d("2028-05-01"), base["I8"]["area"],
                       seal=fire_seal(INST["I1"]))
     docs["fire_noc"] = demo_pki.sign_pdf(pdf, applicant["I8"], chain, reason="Uploaded", location="Hyderabad")
     registry["records"] = [r for r in registry["records"] if r["ref_no"] != base["I8"]["noc"]]
@@ -1129,16 +1129,20 @@ def main() -> None:
          extra={"issuers_down": ["MUNICIPAL-OC"]})
 
     # A10 intake increase with two core branches; lab photo reused from A1; map point away from campus
-    docs = standard_docs("I10")
+    # Its fire NOC is valid when submitted but lapses three months into the 2026-27 session
+    docs = standard_docs("I10", fire_issue=d("2024-10-01"), fire_valid=d("2026-09-30"))
     i10 = INST["I10"]
     docs["satellite_map"] = satellite(i10, i10["lat"] + 0.021, i10["lon"] + 0.012)[0]
     reused = recompress(lab_original, 72, 0.75)
     decl = declared("I10")
     decl["programmes"][0]["proposed_intake"] = 120
     emit("A10", "I10", "INCREASE_INTAKE", docs, decl,
-         ["ADD26-26C-CORE-BRANCHES", "XD-SATMAP-LOCATION", "XA-PHOTO-REUSED", "FX-IMG-GEOTAG-FAR"],
+         ["ADD26-26C-CORE-BRANCHES", "XD-SATMAP-LOCATION", "XA-PHOTO-REUSED", "FX-IMG-GEOTAG-FAR",
+          "XD-CERT-EXPIRES-IN-SESSION"],
          "Seeks an intake increase with only two core branches outside CS (IT is CS-allied). The lab photo is "
-         "A1's photo recompressed, carrying a Pune geotag far from Jalgaon. Map point is 2.6 km from campus.",
+         "A1's photo recompressed, carrying a Pune geotag far from Jalgaon. Map point is 2.6 km from campus. "
+         "Its fire NOC is valid on the submission date but lapses on 30-09-2026, three months into the 2026-27 "
+         "session.",
          {"lab_photo_2.jpg": reused})
 
     # A11 a valid fire NOC in an unfamiliar layout that also carries text aimed at automated readers
@@ -1186,7 +1190,7 @@ def main() -> None:
 
     # Printable samples for the public scan page, one per result the page explains
     i1, b1 = INST["I1"], base["I1"]
-    tok1 = fire_qr("I1", b1["noc"], d("2025-03-12"), d("2027-03-11"), i1["name"])
+    tok1 = fire_qr("I1", b1["noc"], d("2025-03-12"), d("2028-03-11"), i1["name"])
     h, p, sig = tok1.split(".")
     payload = json.loads(base64.urlsafe_b64decode(p + "=" * (-len(p) % 4)))
     edited = base64.urlsafe_b64encode(json.dumps({**payload, "valid_until": "2029-03-11"}, separators=(",", ":"))
@@ -1195,7 +1199,7 @@ def main() -> None:
     tok3 = fire_qr("I3", base["I3"]["noc"], d("2023-10-01"), d("2025-09-30"), INST["I3"]["name"])
     scan_samples([
         ("as_issued", "as issued, every printed value matches the signed QR",
-         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2027-03-11"), b1["area"], qr_token=tok1)[0], tok1),
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2028-03-11"), b1["area"], qr_token=tok1)[0], tok1),
         ("printed_date_changed", "same QR, printed validity changed to 11-03-2029",
          fire_noc(i1, b1["noc"], d("2025-03-12"), d("2029-03-11"), b1["area"], qr_token=tok1)[0], tok1),
         ("expired", "signed QR whose validity ended on 30-09-2025",
@@ -1205,7 +1209,7 @@ def main() -> None:
          fire_noc(i1, b1["noc"], d("2025-03-12"), d("2029-03-11"), b1["area"], qr_token=f"{h}.{edited}.{sig}")[0],
          f"{h}.{edited}.{sig}"),
         ("unknown_key", "signed with a key the service does not publish",
-         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2027-03-11"), b1["area"], qr_token=stranger)[0], stranger),
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2028-03-11"), b1["area"], qr_token=stranger)[0], stranger),
     ])
 
     # Faculty registry and the remaining reference records
