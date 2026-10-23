@@ -51,7 +51,7 @@ function HeroCopy({ wide }: { wide: boolean }) {
       </span>
       <h1
         id="hero-title"
-        className="lp-display mt-5 text-[clamp(38px,min(4.3vw,7.4vh),78px)] leading-[0.98] font-semibold text-(--lp-ink)"
+        className="lp-display mt-5 text-[clamp(40px,min(4.6vw,8.2vh),92px)] leading-[0.98] font-semibold text-(--lp-ink)"
       >
         Every approval,
         <br />
@@ -343,14 +343,29 @@ export default function HeroStory() {
 
         <div
           ref={copyRef}
-          className={`absolute ${L.wide ? "flex items-center" : ""}`}
-          style={L.wide ? { left: L.copy.x, width: L.copy.w, top: 72, height: L.horizonY - 72 + 48 } : { left: L.copy.x, width: L.copy.w, top: 92 }}
+          className={`pointer-events-none absolute ${L.wide ? "flex items-center" : ""}`}
+          style={
+            L.wide
+              ? { left: L.copy.x, width: L.copy.w, top: 0, height: L.h, paddingTop: 88, paddingBottom: L.h * 0.06 }
+              : { left: L.copy.x, width: L.copy.w, top: Math.max(96, L.h * 0.13) }
+          }
         >
           <motion.div
+            className="pointer-events-auto relative isolate"
             initial={reduced ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
           >
+            {/* the copy may sit over the block floor, so the soft light behind it extends down with it */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -z-10"
+              style={{
+                inset: L.wide ? "-16% -22% -20% -26%" : "-10% -12% -14% -12%",
+                background:
+                  "radial-gradient(closest-side, rgb(255 249 244 / 0.86), rgb(255 247 241 / 0.6) 48%, rgb(255 246 240 / 0.22) 78%, rgb(255 246 240 / 0) 100%)",
+              }}
+            />
             <HeroCopy wide={L.wide} />
           </motion.div>
         </div>
