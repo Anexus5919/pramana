@@ -1,106 +1,94 @@
-import { motion, useReducedMotion } from "motion/react";
-import { createContext, useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { fmtMs } from "../../lib/format";
-import { cn } from "../../ui/cn";
-import { dur, ease } from "../../ui/motion";
+import type { DocumentDetail, ExtractedField } from "../../types";
+import { Button, MetaList, Panel, type ButtonProps } from "../../ui2";
 import type { AnalyseStep } from "./analyseApi";
 import { STEP_LABEL } from "./summary";
 
-/** The section the overview last sent the reader to; it pulses once on arrival. */
-export const FlashContext = createContext<{ id: string; n: number } | null>(null);
+/** Anchor id of a report section, shared by the panels and the in-page index. */
+export const anchorId = (id: string) => `an-${id}`;
 
-export function Section({
+/** One report section: a Panel with a stable anchor for the in-page index. */
+export function ReportPanel({
   id,
   title,
-  eyebrow,
-  aside,
   description,
+  actions,
+  padding,
   children,
-  className,
-  bare = false,
 }: {
   id: string;
   title: ReactNode;
-  eyebrow?: ReactNode;
-  aside?: ReactNode;
   description?: ReactNode;
+  actions?: ReactNode;
+  padding?: "none" | "md";
   children: ReactNode;
-  className?: string;
-  /** No card chrome, for sections whose content is already a set of cards */
-  bare?: boolean;
 }) {
-  const flash = useContext(FlashContext);
-  const reduce = useReducedMotion();
-  const lit = flash?.id === id;
   return (
-    <motion.section
-      id={`an-${id}`}
-      aria-labelledby={`an-${id}-title`}
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: dur.panel, ease: ease.out }}
-      className={cn("relative min-w-0 scroll-mt-24", bare ? "rounded-panel" : "rounded-card border border-line bg-surface p-5 shadow-sm", className)}
-    >
-      {lit && !reduce && (
-        <motion.span
-          key={flash.n}
-          aria-hidden
-          className="pointer-events-none absolute -inset-px rounded-[inherit] ring-2 ring-brand-400"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ delay: 0.35, duration: 1.1, ease: ease.out, times: [0, 0.2, 1] }}
-        />
-      )}
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
-        <div className="min-w-0">
-          {eyebrow && <div className="eyebrow mb-1">{eyebrow}</div>}
-          <h2 id={`an-${id}-title`} className="font-display text-md font-semibold tracking-title text-ink">
-            {title}
-          </h2>
-          {description && <p className="mt-0.5 text-sm text-ink-3 text-pretty">{description}</p>}
-        </div>
-        {aside && <div className="flex shrink-0 flex-wrap items-center gap-1.5">{aside}</div>}
-      </header>
+    <Panel id={anchorId(id)} title={title} description={description} actions={actions} padding={padding} className="scroll-mt-20">
       {children}
-    </motion.section>
+    </Panel>
   );
 }
 
-export const actionCls =
-  "inline-flex h-7 shrink-0 items-center gap-1 rounded-[7px] bg-brand-soft px-2 text-xs font-medium text-brand-ink transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500";
-
-export function Quiet({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("rounded-[10px] border border-dashed border-line px-3 py-2.5 text-sm text-ink-3 text-pretty", className)}>{children}</p>;
+/** Small ghost button for "Show on page" and "Locate" actions inside rows. */
+export function RowAction(props: ButtonProps) {
+  return <Button size="sm" variant="ghost" {...props} />;
 }
 
-/** Where the server's time went, one block per stage, widths proportional to the measured milliseconds. */
-export function StepTimeline({ steps }: { steps: AnalyseStep[] }) {
-  const reduce = useReducedMotion();
-  const total = steps.reduce((s, x) => s + x.ms, 0) || 1;
+/** Plain explanation when a section has nothing to show. */
+export function Quiet({ children }: { children: ReactNode }) {
+  return <p className="text-sm text-ink-3 text-pretty">{children}</p>;
+}
+
+/** Where the server's time went, as one line of stage timings. */
+export function StepLine({ steps }: { steps: AnalyseStep[] }) {
   return (
-    <div>
-      <div className="flex h-3 w-full gap-[3px] overflow-hidden" role="img" aria-label={`Server time by stage: ${steps.map((s) => `${STEP_LABEL[s.step] ?? s.step} ${fmtMs(s.ms)}`).join(", ")}`}>
-        {steps.map((s, i) => (
-          <motion.span
-            key={`${s.step}-${i}`}
-            aria-hidden
-            initial={{ scaleX: reduce ? 1 : 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: reduce ? 0 : 0.1 + i * 0.05, duration: dur.panel, ease: ease.out }}
-            style={{ flexGrow: Math.max(s.ms, total * 0.012), flexBasis: 0, transformOrigin: "left" }}
-            className={cn("h-full min-w-[3px] rounded-[3px]", i % 2 ? "bg-brand-300" : "bg-brand-500")}
-          />
-        ))}
-      </div>
-      <ol className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] text-ink-3">
-        {steps.map((s, i) => (
-          <li key={`${s.step}-${i}`} className="inline-flex items-center gap-1.5">
-            <span aria-hidden className={cn("size-2 rounded-[2px]", i % 2 ? "bg-brand-300" : "bg-brand-500")} />
-            {STEP_LABEL[s.step] ?? s.step} <span className="tabular text-ink-2">{fmtMs(s.ms)}</span>
-          </li>
-        ))}
-      </ol>
+    <MetaList
+      className="text-xs text-ink-3"
+      items={steps.map((s, i) => (
+        <span key={`${s.step}-${i}`}>
+          {STEP_LABEL[s.step] ?? s.step} <span className="text-ink-2">{fmtMs(s.ms)}</span>
+        </span>
+      ))}
+    />
+  );
+}
+
+function devanagariPages(doc: DocumentDetail) {
+  return (doc.ocr_scripts ?? []).filter((n) => n.script === "devanagari");
+}
+
+/** How a page carrying Hindi was read, or why its Hindi text was not read. */
+export function ScriptNote({ doc }: { doc: DocumentDetail }) {
+  const notes = devanagariPages(doc);
+  if (!notes.length) return null;
+  return (
+    <ul className="space-y-1 text-sm text-ink-2">
+      {notes.map((n) => (
+        <li key={n.page} className="text-pretty">
+          <span className="font-medium text-ink">Page {n.page}.</span> {n.reason ? `Routed to OCR because ${n.reason}. ` : ""}
+          {n.read === false
+            ? n.note
+            : "Devanagari words were read with the PP-OCRv5 Devanagari recogniser and Latin words and digits with the default recogniser, line by line."}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The OCR line a value was read from, so a Hindi label can be checked against the page. */
+export function FieldSourceLine({ doc, f }: { doc: DocumentDetail; f: ExtractedField }) {
+  if (!f.raw || !f.page || !devanagariPages(doc).some((n) => n.page === f.page && n.read !== false)) return null;
+  const text = doc.pages.find((p) => p.page_no === f.page)?.text ?? "";
+  const line = text.split("\n").find((l) => l.includes(f.raw as string));
+  if (!line || line.trim() === f.raw.trim()) return null;
+  return (
+    <div className="mt-0.5 text-xs text-ink-3">
+      Line read:{" "}
+      <span lang="hi" className="text-ink-2">
+        "{line}"
+      </span>
     </div>
   );
 }
