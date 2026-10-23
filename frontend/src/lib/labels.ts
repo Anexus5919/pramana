@@ -29,7 +29,7 @@ export const verificationMeta: Record<string, { label: string; tone: Tone; meani
     tone: "mismatch",
     meaning: "The authoritative source disagrees with what was submitted.",
   },
-  expired: { label: "Expired", tone: "expired", meaning: "Genuine, but its validity has ended." },
+  expired: { label: "Expired", tone: "expired", meaning: "Confirmed by the source, but its validity has ended." },
   verification_pending: {
     label: "Verification pending",
     tone: "pending",

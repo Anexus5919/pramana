@@ -126,7 +126,7 @@ INJECTION = re.compile(
 
 
 def injection_lines(pages: list[PageText]) -> list[dict[str, Any]]:
-    """Lines that address an automated reader. Genuine certificates do not talk to software."""
+    """Lines that address an automated reader. Certificates from issuers do not talk to software."""
     out = []
     for p in pages:
         for line in p.lines:

@@ -337,7 +337,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     "code": "SEC-INSTRUCTION-TEXT", "fingerprint": _fp("inj", d.declared_type, il["text"][:60]),
                     "category": "forensic", "evidence_class": "structural", "severity": "high",
                     "outcome": "indicator", "title": "Document contains instructions aimed at automated readers",
-                    "message": f"Page {il['page']} says: '{il['text']}'. Genuine certificates do not address "
+                    "message": f"Page {il['page']} says: '{il['text']}'. Certificates from issuers do not address "
                                "software. Values found only in this line are never accepted.",
                     "limitation": "Pattern-based; unusual but legitimate wording could match. Read the line.",
                     "evidence": [{"kind": "region", "document_id": d.id, "page": il["page"], "bbox": il["bbox"],
