@@ -1,0 +1,5465 @@
+{
+ "seed": 2202,
+ "n": 100,
+ "generator_version": 1,
+ "rules": "Each expected item is an (application, finding code) pair. planted: the condition's own finding; partner: the finding the condition causes on the other application; side_effect: a consequence fixed by the plan before any run. An application with no expected item is clean.",
+ "world": {
+  "fire_number_format": {
+   "AP": "FES/{c}/{y}/{n5}",
+   "GJ": "{st}FS/{c}/NOC/{y}/{n4}",
+   "KA": "DFS-{c}-{y}-{n6}",
+   "KL": "FES/{c}/{y}/{n5}",
+   "MH": "FIRE/{c}/{n5}/{y}",
+   "MP": "FIRE/{c}/{n5}/{y}",
+   "RJ": "DFS-{c}-{y}-{n6}",
+   "TG": "F/NOC/{c}/{y}-{yy}/{n4}",
+   "TN": "{st}-FNOC-{y}-{n5}",
+   "UP": "{st}FS/{c}/NOC/{y}/{n4}",
+   "WB": "F/NOC/{c}/{y}-{yy}/{n4}"
+  },
+  "occupancy_number_format": {
+   "AP": "{c}/BP/OC/{y}/{n5}",
+   "GJ": "{c}/BP/OC/{y}/{n5}",
+   "KA": "BPMS/{st}/{c}/{n7}",
+   "KL": "CC/{y}/{c}/{n5}",
+   "MH": "{c}/BP/OC/{y}/{n5}",
+   "MP": "{c}MC-OC-{y}-{n6}",
+   "RJ": "CC/{y}/{c}/{n5}",
+   "TG": "OC/{c}/{y}/{n4}",
+   "TN": "CC/{y}/{c}/{n5}",
+   "UP": "BPMS/{st}/{c}/{n7}",
+   "WB": "{c}MC-OC-{y}-{n6}"
+  },
+  "nba_format": "NBA/ACCR/{y}/{n5}",
+  "fire_qr_by_state": {
+   "AP": false,
+   "GJ": true,
+   "KA": true,
+   "KL": false,
+   "MH": true,
+   "MP": false,
+   "RJ": true,
+   "TG": false,
+   "TN": true,
+   "UP": true,
+   "WB": true
+  },
+  "fire_issuer_signs_by_state": {
+   "AP": true,
+   "GJ": true,
+   "KA": false,
+   "KL": true,
+   "MH": true,
+   "MP": false,
+   "RJ": true,
+   "TG": true,
+   "TN": true,
+   "UP": true,
+   "WB": true
+  },
+  "municipal_issuer_signs_by_state": {
+   "AP": false,
+   "GJ": true,
+   "KA": true,
+   "KL": true,
+   "MH": true,
+   "MP": true,
+   "RJ": true,
+   "TG": true,
+   "TN": true,
+   "UP": true,
+   "WB": false
+  },
+  "nba_qr": true
+ },
+ "applications": [
+  {
+   "key": "R001",
+   "id": "APP-2026-371178",
+   "institution": "Sant Kaveri Polytechnic and Engineering College",
+   "city": "Surat",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-30",
+   "clean": false,
+   "conditions": [
+    "C084"
+   ],
+   "involved_in": [
+    "C084"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R002",
+   "id": "APP-2026-627930",
+   "institution": "Sri Bhima Engineering College",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2026-01-11",
+   "clean": false,
+   "conditions": [
+    "C068"
+   ],
+   "involved_in": [
+    "C068"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R003",
+   "id": "APP-2026-910377",
+   "institution": "Lucknow Polytechnic and Engineering College",
+   "city": "Lucknow",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2026-01-16",
+   "clean": false,
+   "conditions": [
+    "C066",
+    "C067"
+   ],
+   "involved_in": [
+    "C066",
+    "C067"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R004",
+   "id": "APP-2026-864354",
+   "institution": "Udaipur College of Engineering and Technology",
+   "city": "Udaipur",
+   "state": "Rajasthan",
+   "category": "EOA",
+   "submitted": "2025-11-28",
+   "clean": false,
+   "conditions": [
+    "C109",
+    "C110"
+   ],
+   "involved_in": [
+    "C055",
+    "C109",
+    "C110"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R005",
+   "id": "APP-2026-833240",
+   "institution": "Dr. Annamacharya Institute of Technology",
+   "city": "Sangli",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-31",
+   "clean": false,
+   "conditions": [
+    "C052"
+   ],
+   "involved_in": [
+    "C052"
+   ],
+   "layout": {
+    "fire": "variant",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R006",
+   "id": "APP-2026-796995",
+   "institution": "Gwalior Engineering College",
+   "city": "Gwalior",
+   "state": "Madhya Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-11-28",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R007",
+   "id": "APP-2026-399180",
+   "institution": "Swami Ahilya School of Engineering",
+   "city": "Ahilyanagar",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-11",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R008",
+   "id": "APP-2026-780814",
+   "institution": "Sri Sanjeevani Polytechnic and Engineering College",
+   "city": "Indore",
+   "state": "Madhya Pradesh",
+   "category": "EOA",
+   "submitted": "2026-01-01",
+   "clean": false,
+   "conditions": [
+    "C011",
+    "C012"
+   ],
+   "involved_in": [
+    "C011",
+    "C012"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R009",
+   "id": "APP-2026-536294",
+   "institution": "Deccan College of Engineering",
+   "city": "Rajkot",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-16",
+   "clean": false,
+   "conditions": [
+    "C005",
+    "C006"
+   ],
+   "involved_in": [
+    "C005",
+    "C006"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R010",
+   "id": "APP-2026-157106",
+   "institution": "Jodhpur Polytechnic and Engineering College",
+   "city": "Jodhpur",
+   "state": "Rajasthan",
+   "category": "EOA",
+   "submitted": "2026-01-06",
+   "clean": false,
+   "conditions": [
+    "C018"
+   ],
+   "involved_in": [
+    "C005",
+    "C018"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R011",
+   "id": "APP-2026-792637",
+   "institution": "Shri Manjira Institute of Technology",
+   "city": "Kanpur",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-25",
+   "clean": false,
+   "conditions": [
+    "C089"
+   ],
+   "involved_in": [
+    "C089"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R012",
+   "id": "APP-2026-503272",
+   "institution": "Maharshi Gurukul Institute of Technology and Research",
+   "city": "Surat",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-11-29",
+   "clean": false,
+   "conditions": [
+    "C106",
+    "C107",
+    "C108"
+   ],
+   "involved_in": [
+    "C106",
+    "C107",
+    "C108"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R013",
+   "id": "APP-2026-428571",
+   "institution": "Kozhikode Institute of Technology and Research",
+   "city": "Kozhikode",
+   "state": "Kerala",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-29",
+   "clean": false,
+   "conditions": [
+    "C061",
+    "C062",
+    "C063"
+   ],
+   "involved_in": [
+    "C061",
+    "C062",
+    "C063"
+   ],
+   "layout": {
+    "fire": "variant",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R014",
+   "id": "APP-2026-386574",
+   "institution": "Latur College of Engineering and Technology",
+   "city": "Latur",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-11-28",
+   "clean": false,
+   "conditions": [
+    "C042"
+   ],
+   "involved_in": [
+    "C042"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R015",
+   "id": "APP-2026-947465",
+   "institution": "Shree Savitribai Institute of Engineering and Management",
+   "city": "Vijayawada",
+   "state": "Andhra Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-14",
+   "clean": false,
+   "conditions": [
+    "C016"
+   ],
+   "involved_in": [
+    "C016"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R016",
+   "id": "APP-2026-122797",
+   "institution": "Panchganga Technical Campus",
+   "city": "Davanagere",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2026-01-13",
+   "clean": false,
+   "conditions": [
+    "C105"
+   ],
+   "involved_in": [
+    "C105"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R017",
+   "id": "APP-2026-489815",
+   "institution": "Late Shri Hooghly Institute of Technology",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-11-29",
+   "clean": false,
+   "conditions": [
+    "C046",
+    "C047"
+   ],
+   "involved_in": [
+    "C046",
+    "C047"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R018",
+   "id": "APP-2026-674903",
+   "institution": "Shri Dhanvantari College of Engineering",
+   "city": "Chhatrapati Sambhajinagar",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-15",
+   "clean": false,
+   "conditions": [
+    "C049",
+    "C050",
+    "C051"
+   ],
+   "involved_in": [
+    "C049",
+    "C050",
+    "C051"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R019",
+   "id": "APP-2026-548892",
+   "institution": "Dr. Dnyaneshwar College of Engineering and Technology",
+   "city": "Tirupati",
+   "state": "Andhra Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-20",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R020",
+   "id": "APP-2026-618893",
+   "institution": "Unnati Polytechnic and Engineering College",
+   "city": "Kanpur",
+   "state": "Uttar Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-01",
+   "clean": false,
+   "conditions": [
+    "C072",
+    "C073"
+   ],
+   "involved_in": [
+    "C072",
+    "C073"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R021",
+   "id": "APP-2026-574329",
+   "institution": "Shri Chambal School of Engineering",
+   "city": "Sangli",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-25",
+   "clean": false,
+   "conditions": [
+    "C056",
+    "C057",
+    "C058"
+   ],
+   "involved_in": [
+    "C056",
+    "C057",
+    "C058"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R022",
+   "id": "APP-2026-317344",
+   "institution": "Maharshi Sabarmati Technical Campus",
+   "city": "Mumbai",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-02",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R023",
+   "id": "APP-2026-343252",
+   "institution": "Pennar Institute of Engineering and Management",
+   "city": "Madurai",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-12-02",
+   "clean": false,
+   "conditions": [
+    "C036"
+   ],
+   "involved_in": [
+    "C036"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R024",
+   "id": "APP-2026-324165",
+   "institution": "Late Shri Aryabhata Engineering College",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2026-01-31",
+   "clean": false,
+   "conditions": [
+    "C003"
+   ],
+   "involved_in": [
+    "C003",
+    "C008"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R025",
+   "id": "APP-2026-320564",
+   "institution": "Rajarshi Ganga Institute of Engineering and Management",
+   "city": "Nanded",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-11-28",
+   "clean": false,
+   "conditions": [
+    "C037",
+    "C038"
+   ],
+   "involved_in": [
+    "C037",
+    "C038"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R026",
+   "id": "APP-2026-647632",
+   "institution": "Maharshi Kaveri School of Engineering",
+   "city": "Lucknow",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-26",
+   "clean": false,
+   "conditions": [
+    "C004"
+   ],
+   "involved_in": [
+    "C004"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R027",
+   "id": "APP-2026-843209",
+   "institution": "Rajarshi Narmada Technical Campus",
+   "city": "Prayagraj",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2026-02-21",
+   "clean": false,
+   "conditions": [
+    "C079"
+   ],
+   "involved_in": [
+    "C079"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R028",
+   "id": "APP-2026-179459",
+   "institution": "Shree Vasundhara Engineering College",
+   "city": "Thiruvananthapuram",
+   "state": "Kerala",
+   "category": "EOA",
+   "submitted": "2025-11-29",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R029",
+   "id": "APP-2026-073250",
+   "institution": "Rajarshi Kabir School of Engineering",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-12-08",
+   "clean": false,
+   "conditions": [
+    "C069"
+   ],
+   "involved_in": [
+    "C069"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R030",
+   "id": "APP-2026-796303",
+   "institution": "Sri Tungabhadra Technical Campus",
+   "city": "Warangal",
+   "state": "Telangana",
+   "category": "EOA",
+   "submitted": "2025-12-03",
+   "clean": false,
+   "conditions": [
+    "C055"
+   ],
+   "involved_in": [
+    "C055"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R031",
+   "id": "APP-2026-703398",
+   "institution": "Kolkata College of Engineering",
+   "city": "Kolkata",
+   "state": "West Bengal",
+   "category": "EOA",
+   "submitted": "2026-01-07",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R032",
+   "id": "APP-2026-589636",
+   "institution": "Satpura Technical Campus",
+   "city": "Noida",
+   "state": "Uttar Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-27",
+   "clean": false,
+   "conditions": [
+    "C074",
+    "C075"
+   ],
+   "involved_in": [
+    "C074",
+    "C075"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R033",
+   "id": "APP-2026-562665",
+   "institution": "Kalinga Institute of Technology",
+   "city": "Davanagere",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2025-12-07",
+   "clean": false,
+   "conditions": [
+    "C078"
+   ],
+   "involved_in": [
+    "C078"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R034",
+   "id": "APP-2026-929249",
+   "institution": "Shatabdi School of Engineering",
+   "city": "Belagavi",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2025-12-09",
+   "clean": false,
+   "conditions": [
+    "C024"
+   ],
+   "involved_in": [
+    "C024"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R035",
+   "id": "APP-2026-230696",
+   "institution": "Swami Sabarmati Institute of Engineering Studies",
+   "city": "Coimbatore",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-12-29",
+   "clean": false,
+   "conditions": [
+    "C009"
+   ],
+   "involved_in": [
+    "C009"
+   ],
+   "layout": {
+    "fire": "variant",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R036",
+   "id": "APP-2026-614280",
+   "institution": "Dr. Sanjeevani Technical Campus",
+   "city": "Noida",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-08",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R037",
+   "id": "APP-2026-409154",
+   "institution": "Tapi Institute of Engineering and Management",
+   "city": "Lucknow",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-18",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R038",
+   "id": "APP-2026-777247",
+   "institution": "Rajarshi Satpura Institute of Engineering and Management",
+   "city": "Ahilyanagar",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-09",
+   "clean": false,
+   "conditions": [
+    "C017"
+   ],
+   "involved_in": [
+    "C017"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R039",
+   "id": "APP-2026-661640",
+   "institution": "Sri Navodaya Institute of Technology and Research",
+   "city": "Mumbai",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2026-01-06",
+   "clean": false,
+   "conditions": [
+    "C031"
+   ],
+   "involved_in": [
+    "C031"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R040",
+   "id": "APP-2026-136828",
+   "institution": "Late Shri Shatabdi Institute of Technology",
+   "city": "Jaipur",
+   "state": "Rajasthan",
+   "category": "EOA",
+   "submitted": "2025-12-12",
+   "clean": false,
+   "conditions": [
+    "C014"
+   ],
+   "involved_in": [
+    "C014",
+    "C047"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R041",
+   "id": "APP-2026-069267",
+   "institution": "Sri Bhaskaracharya Engineering College",
+   "city": "Coimbatore",
+   "state": "Tamil Nadu",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-18",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R042",
+   "id": "APP-2026-982297",
+   "institution": "Maharshi Deccan Institute of Technology and Research",
+   "city": "Coimbatore",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-12-11",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R043",
+   "id": "APP-2026-401810",
+   "institution": "Shree Vivekananda Polytechnic and Engineering College",
+   "city": "Chhatrapati Sambhajinagar",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-25",
+   "clean": false,
+   "conditions": [
+    "C082",
+    "C083"
+   ],
+   "involved_in": [
+    "C082",
+    "C083"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R044",
+   "id": "APP-2026-002746",
+   "institution": "Late Shri Vidarbha Institute of Technology and Research",
+   "city": "Siliguri",
+   "state": "West Bengal",
+   "category": "EOA",
+   "submitted": "2026-01-23",
+   "clean": false,
+   "conditions": [
+    "C044",
+    "C045"
+   ],
+   "involved_in": [
+    "C044",
+    "C045"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R045",
+   "id": "APP-2026-239996",
+   "institution": "Shri Shatabdi Engineering College",
+   "city": "Rajkot",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-29",
+   "clean": false,
+   "conditions": [
+    "C007",
+    "C008"
+   ],
+   "involved_in": [
+    "C007",
+    "C008"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R046",
+   "id": "APP-2026-792356",
+   "institution": "Sant Narmada Institute of Engineering and Management",
+   "city": "Kochi",
+   "state": "Kerala",
+   "category": "EOA",
+   "submitted": "2026-01-16",
+   "clean": false,
+   "conditions": [
+    "C021",
+    "C022",
+    "C023"
+   ],
+   "involved_in": [
+    "C021",
+    "C022",
+    "C023"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R047",
+   "id": "APP-2026-136925",
+   "institution": "Satpura Institute of Technology",
+   "city": "Pune",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-13",
+   "clean": false,
+   "conditions": [
+    "C085"
+   ],
+   "involved_in": [
+    "C085"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R048",
+   "id": "APP-2026-572748",
+   "institution": "Maharshi Nilgiri School of Engineering",
+   "city": "Guntur",
+   "state": "Andhra Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-18",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R049",
+   "id": "APP-2026-997152",
+   "institution": "Rajarshi Chanakya Technical Campus",
+   "city": "Guntur",
+   "state": "Andhra Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-26",
+   "clean": false,
+   "conditions": [
+    "C064",
+    "C065"
+   ],
+   "involved_in": [
+    "C064",
+    "C065"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": true,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R050",
+   "id": "APP-2026-644730",
+   "institution": "Sri Betwa Institute of Engineering and Management",
+   "city": "Gwalior",
+   "state": "Madhya Pradesh",
+   "category": "EOA",
+   "submitted": "2026-01-18",
+   "clean": false,
+   "conditions": [
+    "C026",
+    "C027"
+   ],
+   "involved_in": [
+    "C026",
+    "C027"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R051",
+   "id": "APP-2026-236118",
+   "institution": "Unnati Engineering College",
+   "city": "Nanded",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-04",
+   "clean": false,
+   "conditions": [
+    "C071"
+   ],
+   "involved_in": [
+    "C071"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R052",
+   "id": "APP-2026-087532",
+   "institution": "Thiruvalluvar School of Engineering",
+   "city": "Surat",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-02",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R053",
+   "id": "APP-2026-652598",
+   "institution": "Tungabhadra Institute of Engineering Studies",
+   "city": "Mumbai",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2026-01-11",
+   "clean": false,
+   "conditions": [
+    "C097"
+   ],
+   "involved_in": [
+    "C097"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R054",
+   "id": "APP-2026-251789",
+   "institution": "Shree Hooghly Institute of Technology and Research",
+   "city": "Davanagere",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2025-12-15",
+   "clean": false,
+   "conditions": [
+    "C090",
+    "C091",
+    "C092"
+   ],
+   "involved_in": [
+    "C090",
+    "C091",
+    "C092"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R055",
+   "id": "APP-2026-829243",
+   "institution": "Sri Bhagirathi Institute of Engineering and Management",
+   "city": "Karimnagar",
+   "state": "Telangana",
+   "category": "EOA",
+   "submitted": "2025-12-31",
+   "clean": false,
+   "conditions": [
+    "C102",
+    "C103",
+    "C104"
+   ],
+   "involved_in": [
+    "C012",
+    "C102",
+    "C103",
+    "C104"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R056",
+   "id": "APP-2026-638972",
+   "institution": "Gwalior Institute of Technology and Research",
+   "city": "Gwalior",
+   "state": "Madhya Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-15",
+   "clean": false,
+   "conditions": [
+    "C040",
+    "C041"
+   ],
+   "involved_in": [
+    "C040",
+    "C041"
+   ],
+   "layout": {
+    "fire": "variant",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R057",
+   "id": "APP-2026-314892",
+   "institution": "Vidyadhar Institute of Technology and Research",
+   "city": "Vadodara",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-20",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R058",
+   "id": "APP-2026-781680",
+   "institution": "Vasundhara Institute of Engineering Studies",
+   "city": "Hyderabad",
+   "state": "Telangana",
+   "category": "EOA",
+   "submitted": "2026-01-17",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R059",
+   "id": "APP-2026-955449",
+   "institution": "Sumati College of Engineering and Technology",
+   "city": "Gwalior",
+   "state": "Madhya Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-28",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R060",
+   "id": "APP-2026-776377",
+   "institution": "Shri Vivekananda College of Engineering",
+   "city": "Chhatrapati Sambhajinagar",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-01",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R061",
+   "id": "APP-2026-820059",
+   "institution": "Gurukul School of Engineering",
+   "city": "Ahmedabad",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-14",
+   "clean": false,
+   "conditions": [
+    "C013"
+   ],
+   "involved_in": [
+    "C013"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R062",
+   "id": "APP-2026-422492",
+   "institution": "Sant Kamadhenu College of Engineering",
+   "city": "Siliguri",
+   "state": "West Bengal",
+   "category": "EOA",
+   "submitted": "2026-01-06",
+   "clean": false,
+   "conditions": [
+    "C096"
+   ],
+   "involved_in": [
+    "C096"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R063",
+   "id": "APP-2026-637466",
+   "institution": "Rajarshi Vidarbha Engineering College",
+   "city": "Kanpur",
+   "state": "Uttar Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-15",
+   "clean": false,
+   "conditions": [
+    "C098",
+    "C099"
+   ],
+   "involved_in": [
+    "C098",
+    "C099"
+   ],
+   "layout": {
+    "fire": "variant",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R064",
+   "id": "APP-2026-802677",
+   "institution": "Jalgaon Institute of Engineering and Management",
+   "city": "Jalgaon",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-16",
+   "clean": false,
+   "conditions": [
+    "C028",
+    "C029",
+    "C030"
+   ],
+   "involved_in": [
+    "C028",
+    "C029",
+    "C030"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R065",
+   "id": "APP-2026-707753",
+   "institution": "Bhagirathi Institute of Technology and Research",
+   "city": "Guntur",
+   "state": "Andhra Pradesh",
+   "category": "EOA",
+   "submitted": "2026-01-13",
+   "clean": false,
+   "conditions": [
+    "C020"
+   ],
+   "involved_in": [
+    "C020"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R066",
+   "id": "APP-2026-905840",
+   "institution": "Rajarshi Kaveri Institute of Technology and Research",
+   "city": "Surat",
+   "state": "Gujarat",
+   "category": "EOA",
+   "submitted": "2025-12-03",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R067",
+   "id": "APP-2026-452372",
+   "institution": "Shri Lokmanya Polytechnic and Engineering College",
+   "city": "Coimbatore",
+   "state": "Tamil Nadu",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-28",
+   "clean": false,
+   "conditions": [
+    "C019"
+   ],
+   "involved_in": [
+    "C019"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R068",
+   "id": "APP-2026-183094",
+   "institution": "Sant Hooghly College of Engineering",
+   "city": "Mangaluru",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2025-12-30",
+   "clean": false,
+   "conditions": [
+    "C034"
+   ],
+   "involved_in": [
+    "C034"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R069",
+   "id": "APP-2026-466144",
+   "institution": "Madurai Institute of Engineering and Management",
+   "city": "Madurai",
+   "state": "Tamil Nadu",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-13",
+   "clean": false,
+   "conditions": [
+    "C048"
+   ],
+   "involved_in": [
+    "C048"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R070",
+   "id": "APP-2026-073914",
+   "institution": "Shree Konkan Technical Campus",
+   "city": "Nashik",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-11",
+   "clean": false,
+   "conditions": [
+    "C053",
+    "C054"
+   ],
+   "involved_in": [
+    "C053",
+    "C054"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R071",
+   "id": "APP-2026-597694",
+   "institution": "Dr. Sardar Patel Institute of Technology",
+   "city": "Vijayawada",
+   "state": "Andhra Pradesh",
+   "category": "EOA",
+   "submitted": "2025-11-27",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R072",
+   "id": "APP-2026-198275",
+   "institution": "Dr. Deccan Institute of Engineering and Management",
+   "city": "Thiruvananthapuram",
+   "state": "Kerala",
+   "category": "EOA",
+   "submitted": "2025-11-27",
+   "clean": false,
+   "conditions": [
+    "C010"
+   ],
+   "involved_in": [
+    "C010"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R073",
+   "id": "APP-2026-486091",
+   "institution": "Sri Vindhya Institute of Technology and Research",
+   "city": "Chhatrapati Sambhajinagar",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-06",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R074",
+   "id": "APP-2026-521199",
+   "institution": "Belagavi College of Engineering and Technology",
+   "city": "Belagavi",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2025-12-21",
+   "clean": false,
+   "conditions": [
+    "C095"
+   ],
+   "involved_in": [
+    "C095"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R075",
+   "id": "APP-2026-307181",
+   "institution": "Betwa School of Engineering",
+   "city": "Satara",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-15",
+   "clean": false,
+   "conditions": [
+    "C070"
+   ],
+   "involved_in": [
+    "C070"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R076",
+   "id": "APP-2026-230049",
+   "institution": "Nanded College of Engineering and Technology",
+   "city": "Nanded",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2026-01-08",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R077",
+   "id": "APP-2026-200322",
+   "institution": "Sant Konkan College of Engineering and Technology",
+   "city": "Vijayawada",
+   "state": "Andhra Pradesh",
+   "category": "EOA",
+   "submitted": "2025-11-27",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R078",
+   "id": "APP-2026-732422",
+   "institution": "Bhaskaracharya Engineering College",
+   "city": "Hubballi",
+   "state": "Karnataka",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-07",
+   "clean": false,
+   "conditions": [
+    "C086"
+   ],
+   "involved_in": [
+    "C086"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R079",
+   "id": "APP-2026-869611",
+   "institution": "Rajarshi Gurukul Polytechnic and Engineering College",
+   "city": "Prayagraj",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2025-12-28",
+   "clean": false,
+   "conditions": [
+    "C043"
+   ],
+   "involved_in": [
+    "C043"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R080",
+   "id": "APP-2026-698028",
+   "institution": "Dr. Kaveri Institute of Technology",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-01",
+   "clean": false,
+   "conditions": [
+    "C025"
+   ],
+   "involved_in": [
+    "C025"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R081",
+   "id": "APP-2026-417819",
+   "institution": "Shree Sardar Patel Institute of Technology and Research",
+   "city": "Varanasi",
+   "state": "Uttar Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-31",
+   "clean": false,
+   "conditions": [
+    "C093",
+    "C094"
+   ],
+   "involved_in": [
+    "C093",
+    "C094"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R082",
+   "id": "APP-2026-013318",
+   "institution": "Kochi Polytechnic and Engineering College",
+   "city": "Kochi",
+   "state": "Kerala",
+   "category": "EOA",
+   "submitted": "2025-12-01",
+   "clean": false,
+   "conditions": [
+    "C076",
+    "C077"
+   ],
+   "involved_in": [
+    "C076",
+    "C077"
+   ],
+   "layout": {
+    "fire": "variant",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R083",
+   "id": "APP-2026-168568",
+   "institution": "Saraswati Institute of Engineering Studies",
+   "city": "Pune",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-02-14",
+   "clean": false,
+   "conditions": [
+    "C080",
+    "C081"
+   ],
+   "involved_in": [
+    "C080",
+    "C081"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R084",
+   "id": "APP-2026-620841",
+   "institution": "Solapur Institute of Engineering and Management",
+   "city": "Solapur",
+   "state": "Maharashtra",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-09",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R085",
+   "id": "APP-2026-961410",
+   "institution": "Maharshi Unnati Institute of Engineering Studies",
+   "city": "Tiruchirappalli",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-11-30",
+   "clean": false,
+   "conditions": [
+    "C100",
+    "C101"
+   ],
+   "involved_in": [
+    "C089",
+    "C100",
+    "C101"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R086",
+   "id": "APP-2026-496523",
+   "institution": "Dr. Vidarbha Institute of Technology and Research",
+   "city": "Belagavi",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2026-01-17",
+   "clean": false,
+   "conditions": [
+    "C001",
+    "C002"
+   ],
+   "involved_in": [
+    "C001",
+    "C002"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": true,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R087",
+   "id": "APP-2026-167350",
+   "institution": "Maharshi Malwa College of Engineering and Technology",
+   "city": "Jalgaon",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2025-12-10",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R088",
+   "id": "APP-2026-045348",
+   "institution": "Swami Basaveshwar Polytechnic and Engineering College",
+   "city": "Salem",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-12-02",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R089",
+   "id": "APP-2026-673456",
+   "institution": "Shree Dhanvantari Engineering College",
+   "city": "Siliguri",
+   "state": "West Bengal",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-02",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": false,
+    "accounts_scanned": false,
+    "nba_letter": true,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R090",
+   "id": "APP-2026-218984",
+   "institution": "Maharshi Visvesvaraya Institute of Technology",
+   "city": "Davanagere",
+   "state": "Karnataka",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2026-01-15",
+   "clean": false,
+   "conditions": [
+    "C035"
+   ],
+   "involved_in": [
+    "C035"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R091",
+   "id": "APP-2026-159155",
+   "institution": "Sanjeevani Institute of Engineering and Management",
+   "city": "Kozhikode",
+   "state": "Kerala",
+   "category": "EOA",
+   "submitted": "2026-02-10",
+   "clean": false,
+   "conditions": [
+    "C032"
+   ],
+   "involved_in": [
+    "C032"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R092",
+   "id": "APP-2026-485519",
+   "institution": "Shree Mahanadi Institute of Technology",
+   "city": "Nashik",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2026-01-17",
+   "clean": false,
+   "conditions": [
+    "C033"
+   ],
+   "involved_in": [
+    "C033"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R093",
+   "id": "APP-2026-096054",
+   "institution": "Maharshi Thiruvalluvar School of Engineering",
+   "city": "Nanded",
+   "state": "Maharashtra",
+   "category": "EOA",
+   "submitted": "2026-01-02",
+   "clean": false,
+   "conditions": [
+    "C059",
+    "C060"
+   ],
+   "involved_in": [
+    "C059",
+    "C060"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R094",
+   "id": "APP-2026-751432",
+   "institution": "Visvesvaraya Polytechnic and Engineering College",
+   "city": "Varanasi",
+   "state": "Uttar Pradesh",
+   "category": "EOA",
+   "submitted": "2026-01-19",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 1
+   }
+  },
+  {
+   "key": "R095",
+   "id": "APP-2026-226544",
+   "institution": "Ahmedabad College of Engineering and Technology",
+   "city": "Ahmedabad",
+   "state": "Gujarat",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-22",
+   "clean": false,
+   "conditions": [
+    "C039"
+   ],
+   "involved_in": [
+    "C024",
+    "C039"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R096",
+   "id": "APP-2026-381766",
+   "institution": "Shri Sardar Patel College of Engineering and Technology",
+   "city": "Varanasi",
+   "state": "Uttar Pradesh",
+   "category": "INCREASE_INTAKE",
+   "submitted": "2025-12-19",
+   "clean": false,
+   "conditions": [
+    "C111",
+    "C112",
+    "C113"
+   ],
+   "involved_in": [
+    "C111",
+    "C112",
+    "C113"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R097",
+   "id": "APP-2026-062151",
+   "institution": "Sant Sahyadri Engineering College",
+   "city": "Bhopal",
+   "state": "Madhya Pradesh",
+   "category": "EOA",
+   "submitted": "2026-01-09",
+   "clean": false,
+   "conditions": [
+    "C087",
+    "C088"
+   ],
+   "involved_in": [
+    "C087",
+    "C088"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": false,
+    "fire_signed_by": "applicant",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R098",
+   "id": "APP-2026-005058",
+   "institution": "Sri Visvesvaraya Institute of Technology and Research",
+   "city": "Mysuru",
+   "state": "Karnataka",
+   "category": "EOA",
+   "submitted": "2026-01-17",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": null,
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R099",
+   "id": "APP-2026-486287",
+   "institution": "Rajarshi Panchganga School of Engineering",
+   "city": "Coimbatore",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-11-30",
+   "clean": false,
+   "conditions": [
+    "C015"
+   ],
+   "involved_in": [
+    "C015"
+   ],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 0,
+    "photo_c2pa": 0
+   }
+  },
+  {
+   "key": "R100",
+   "id": "APP-2026-700146",
+   "institution": "Dnyaneshwar Engineering College",
+   "city": "Madurai",
+   "state": "Tamil Nadu",
+   "category": "EOA",
+   "submitted": "2025-12-22",
+   "clean": true,
+   "conditions": [],
+   "involved_in": [],
+   "layout": {
+    "fire": "standard",
+    "fire_qr": true,
+    "fire_signed_by": "issuer",
+    "oc_signed": true,
+    "accounts_scanned": false,
+    "nba_letter": false,
+    "photos": 1,
+    "photo_c2pa": 0
+   }
+  }
+ ],
+ "conditions": [
+  {
+   "id": "C001",
+   "kind": "oc_other_name",
+   "title": "Occupancy certificate in another institution's name",
+   "app": "R086",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R086",
+     "code": "XD-OC-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C002",
+   "kind": "fire_unknown_number",
+   "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+   "app": "R086",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R086",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C003",
+   "kind": "late_submission",
+   "title": "Application submitted after the deadline",
+   "app": "R024",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R024",
+     "code": "PN2627-DEADLINE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C004",
+   "kind": "fire_after_submission",
+   "title": "Fire NOC issued after the application was submitted",
+   "app": "R026",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R026",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C005",
+   "kind": "fire_copied",
+   "title": "Fire NOC copied from another application with the name changed and its QR pasted",
+   "app": "R009",
+   "partner": "R010",
+   "expect": [
+    {
+     "app": "R009",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R009",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R009",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R010",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "role": "partner",
+     "why": ""
+    },
+    {
+     "app": "R010",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "role": "partner",
+     "why": ""
+    },
+    {
+     "app": "R009",
+     "code": "VER-SIGNED_QR-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C006",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R009",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R009",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C007",
+   "kind": "bandwidth_short",
+   "title": "Internet bandwidth below the handbook tier",
+   "app": "R045",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R045",
+     "code": "APH-ANX41-BANDWIDTH",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C008",
+   "kind": "faculty_shared",
+   "title": "Faculty also listed and registered by another application",
+   "app": "R045",
+   "partner": "R024",
+   "expect": [
+    {
+     "app": "R045",
+     "code": "XA-FACULTY-MULTIPLE-INSTITUTIONS",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R045",
+     "code": "XA-FACULTY-REGISTERED-ELSEWHERE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R024",
+     "code": "XA-FACULTY-MULTIPLE-INSTITUTIONS",
+     "role": "partner",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C009",
+   "kind": "fire_variant_layout",
+   "title": "Valid fire NOC in an issuer layout the patterns do not know",
+   "app": "R035",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R035",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R035",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R035",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R035",
+     "code": "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C010",
+   "kind": "ssc_missing",
+   "title": "Building over 30 years old without a Structural Stability Certificate",
+   "app": "R072",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R072",
+     "code": "APH-A21-SSC-REQUIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C011",
+   "kind": "ter_not_received",
+   "title": "TER fee not received according to the ledger",
+   "app": "R008",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R008",
+     "code": "APH-232D-TER-STATUS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C012",
+   "kind": "seal_other_issuer",
+   "title": "Fire NOC carrying another city's fire brigade seal",
+   "app": "R008",
+   "partner": "R055",
+   "expect": [
+    {
+     "app": "R008",
+     "code": "FX-SEAL-REUSED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R055",
+     "code": "FX-SEAL-REUSED-LATER",
+     "role": "partner",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C013",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R061",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R061",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C014",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R040",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R040",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C015",
+   "kind": "fire_overwritten_same_font",
+   "title": "Fire NOC validity overwritten after issuer signing, same font",
+   "app": "R099",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R099",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R099",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R099",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R099",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R099",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C016",
+   "kind": "eoa_seat_increase",
+   "title": "Extension of Approval proposing more seats than approved",
+   "app": "R015",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R015",
+     "code": "XR-EOA-NO-INCREASE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R015",
+     "code": "YOY-INTAKE-JUMP",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C017",
+   "kind": "ssc_missing",
+   "title": "Building over 30 years old without a Structural Stability Certificate",
+   "app": "R038",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R038",
+     "code": "APH-A21-SSC-REQUIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C018",
+   "kind": "affidavit_other_app",
+   "title": "Affidavit 2 generated for last year's application",
+   "app": "R010",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R010",
+     "code": "XD-AFF2-APPLICATION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C019",
+   "kind": "satmap_off_site",
+   "title": "Satellite map point away from the campus on record",
+   "app": "R067",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R067",
+     "code": "XD-SATMAP-LOCATION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C020",
+   "kind": "intake_above_record",
+   "title": "Approved intake declared above the AICTE record",
+   "app": "R065",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R065",
+     "code": "XR-INTAKE-RECORD",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R065",
+     "code": "XR-EOA-NO-INCREASE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R065",
+     "code": "YOY-INTAKE-JUMP",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R065",
+     "code": "APH-ANX5-FSR",
+     "role": "side_effect",
+     "why": "follows from the planted change (restated from the plan before any run)"
+    }
+   ]
+  },
+  {
+   "id": "C021",
+   "kind": "oc_other_name",
+   "title": "Occupancy certificate in another institution's name",
+   "app": "R046",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R046",
+     "code": "XD-OC-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C022",
+   "kind": "ssc_missing",
+   "title": "Building over 30 years old without a Structural Stability Certificate",
+   "app": "R046",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R046",
+     "code": "APH-A21-SSC-REQUIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C023",
+   "kind": "faculty_short",
+   "title": "Faculty below the faculty-student ratio",
+   "app": "R046",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R046",
+     "code": "APH-ANX5-FSR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C024",
+   "kind": "faculty_shared",
+   "title": "Faculty also listed and registered by another application",
+   "app": "R034",
+   "partner": "R095",
+   "expect": [
+    {
+     "app": "R034",
+     "code": "XA-FACULTY-MULTIPLE-INSTITUTIONS",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R034",
+     "code": "XA-FACULTY-REGISTERED-ELSEWHERE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R095",
+     "code": "XA-FACULTY-MULTIPLE-INSTITUTIONS",
+     "role": "partner",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C025",
+   "kind": "faculty_count_mismatch",
+   "title": "Declared faculty count differs from the roster",
+   "app": "R080",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R080",
+     "code": "XD-FACULTY-COUNT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C026",
+   "kind": "ter_receipt_mismatch",
+   "title": "TER receipt disagrees with the ledger (amount or transaction)",
+   "app": "R050",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R050",
+     "code": "XR-TER-RECEIPT-MATCH",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C027",
+   "kind": "faculty_turnover",
+   "title": "More than half of last year's faculty roster replaced",
+   "app": "R050",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R050",
+     "code": "YOY-FACULTY-TURNOVER",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C028",
+   "kind": "yoy_built_up_decreased",
+   "title": "Declared built-up area smaller than last year",
+   "app": "R064",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R064",
+     "code": "YOY-BUILT-UP-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C029",
+   "kind": "fire_overwritten_same_font",
+   "title": "Fire NOC validity overwritten after issuer signing, same font",
+   "app": "R064",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R064",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R064",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C030",
+   "kind": "affidavit_unsigned",
+   "title": "Affidavit 2 without a digital signature",
+   "app": "R064",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R064",
+     "code": "APH-639-AFF2-DSC",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C031",
+   "kind": "fire_unknown_number",
+   "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+   "app": "R039",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R039",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C032",
+   "kind": "late_submission",
+   "title": "Application submitted after the deadline",
+   "app": "R091",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R091",
+     "code": "PN2627-DEADLINE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C033",
+   "kind": "fire_unknown_number",
+   "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+   "app": "R092",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R092",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C034",
+   "kind": "fire_after_submission",
+   "title": "Fire NOC issued after the application was submitted",
+   "app": "R068",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R068",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C035",
+   "kind": "ssc_expired",
+   "title": "Structural Stability Certificate older than five years",
+   "app": "R090",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R090",
+     "code": "APH-617H-SSC-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R090",
+     "code": "VER-ISSUER_REGISTRY-VERIFICATION_PENDING",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C036",
+   "kind": "ter_not_received",
+   "title": "TER fee not received according to the ledger",
+   "app": "R023",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R023",
+     "code": "APH-232D-TER-STATUS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C037",
+   "kind": "fire_expired",
+   "title": "Fire NOC expired before submission",
+   "app": "R025",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R025",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R025",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R025",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C038",
+   "kind": "photo_geotag_far",
+   "title": "Photo geotag far from the campus",
+   "app": "R025",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R025",
+     "code": "FX-IMG-GEOTAG-FAR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C039",
+   "kind": "core_branches_unmet",
+   "title": "Intake increase without three core branches, two outside CS",
+   "app": "R095",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R095",
+     "code": "ADD26-26C-CORE-BRANCHES",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C040",
+   "kind": "fire_variant_instruction",
+   "title": "Unfamiliar fire NOC layout with a line addressed to automated readers",
+   "app": "R056",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R056",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R056",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R056",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R056",
+     "code": "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R056",
+     "code": "SEC-INSTRUCTION-TEXT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C041",
+   "kind": "photo_geotag_far",
+   "title": "Photo geotag far from the campus",
+   "app": "R056",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R056",
+     "code": "FX-IMG-GEOTAG-FAR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C042",
+   "kind": "nba_unsupported",
+   "title": "NBA accreditation claimed without a register entry",
+   "app": "R014",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R014",
+     "code": "XR-NBA-CLAIMS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C043",
+   "kind": "fire_expired",
+   "title": "Fire NOC expired before submission",
+   "app": "R079",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R079",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R079",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R079",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C044",
+   "kind": "late_submission",
+   "title": "Application submitted after the deadline",
+   "app": "R044",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R044",
+     "code": "PN2627-DEADLINE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C045",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R044",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R044",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C046",
+   "kind": "ssc_expired",
+   "title": "Structural Stability Certificate older than five years",
+   "app": "R017",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R017",
+     "code": "APH-617H-SSC-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R017",
+     "code": "VER-ISSUER_REGISTRY-VERIFICATION_PENDING",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C047",
+   "kind": "fire_copied",
+   "title": "Fire NOC copied from another application with the name changed and its QR pasted",
+   "app": "R017",
+   "partner": "R040",
+   "expect": [
+    {
+     "app": "R017",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R017",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R017",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R040",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "role": "partner",
+     "why": ""
+    },
+    {
+     "app": "R040",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "role": "partner",
+     "why": ""
+    },
+    {
+     "app": "R017",
+     "code": "VER-SIGNED_QR-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C048",
+   "kind": "fire_other_name",
+   "title": "Fire NOC issued to a different institution name",
+   "app": "R069",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R069",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C049",
+   "kind": "fire_overwritten_same_font",
+   "title": "Fire NOC validity overwritten after issuer signing, same font",
+   "app": "R018",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R018",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R018",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R018",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R018",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R018",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C050",
+   "kind": "oc_other_name",
+   "title": "Occupancy certificate in another institution's name",
+   "app": "R018",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R018",
+     "code": "XD-OC-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C051",
+   "kind": "yoy_built_up_decreased",
+   "title": "Declared built-up area smaller than last year",
+   "app": "R018",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R018",
+     "code": "YOY-BUILT-UP-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C052",
+   "kind": "fire_variant_instruction",
+   "title": "Unfamiliar fire NOC layout with a line addressed to automated readers",
+   "app": "R005",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R005",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R005",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R005",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R005",
+     "code": "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R005",
+     "code": "SEC-INSTRUCTION-TEXT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C053",
+   "kind": "fire_after_submission",
+   "title": "Fire NOC issued after the application was submitted",
+   "app": "R070",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R070",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C054",
+   "kind": "yoy_land_decreased",
+   "title": "Declared land area smaller than last year",
+   "app": "R070",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R070",
+     "code": "YOY-LAND-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C055",
+   "kind": "fire_copied",
+   "title": "Fire NOC copied from another application with the name changed and its QR pasted",
+   "app": "R030",
+   "partner": "R004",
+   "expect": [
+    {
+     "app": "R030",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R030",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R030",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R004",
+     "code": "XA-SHARED-CERTIFICATE-NUMBER",
+     "role": "partner",
+     "why": ""
+    },
+    {
+     "app": "R004",
+     "code": "XA-NEAR-DUPLICATE-DETAILS",
+     "role": "partner",
+     "why": ""
+    },
+    {
+     "app": "R030",
+     "code": "VER-SIGNED_QR-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C056",
+   "kind": "fire_other_name",
+   "title": "Fire NOC issued to a different institution name",
+   "app": "R021",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R021",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C057",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R021",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R021",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C058",
+   "kind": "ssc_pending",
+   "title": "Structural engineer register confirms asynchronously (pending)",
+   "app": "R021",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R021",
+     "code": "VER-ISSUER_REGISTRY-VERIFICATION_PENDING",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C059",
+   "kind": "intake_above_record",
+   "title": "Approved intake declared above the AICTE record",
+   "app": "R093",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R093",
+     "code": "XR-INTAKE-RECORD",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R093",
+     "code": "XR-EOA-NO-INCREASE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R093",
+     "code": "YOY-INTAKE-JUMP",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R093",
+     "code": "APH-ANX5-FSR",
+     "role": "side_effect",
+     "why": "follows from the planted change (restated from the plan before any run)"
+    }
+   ]
+  },
+  {
+   "id": "C060",
+   "kind": "fire_unknown_number",
+   "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+   "app": "R093",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R093",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C061",
+   "kind": "faculty_count_mismatch",
+   "title": "Declared faculty count differs from the roster",
+   "app": "R013",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R013",
+     "code": "XD-FACULTY-COUNT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C062",
+   "kind": "fire_variant_instruction",
+   "title": "Unfamiliar fire NOC layout with a line addressed to automated readers",
+   "app": "R013",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R013",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R013",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R013",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R013",
+     "code": "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R013",
+     "code": "SEC-INSTRUCTION-TEXT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C063",
+   "kind": "core_branches_unmet",
+   "title": "Intake increase without three core branches, two outside CS",
+   "app": "R013",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R013",
+     "code": "ADD26-26C-CORE-BRANCHES",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C064",
+   "kind": "nba_unsupported",
+   "title": "NBA accreditation claimed without a register entry",
+   "app": "R049",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R049",
+     "code": "XR-NBA-CLAIMS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C065",
+   "kind": "ssc_missing",
+   "title": "Building over 30 years old without a Structural Stability Certificate",
+   "app": "R049",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R049",
+     "code": "APH-A21-SSC-REQUIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C066",
+   "kind": "yoy_built_up_decreased",
+   "title": "Declared built-up area smaller than last year",
+   "app": "R003",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R003",
+     "code": "YOY-BUILT-UP-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C067",
+   "kind": "fire_overwritten_other_font",
+   "title": "Fire NOC validity overwritten after issuer signing, in another font",
+   "app": "R003",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R003",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R003",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R003",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R003",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R003",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R003",
+     "code": "FX-FONT-MISMATCH",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C068",
+   "kind": "satmap_off_site",
+   "title": "Satellite map point away from the campus on record",
+   "app": "R002",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R002",
+     "code": "XD-SATMAP-LOCATION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C069",
+   "kind": "yoy_cert_reused",
+   "title": "Fire NOC number from last year returns with a new validity",
+   "app": "R029",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R029",
+     "code": "YOY-CERT-REUSED-NEW-VALIDITY",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C070",
+   "kind": "faculty_turnover",
+   "title": "More than half of last year's faculty roster replaced",
+   "app": "R075",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R075",
+     "code": "YOY-FACULTY-TURNOVER",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C071",
+   "kind": "faculty_short",
+   "title": "Faculty below the faculty-student ratio",
+   "app": "R051",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R051",
+     "code": "APH-ANX5-FSR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C072",
+   "kind": "yoy_land_decreased",
+   "title": "Declared land area smaller than last year",
+   "app": "R020",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R020",
+     "code": "YOY-LAND-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C073",
+   "kind": "fire_overwritten_same_font",
+   "title": "Fire NOC validity overwritten after issuer signing, same font",
+   "app": "R020",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R020",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R020",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C074",
+   "kind": "core_branches_unmet",
+   "title": "Intake increase without three core branches, two outside CS",
+   "app": "R032",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R032",
+     "code": "ADD26-26C-CORE-BRANCHES",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C075",
+   "kind": "faculty_short",
+   "title": "Faculty below the faculty-student ratio",
+   "app": "R032",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R032",
+     "code": "APH-ANX5-FSR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C076",
+   "kind": "fire_variant_layout",
+   "title": "Valid fire NOC in an issuer layout the patterns do not know",
+   "app": "R082",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R082",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R082",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R082",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R082",
+     "code": "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C077",
+   "kind": "yoy_land_decreased",
+   "title": "Declared land area smaller than last year",
+   "app": "R082",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R082",
+     "code": "YOY-LAND-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C078",
+   "kind": "registry_outage",
+   "title": "Issuer registry unavailable during validation",
+   "app": "R033",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R033",
+     "code": "VER-ISSUER_REGISTRY-SOURCE_UNAVAILABLE",
+     "role": "planted",
+     "why": "SHCIL-ESTAMP did not respond during validation"
+    }
+   ]
+  },
+  {
+   "id": "C079",
+   "kind": "late_submission",
+   "title": "Application submitted after the deadline",
+   "app": "R027",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R027",
+     "code": "PN2627-DEADLINE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C080",
+   "kind": "late_submission",
+   "title": "Application submitted after the deadline",
+   "app": "R083",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R083",
+     "code": "PN2627-DEADLINE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C081",
+   "kind": "ssc_pending",
+   "title": "Structural engineer register confirms asynchronously (pending)",
+   "app": "R083",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R083",
+     "code": "VER-ISSUER_REGISTRY-VERIFICATION_PENDING",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C082",
+   "kind": "photo_geotag_far",
+   "title": "Photo geotag far from the campus",
+   "app": "R043",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R043",
+     "code": "FX-IMG-GEOTAG-FAR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C083",
+   "kind": "admin_area_short",
+   "title": "Administrative or amenities area below the norm",
+   "app": "R043",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R043",
+     "code": "APH-ANX33-ADMIN-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C084",
+   "kind": "fire_qr_mismatch",
+   "title": "Printed fire NOC validity differs from its issuer-signed QR",
+   "app": "R001",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R001",
+     "code": "VER-SIGNED_QR-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R001",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R001",
+     "code": "YOY-CERT-REUSED-NEW-VALIDITY",
+     "role": "side_effect",
+     "why": "follows from the planted change (restated from the plan before any run)"
+    }
+   ]
+  },
+  {
+   "id": "C085",
+   "kind": "admin_area_short",
+   "title": "Administrative or amenities area below the norm",
+   "app": "R047",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R047",
+     "code": "APH-ANX33-ADMIN-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C086",
+   "kind": "yoy_land_decreased",
+   "title": "Declared land area smaller than last year",
+   "app": "R078",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R078",
+     "code": "YOY-LAND-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C087",
+   "kind": "photo_geotag_far",
+   "title": "Photo geotag far from the campus",
+   "app": "R097",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R097",
+     "code": "FX-IMG-GEOTAG-FAR",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C088",
+   "kind": "fire_unknown_number",
+   "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+   "app": "R097",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R097",
+     "code": "VER-ISSUER_REGISTRY-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C089",
+   "kind": "seal_other_issuer",
+   "title": "Fire NOC carrying another city's fire brigade seal",
+   "app": "R011",
+   "partner": "R085",
+   "expect": [
+    {
+     "app": "R011",
+     "code": "FX-SEAL-REUSED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R085",
+     "code": "FX-SEAL-REUSED-LATER",
+     "role": "partner",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C090",
+   "kind": "accounts_wrong_year",
+   "title": "Audited accounts for an earlier financial year",
+   "app": "R054",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R054",
+     "code": "XD-ACCOUNTS-ENTITY",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C091",
+   "kind": "faculty_count_mismatch",
+   "title": "Declared faculty count differs from the roster",
+   "app": "R054",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R054",
+     "code": "XD-FACULTY-COUNT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C092",
+   "kind": "ssc_pending",
+   "title": "Structural engineer register confirms asynchronously (pending)",
+   "app": "R054",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R054",
+     "code": "VER-ISSUER_REGISTRY-VERIFICATION_PENDING",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C093",
+   "kind": "ter_not_received",
+   "title": "TER fee not received according to the ledger",
+   "app": "R081",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R081",
+     "code": "APH-232D-TER-STATUS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C094",
+   "kind": "fire_after_submission",
+   "title": "Fire NOC issued after the application was submitted",
+   "app": "R081",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R081",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C095",
+   "kind": "fire_expired",
+   "title": "Fire NOC expired before submission",
+   "app": "R074",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R074",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R074",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R074",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C096",
+   "kind": "faculty_turnover",
+   "title": "More than half of last year's faculty roster replaced",
+   "app": "R062",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R062",
+     "code": "YOY-FACULTY-TURNOVER",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C097",
+   "kind": "fire_expired",
+   "title": "Fire NOC expired before submission",
+   "app": "R053",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R053",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R053",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R053",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C098",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R063",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R063",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C099",
+   "kind": "fire_variant_instruction",
+   "title": "Unfamiliar fire NOC layout with a line addressed to automated readers",
+   "app": "R063",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R063",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R063",
+     "code": "APH-A31D-FIRE-BEFORE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R063",
+     "code": "XD-FIRE-INSTITUTION",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R063",
+     "code": "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R063",
+     "code": "SEC-INSTRUCTION-TEXT",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C100",
+   "kind": "yoy_built_up_decreased",
+   "title": "Declared built-up area smaller than last year",
+   "app": "R085",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R085",
+     "code": "YOY-BUILT-UP-AREA-DECREASED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C101",
+   "kind": "nba_unsupported",
+   "title": "NBA accreditation claimed without a register entry",
+   "app": "R085",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R085",
+     "code": "XR-NBA-CLAIMS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C102",
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "app": "R055",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R055",
+     "code": "XD-OC-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C103",
+   "kind": "admin_area_short",
+   "title": "Administrative or amenities area below the norm",
+   "app": "R055",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R055",
+     "code": "APH-ANX33-ADMIN-AREA",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C104",
+   "kind": "satmap_off_site",
+   "title": "Satellite map point away from the campus on record",
+   "app": "R055",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R055",
+     "code": "XD-SATMAP-LOCATION",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C105",
+   "kind": "accounts_other_entity",
+   "title": "Audited accounts of another trust or society",
+   "app": "R016",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R016",
+     "code": "XD-ACCOUNTS-ENTITY",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C106",
+   "kind": "fire_overwritten_same_font",
+   "title": "Fire NOC validity overwritten after issuer signing, same font",
+   "app": "R012",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R012",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "APH-617I-FIRE-VALID",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "VER-ISSUER_REGISTRY-EXPIRED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "VER-SIGNED_QR-EXPIRED",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C107",
+   "kind": "faculty_count_mismatch",
+   "title": "Declared faculty count differs from the roster",
+   "app": "R012",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R012",
+     "code": "XD-FACULTY-COUNT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "APH-ANX5-FSR",
+     "role": "side_effect",
+     "why": "follows from the planted change (restated from the plan before any run)"
+    }
+   ]
+  },
+  {
+   "id": "C108",
+   "kind": "intake_above_record",
+   "title": "Approved intake declared above the AICTE record",
+   "app": "R012",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R012",
+     "code": "XR-INTAKE-RECORD",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "XR-EOA-NO-INCREASE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "YOY-INTAKE-JUMP",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R012",
+     "code": "APH-ANX41-BANDWIDTH",
+     "role": "side_effect",
+     "why": "follows from the planted change (restated from the plan before any run)"
+    }
+   ]
+  },
+  {
+   "id": "C109",
+   "kind": "faculty_count_mismatch",
+   "title": "Declared faculty count differs from the roster",
+   "app": "R004",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R004",
+     "code": "XD-FACULTY-COUNT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R004",
+     "code": "APH-ANX5-FSR",
+     "role": "side_effect",
+     "why": "follows from the planted change (restated from the plan before any run)"
+    }
+   ]
+  },
+  {
+   "id": "C110",
+   "kind": "intake_above_record",
+   "title": "Approved intake declared above the AICTE record",
+   "app": "R004",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R004",
+     "code": "XR-INTAKE-RECORD",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R004",
+     "code": "XR-EOA-NO-INCREASE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R004",
+     "code": "YOY-INTAKE-JUMP",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C111",
+   "kind": "core_branches_unmet",
+   "title": "Intake increase without three core branches, two outside CS",
+   "app": "R096",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R096",
+     "code": "ADD26-26C-CORE-BRANCHES",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C112",
+   "kind": "fire_overwritten_other_font",
+   "title": "Fire NOC validity overwritten after issuer signing, in another font",
+   "app": "R096",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R096",
+     "code": "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R096",
+     "code": "FX-FIELD-OVERWRITTEN",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R096",
+     "code": "FX-PDF-REVISION-TEXT-CHANGE",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R096",
+     "code": "FX-PDF-OVERLAID-TEXT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R096",
+     "code": "FX-PDF-WHITEOUT",
+     "role": "planted",
+     "why": ""
+    },
+    {
+     "app": "R096",
+     "code": "FX-FONT-MISMATCH",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  },
+  {
+   "id": "C113",
+   "kind": "ter_not_received",
+   "title": "TER fee not received according to the ledger",
+   "app": "R096",
+   "partner": null,
+   "expect": [
+    {
+     "app": "R096",
+     "code": "APH-232D-TER-STATUS",
+     "role": "planted",
+     "why": ""
+    }
+   ]
+  }
+ ],
+ "catalogue": [
+  {
+   "kind": "fire_expired",
+   "title": "Fire NOC expired before submission",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_overwritten_same_font",
+   "title": "Fire NOC validity overwritten after issuer signing, same font",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "expiry findings when the original validity had ended",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_overwritten_other_font",
+   "title": "Fire NOC validity overwritten after issuer signing, in another font",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "expiry findings when the original validity had ended",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_unknown_number",
+   "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_copied",
+   "title": "Fire NOC copied from another application with the name changed and its QR pasted",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [
+    "fire"
+   ],
+   "cross_application": true,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_qr_mismatch",
+   "title": "Printed fire NOC validity differs from its issuer-signed QR",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "YOY-CERT-REUSED-NEW-VALIDITY when last year's application carried the same number",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_after_submission",
+   "title": "Fire NOC issued after the application was submitted",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_other_name",
+   "title": "Fire NOC issued to a different institution name",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_variant_layout",
+   "title": "Valid fire NOC in an issuer layout the patterns do not know",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "fire_variant_instruction",
+   "title": "Unfamiliar fire NOC layout with a line addressed to automated readers",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "seal_other_issuer",
+   "title": "Fire NOC carrying another city's fire brigade seal",
+   "slots": [
+    "fire",
+    "date"
+   ],
+   "partner_slots": [
+    "fire",
+    "date"
+   ],
+   "cross_application": true,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "yoy_cert_reused",
+   "title": "Fire NOC number from last year returns with a new validity",
+   "slots": [
+    "fire"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "ssc_missing",
+   "title": "Building over 30 years old without a Structural Stability Certificate",
+   "slots": [
+    "ssc"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "ssc_pending",
+   "title": "Structural engineer register confirms asynchronously (pending)",
+   "slots": [
+    "ssc"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "ssc_expired",
+   "title": "Structural Stability Certificate older than five years",
+   "slots": [
+    "ssc"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "oc_area_exceeded",
+   "title": "Declared built-up area beyond the occupancy certificate",
+   "slots": [
+    "area"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "oc_other_name",
+   "title": "Occupancy certificate in another institution's name",
+   "slots": [
+    "oc"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "yoy_land_decreased",
+   "title": "Declared land area smaller than last year",
+   "slots": [
+    "land"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "yoy_built_up_decreased",
+   "title": "Declared built-up area smaller than last year",
+   "slots": [
+    "area"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "intake_above_record",
+   "title": "Approved intake declared above the AICTE record",
+   "slots": [
+    "intake"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "APH-ANX5-FSR and APH-ANX41-BANDWIDTH when the inflated intake raises the norm",
+   "weight": 1.0
+  },
+  {
+   "kind": "eoa_seat_increase",
+   "title": "Extension of Approval proposing more seats than approved",
+   "slots": [
+    "intake"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "core_branches_unmet",
+   "title": "Intake increase without three core branches, two outside CS",
+   "slots": [
+    "intake"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 4.0
+  },
+  {
+   "kind": "nba_unsupported",
+   "title": "NBA accreditation claimed without a register entry",
+   "slots": [
+    "nba"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "bandwidth_short",
+   "title": "Internet bandwidth below the handbook tier",
+   "slots": [
+    "bw"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "admin_area_short",
+   "title": "Administrative or amenities area below the norm",
+   "slots": [
+    "admin",
+    "intake"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "affidavit_unsigned",
+   "title": "Affidavit 2 without a digital signature",
+   "slots": [
+    "aff"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "affidavit_other_app",
+   "title": "Affidavit 2 generated for last year's application",
+   "slots": [
+    "aff"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "ter_not_received",
+   "title": "TER fee not received according to the ledger",
+   "slots": [
+    "ter"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "ter_receipt_mismatch",
+   "title": "TER receipt disagrees with the ledger (amount or transaction)",
+   "slots": [
+    "ter"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "accounts_wrong_year",
+   "title": "Audited accounts for an earlier financial year",
+   "slots": [
+    "acc"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "accounts_other_entity",
+   "title": "Audited accounts of another trust or society",
+   "slots": [
+    "acc"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "satmap_off_site",
+   "title": "Satellite map point away from the campus on record",
+   "slots": [
+    "sat"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "faculty_short",
+   "title": "Faculty below the faculty-student ratio",
+   "slots": [
+    "fac"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "YOY-FACULTY-TURNOVER when the dropped names push last year's roster past half gone",
+   "weight": 1.0
+  },
+  {
+   "kind": "faculty_shared",
+   "title": "Faculty also listed and registered by another application",
+   "slots": [
+    "fac"
+   ],
+   "partner_slots": [
+    "fac"
+   ],
+   "cross_application": true,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "faculty_turnover",
+   "title": "More than half of last year's faculty roster replaced",
+   "slots": [
+    "fac"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "faculty_count_mismatch",
+   "title": "Declared faculty count differs from the roster",
+   "slots": [
+    "fac"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "photo_reused",
+   "title": "Infrastructure photo reused from another application",
+   "slots": [
+    "photo",
+    "date"
+   ],
+   "partner_slots": [
+    "photo",
+    "date"
+   ],
+   "cross_application": true,
+   "side_effects": "FX-IMG-GEOTAG-FAR, since the copy keeps the other campus's geotag",
+   "weight": 1.0
+  },
+  {
+   "kind": "photo_geotag_far",
+   "title": "Photo geotag far from the campus",
+   "slots": [
+    "photo"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "photo_c2pa_edited",
+   "title": "Photo edited after its Content Credentials were signed",
+   "slots": [
+    "photo"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "registry_outage",
+   "title": "Issuer registry unavailable during validation",
+   "slots": [
+    "registry"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  },
+  {
+   "kind": "late_submission",
+   "title": "Application submitted after the deadline",
+   "slots": [
+    "date"
+   ],
+   "partner_slots": [],
+   "cross_application": false,
+   "side_effects": "",
+   "weight": 1.0
+  }
+ ]
+}
