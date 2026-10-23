@@ -126,6 +126,32 @@ def test_near_duplicate_needs_more_than_shared_office_fee_status_or_dates():
     assert not near(doc(noc_number="FES/PUN/2025/1", **office), doc(noc_number="FES/PUN/2025/2", **office))
 
 
+def test_one_engineer_may_certify_two_buildings(monkeypatch):
+    # Found by the random evaluation: two colleges certified by the same structural engineer were reported as
+    # sharing one certificate, because the register is queried by the engineer's licence number
+    from types import SimpleNamespace as NS
+
+    from pramana.consistency import cross
+
+    def ssc(doc_id, number, inst):
+        fields = [NS(name="certificate_no", value=number, value_type="text", page=1, bbox=[0, 0, 1, 1]),
+                  NS(name="engineer_registration_no", value="SE/NAS/2006/6305", value_type="text", page=1,
+                     bbox=[0, 0, 1, 1]),
+                  NS(name="issue_date", value=f"2024-0{len(doc_id)}-01", value_type="date", page=1, bbox=None)]
+        return NS(id=doc_id, declared_type="structural_stability", mime="application/pdf", fingerprints={},
+                  original_filename="structural_stability.pdf", fields=fields, analysis={}), \
+            NS(id=f"app-{doc_id}", institution=NS(name=inst))
+
+    mine, _ = ssc("d1", "SSC/2024/117", "College A")
+    other = ssc("d22", "SSC/2023/904", "College B")
+    monkeypatch.setattr(cross, "_peer_docs", lambda db, app: [other])
+    refs = {"structural_stability": "engineer_registration_no"}
+    assert [ln.code for ln in cross.cross_checks(None, NS(id="app-d1"), [mine], refs)] == []
+    copied = ssc("d33", "SSC/2024/117", "College C")
+    monkeypatch.setattr(cross, "_peer_docs", lambda db, app: [copied])
+    assert "XA-SHARED-CERTIFICATE-NUMBER" in [ln.code for ln in cross.cross_checks(None, NS(id="app-d1"), [mine], refs)]
+
+
 def test_seal_distance_is_a_plain_int():
     # Found by the random evaluation: a seal match that was close but not pixel-identical put a numpy integer
     # into the finding's evidence, and saving the run failed
