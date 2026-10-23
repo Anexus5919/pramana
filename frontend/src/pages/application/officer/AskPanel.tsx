@@ -88,6 +88,10 @@ function Answer({ a, fresh }: { a: AskAnswer; fresh: boolean }) {
           <Tag variant="neutral" title={a.provider ?? undefined}>
             {a.external ? "External model" : "Local model"} {a.model}
           </Tag>
+        ) : a.model ? (
+          <Tag variant="neutral" title={a.fallback ?? undefined}>
+            Template answer, model sentences failed the check
+          </Tag>
         ) : (
           <Tag variant="neutral">Template answer, no model reachable</Tag>
         )}

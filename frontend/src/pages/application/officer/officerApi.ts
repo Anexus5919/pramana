@@ -111,6 +111,8 @@ export interface AskAnswer {
   sentences: { text: string; cites: string[]; related?: string[] }[];
   dropped: { text: string; cites: string[]; reason: string }[];
   dropped_count: number;
+  /** Why a template answer was used: no model reachable, or every model sentence failed the evidence check */
+  fallback: string | null;
   proposed_count: number;
   evidence: Record<string, AskEvidence>;
   context_items: number;

@@ -92,15 +92,19 @@ def main(template: bool = False) -> None:
         app = db.get(Application, aid)
         out = ask.answer(db, app, q, use_model=not template)
         ctx = ask.build_context(db, app, q)["items"]
-        cited = [ctx[c] for s in out["sentences"] for c in s["cites"] if c in ctx]
-        valid_cite = sum(1 for s in out["sentences"]) + sum(1 for d in out["dropped"]
-                                                             if d["reason"] != "no valid citation")
+        # Score the first pass only (model sentences in model mode); a template fallback is reported separately
+        first = out["first_pass_kept"]
+        model_dropped = out["proposed_count"] - first
+        fell_back = out["fallback"] == "the model's sentences did not pass the evidence check"
+        cited = [ctx[c] for s in (out["sentences"] if not fell_back else []) for c in s["cites"] if c in ctx]
+        valid_cite = first + sum(1 for d in out["dropped"][:model_dropped] if d["reason"] != "no valid citation")
         rows.append({"application": aid, "question": q, "mode": out["mode"], "model": out["model"],
-                     "proposed": out["proposed_count"], "kept": len(out["sentences"]), "dropped": out["dropped_count"],
+                     "fallback_after_drop": fell_back,
+                     "proposed": out["proposed_count"], "kept": first, "dropped": model_dropped,
                      "citation_valid": valid_cite, "drop_reasons": [d["reason"] for d in out["dropped"]],
                      "hit": any(_matches(i, expected) for i in cited), "latency_ms": out["latency_ms"],
                      "sentences": out["sentences"], "dropped_sentences": out["dropped"], "errors": out["errors"]})
-        print(f"{aid} {out['mode']:8} kept {len(out['sentences'])}/{out['proposed_count']} "
+        print(f"{aid} {out['mode']:8} kept {first}/{out['proposed_count']} "
               f"{'hit ' if rows[-1]['hit'] else 'miss'} {out['latency_ms']:6} ms  {q}")
     db.close()
 
@@ -120,7 +124,8 @@ def main(template: bool = False) -> None:
             reasons[key] = reasons.get(key, 0) + 1
     summary = {
         "mode": "template" if template else "model", "questions": len(rows),
-        "model_answers": sum(1 for r in rows if r["mode"] == "model"),
+        "model_answers": sum(1 for r in rows if r["model"]),
+        "template_fallbacks_after_drop": sum(1 for r in rows if r["fallback_after_drop"]),
         "sentences_proposed": proposed, "sentences_kept": kept, "sentences_dropped": dropped,
         "citation_valid_rate": round(valid / proposed, 3) if proposed else None,
         "kept_rate": round(kept / proposed, 3) if proposed else None,
@@ -138,7 +143,7 @@ def main(template: bool = False) -> None:
     print()
     print(f"| Metric | {summary['mode']} |")
     print("|---|---|")
-    for k in ("questions", "model_answers", "sentences_proposed", "sentences_kept", "sentences_dropped",
+    for k in ("questions", "model_answers", "template_fallbacks_after_drop", "sentences_proposed", "sentences_kept", "sentences_dropped",
               "citation_valid_rate", "kept_rate", "dropped_rate", "answers_with_expected_evidence",
               "answers_with_no_kept_sentence"):
         print(f"| {k} | {summary[k]} |")

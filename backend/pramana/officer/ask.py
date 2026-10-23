@@ -34,7 +34,8 @@ SYSTEM = (
     "3) Add nothing that is not in the items. 4) You explain existing findings; you never decide, approve, "
     "reject or recommend action on the application. 5) Never call a document forged, fake, fraudulent or "
     "genuine; use the wording of the items, such as 'modified after signing', 'could not be confirmed' or "
-    "'not found in the issuer registry'. 6) If the items do not answer the question, say so in one sentence "
+    "'not found in the issuer registry'. Use status words as the items state them; say 'verified' only for an "
+    "item whose status is verified. 6) If the items do not answer the question, say so in one sentence "
     "citing the closest item. Answer in two to four short sentences and cite the specific items behind each one: "
     "findings (F), verification results (V), rules (R), documents (D), page regions (P) or the run (RUN). "
     "Reply with JSON only."
@@ -353,7 +354,9 @@ def check_sentence(text: str, cites: list[str], items: dict[str, dict[str, Any]]
         return valid, "judges a document instead of describing the evidence"
     if DECIDES.search(text):
         return valid, "states or recommends a decision"
-    cited_text = " ".join(items[c]["text"] for c in valid)
+    # A finding's own rule and page regions count as part of what it cites
+    support = list(dict.fromkeys(valid + [r for c in valid for r in items[c].get("related", [])]))
+    cited_text = " ".join(items[c]["text"] for c in support)
     for d in _dates(text) - _dates(cited_text):
         return valid, f"date {d} is not in the cited items"
     upper_cited = cited_text.upper()
@@ -438,14 +441,7 @@ def template_answer(items: dict[str, dict[str, Any]], question: str) -> list[dic
 # ------------------------------------------------------------------ answer
 
 
-def answer(db: Session, app: Application, question: str, *, use_model: bool = True) -> dict[str, Any]:
-    t0 = time.perf_counter()
-    ctx = build_context(db, app, question)
-    items = ctx["items"]
-    raw, provider, errors = (call_model(_prompt(items, question)) if use_model else (None, None, []))
-    mode = "model" if raw is not None else "template"
-    if raw is None:
-        raw = template_answer(items, question)
+def _check_all(raw: list[Any], items: dict[str, dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     kept, dropped = [], []
     for n, s in enumerate(raw):
         text = str(s.get("text", "")).strip() if isinstance(s, dict) else ""
@@ -457,11 +453,29 @@ def answer(db: Session, app: Application, question: str, *, use_model: bool = Tr
             # Deterministic links from a cited finding to its rule and page regions, shown as extra chips
             related = [r for c in valid for r in items[c].get("related", []) if r not in valid]
             kept.append({"text": text, "cites": valid, "related": list(dict.fromkeys(related))[:3]})
+    return kept, dropped
+
+
+def answer(db: Session, app: Application, question: str, *, use_model: bool = True) -> dict[str, Any]:
+    t0 = time.perf_counter()
+    ctx = build_context(db, app, question)
+    items = ctx["items"]
+    raw, provider, errors = (call_model(_prompt(items, question)) if use_model else (None, None, []))
+    mode = "model" if raw is not None else "template"
+    fallback = None if raw is not None else ("no model reachable" if use_model else "model not used")
+    kept, dropped = _check_all(raw if raw is not None else template_answer(items, question), items)
+    proposed, first_kept = len(kept) + len(dropped), len(kept)
+    if mode == "model" and not kept:
+        # Every model sentence failed the evidence check: answer from the templates and keep the drops visible
+        kept, extra = _check_all(template_answer(items, question), items)
+        dropped += extra
+        mode, fallback = "template", "the model's sentences did not pass the evidence check"
     used = {c for s in kept for c in s["cites"] + s["related"]}
     return {
         "question": question, "mode": mode, "provider": provider,
         "model": model_name(provider) if provider else None, "external": provider in EXTERNAL if provider else False,
-        "sentences": kept, "dropped": dropped, "dropped_count": len(dropped), "proposed_count": len(raw),
+        "sentences": kept, "dropped": dropped, "dropped_count": len(dropped), "proposed_count": proposed,
+        "fallback": fallback, "first_pass_kept": first_kept,
         "evidence": {k: {kk: v[kk] for kk in ("id", "kind", "label", "text", "target")} for k, v in items.items()
                      if k in used},
         "context_items": len(items), "errors": errors, "run_id": ctx["run_id"],

@@ -245,6 +245,20 @@ def test_ask_why_post_check_drops_unsupported_sentences(app, monkeypatch):
     assert "number 42" in reasons[5] and "FES/KOL/2099/1" in reasons[6] and reasons[7] == "no valid citation"
 
 
+def test_ask_why_falls_back_to_templates_when_every_model_sentence_fails(app, monkeypatch):
+    from pramana.db import SessionLocal
+    from pramana.models import Application
+    from pramana.officer import ask
+
+    bad = [{"text": "The certificate was verified on 2031-01-01.", "cites": ["F1"]}]
+    monkeypatch.setattr(ask, "call_model", lambda prompt: (bad, "ollama", []))
+    db = SessionLocal()
+    out = ask.answer(db, db.get(Application, "APP-2026-000107"), "Why is the fire NOC flagged?")
+    db.close()
+    assert out["mode"] == "template" and "did not pass" in out["fallback"] and out["first_pass_kept"] == 0
+    assert out["sentences"] and out["dropped"][0]["text"] == bad[0]["text"]
+
+
 def test_ask_why_context_never_carries_injected_document_text(app):
     from pramana.db import SessionLocal
     from pramana.models import Application

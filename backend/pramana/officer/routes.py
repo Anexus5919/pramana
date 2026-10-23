@@ -325,7 +325,8 @@ def ask_why(app_id: str, body: AskBody, user: User = Depends(require_roles("offi
     out = answer(db, app, body.question.strip())
     audit.record(db, actor=user.username, actor_role=user.role, action="ask.answered", object_type="application",
                  object_id=app.id, application_id=app.id,
-                 details={"question": out["question"], "mode": out["mode"], "provider": out["provider"],
+                 details={"question": out["question"], "mode": out["mode"], "fallback": out["fallback"],
+                          "provider": out["provider"],
                           "model": out["model"], "sentences": out["sentences"], "dropped": out["dropped"],
                           "latency_ms": out["latency_ms"], "run_id": out["run_id"]})
     db.commit()
