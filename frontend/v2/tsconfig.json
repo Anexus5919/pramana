@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.v2.tsbuildinfo",
+    "incremental": true
+  },
+  "include": ["../src/landing-v2", "./entry.ts"]
+}
