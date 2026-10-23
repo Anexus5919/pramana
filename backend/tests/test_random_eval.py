@@ -218,7 +218,9 @@ def test_instruction_lines_are_flagged_and_ordinary_certificate_text_is_not():
     sets = json.loads((Path(__file__).parent / "data" / "instruction_lines.json").read_text(encoding="utf-8"))
     assert all(INJECTION.search(x) for x in sets["known"] + sets["held_out_author"])
     assert sum(1 for x in sets["held_out_independent"] if INJECTION.search(x)) >= 7
-    assert not any(INJECTION.search(x) for x in sets["benign_independent"])
+    assert not any(INJECTION.search(x) for x in sets["benign_independent"] + sets["benign_blind"])
+    # Written blind after the detector was frozen; this records its score, it was not tuned on these lines
+    assert sum(1 for x in sets["held_out_blind"] if INJECTION.search(x)) >= 4
     for benign in ("Fire Alarm System: provided in all blocks", "Software: Tally ERP 9", "Reviewer: Dr. A. Rao",
                    "Lab Assistant, Computer Engineering", "The automatic sprinkler system shall be maintained.",
                    "Please ignore this reminder if the fee has been paid.", "Model: XR-200 smoke detector"):
