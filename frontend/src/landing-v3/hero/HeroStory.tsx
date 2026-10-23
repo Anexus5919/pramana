@@ -308,7 +308,7 @@ export default function HeroStory() {
   return (
     <>
     <section ref={sectionRef} id="top" aria-labelledby="hero-title" className="relative" style={{ height: sectionH }}>
-      <div ref={stageRef} className="sticky top-0 h-svh w-full overflow-hidden bg-(--lp-peach)">
+      <div ref={stageRef} className="sticky top-0 h-svh w-full overflow-clip bg-(--lp-peach)">
         {glFailed ? (
           <>
             <FallbackGround layout={L} />

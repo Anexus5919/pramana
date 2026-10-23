@@ -143,8 +143,8 @@ export function computeLayout(w: number, h: number, cardRatio: number): Layout {
   const card = { x: cx - cw / 2, y: bottom - ch, w: cw, h: ch };
   const ringY = card.y - 22 * s;
   const hold: [HoldSpot, HoldSpot] = [
-    solveHold(s, groundY, { x: card.x + 30, y: ringY }, 7, true),
-    solveHold(s, groundY, { x: card.x + cw - 30, y: ringY }, -7, false),
+    solveHold(s, groundY, { x: card.x + 46, y: ringY }, 7, true),
+    solveHold(s, groundY, { x: card.x + cw - 46, y: ringY }, -7, false),
   ];
   return {
     w,
@@ -158,7 +158,7 @@ export function computeLayout(w: number, h: number, cardRatio: number): Layout {
     hero,
     hold,
     card,
-    caption: { x: 20, y: Math.max(84, h * 0.115), w: w - 40 },
+    caption: { x: 20, y: Math.max(96, h * 0.15), w: w - 40 },
     copy: { x: 20, w: w - 40 },
   };
 }
