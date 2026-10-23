@@ -1,9 +1,11 @@
 """Merge a trained LoRA adapter into fp16 Qwen3-1.7B weights on CPU and write an Ollama Modelfile.
 
     python training/merge_adapter.py <adapter_dir> <out_dir>
-    ollama create pramana-extract -f <out_dir>/Modelfile -q q4_K_M
+    python <llama.cpp>/convert_hf_to_gguf.py <out_dir>/merged --outtype q8_0 --outfile <out_dir>/pramana-extract-q8_0.gguf
+    ollama create pramana-extract -f <out_dir>/Modelfile
 
-Ollama quantises safetensors imports itself, so no llama.cpp build is needed.
+The converter writes Q8_0 directly, so no llama.cpp build is needed. Ollama's own quantiser for safetensors
+imports needs the MLX runtime, which is not available on Windows.
 """
 
 import sys
@@ -25,7 +27,7 @@ def main(adapter: str, out: str) -> None:
     model.save_pretrained(merged, safe_serialization=True)
     tok.save_pretrained(merged)
     template = (Path(__file__).parent / "Modelfile").read_text(encoding="utf-8")
-    template = template.replace("FROM ./pramana-extract-q4_k_m.gguf", "FROM ./merged")
+    template = template.replace("FROM ./pramana-extract-q4_k_m.gguf", "FROM ./pramana-extract-q8_0.gguf")
     (out_dir / "Modelfile").write_text(template, encoding="utf-8")
     print("merged to", merged)
 
