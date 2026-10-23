@@ -62,11 +62,11 @@ function FineTune() {
 }
 
 const STATS: Stat[] = [
-  { value: 42, of: "of 42", label: "planted conditions found", sub: "Across 11 synthetic applications, deterministic mode." },
+  { value: 51, of: "of 51", label: "planted conditions found", sub: "Across 11 synthetic applications, deterministic mode." },
   { value: 0, label: "false alarms", sub: "On the benign control set." },
   { value: 323, of: "of 328", label: "printed fields read by patterns", sub: "The 5 misses are all in one unfamiliar issuer layout." },
   { value: 1.1, decimals: 1, prefix: "~", unit: "s", label: "per validation run", sub: "About 1.1 seconds on a laptop CPU." },
-  { value: 22, label: "automated tests", sub: "Run on every change to the checks." },
+  { value: 73, label: "automated tests", sub: "Run on every change to the checks." },
   { value: 29, label: "cited APH rules", sub: "Each finding names its annexure and page." },
 ];
 
