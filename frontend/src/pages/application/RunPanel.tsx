@@ -9,6 +9,7 @@ import { stageLabel } from "../../lib/labels";
 import type { Finding, RunFull } from "../../types";
 import { BlockProgress, SeverityMeter, type BlockStage } from "../../ui/Blocks";
 import { IconButton } from "../../ui/Button";
+import { cn } from "../../ui/cn";
 import { Counter } from "../../ui/Counter";
 import { dur, ease } from "../../ui/motion";
 import { ErrorState } from "../../ui/States";
@@ -149,14 +150,16 @@ export function RunPanel({ appId, v }: { appId: string; v: ReturnType<typeof use
                   className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:items-start"
                 >
                   <div className="flex items-baseline gap-2 pr-4">
-                    <span className="font-display text-3xl leading-none font-semibold text-mismatch-fg">
-                      +<Counter value={s.added.length} duration={0.8} />
+                    <span className={cn("font-display text-3xl leading-none font-semibold", s.added.length ? "text-mismatch-fg" : "text-ink-4")}>
+                      {s.added.length ? "+" : ""}
+                      <Counter value={s.added.length} duration={0.8} />
                     </span>
                     <span className="text-sm text-ink-3">new {s.added.length === 1 ? "finding" : "findings"}</span>
                   </div>
                   <div className="flex items-baseline gap-2 pr-4">
-                    <span className="font-display text-3xl leading-none font-semibold text-verified-fg">
-                      -<Counter value={resolved.length} duration={0.8} />
+                    <span className={cn("font-display text-3xl leading-none font-semibold", resolved.length ? "text-verified-fg" : "text-ink-4")}>
+                      {resolved.length ? "-" : ""}
+                      <Counter value={resolved.length} duration={0.8} />
                     </span>
                     <span className="text-sm text-ink-3">resolved</span>
                   </div>

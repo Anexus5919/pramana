@@ -38,10 +38,10 @@ function SeverityBar({ run }: { run: RunBrief }) {
   );
 }
 
-function Slot({ which }: { which: "A" | "B" }) {
+function Slot({ which, fly = false }: { which: "A" | "B"; fly?: boolean }) {
   return (
     <motion.span
-      layoutId={`run-slot-${which}`}
+      layoutId={fly ? `run-slot-${which}` : undefined}
       transition={spring.snappy}
       className={cn("grid size-6 place-items-center rounded-[7px] text-xs font-bold text-white shadow-sm", which === "A" ? "bg-ink-2" : "bg-brand-500")}
     >
@@ -100,7 +100,7 @@ function RunCard({ run, all, slot, onPick, latest }: { run: RunBrief; all: RunBr
               aria-label={slot ? `Remove round ${run.round} from the comparison` : `Compare round ${run.round}`}
               className="grid size-6 place-items-center rounded-[7px] border border-dashed border-line-2 transition-colors hover:border-brand-400"
             >
-              {slot && <Slot which={slot} />}
+              {slot && <Slot which={slot} fly />}
             </button>
           </div>
         </div>
