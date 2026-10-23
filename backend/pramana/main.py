@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from .api import admin, applications
 from .config import get_settings
 from .db import init_db
+from .officer import routes as officer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 # pyHanko logs full tracebacks for expected diff-analysis outcomes; results are reported through the API instead
@@ -26,6 +27,7 @@ app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
                           "assistance. Decision support only: findings are for review by competent authorities.")
 app.include_router(applications.router)
 app.include_router(admin.router)
+app.include_router(officer.router)
 
 
 @app.middleware("http")
