@@ -14,6 +14,7 @@ from .. import audit
 from ..config import get_settings
 from ..consistency.cross import cross_checks, relationship_graph
 from ..crypto import digest, load_document, sha256_hex
+from ..history.yoy import findings as yoy_findings
 from ..models import (
     Application,
     Document,
@@ -25,6 +26,7 @@ from ..models import (
     VerificationAttempt,
     utcnow,
 )
+from ..photos.findings import photo_stage
 from ..rules.engine import ERROR, FAIL, INSUFFICIENT, Ruleset, active_ruleset, evaluate, load_ruleset
 from ..verification import base as vb
 from ..verification.issuer import adapters, compare_values
@@ -453,6 +455,8 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     s["severity"] in ("high", "medium") else "heuristic",
                     "severity": s["severity"], "outcome": "indicator", "title": s["title"], "message": s["detail"],
                     "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id})
+        # Content Credentials and room indicators for photos
+        findings += photo_stage(db, app, run, docs, doc_status)
         stage("forensics", t0)
 
         t0 = time.perf_counter()
@@ -468,6 +472,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                     None)})
         graph = relationship_graph(db, app, links)
         findings += _rectification_scope(db, app, docs)
+        findings += yoy_findings(db, app, docs, rs)
         stage("cross_application", t0, links=len(links))
 
         # Reviewer decisions carry over when the same finding reappears in a later run

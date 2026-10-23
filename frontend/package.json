@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "dev:v2": "vite --config vite.v2.config.ts",
+    "dev:v3": "vite --config vite.v3.config.ts",
     "build": "tsc -b && vite build",
     "build:v2": "tsc -p v2/tsconfig.json && vite build --config vite.v2.config.ts",
+    "build:v3": "tsc -p v3/tsconfig.json && vite build --config vite.v3.config.ts",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview"
   },
@@ -21,6 +23,7 @@
     "@tanstack/react-query": "5.103.2",
     "clsx": "2.1.1",
     "d3-force": "3.0.0",
+    "leaflet": "1.9.4",
     "lucide-react": "1.47.0",
     "motion": "14.6.0",
     "react": "19.2.8",
@@ -31,6 +34,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
     "@types/d3-force": "3.0.10",
+    "@types/leaflet": "1.9.22",
     "@types/node": "22.20.4",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

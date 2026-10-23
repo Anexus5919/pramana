@@ -11,6 +11,7 @@ from ..crypto import load_document
 from ..forensics import fingerprints, pdf_struct
 from ..forensics import image as img_forensics
 from ..models import Document, DocumentPage, ExtractedField
+from ..photos import analysis as photo_analysis
 from ..rules.engine import Ruleset
 from ..verification.signed_qr import decode_qr
 from .extract import classify, extract_fields, extract_table
@@ -86,6 +87,7 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         signals, facts = pdf_struct.analyse(data, issue_date)
     else:
         signals, facts = img_forensics.analyse(data, campus)
+        analysis["photo"] = photo_analysis.analyse(data, doc.mime)
     analysis["forensic_signals"] = [asdict(s) for s in signals]
     analysis["forensic_facts"] = facts
     try:

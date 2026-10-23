@@ -1,4 +1,4 @@
-import { ArrowUpRight, Clock, ServerOff, ShieldAlert, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Clock, Eye, ServerOff, ShieldAlert, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -15,6 +15,7 @@ const KIND: Record<string, { label: string; icon: LucideIcon; className: string 
   high_severity_finding: { label: "Finding", icon: ShieldAlert, className: "bg-mismatch-bg text-mismatch-fg" },
   source_unavailable: { label: "Source unavailable", icon: ServerOff, className: "bg-unavail-bg text-unavail-fg" },
   verification_pending: { label: "Verification pending", icon: Clock, className: "bg-pending-bg text-pending-fg" },
+  watch_change: { label: "Re-verification watch", icon: Eye, className: "bg-expired-bg text-expired-fg" },
 };
 
 type Filter = "all" | "findings" | "verification";

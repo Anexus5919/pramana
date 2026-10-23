@@ -54,6 +54,12 @@ def main(validate: bool = True) -> None:
     demo = s.trust_dir / "demo"
     demo.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(FIX / "trust" / "pramana-demo-root.pem", demo / "pramana-demo-root.pem")
+    from pramana.photos import credentials
+
+    if (FIX / "trust" / credentials.DEMO_CA_FILE).exists():
+        credentials.demo_ca_path().parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(FIX / "trust" / credentials.DEMO_CA_FILE, credentials.demo_ca_path())
+    credentials._trust_pem.cache_clear()
     signed_qr.issuer_keys.cache_clear()
     signature.trust_anchors.cache_clear()
 
@@ -139,6 +145,9 @@ def main(validate: bool = True) -> None:
                 sim.set_availability(code, True)
             print(f"{spec['key']:4} {app.id} {run.status:9} findings={run.summary.get('findings')} "
                   f"{time.perf_counter() - t0:5.1f}s  {spec['story'][:70]}")
+        from pramana.history.watch import seed_outcomes
+
+        seed_outcomes(db, m, users["officer"])
         audit.checkpoint(db)
         db.commit()
         print(f"validated {len(timings)} applications, mean {sum(timings) / len(timings):.1f}s")

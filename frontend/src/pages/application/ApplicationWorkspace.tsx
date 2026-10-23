@@ -1,16 +1,18 @@
 import { useMutation } from "@tanstack/react-query";
 import {
+  CalendarClock,
   ClipboardCheck,
   FileText,
   History,
   LayoutGrid,
   ListChecks,
+  MapPinned,
   Network,
   ScrollText,
   ShieldCheck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ApiError, api } from "../../api";
 import { useAuth } from "../../auth/session";
@@ -25,6 +27,7 @@ import { TabPanel, Tabs, type TabItem } from "../../ui/Tabs";
 import { WorkspaceProvider, type DocTarget, type WorkspaceCtx } from "./context";
 import { appPath, isTab, useApplication, useFindings, useInvalidateApp, useRun, useVerifications, type WorkspaceTab } from "./data";
 import { HeaderTitle, WorkspaceHeader } from "./Header";
+import { SinceLastYearTab } from "./history/SinceLastYearTab";
 import { AskPanel } from "./officer/AskPanel";
 import { EvidencePackDialog } from "./officer/EvidencePackDialog";
 import { LetterEditor } from "./officer/LetterEditor";
@@ -49,11 +52,15 @@ const ICONS: Record<WorkspaceTab, ReactNode> = {
   checklist: <ClipboardCheck />,
   verification: <ShieldCheck />,
   relationships: <Network />,
+  campus: <MapPinned />,
+  "since-last-year": <CalendarClock />,
   runs: <History />,
   audit: <ScrollText />,
 };
 
 const OPEN = new Set(["open", "acknowledged", "evidence_requested"]);
+// Leaflet is only needed on the Campus tab, so it loads with it
+const CampusTab = lazy(() => import("./tabs/CampusTab").then((m) => ({ default: m.CampusTab })));
 const TABS_ID = "ws";
 
 function LoadingHeader({ appId, name }: { appId: string; name?: string }) {
@@ -131,6 +138,7 @@ export default function ApplicationWorkspace() {
   const openHigh = findings.some((f) => OPEN.has(f.review_status) && (f.severity === "high" || f.severity === "critical"));
   const currentAttempts = (verQ.data ?? []).filter((a) => a.run_id === app.latest_run?.id);
   const peers = run?.graph?.nodes.filter((n) => n.kind === "application" && !n.focus).length;
+  const yoyOpen = findings.filter((f) => f.code.startsWith("YOY-") && OPEN.has(f.review_status)).length;
 
   const items: TabItem<WorkspaceTab>[] = [
     { id: "overview", label: WORKSPACE_TAB_LABEL.overview, icon: ICONS.overview },
@@ -139,6 +147,11 @@ export default function ApplicationWorkspace() {
     { id: "checklist", label: WORKSPACE_TAB_LABEL.checklist, icon: ICONS.checklist, count: run?.checklist.length },
     { id: "verification", label: WORKSPACE_TAB_LABEL.verification, icon: ICONS.verification, count: verQ.data ? currentAttempts.length : undefined },
     { id: "relationships", label: WORKSPACE_TAB_LABEL.relationships, icon: ICONS.relationships, count: peers || undefined },
+    // Officer-only photo evidence; the workspace route is already limited to officials
+    ...(is("officer", "verifier", "admin")
+      ? [{ id: "campus" as const, label: WORKSPACE_TAB_LABEL.campus ?? "Campus", icon: ICONS.campus, count: app.documents.filter((d) => !d.superseded && d.mime.startsWith("image/")).length || undefined }]
+      : []),
+    { id: "since-last-year", label: WORKSPACE_TAB_LABEL["since-last-year"], icon: ICONS["since-last-year"], count: yoyOpen || undefined, attention: yoyOpen > 0 },
     { id: "runs", label: WORKSPACE_TAB_LABEL.runs, icon: ICONS.runs },
     { id: "audit", label: WORKSPACE_TAB_LABEL.audit, icon: ICONS.audit },
   ];
@@ -189,6 +202,12 @@ export default function ApplicationWorkspace() {
               {tab === "checklist" && <ChecklistTab />}
               {tab === "verification" && <VerificationTab query={verQ} />}
               {tab === "relationships" && <RelationshipsTab />}
+              {tab === "campus" && is("officer", "verifier", "admin") && (
+                <Suspense fallback={<Skeleton className="h-[440px]" rounded="lg" />}>
+                  <CampusTab />
+                </Suspense>
+              )}
+              {tab === "since-last-year" && <SinceLastYearTab />}
               {tab === "runs" && <RunsTab />}
               {tab === "audit" && <AuditTab />}
             </TabPanel>

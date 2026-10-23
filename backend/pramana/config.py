@@ -39,7 +39,15 @@ class Settings(BaseSettings):
     groq_model: str = "openai/gpt-oss-20b"
     gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
                                                                           "GEMINI_API_KEY", "GOOGLE_API_KEY"))
-    gemini_model: str = "gemini-2.5-flash"
+    # gemini-2.5-flash is closed to new API keys; the alias tracks Google's current Flash release
+    gemini_model: str = "gemini-flash-latest"
+    # Photo evidence: detector weights fetched by scripts/fetch_photo_assets.py (pinned SHA-256), and the map
+    # tile URL for the Campus tab; empty disables tiles and the tab shows a plain plot instead
+    models_dir: Path = BACKEND_DIR / "models"
+    map_tile_url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    # Re-verification watch: how often issuer-verified certificates are re-queried after a scrutiny outcome
+    watch_interval_hours: float = 24.0
+    watch_scheduler: bool = True
 
     @property
     def db_url(self) -> str:

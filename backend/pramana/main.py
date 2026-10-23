@@ -5,9 +5,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import admin, applications
+from .api import admin, applications, photos
 from .config import get_settings
 from .db import init_db
+from .history import api as history_api
+from .history.watch import start_scheduler
 from .officer import routes as officer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -19,7 +21,10 @@ for noisy in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "fontTools"):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    watch_task = start_scheduler()
     yield
+    if watch_task:
+        watch_task.cancel()
 
 
 app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
@@ -27,6 +32,8 @@ app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
                           "assistance. Decision support only: findings are for review by competent authorities.")
 app.include_router(applications.router)
 app.include_router(admin.router)
+app.include_router(photos.router)
+app.include_router(history_api.router)
 app.include_router(officer.router)
 
 

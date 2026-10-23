@@ -14,13 +14,13 @@ import math
 import random
 import shutil
 import sys
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 
 import segno
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from PIL import Image, ImageDraw, ImageFilter, TiffImagePlugin
+from PIL import Image, ImageDraw, ImageFilter, ImageOps, TiffImagePlugin
 from reportlab.lib.colors import HexColor, black
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
@@ -28,11 +28,17 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from pramana.config import get_settings  # noqa: E402
+from pramana.photos import demo_capture  # noqa: E402
+from pramana.photos.assets import DETECTOR, SAMPLE_PHOTOS, Asset, fetch  # noqa: E402
+from pramana.photos.credentials import DEMO_CA_FILE  # noqa: E402
 from pramana.verification import demo_pki  # noqa: E402
 from pramana.verification.signed_qr import sign_payload  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "out"
+PHOTOS = ROOT / "fixtures" / "real" / "photos"
+IST = timezone(timedelta(hours=5, minutes=30))
 W, H = A4
 FOOT = "SYNTHETIC TEST DOCUMENT generated for the Pramana prototype. Not a real record."
 rng = random.Random(26261)
@@ -507,6 +513,13 @@ def photo(seed: int, gps: tuple[float, float] | None, taken: datetime, software:
         p = px[x, y]
         n = r.randint(-18, 18)
         px[x, y] = (max(0, min(255, p[0] + n)), max(0, min(255, p[1] + n)), max(0, min(255, p[2] + n)))
+    b = io.BytesIO()
+    img.save(b, "JPEG", quality=88, exif=photo_exif(gps, taken, software))
+    return b.getvalue()
+
+
+def photo_exif(gps: tuple[float, float] | None, taken: datetime, software: str | None = None,
+               credit: Asset | None = None) -> Image.Exif:
     exif = Image.Exif()
     exif[0x010F] = "SyntheticCam"
     exif[0x0110] = "PR-1"
@@ -530,9 +543,49 @@ def photo(seed: int, gps: tuple[float, float] | None, taken: datetime, software:
         g[2] = dms(gps[0])
         g[3] = "E" if gps[1] >= 0 else "W"
         g[4] = dms(gps[1])
+    if credit:
+        # Attribution travels with the file; the capture data above is synthetic
+        exif[0x010E] = f"Demo fixture photo '{credit.title}' from Wikimedia Commons; synthetic capture metadata"
+        exif[0x013B] = credit.author
+        exif[0x8298] = f"{credit.licence}, {credit.page}"
+    return exif
+
+
+def sample_photo(asset: Asset, gps: tuple[float, float], taken: datetime) -> bytes:
+    """An openly licensed photo resized to 1600 px with synthetic capture EXIF and its attribution."""
+    with Image.open(PHOTOS / asset.name) as im:
+        img = ImageOps.exif_transpose(im).convert("RGB")
+    img.thumbnail((1600, 1600))
     b = io.BytesIO()
-    img.save(b, "JPEG", quality=88, exif=exif)
+    img.save(b, "JPEG", quality=88, exif=photo_exif(gps, taken, credit=asset))
     return b.getvalue()
+
+
+def copy_move(img: Image.Image) -> Image.Image:
+    """Pixel edit for the edited-after-signing fixture: copy one band of the room over another."""
+    w, h = img.size
+    band = img.crop((int(w * 0.02), int(h * 0.48), int(w * 0.40), int(h * 0.66)))
+    img.paste(band, (int(w * 0.55), int(h * 0.48)))
+    return img
+
+
+def fetch_assets() -> tuple[set[str], bool]:
+    """Sample photos and detector weights (pinned SHA-256). Offline, the photo scenarios that need them are
+    left out of the fixtures and of the expected findings rather than faked."""
+    got = set()
+    for key, a in SAMPLE_PHOTOS.items():
+        try:
+            fetch(a, PHOTOS)
+            got.add(key)
+        except Exception as e:  # noqa: BLE001
+            print(f"warning: sample photo {a.name} unavailable ({e}); its scenario is skipped")
+    try:
+        fetch(DETECTOR, get_settings().models_dir)
+        detector = True
+    except Exception as e:  # noqa: BLE001
+        print(f"warning: detector weights unavailable ({e}); room indicators are not planted")
+        detector = False
+    return got, detector
 
 
 def recompress(jpeg: bytes, quality: int, scale: float, keep_exif: bool = True) -> bytes:
@@ -585,6 +638,80 @@ def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: flo
     return out.getvalue()
 
 
+# ---------------------------------------------------------------- previous year
+
+LABS = {"CE": ["Programming Lab", "Data Structures Lab", "Computer Networks Lab"],
+        "IT": ["Web Technologies Lab", "Database Systems Lab"],
+        "ME": ["Thermal Engineering Lab", "Fluid Mechanics Lab", "Central Workshop"],
+        "CV": ["Surveying Lab", "Concrete Technology Lab"],
+        "EE": ["Electrical Machines Lab", "Power Systems Lab"],
+        "EC": ["Analog Circuits Lab", "Communication Lab"]}
+COMMON_LABS = ["Engineering Physics Lab", "Engineering Chemistry Lab", "Language Lab"]
+# Year-over-year conditions planted through the previous year's application (code, what differs)
+YOY_PLANTED = {
+    "A2": ("YOY-CERT-REUSED-NEW-VALIDITY", "Last year's application carried the same fire NOC number with validity to "
+                                           "11-03-2026; this year the number shows validity to 11-03-2027."),
+    "A4": ("YOY-INTAKE-JUMP", "Last year's application had 60 approved CE seats; this EoA proposes 120."),
+    "A8": ("YOY-FACULTY-TURNOVER", "22 of the 36 faculty IDs on last year's roster are gone this year."),
+    "A10": ("YOY-LAND-AREA-DECREASED", "Last year's application declared 12.5 acres of land; this year 10.5."),
+}
+
+
+def labs_for(progs: list[dict]) -> list[str]:
+    return COMMON_LABS + [lab for p in progs for lab in LABS.get(p["code"], [])]
+
+
+def previous_year(app: dict, inst: dict, b: dict, docs: dict[str, dict], yrng: random.Random) -> dict:
+    """The institution's 2025-26 application as the approval portal would hold it.
+
+    Benign institutions differ in ordinary ways (a few faculty moved, bandwidth upgraded, fire NOC renewed
+    under a new number, a lab added). The apps in YOY_PLANTED differ in one implausible way."""
+    key, idx = app["key"], int(app["institution"][1:])
+    decl = app["declared"]
+    own = [r["faculty_id"] for r in b["fac"]]
+    moved = 22 if key == "A8" else 2 + idx % 3
+    joined = set(yrng.sample(own, moved))
+    left = [f"FID-{20000000 + idx * 1000 + i * 7:08d}" for i in range(moved)]
+    roster = [f for f in own if f not in joined] + left
+    progs = [{"code": p["code"], "name": p["name"], "level": p["level"], "approved_intake": p["approved_intake"],
+              "proposed_intake": p["approved_intake"], "nba_accredited": p["nba_accredited"]} for p in b["progs"]]
+    labs = list(decl["labs"])
+    if idx % 3 == 0:
+        labs.remove(labs[-1])
+    if idx % 4 == 1:
+        labs.append("Basic Electronics Lab")
+    certs = {}
+    fire = docs["fire_noc"]
+    if key == "A2":
+        certs["fire_noc"] = {"number": fire["number"], "valid_until": "2026-03-11"}
+    elif fire["valid_until"] < "2025-12-01":
+        # A certificate that was still valid when last year's application went in is simply carried over
+        certs["fire_noc"] = dict(fire)
+    else:
+        certs["fire_noc"] = {"number": f"FES/{inst['city'][:3].upper()}/2024/{3100 + idx * 23:05d}",
+                             "valid_until": "2025-03-11"}
+    for t in ("occupancy_certificate", "nba_certificate"):
+        if docs.get(t):
+            certs[t] = dict(docs[t])
+    certs["affidavit_2"] = {"number": f"IN-{'TG' if inst['state'] == 'Telangana' else 'MH'}"
+                                      f"{36120440119203 + idx * 6151:014d}X"}
+    certs["audited_accounts"] = {"number": f"24{200000 + idx * 613:06d}"
+                                           f"{''.join(yrng.choice('ABCDEFGHJKLMNPQRSTUVWXYZ0123456789') for _ in range(10))}"}
+    # A4 inflates this year's figure; last year it declared the area its occupancy certificate covers
+    built = b["area"] - 200 if key == "A4" else int(decl["built_up_area_sqm"]) - (idx % 3) * 200
+    return {
+        "academic_year": "2025-26", "application_id": f"APP-2025-{100 + idx:06d}", "category": "EOA",
+        "submitted_on": (date(2024, 12, 1) + timedelta(days=idx * 3)).isoformat(),
+        "programmes": progs, "faculty_ids": roster, "faculty_count": len(roster),
+        "land_area_acres": 12.5 if key == "A10" else decl["land_area_acres"],
+        "built_up_area_sqm": built,
+        "administrative_area_sqm": decl["administrative_area_sqm"] - (40 if idx % 2 else 0),
+        "amenities_area_sqm": decl["amenities_area_sqm"],
+        "internet_bandwidth_mbps": 100 if idx % 2 else decl["internet_bandwidth_mbps"],
+        "labs": labs, "nba_claims": [p["code"] for p in progs if p["nba_accredited"]], "certificates": certs,
+    }
+
+
 # ---------------------------------------------------------------- build
 
 
@@ -604,6 +731,13 @@ def main() -> None:
     applicant = {k: demo_pki.signer(sub, i["chair"], i["society"], start) for k, i in INST.items()}
     (OUT / "trust").mkdir()
     (OUT / "trust" / "pramana-demo-root.pem").write_bytes(root.cert.public_bytes(serialization.Encoding.PEM))
+    capture_ca = demo_capture.build_ca()
+    (OUT / "trust" / DEMO_CA_FILE).write_bytes(capture_ca[0].public_bytes(serialization.Encoding.PEM))
+    samples, detector_ok = fetch_assets()
+
+    def camera(k: str) -> demo_capture.Device:
+        return demo_capture.device(capture_ca, f"Campus camera 01, {INST[k]['city']} (DEMO)",
+                                   f"{INST[k]['name']} (DEMO)")
 
     qr_keys = {"fire-sim-2025": Ed25519PrivateKey.generate(), "nba-sim-2024": Ed25519PrivateKey.generate()}
     issuer_keys = {kid: {"issuer": {"fire-sim-2025": "State Fire and Emergency Services (SIMULATED)",
@@ -738,7 +872,7 @@ def main() -> None:
         out = {"programmes": [dict(p) for p in b["progs"]], "faculty_count": len(b["fac"]),
                "built_up_area_sqm": b["area"] - 200, "land_area_acres": 10.5, "internet_bandwidth_mbps": 200,
                "administrative_area_sqm": 820, "amenities_area_sqm": 560, "fire_noc_number": b["noc"],
-               "fee_transaction_id": b["txn"]}
+               "fee_transaction_id": b["txn"], "labs": labs_for(b["progs"])}
         out.update(over)
         return out
 
@@ -757,15 +891,21 @@ def main() -> None:
                      "academic_year": "2026-27", "submitted": base[k]["submitted"].isoformat(), "declared": decl,
                      "documents": files, "expected": sorted(set(expected)), "story": story, **(extra or {})})
 
-    lab_original = photo(11, (INST["I1"]["lat"] + 0.0006, INST["I1"]["lon"] + 0.0004), datetime(2025, 11, 18, 10, 31))
+    # A1's lab photo carries Content Credentials from a DEMO campus camera; A10 later reuses it
+    gps1, taken1 = (INST["I1"]["lat"] + 0.0006, INST["I1"]["lon"] + 0.0004), datetime(2025, 11, 18, 10, 31)
+    lab_plain = sample_photo(SAMPLE_PHOTOS["cmi_lab"], gps1, taken1) if "cmi_lab" in samples else photo(11, gps1, taken1)
+    lab_original = demo_capture.sign_jpeg(lab_plain, camera("I1"), "lab_photo.jpg", taken1.replace(tzinfo=IST))
+    lab1 = [{"name": "Computer Lab 1 (CE)", "room_type": "computer_lab", "workstations": 15, "photo": "lab_photo.jpg"}]
 
     # A1 clean: everything verifiable
     docs = standard_docs("I1")
     p1 = base["I1"]["progs"]
     p1[0]["nba_accredited"] = True
     docs["nba_certificate"] = nba_for("I1", p1[0], d("2024-07-01"), d("2027-06-30"))
-    emit("A1", "I1", "EOA", docs, declared("I1"), ["XA-PHOTO-REUSED-LATER"],
-         "Clean application: issuer-signed fire NOC with signed QR, NBA QR, all registries match.",
+    emit("A1", "I1", "EOA", docs, declared("I1", **({"facilities": lab1} if "cmi_lab" in samples else {})),
+         ["XA-PHOTO-REUSED-LATER"],
+         "Clean application: issuer-signed fire NOC with signed QR, NBA QR, all registries match. The lab photo "
+         "carries Content Credentials from a DEMO campus camera.",
          {"lab_photo.jpg": lab_original})
 
     # A2 building older than 30 years without a structural stability certificate; accounts arrive as a scan
@@ -803,11 +943,19 @@ def main() -> None:
     decl["programmes"][0]["proposed_intake"] = 120
     decl["programmes"][1]["nba_accredited"] = True
     decl["faculty_count"] = len(b4["fac"])
+    photos4, exp4, story4 = {}, [], ""
+    if "baramati_lab" in samples and detector_ok:
+        photos4["lab_photo.jpg"] = sample_photo(SAMPLE_PHOTOS["baramati_lab"], (INST["I4"]["lat"] + 0.0004,
+                                                INST["I4"]["lon"] - 0.0005), datetime(2025, 11, 22, 15, 5))
+        decl["facilities"] = [{"name": "Computer Lab 2 (EE)", "room_type": "computer_lab", "workstations": 60,
+                               "photo": "lab_photo.jpg"}]
+        exp4, story4 = ["PH-ROOM-FEW-WORKSTATIONS"], " Its lab photo shows far fewer workstations than the 60 declared."
     emit("A4", "I4", "EOA", docs, decl,
          ["XR-INTAKE-RECORD", "XR-EOA-NO-INCREASE", "XD-OC-AREA", "XR-NBA-CLAIMS", "APH-639-AFF2-DSC",
-          "APH-ANX5-FSR"],
+          "APH-ANX5-FSR", *exp4],
          "Declares 120 approved seats in CE where the record shows 60, a built-up area beyond the OC, NBA "
-         "accreditation for ME with no register entry, and an Affidavit 2 without a digital signature.")
+         "accreditation for ME with no register entry, and an Affidavit 2 without a digital signature." + story4,
+         photos4)
 
     # A6 genuine (its fire NOC number is copied by A5); A6 and A7 share three faculty
     docs6 = standard_docs("I6")
@@ -841,13 +989,23 @@ def main() -> None:
     docs = standard_docs("I7", fire_issue=d("2023-07-01"), fire_valid=d("2025-06-30"))
     x, y, old, size = base["I7"]["fire_marks"]["valid_until"]
     docs["fire_noc"] = tamper_date(docs["fire_noc"], x, y, old, "30-06-2027", size)
+    photos7, exp7, story7 = {}, [], ""
+    if "kmclu_lab" in samples:
+        taken7 = datetime(2025, 12, 2, 11, 48)
+        plain7 = sample_photo(SAMPLE_PHOTOS["kmclu_lab"], (INST["I7"]["lat"] - 0.0003, INST["I7"]["lon"] + 0.0006),
+                              taken7)
+        signed7 = demo_capture.sign_jpeg(plain7, camera("I7"), "lab_photo.jpg", taken7.replace(tzinfo=IST))
+        photos7["lab_photo.jpg"] = demo_capture.edit_after_signing(signed7, copy_move)
+        exp7 = ["PH-C2PA-MODIFIED-AFTER-SIGNING"]
+        story7 = " Its lab photo was edited after the campus camera signed its Content Credentials."
     emit("A7", "I7", "EOA", docs, declared("I7"),
          ["VER-ISSUER_SIGNATURE-MISMATCH_DETECTED", "APH-617I-FIRE-VALID", "VER-SIGNED_QR-EXPIRED",
           "VER-ISSUER_REGISTRY-EXPIRED", "FX-FIELD-OVERWRITTEN", "FX-PDF-REVISION-TEXT-CHANGE", "FX-PDF-OVERLAID-TEXT",
-          "FX-PDF-WHITEOUT", "XA-FACULTY-MULTIPLE-INSTITUTIONS"],
+          "FX-PDF-WHITEOUT", "XA-FACULTY-MULTIPLE-INSTITUTIONS", *exp7],
          "Fire NOC expired 30-06-2025; the date was covered and overwritten as 30-06-2027 in an incremental update "
          "after the issuer signed. The text layer still holds the original date, so the expiry, QR and registry "
-         "checks see 2025 while the page shows 2027. Shares three faculty with A6.")
+         "checks see 2025 while the page shows 2027. Shares three faculty with A6." + story7,
+         photos7)
 
     # A8 fabricated fire NOC: no issuer signature or QR, number unknown to the issuer, applicant DSC only
     docs = standard_docs("I8")
@@ -904,6 +1062,30 @@ def main() -> None:
          "never used.",
          extra={"expected_with_llm": ["SEC-INSTRUCTION-TEXT"]})
 
+    # Previous-year applications for the year-over-year comparison, with a separate generator so the
+    # values above stay as they were
+    yrng = random.Random(2025)
+    for a in apps:
+        k = a["institution"]
+        inst, b = INST[k], base[k]
+        marks = b.get("fire_marks", {})
+        # The institution's own issuer-printed certificates, as generated above
+        cur = {"fire_noc": {"number": marks["noc_number"][2],
+                            "valid_until": datetime.strptime(marks["valid_until"][2], "%d-%m-%Y").date().isoformat()},
+               "occupancy_certificate": {"number": b["oc"]}}
+        nba = next((r["data"] for r in refs if r["record_type"] == "accreditation" and r["inst"] == k), None)
+        if nba:
+            cur["nba_certificate"] = {"number": nba["nba_ref"], "valid_until": nba["valid_until"]}
+        refs.append({"source": "AICTE approval portal, 2025-26 application (synthetic)",
+                     "record_type": "previous_application", "key": f"{inst['aicte_id']}:2025-26", "inst": k,
+                     "data": previous_year(a, inst, b, cur, yrng)})
+        if a["key"] in YOY_PLANTED:
+            code, note = YOY_PLANTED[a["key"]]
+            a["expected"] = sorted(set(a["expected"]) | {code})
+            if "expected_with_llm" in a:
+                a["expected_with_llm"] = sorted(set(a["expected_with_llm"]) | {code})
+            a["story"] += f" Year over year: {note}"
+
     # Faculty registry and the remaining reference records
     for fid, r in faculty_registry.items():
         refs.append({"source": "AICTE faculty registry (synthetic)", "record_type": "faculty", "key": fid,
@@ -919,6 +1101,14 @@ def main() -> None:
         "reference_records": refs, "issuer_registry": registry, "issuer_keys": issuer_keys,
         "applications": apps,
         "rectification": {"A3": {"declared_type": "fire_noc", "file": "rectification/A3_fire_noc_renewed.pdf"}},
+        # Outcomes an officer already recorded, so the re-verification watch has certificates to watch
+        "scrutiny_outcomes": [
+            {"application": "A1", "outcome": "no_deficiency",
+             "reason": "All documents confirmed with the issuers and AICTE records; no deficiency found."},
+            {"application": "A6", "outcome": "deficiencies_recorded",
+             "reason": "Three faculty are also listed by Panchganga Institute; roster deficiency communicated. "
+                       "Issuer-confirmed certificates accepted."},
+        ],
         "demo_accounts": [
             {"username": "officer", "display_name": "R. Sharma (Scrutiny Officer)", "role": "officer"},
             {"username": "verifier", "display_name": "L. Iyer (Verification Cell)", "role": "verifier"},

@@ -1,0 +1,6 @@
+/* v3 runs from its own Vite root, so Tailwind is pointed at the sources it renders */
+@import "../index.css";
+@import "../landing/landing.css";
+@source "./";
+@source "../landing";
+@source "../brand";

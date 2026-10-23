@@ -664,3 +664,115 @@ export interface PdfVerifyResult {
   revisions: number | null;
   metadata: Record<string, string>;
 }
+
+// Campus tab (officer only): backend/pramana/photos/campus.py
+
+export interface CampusPoint {
+  lat: number;
+  lon: number;
+  label: string;
+  source: string;
+  address?: string;
+  document_id?: string;
+  distance_km?: number | null;
+}
+
+export interface ContentCredentials {
+  present: boolean | null;
+  readable?: boolean;
+  error?: string;
+  state?: string | null;
+  title?: string | null;
+  claim_generator?: string | null;
+  signature_valid?: boolean;
+  trusted?: boolean;
+  untrusted?: boolean;
+  trust_list?: string | null;
+  trust_note?: string;
+  signer?: {
+    common_name?: string | null;
+    organization?: string | null;
+    issuer_common_name?: string | null;
+    issuer_organization?: string | null;
+    serial?: string | null;
+    not_before?: string | null;
+    not_after?: string | null;
+    algorithm?: string | null;
+  };
+  chain?: { subject: string | null; organization: string | null; role: string }[];
+  hash_matches?: boolean | null;
+  capture_time?: string | null;
+  actions?: { action: string | null; when: string | null; software: string | null; digital_source_type: string | null }[];
+  failures?: { code: string; explanation: string }[];
+  library?: string;
+}
+
+export interface Detection {
+  label: string;
+  group: string;
+  score: number;
+  /** x0, y0, x1, y1 as fractions of the upright image */
+  box: [number, number, number, number];
+}
+
+export interface RoomReading {
+  status: "analysed" | "not_analysed";
+  reason?: string;
+  model?: { name: string; classes: string; licence: string; runtime: string; score_min: number };
+  latency_ms?: number;
+  image?: [number, number];
+  counts?: Record<string, number>;
+  room_type?: Open<"computer_lab" | "classroom" | "library" | "unclear">;
+  room_basis?: string;
+  detections?: Detection[];
+}
+
+export interface DeclaredFacility {
+  name?: string;
+  room_type?: string;
+  workstations?: number;
+  photo?: string;
+  [key: string]: unknown;
+}
+
+export interface CampusPhoto {
+  document_id: string;
+  filename: string;
+  sha256: string;
+  width: number | null;
+  height: number | null;
+  exif: { captured: string | null; camera: string | null; software: string | null; gps: [number, number] | null };
+  attribution: { artist?: string; copyright?: string; description?: string } | null;
+  distance_km: number | null;
+  distance_declared_km: number | null;
+  geotag: "none" | "within" | "outside" | "unknown";
+  reuse: {
+    code: string;
+    finding_id: string;
+    title: string;
+    message: string;
+    severity: Severity;
+    other_application: string | null;
+    other_institution: string | null;
+    peer_document_id: string | null;
+    direction: "later" | "earlier";
+  }[];
+  c2pa: ContentCredentials;
+  room: RoomReading;
+  declared_facility: DeclaredFacility | null;
+  findings: { id: string; code: string; title: string; severity: Severity; evidence_class: EvidenceClass }[];
+}
+
+export interface CampusPayload {
+  application_id: string;
+  run_id: string | null;
+  institution: { name: string; address: string; district: string; state: string };
+  record: CampusPoint | null;
+  declared: CampusPoint | null;
+  threshold_km: number;
+  map_tolerance_km: number | null;
+  photos: CampusPhoto[];
+  room_labels: Record<string, string>;
+  group_labels: Record<string, string>;
+  tiles: { url: string; attribution: string; max_zoom: number } | null;
+}

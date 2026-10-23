@@ -18,10 +18,11 @@ import { Tooltip } from "../../../ui/Tooltip";
 import { useDocTypeLabel, useWorkspace } from "../context";
 import { appPath, bboxParam, isLlmMethod, llmReportOf, methodLabel, parseBBox, useDocument, useWidth, validBox, type LlmReport } from "../data";
 import { CautionNote, ComparisonTable, PaneLabel, RevisionDiffView, SimTag } from "../parts";
+import { RevisionPanel, RevisionStage } from "../history/TimeMachine";
 import { DocViewer, type Focus } from "../viewer/DocViewer";
 import { INSTRUCTION_CODE, instructionLinesOf, type InstructionLine, type OverlayBox } from "../viewer/overlays";
 
-type Panel = "fields" | "forensics" | "verification" | "rows" | "model";
+type Panel = "fields" | "forensics" | "verification" | "rows" | "model" | "revisions";
 const SPLIT_AT = 860;
 
 const actionCls =
@@ -607,11 +608,14 @@ export function DocumentsTab() {
         { value: "verification", label: "Verification", count: (doc.verifications ?? []).length || undefined },
         ...(rows.length ? [{ value: "rows" as Panel, label: "Rows", count: rows.length }] : []),
         ...(hasModel ? [{ value: "model" as Panel, label: "AI extraction" }] : []),
+        ...(doc.mime === "application/pdf" && doc.forensic_facts
+          ? [{ value: "revisions" as Panel, label: "Time machine", count: (doc.forensic_facts.revisions ?? 0) > 1 ? doc.forensic_facts.revisions : undefined }]
+          : []),
       ]
     : [];
   const panel: Panel = p.panel && panels.some((x) => x.value === p.panel) ? p.panel : hasModel && (report?.rejected.length || lines.length) ? "model" : "fields";
 
-  const selectDoc = (id: string) => p.set({ doc: id, page: null, hl: null, hlabel: null, panel: null });
+  const selectDoc = (id: string) => p.set({ doc: id, page: null, hl: null, hlabel: null, panel: null, rev: null });
   const setFocus = (f: Focus) => p.set({ page: f.page, hl: bboxParam(f.bbox), hlabel: f.label ?? null });
   const locate = (f: ExtractedField) => f.page && validBox(f.bbox) && setFocus({ page: f.page, bbox: f.bbox, label: humanize(f.name) });
 
@@ -664,18 +668,22 @@ export function DocumentsTab() {
         <div className="rounded-panel border border-line bg-surface/70 p-3 shadow-xs sm:p-4">
           <DocHeader doc={doc} status={status[doc.id]} />
           <div className={cn("mt-3 grid gap-4", split && "grid-cols-[minmax(0,1fr)_minmax(320px,380px)]")}>
-            <DocViewer
-              doc={doc}
-              findings={thisDocFindings}
-              page={page}
-              onPage={(n) => p.set({ page: n, hl: null, hlabel: null })}
-              focus={focus}
-              peek={peek}
-              onHover={onHover}
-              onBoxClick={onBoxClick}
-              isClickable={(b) => !!b.findingId || b.layer === "fields"}
-              className={split ? "h-[min(78vh,880px)]" : "h-[72vh]"}
-            />
+            {panel === "revisions" ? (
+              <RevisionStage doc={doc} className={split ? "h-[min(78vh,880px)]" : "h-[72vh]"} />
+            ) : (
+              <DocViewer
+                doc={doc}
+                findings={thisDocFindings}
+                page={page}
+                onPage={(n) => p.set({ page: n, hl: null, hlabel: null })}
+                focus={focus}
+                peek={peek}
+                onHover={onHover}
+                onBoxClick={onBoxClick}
+                isClickable={(b) => !!b.findingId || b.layer === "fields"}
+                className={split ? "h-[min(78vh,880px)]" : "h-[72vh]"}
+              />
+            )}
             <aside aria-label="Document details" className={cn("min-w-0", split && "h-[min(78vh,880px)] overflow-y-auto pr-1")}>
               <div className={cn("z-10 -mx-1 bg-surface/0 px-1 pb-3", split && "sticky top-0 bg-gradient-to-b from-surface via-surface to-surface/0")}>
                 <div className="overflow-x-auto">
@@ -693,6 +701,7 @@ export function DocumentsTab() {
                   {panel === "forensics" && <ForensicsPanel doc={doc} onFocus={setFocus} />}
                   {panel === "verification" && <VerificationPanel doc={doc} />}
                   {panel === "rows" && <RowsPanel rows={rows} onPeek={setPeek} onFocus={setFocus} />}
+                  {panel === "revisions" && <RevisionPanel doc={doc} />}
                   {panel === "model" && (
                     <ModelPanel
                       doc={doc}
