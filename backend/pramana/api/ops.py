@@ -69,11 +69,15 @@ def retention_plan(user: User = Depends(require_roles("admin")), db: Session = D
 
 class PurgeBody(BaseModel):
     dry_run: bool = True
+    reason: str | None = None
 
 
 @router.post("/admin/retention/purge")
 def retention_purge(body: PurgeBody, user: User = Depends(require_roles("admin")), db: Session = Depends(get_db)):
-    return retention.purge(db, user.username, user.role, dry_run=body.dry_run)
+    reason = (body.reason or "").strip()
+    if not body.dry_run and len(reason) < 10:
+        raise HTTPException(422, "A purge deletes stored files; give a reason of at least 10 characters")
+    return retention.purge(db, user.username, user.role, dry_run=body.dry_run, reason=reason or None)
 
 
 @router.get("/admin/platform")

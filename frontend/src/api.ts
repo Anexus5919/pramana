@@ -192,7 +192,8 @@ export const api = {
   // Platform
   platformStatus: () => get<PlatformStatus>("/admin/platform"),
   retentionPlan: () => get<RetentionPlan>("/admin/retention"),
-  retentionPurge: (dryRun: boolean) => post<RetentionPlan>("/admin/retention/purge", { dry_run: dryRun }),
+  retentionPurge: (dryRun: boolean, reason?: string) =>
+    post<RetentionPlan>("/admin/retention/purge", { dry_run: dryRun, reason }),
 
   // Simulated issuers
   simIssuers: () => get<SimIssuer[]>("/sim/issuers"),

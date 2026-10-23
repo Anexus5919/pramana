@@ -246,7 +246,7 @@ function Retention({ s, admin }: { s: PlatformStatus; admin: boolean }) {
   const [touched, setTouched] = useState(false);
   const plan = useQuery({ queryKey: qk.retention, queryFn: api.retentionPlan, enabled: admin });
   const purge = useMutation({
-    mutationFn: () => api.retentionPurge(false),
+    mutationFn: () => api.retentionPurge(false, reason.trim()),
     onSuccess: (r: RetentionPlan) => {
       setConfirm(false);
       setReason("");

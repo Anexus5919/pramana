@@ -74,7 +74,7 @@ def public(p: dict[str, Any]) -> dict[str, Any]:
 
 
 def purge(db: Session, actor: str, actor_role: str, *, dry_run: bool = True,
-          now: datetime | None = None) -> dict[str, Any]:
+          now: datetime | None = None, reason: str | None = None) -> dict[str, Any]:
     p = plan(db, now)
     if dry_run:
         return {**public(p), "dry_run": True}
@@ -85,7 +85,8 @@ def purge(db: Session, actor: str, actor_role: str, *, dry_run: bool = True,
         delete_document(d["storage_name"])
         path.with_name(d["storage_name"] + ".purged").write_text(json.dumps(
             {"document_id": d["document_id"], "sha256": d["sha256"], "purged_at": utcnow().isoformat()}))
-        for c in s.cache_dir.glob(f"{d['document_id']}_p*.png"):
+        # Every cached render of the document: page previews, revision renders and photo previews
+        for c in s.cache_dir.glob(f"{d['document_id']}_*"):
             c.unlink(missing_ok=True)
             keyring.key_path(c).unlink(missing_ok=True)
         audit.record(db, actor=actor, actor_role=actor_role, action="retention.document_purged",
@@ -103,6 +104,6 @@ def purge(db: Session, actor: str, actor_role: str, *, dry_run: bool = True,
     summary = {"documents_purged": len(purged), "previews_deleted": len(p["_previews"]),
                "run_events_deleted": events, "sessions_deleted": sessions, "policy": policy()}
     audit.record(db, actor=actor, actor_role=actor_role, action="retention.purge_completed",
-                 object_type="retention", details=summary)
+                 object_type="retention", details={**summary, "reason": reason})
     db.commit()
     return {**public(p), "dry_run": False, **summary, "purged_document_ids": purged}
