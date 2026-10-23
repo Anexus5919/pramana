@@ -12,6 +12,7 @@ import { fadeUp, stagger } from "../../ui/motion";
 import { Skeleton } from "../../ui/Skeleton";
 import { EmptyState, ErrorState } from "../../ui/States";
 import { useToast } from "../../ui/Toast";
+import { IssuerActions } from "./IssuerActions";
 import { IssuerCard, isOnline, issuerName } from "./IssuerCard";
 import { LookupPanel } from "./LookupPanel";
 
@@ -106,24 +107,27 @@ export default function IssuerSimulatorPage() {
       ) : !issuers.length ? (
         <EmptyState title="No simulated sources configured" description="The demo registry file has no issuers." />
       ) : (
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <motion.div variants={stagger(0.06)} initial="hidden" animate="show" className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-            {issuers.map((i) => (
-              <motion.div key={i.code} variants={fadeUp} className="min-w-0">
-                <IssuerCard
-                  issuer={i}
-                  selected={i.code === code}
-                  busy={busy === i.code}
-                  canToggle={admin}
-                  toggling={toggle.isPending && toggle.variables?.c === i.code}
-                  onSelect={() => setSelected(i.code)}
-                  onToggle={(available) => toggle.mutate({ c: i.code, available })}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-          <LookupPanel issuers={issuers} code={code} onCode={setSelected} onBusy={setBusy} className="min-w-0 xl:sticky xl:top-24" />
-        </div>
+        <>
+          <IssuerActions issuers={issuers} />
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <motion.div variants={stagger(0.06)} initial="hidden" animate="show" className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              {issuers.map((i) => (
+                <motion.div key={i.code} variants={fadeUp} className="min-w-0">
+                  <IssuerCard
+                    issuer={i}
+                    selected={i.code === code}
+                    busy={busy === i.code}
+                    canToggle={admin}
+                    toggling={toggle.isPending && toggle.variables?.c === i.code}
+                    onSelect={() => setSelected(i.code)}
+                    onToggle={(available) => toggle.mutate({ c: i.code, available })}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+            <LookupPanel issuers={issuers} code={code} onCode={setSelected} onBusy={setBusy} className="min-w-0 xl:sticky xl:top-24" />
+          </div>
+        </>
       )}
     </div>
   );
