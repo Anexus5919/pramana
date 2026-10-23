@@ -55,7 +55,8 @@ export function TimeMachineSection({ a }: { a: Analysis }) {
     >
       <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <RevisionStage doc={a.document} source={source} className="h-[680px]" />
-        <div className="min-w-0">
+        {/* RevisionPanel pads its own rows, so it sits in an unpadded frame like the workspace's */}
+        <div className="min-w-0 overflow-hidden rounded-card border border-line">
           <RevisionPanel doc={a.document} source={source} />
         </div>
       </div>

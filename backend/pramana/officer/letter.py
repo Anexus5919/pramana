@@ -230,13 +230,13 @@ def render_pdf(lt: DeficiencyLetter, app: Application, officer: User | None, *, 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm, topMargin=18 * mm,
                             bottomMargin=24 * mm, title=lt.subject, author="Pramana prototype",
-                            subject="Deficiency notice (synthetic demo data)", creator="Pramana prototype")
+                            subject="Deficiency letter (synthetic demo data)", creator="Pramana prototype")
     inst = app.institution
     issued = finalised_on.date() if finalised_on else date.today()
     story: list[Any] = [
         _p("DEFICIENCY NOTICE" if final else "DEFICIENCY NOTICE (DRAFT, NOT SENT)", st["eyebrow"]),
         Spacer(1, 3),
-        _p("Deficiency notice", st["title"]),
+        _p("Deficiency letter", st["title"]),
         Spacer(1, 10),
     ]
     meta = [
