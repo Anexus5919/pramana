@@ -1,0 +1,117 @@
+/* Leaflet inside the Campus tab: token colours, dark tiles, and no z-index leaks past the map */
+
+.pr-map {
+  isolation: isolate;
+  background: var(--surface-2);
+  font-family: inherit;
+}
+
+.pr-map .leaflet-container {
+  background: var(--surface-2);
+  font: inherit;
+}
+
+.dark .pr-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.55);
+}
+
+.pr-map .leaflet-control-attribution {
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  color: var(--ink-3);
+  font-size: 11px;
+  border-top-left-radius: 6px;
+}
+
+.pr-map .leaflet-control-attribution a {
+  color: var(--brand-600);
+}
+
+.pr-map .leaflet-bar a {
+  background: var(--surface);
+  color: var(--ink-2);
+  border-color: var(--line);
+}
+
+.pr-map .leaflet-bar a:hover,
+.pr-map .leaflet-bar a:focus-visible {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.pr-map .leaflet-popup-content-wrapper,
+.pr-map .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 10px 30px -12px rgb(60 20 110 / 0.28);
+}
+
+.pr-map .leaflet-popup-content {
+  margin: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.pr-map .leaflet-container a.leaflet-popup-close-button {
+  color: var(--ink-3);
+}
+
+.pr-ring {
+  stroke: var(--brand-500);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  fill: var(--brand-400);
+  fill-opacity: 0.06;
+}
+
+.pr-ring-tol {
+  stroke: var(--manual-dot);
+  stroke-dasharray: 3 4;
+  fill-opacity: 0;
+}
+
+.pr-line {
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  fill: none;
+}
+
+.pr-line-outside {
+  stroke: var(--mismatch-dot);
+}
+
+.pr-map .pr-dist.leaflet-tooltip {
+  background: var(--surface);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px -2px rgb(28 22 34 / 0.12);
+}
+
+.pr-map .pr-dist.leaflet-tooltip::before {
+  display: none;
+}
+
+.pr-map .pr-ring-label {
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-600);
+  text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface);
+}
+
+.pr-map .leaflet-marker-icon:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-map .leaflet-fade-anim .leaflet-popup,
+  .pr-map .leaflet-zoom-anim .leaflet-zoom-animated {
+    transition: none !important;
+  }
+}

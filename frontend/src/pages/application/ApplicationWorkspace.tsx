@@ -5,12 +5,13 @@ import {
   History,
   LayoutGrid,
   ListChecks,
+  MapPinned,
   Network,
   ScrollText,
   ShieldCheck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ApiError, api } from "../../api";
 import { useAuth } from "../../auth/session";
@@ -45,11 +46,14 @@ const ICONS: Record<WorkspaceTab, ReactNode> = {
   checklist: <ClipboardCheck />,
   verification: <ShieldCheck />,
   relationships: <Network />,
+  campus: <MapPinned />,
   runs: <History />,
   audit: <ScrollText />,
 };
 
 const OPEN = new Set(["open", "acknowledged", "evidence_requested"]);
+// Leaflet is only needed on the Campus tab, so it loads with it
+const CampusTab = lazy(() => import("./tabs/CampusTab").then((m) => ({ default: m.CampusTab })));
 const TABS_ID = "ws";
 
 function LoadingHeader({ appId, name }: { appId: string; name?: string }) {
@@ -132,6 +136,10 @@ export default function ApplicationWorkspace() {
     { id: "checklist", label: WORKSPACE_TAB_LABEL.checklist, icon: ICONS.checklist, count: run?.checklist.length },
     { id: "verification", label: WORKSPACE_TAB_LABEL.verification, icon: ICONS.verification, count: verQ.data ? currentAttempts.length : undefined },
     { id: "relationships", label: WORKSPACE_TAB_LABEL.relationships, icon: ICONS.relationships, count: peers || undefined },
+    // Officer-only photo evidence; the workspace route is already limited to officials
+    ...(is("officer", "verifier", "admin")
+      ? [{ id: "campus" as const, label: WORKSPACE_TAB_LABEL.campus ?? "Campus", icon: ICONS.campus, count: app.documents.filter((d) => !d.superseded && d.mime.startsWith("image/")).length || undefined }]
+      : []),
     { id: "runs", label: WORKSPACE_TAB_LABEL.runs, icon: ICONS.runs },
     { id: "audit", label: WORKSPACE_TAB_LABEL.audit, icon: ICONS.audit },
   ];
@@ -181,6 +189,11 @@ export default function ApplicationWorkspace() {
               {tab === "checklist" && <ChecklistTab />}
               {tab === "verification" && <VerificationTab query={verQ} />}
               {tab === "relationships" && <RelationshipsTab />}
+              {tab === "campus" && is("officer", "verifier", "admin") && (
+                <Suspense fallback={<Skeleton className="h-[440px]" rounded="lg" />}>
+                  <CampusTab />
+                </Suspense>
+              )}
               {tab === "runs" && <RunsTab />}
               {tab === "audit" && <AuditTab />}
             </TabPanel>

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState, type RefObject } from "react";
 import { api, qk } from "../../api";
 import type { BBox, DocumentDetail, Evidence, Finding, ReviewAction } from "../../types";
 
-export const TABS = ["overview", "documents", "findings", "checklist", "verification", "relationships", "runs", "audit"] as const;
+export const TABS = ["overview", "documents", "findings", "checklist", "verification", "relationships", "campus", "runs", "audit"] as const;
 export type WorkspaceTab = (typeof TABS)[number];
 
 export function isTab(s: string | undefined): s is WorkspaceTab {
