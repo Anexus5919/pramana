@@ -218,9 +218,9 @@ export function FindingDetail({ finding: f, canReview, onRectify }: { finding: F
             {f.code}
           </Tag>
         </div>
-        <motion.h3 id={`fd-${f.id}`} layoutId={`fnd-${f.id}`} layout="position" transition={spring.snappy} className="mt-3 font-display text-xl font-semibold tracking-title text-ink text-balance">
+        <h3 id={`fd-${f.id}`} className="mt-3 font-display text-xl font-semibold tracking-title text-ink text-balance">
           {f.title}
-        </motion.h3>
+        </h3>
         <p className="mt-1 text-xs text-ink-3">{categoryMeta[f.category]?.label ?? humanize(f.category)}, outcome {humanize(f.outcome).toLowerCase()}</p>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-2 text-pretty">{f.message}</p>
       </header>

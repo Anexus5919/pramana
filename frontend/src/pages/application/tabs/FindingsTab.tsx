@@ -77,15 +77,7 @@ function Row({
         <SeverityMeter severity={f.severity} />
       </span>
       <span className="min-w-0">
-        {selected ? (
-          <span key="plain" className="block text-sm leading-snug font-semibold text-brand-ink">
-            {f.title}
-          </span>
-        ) : (
-          <motion.span key="fly" layoutId={`fnd-${f.id}`} layout="position" transition={spring.snappy} className="block text-sm leading-snug font-medium text-ink group-hover/row:text-brand-ink">
-            {f.title}
-          </motion.span>
-        )}
+        <span className={cn("block text-sm leading-snug transition-colors duration-200", selected ? "font-semibold text-brand-ink" : "font-medium text-ink group-hover/row:text-brand-ink")}>{f.title}</span>
         <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
           <EvidenceClassChip cls={f.evidence_class} showName={false} />
           <ReviewPill status={f.review_status} />
@@ -241,7 +233,7 @@ export function FindingsTab({ query, onRectify }: { query: UseQueryResult<Findin
       </div>
       {split && (
         <aside aria-label="Finding detail" className="sticky top-[128px] max-h-[calc(100dvh-148px)] min-w-0 overflow-y-auto rounded-panel border border-line bg-surface p-5 shadow-sm">
-          <AnimatePresence mode="popLayout" initial={false}>
+          <AnimatePresence mode="wait" initial={false}>
             {current ? (
               <motion.div key={current.id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, transition: { duration: dur.micro } }} transition={{ duration: dur.panel, ease: ease.out }}>
                 <FindingDetail finding={current} canReview={canReview} onRectify={onRectify} />
