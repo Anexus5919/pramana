@@ -120,7 +120,8 @@ function Lane({ lane, person, axis }: { lane: FacultyLane; person: FacultyPerson
         </div>
       </div>
 
-      <div className="relative h-7" role="img" aria-label={describe}>
+      <div className="relative h-7">
+        <span className="sr-only">{describe}</span>
         <div aria-hidden className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-line" />
         {lane.source === "registry" ? (
           <div
