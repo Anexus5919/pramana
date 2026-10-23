@@ -39,7 +39,8 @@ class Settings(BaseSettings):
     groq_model: str = "openai/gpt-oss-20b"
     gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
                                                                           "GEMINI_API_KEY", "GOOGLE_API_KEY"))
-    gemini_model: str = "gemini-2.5-flash"
+    # gemini-2.5-flash is closed to new API keys; the alias tracks Google's current Flash release
+    gemini_model: str = "gemini-flash-latest"
 
     @property
     def db_url(self) -> str:
