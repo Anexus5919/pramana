@@ -1,5 +1,6 @@
 import { QrCode } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import type { ReactNode } from "react";
 import { cn } from "../../ui/cn";
 import { dur, ease } from "../../ui/motion";
 import { toneClass, type Tone } from "../../ui/tone";
@@ -9,7 +10,23 @@ import { toneClass, type Tone } from "../../ui/tone";
  * (real work in progress); when the answer arrives the brackets take the result's colour and close in,
  * tying the verdict to the picture it came from.
  */
-export function Viewfinder({ preview, busy, tone, compact = false }: { preview: string | null; busy: boolean; tone: Tone | null; compact?: boolean }) {
+export function Viewfinder({
+  preview,
+  busy,
+  tone,
+  compact = false,
+  small = false,
+  placeholder,
+}: {
+  preview: string | null;
+  busy: boolean;
+  tone: Tone | null;
+  compact?: boolean;
+  /** A fixed small frame, for checks that have no photo to show */
+  small?: boolean;
+  /** Shown instead of the QR glyph when there is no photo, e.g. for a check opened from a scan link */
+  placeholder?: ReactNode;
+}) {
   const reduce = useReducedMotion();
   const color = tone ? toneClass[tone].color : "var(--brand-500)";
   const corners: [string, number, number][] = [
@@ -19,7 +36,7 @@ export function Viewfinder({ preview, busy, tone, compact = false }: { preview: 
     ["right-0 bottom-0 border-r-[3px] border-b-[3px] rounded-br-[14px]", -1, -1],
   ];
   return (
-    <div className={cn("relative mx-auto aspect-square w-full", compact ? "max-w-[180px] lg:max-w-[340px]" : "max-w-[300px] sm:max-w-[340px]")}>
+    <div className={cn("relative mx-auto aspect-square w-full", small ? "max-w-[200px]" : compact ? "max-w-[180px] lg:max-w-[340px]" : "max-w-[300px] sm:max-w-[340px]")}>
       <div className="absolute inset-3 overflow-hidden rounded-[12px] bg-surface-2">
         {preview ? (
           <motion.img
@@ -33,7 +50,7 @@ export function Viewfinder({ preview, busy, tone, compact = false }: { preview: 
           />
         ) : (
           <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_40%,var(--brand-soft),transparent_70%)]">
-            <QrCode aria-hidden className="size-24 text-brand-400" strokeWidth={1.25} />
+            {placeholder ?? <QrCode aria-hidden className="size-24 text-brand-400" strokeWidth={1.25} />}
           </div>
         )}
         {busy && preview && (
