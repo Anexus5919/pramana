@@ -242,7 +242,7 @@ export function RunPanel({ appId, v }: { appId: string; v: ReturnType<typeof use
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto", transition: { duration: dur.panel, ease: ease.out } }}
           exit={{ opacity: 0, height: 0, transition: { duration: dur.ui, ease: ease.inOut } }}
-          className="overflow-hidden"
+          className="overflow-hidden [overflow-anchor:none]"
         >
           <div className="mb-5 rounded-card border border-brand-200/70 bg-surface p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-start justify-between gap-4">

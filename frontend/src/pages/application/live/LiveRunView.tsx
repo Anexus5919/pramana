@@ -65,7 +65,7 @@ function docDetail(d: LiveDoc, active = false): string {
   if (d.cached) return "Read in an earlier run";
   if (d.status === "failed") return "Could not be read safely";
   const next = DOC_STEPS.find((k) => !d.steps[k]);
-  if (active && next && !d.status) return `Now: ${STEP_LABEL[next].toLowerCase()}`;
+  if (active && next && !d.status) return `Now: ${STEP_LABEL[next]}`;
   const parts: string[] = [];
   const read = d.steps.read?.info;
   if (read) {
