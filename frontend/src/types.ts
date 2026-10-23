@@ -182,6 +182,22 @@ export interface GeoEvidence {
   distance_km: number;
   document_id?: string;
 }
+/** The same embedded image (a seal) on this document and on another application's document. */
+export interface ImageMatchEvidence {
+  kind: "image_match";
+  document_id: string;
+  page: number;
+  bbox: BBox;
+  issuer: string;
+  peer_document_id: string;
+  peer_application_id: string;
+  peer_institution: string;
+  peer_page: number;
+  peer_bbox: BBox;
+  peer_issuer: string;
+  distance: number;
+  exact: boolean;
+}
 export interface UnknownEvidence {
   kind: string;
   [key: string]: unknown;
@@ -195,7 +211,8 @@ export type Evidence =
   | DeclaredEvidence
   | VerificationEvidence
   | RevisionDiffEvidence
-  | GeoEvidence;
+  | GeoEvidence
+  | ImageMatchEvidence;
 
 export interface FindingTrace {
   inputs?: FactInput[];
@@ -558,6 +575,19 @@ export interface DocumentDetail extends DocumentSummary {
   rows: TableRow[] | null;
   fingerprints?: Record<string, unknown>;
   verifications?: VerificationAttempt[];
+  /** Pages whose Devanagari text went through OCR, and how */
+  ocr_scripts?: OcrScriptNote[];
+}
+
+export interface OcrScriptNote {
+  page: number;
+  script: "devanagari" | "latin";
+  recogniser: string;
+  reason?: string;
+  read?: boolean;
+  note?: string;
+  model?: string;
+  lines_devanagari?: number;
 }
 
 export interface AuditEvent {

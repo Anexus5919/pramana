@@ -82,6 +82,10 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         step("fingerprints")
 
         signals, facts = sandbox.forensics(data, doc.mime, issue_date, campus)
+        if doc.mime == "application/pdf":
+            doc.fingerprints = {**doc.fingerprints, "images": sandbox.seal_images(data)}
+            signals += sandbox.font_check(data, [{"name": e.name, "raw": e.raw, "page": e.page, "bbox": e.bbox,
+                                                  "method": e.method} for e in extracted], facts)
         analysis["forensic_signals"] = [asdict(s) for s in signals]
         analysis["forensic_facts"] = facts
         if doc.mime != "application/pdf":
@@ -99,6 +103,8 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
         analysis["qr"] = []
     step("qr", tokens=len(analysis["qr"]))
     analysis["unreadable_pages"] = [p.page_no for p in pages if p.source == "unreadable"]
+    analysis["ocr_scripts"] = [{"page": p.page_no, **p.ocr} for p in pages
+                               if (p.ocr or {}).get("script") == "devanagari"]
     analysis["instruction_lines"] = injection_lines(pages)
     doc.analysis = analysis
     doc.processing_status = "processed"

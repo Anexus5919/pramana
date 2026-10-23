@@ -64,7 +64,8 @@ def op_pages(data: bytes, mime: str):
 
     pages = extract_pdf(data) if mime == "application/pdf" else extract_image(data)
     return [{"page_no": p.page_no, "width": p.width, "height": p.height, "source": p.source, "mean_conf": p.mean_conf,
-             "words": [[w.text, w.x0, w.top, w.x1, w.bottom, w.font, w.size, w.conf] for w in p.words]}
+             "words": [[w.text, w.x0, w.top, w.x1, w.bottom, w.font, w.size, w.conf] for w in p.words],
+             "ocr": p.ocr}
             for p in pages], None
 
 
@@ -109,6 +110,21 @@ def op_forensics(data: bytes, mime: str, issue_date: str | None, campus: list[fl
 
         signals, facts = img_forensics.analyse(data, tuple(campus) if campus else None)
     return {"signals": [asdict(s) for s in signals], "facts": facts}, None
+
+
+def op_seal_images(data: bytes):
+    from .forensics import seals
+
+    return seals.image_fingerprints(data), None
+
+
+def op_font_check(data: bytes, fields: list[dict[str, Any]], facts: dict[str, Any] | None):
+    from types import SimpleNamespace
+
+    from .forensics import fonts
+
+    signals = fonts.font_mismatches(data, [SimpleNamespace(**f) for f in fields], facts)
+    return [asdict(s) for s in signals], None
 
 
 def op_render(data: bytes, mime: str, page_index: int, dpi: int):
@@ -165,6 +181,8 @@ OPS = {
     "qr": op_qr,
     "fingerprints": op_fingerprints,
     "forensics": op_forensics,
+    "seal_images": op_seal_images,
+    "font_check": op_font_check,
     "render": op_render,
     "intake": op_intake,
     "selftest_sleep": op_selftest_sleep,

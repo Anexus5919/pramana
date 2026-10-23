@@ -83,14 +83,14 @@ document_types:
   occupancy_certificate:
     label: Occupancy / Completion Certificate
     description: Valid Occupancy/Completion Certificate, Building License or Form D from the competent authority.
-    classify: {keywords: ["occupancy certificate", "completion certificate", "building permission", "built-up area", "municipal"], min_score: 2}
+    classify: {keywords: ["occupancy certificate", "completion certificate", "building permission", "built-up area", "municipal", "अधिभोग प्रमाणपत्र", "महानगरपालिका", "भवन अनुज्ञा"], min_score: 2}
     fields:
-      - {name: certificate_no, patterns: ['Certificate No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})']}
-      - {name: issue_date, type: date, patterns: ['Date of Issue\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
-      - {name: institution_name, patterns: ['Name of Institution\s*:\s*(?P<v>.+)$']}
-      - {name: built_up_area_sqm, type: number, patterns: ['Total Built-up Area\s*:\s*(?P<v>[\d,]+(?:\.\d+)?)\s*sq']}
-      - {name: certificate_type, patterns: ['Certificate Type\s*:\s*(?P<v>Full|Provisional|Partial)']}
-      - {name: issuing_authority, patterns: ['Issuing Authority\s*:\s*(?P<v>.+)$']}
+      - {name: certificate_no, patterns: ['Certificate No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})', 'प्रमाण\S*\s*(?:संख्या|क्रमांक|सं\.)\s*[:ः]?\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})']}
+      - {name: issue_date, type: date, patterns: ['Date of Issue\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})', '(?:जारी\s*करने\s*की\s*(?:तिथि|तारीख)|जारी\s*(?:तिथि|दिनांक)|दिनांक)\s*[:ः]?\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
+      - {name: institution_name, patterns: ['Name of Institution\s*:\s*(?P<v>.+)$', 'संस्था\s*का\s*नाम\s*[:ः]?\s*(?P<v>.+)$']}
+      - {name: built_up_area_sqm, type: number, patterns: ['Total Built-up Area\s*:\s*(?P<v>[\d,]+(?:\.\d+)?)\s*sq', 'निर्मित\s*क्ष\S*\s*[:ः]?\s*(?P<v>[\d,]+(?:\.\d+)?)\s*(?:sq|वर्ग)']}
+      - {name: certificate_type, patterns: ['Certificate Type\s*:\s*(?P<v>Full|Provisional|Partial)', 'प्रमाण\S*\s*का\s*प्रकार\s*[:ः]?\s*(?:\S+\s*)?\(?(?P<v>Full|Provisional|Partial)']}
+      - {name: issuing_authority, patterns: ['Issuing Authority\s*:\s*(?P<v>.+)$', 'जारीक\S*\s*प्राधिकारी\s*[:ः]?\s*(?P<v>.+)$']}
     verification:
       issuer: MUNICIPAL-OC
       ref_field: certificate_no
@@ -99,10 +99,10 @@ document_types:
   structural_stability:
     label: Structural Stability Certificate
     description: Required when the building is more than thirty years from its Completion Certificate; valid five years.
-    classify: {keywords: ["structural stability", "structural engineer", "fit for human habitation"], min_score: 2}
+    classify: {keywords: ["structural stability", "structural engineer", "fit for human habitation", "संरचनात्मक स्थिरता"], min_score: 2}
     fields:
-      - {name: certificate_no, patterns: ['Certificate No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{4,})']}
-      - {name: issue_date, type: date, patterns: ['Date of Issue\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
+      - {name: certificate_no, patterns: ['Certificate No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{4,})', 'प्रमाण\S*\s*(?:संख्या|क्रमांक|सं\.)\s*[:ः]?\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})']}
+      - {name: issue_date, type: date, patterns: ['Date of Issue\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})', '(?:जारी\s*करने\s*की\s*(?:तिथि|तारीख)|जारी\s*(?:तिथि|दिनांक)|दिनांक)\s*[:ः]?\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
       - {name: engineer_registration_no, patterns: ['Registration No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{4,})']}
       - {name: institution_name, patterns: ['Name of Institution\s*:\s*(?P<v>.+)$']}
     verification:
@@ -112,13 +112,13 @@ document_types:
   fire_noc:
     label: Fire Safety Certificate
     description: Valid Fire and Life Safety Certificate from the State Fire Department, obtained before applying.
-    classify: {keywords: ["fire", "fire safety", "no objection certificate", "fire and emergency", "fire officer"], min_score: 3}
+    classify: {keywords: ["fire", "fire safety", "no objection certificate", "fire and emergency", "fire officer", "अग्निशमन", "अग्नि सुरक्षा", "अनापत्ति प्रमाणपत्र"], min_score: 3}
     fields:
-      - {name: noc_number, patterns: ['NOC No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})']}
-      - {name: issue_date, type: date, patterns: ['Date of Issue\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
-      - {name: valid_until, type: date, patterns: ['Valid\s*(?:Up\s*To|Upto|Till|Until)\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
-      - {name: institution_name, patterns: ['Issued to\s*:\s*(?P<v>.+)$']}
-      - {name: issuing_authority, patterns: ['Issuing Authority\s*:\s*(?P<v>.+)$']}
+      - {name: noc_number, patterns: ['NOC No\.?\s*:\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})', '(?:अनापत्ति\s*)?प्रमाण\S*\s*(?:संख्या|क्रमांक)\s*[:ः]?\s*(?P<v>[A-Z][A-Z0-9/\-]{5,})']}
+      - {name: issue_date, type: date, patterns: ['Date of Issue\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})', '(?:जारी\s*करने\s*की\s*(?:तिथि|तारीख)|जारी\s*(?:तिथि|दिनांक)|दिनांक)\s*[:ः]?\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
+      - {name: valid_until, type: date, patterns: ['Valid\s*(?:Up\s*To|Upto|Till|Until)\s*:\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})', '(?:वैध\s*(?:तिथि|दिनांक)|वैधता\s*(?:तिथि|तक)|तक\s*वैध)\s*[:ः]?\s*(?P<v>\d{1,2}[-/.]\d{1,2}[-/.]\d{4})']}
+      - {name: institution_name, patterns: ['Issued to\s*:\s*(?P<v>.+)$', 'संस्था\s*का\s*नाम\s*[:ः]?\s*(?P<v>.+)$']}
+      - {name: issuing_authority, patterns: ['Issuing Authority\s*:\s*(?P<v>.+)$', 'जारीक\S*\s*प्राधिकारी\s*[:ः]?\s*(?P<v>.+)$']}
     verification:
       issuer: FIRE-SERVICES
       ref_field: noc_number

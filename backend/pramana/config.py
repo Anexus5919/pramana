@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     frontend_dist: Path = REPO_DIR / "frontend" / "dist"
     rulesets_dir: Path = BACKEND_DIR / "rulesets"
     trust_dir: Path = BACKEND_DIR / "trust"
+    # Model files (the Devanagari recogniser, the photo detector) live in models_dir below; the recogniser is
+    # fetched on first use against a pinned SHA-256 unless this is off
+    fetch_models: bool = True
     # Fetch CRL/OCSP for India PKI signatures; off by default so demos work offline
     pki_fetch_revocation: bool = False
     # Optional grounded LLM extraction for fields the patterns miss; the pipeline never requires it.
@@ -41,8 +44,9 @@ class Settings(BaseSettings):
                                                                           "GEMINI_API_KEY", "GOOGLE_API_KEY"))
     # gemini-2.5-flash is closed to new API keys; the alias tracks Google's current Flash release
     gemini_model: str = "gemini-flash-latest"
-    # Photo evidence: detector weights fetched by scripts/fetch_photo_assets.py (pinned SHA-256), and the map
-    # tile URL for the Campus tab; empty disables tiles and the tab shows a plain plot instead
+    # Model weights outside data_dir, so a fresh data directory does not refetch them: the photo detector
+    # (scripts/fetch_photo_assets.py) and the Devanagari recogniser, both pinned by SHA-256. The map tile URL
+    # is for the Campus tab; empty disables tiles and the tab shows a plain plot instead
     models_dir: Path = BACKEND_DIR / "models"
     map_tile_url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     # Re-verification watch: how often issuer-verified certificates are re-queried after a scrutiny outcome

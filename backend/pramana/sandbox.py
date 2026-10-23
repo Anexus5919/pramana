@@ -394,7 +394,7 @@ def read_pages(data: bytes, mime: str):
     pages = []
     for p in result:
         pt = PageText(p["page_no"], p["width"], p["height"], p["source"], [Word(*w) for w in p["words"]],
-                      p["mean_conf"])
+                      p["mean_conf"], ocr=p.get("ocr"))
         pt.lines = group_lines(pt.words)
         pages.append(pt)
     return pages
@@ -414,6 +414,16 @@ def forensics(data: bytes, mime: str, issue_date: datetime | None, campus: tuple
     res = call("forensics", mime, issue_date.isoformat() if issue_date else None,
                list(campus) if campus else None, data=data)[0]
     return [Signal(**s) for s in res["signals"]], res["facts"]
+
+
+def seal_images(data: bytes) -> list[dict[str, Any]]:
+    return call("seal_images", data=data)[0]
+
+
+def font_check(data: bytes, fields: list[dict[str, Any]], facts: dict[str, Any] | None):
+    from .forensics.pdf_struct import Signal
+
+    return [Signal(**s) for s in call("font_check", fields, facts, data=data)[0]]
 
 
 def render_png(data: bytes, mime: str, page_index: int, dpi: int) -> bytes:

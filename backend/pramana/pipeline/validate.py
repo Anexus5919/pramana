@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, object_session
 from .. import audit
 from ..config import get_settings
 from ..consistency.cross import cross_checks, relationship_graph
+from ..consistency.seal_reuse import seal_reuse
 from ..crypto import digest, load_document, sha256_hex
 from ..history.yoy import findings as yoy_findings
 from ..models import (
@@ -376,6 +377,15 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     "message": f"No text layer and OCR produced nothing on pages {unread}. Values on these pages "
                                "were not checked.", "evidence": [{"kind": "document", "document_id": d.id}],
                     "document_id": d.id})
+            for sc in (d.analysis or {}).get("ocr_scripts") or []:
+                if sc.get("read") is False:
+                    findings.append({
+                        "code": "DOC-SCRIPT-NOT-READ", "fingerprint": _fp("script", d.declared_type, sc["page"]),
+                        "category": "completeness", "evidence_class": "structural", "severity": "medium",
+                        "outcome": "manual_review", "title": "Hindi text was not read",
+                        "message": f"Page {sc['page']} carries Devanagari text ({sc.get('reason')}). "
+                                   f"{sc.get('note')} Values printed only in Hindi were not checked.",
+                        "evidence": [{"kind": "document", "document_id": d.id}], "document_id": d.id})
             diffs = ((d.analysis or {}).get("forensic_facts") or {}).get("revision_diffs") or []
             for f in d.fields:
                 hit = next((x for x in diffs if f.bbox and x.get("bbox") and x["page"] == f.page
@@ -476,8 +486,9 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                                                                          "document_id": d.id}]
                 findings.append({
                     "code": s["code"], "fingerprint": _fp("fx", d.declared_type, s["code"]),
-                    "category": "forensic", "evidence_class": "structural" if s["code"].startswith("FX-PDF-") and
-                    s["severity"] in ("high", "medium") else "heuristic",
+                    "category": "forensic", "evidence_class": s.get("evidence_class") or (
+                        "structural" if s["code"].startswith("FX-PDF-") and s["severity"] in ("high", "medium")
+                        else "heuristic"),
                     "severity": s["severity"], "outcome": "indicator", "title": s["title"], "message": s["detail"],
                     "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id})
         # Content Credentials and room indicators for photos
@@ -487,7 +498,8 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         t0 = time.perf_counter()
         ref_fields = {t: (s.get("verification") or {}).get("ref_field") for t, s in rs.doc_types.items()
                       if (s.get("verification") or {}).get("ref_field")}
-        links = cross_checks(db, app, [d for d in docs if d.processing_status == "processed"], ref_fields)
+        processed_docs = [d for d in docs if d.processing_status == "processed"]
+        links = cross_checks(db, app, processed_docs, ref_fields) + seal_reuse(db, app, processed_docs)
         for ln in links:
             findings.append({
                 "code": ln.code, "fingerprint": _fp("xa", ln.code, ln.entity), "category": "consistency",
