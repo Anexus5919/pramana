@@ -184,3 +184,127 @@ def test_bilingual_certificate_is_read_with_the_devanagari_recogniser():
     assert got["issue_date"].value.isoformat() == "1991-02-20"
     assert got["institution_name"].value == inst["name"]
     assert all(got[k].bbox and got[k].page == 1 for k in ("certificate_no", "issue_date", "institution_name"))
+
+
+# ---- public scan
+
+
+def _qr_photo(token: str) -> bytes:
+    """A QR as a phone might see it: off centre on a larger, slightly grey, slightly rotated page."""
+    import segno
+    from PIL import Image, ImageFilter
+
+    q = io.BytesIO()
+    segno.make(token, error="l", micro=False).save(q, kind="png", scale=7, border=4)
+    code = Image.open(io.BytesIO(q.getvalue())).convert("RGB")
+    page = Image.new("RGB", (code.width + 500, code.height + 400), (236, 232, 226))
+    page.paste(code, (300, 160))
+    page = page.rotate(3, fillcolor=(236, 232, 226)).filter(ImageFilter.GaussianBlur(0.6))
+    b = io.BytesIO()
+    page.save(b, "JPEG", quality=85)
+    return b.getvalue()
+
+
+def _scan_client(monkeypatch, keys: dict):
+    from fastapi.testclient import TestClient
+
+    from pramana import ratelimit
+    from pramana.main import app
+    from pramana.verification import signed_qr
+
+    monkeypatch.setattr(signed_qr, "issuer_keys", lambda: keys)
+    ratelimit.reset()
+    return TestClient(app)
+
+
+def _issuer_key(kid: str = "fire-sim-2025"):
+    import base64
+
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    k = Ed25519PrivateKey.generate()
+    pub = base64.b64encode(k.public_key().public_bytes(serialization.Encoding.Raw,
+                                                        serialization.PublicFormat.Raw)).decode()
+    return k, {kid: {"issuer": "State Fire and Emergency Services (SIMULATED)", "public_key": pub, "simulated": True}}
+
+
+def test_public_scan_states(monkeypatch):
+    import base64
+    import json
+
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from PIL import Image
+
+    from pramana.verification.signed_qr import sign_payload
+
+    k, keys = _issuer_key()
+    payload = {"noc": "FES/PUN/2025/04417", "issued_to": "Shree Test Institute", "issue_date": "2025-03-12",
+               "valid_until": "2030-03-11"}
+    good = sign_payload(payload, k, "fire-sim-2025")
+    old = sign_payload({**payload, "valid_until": "2025-03-11"}, k, "fire-sim-2025")
+    h, _, sig = good.split(".")
+    edited = base64.urlsafe_b64encode(json.dumps({**payload, "valid_until": "2032-03-11"}).encode()).rstrip(b"=")
+    stranger = sign_payload(payload, Ed25519PrivateKey.generate(), "fire-sim-2023")
+    blank = io.BytesIO()
+    Image.new("RGB", (400, 300), "white").save(blank, "PNG")
+    with _scan_client(monkeypatch, keys) as c:
+        def scan(data: bytes, name: str = "photo.jpg"):
+            return c.post("/api/public/scan", files={"file": (name, data, "image/jpeg")})
+
+        r = scan(_qr_photo(good)).json()
+        assert r["status"] == "verified" and r["stored"] is False
+        res = r["results"][0]
+        assert res["issuer"]["simulated"] is True and res["validity"]["state"] == "valid"
+        assert {f["key"]: f["value"] for f in res["fields"]}["valid_until"] == "2030-03-11"
+        assert res["proves"] and any("paper" in x for x in res["does_not_prove"])
+        assert scan(_qr_photo(old)).json()["status"] == "expired"
+        assert scan(_qr_photo(f"{h}.{edited.decode()}.{sig}")).json()["status"] == "bad_signature"
+        assert scan(_qr_photo(stranger)).json()["status"] == "unknown_key"
+        assert scan(_qr_photo("https://example.org/not-a-token")).json()["status"] == "not_signed"
+        assert scan(blank.getvalue(), "blank.png").json()["status"] == "no_qr"
+        assert scan(b"%PDF-1.7 not an image", "x.pdf").status_code == 415
+
+
+def test_public_scan_keeps_only_the_image_hash_and_is_rate_limited(monkeypatch):
+    import hashlib
+
+    from sqlalchemy import select
+
+    from pramana.db import SessionLocal
+    from pramana.models import AuditEvent
+    from pramana.verification.signed_qr import sign_payload
+
+    k, keys = _issuer_key()
+    photo = _qr_photo(sign_payload({"noc": "FES/PUN/2025/1", "valid_until": "2030-01-01"}, k, "fire-sim-2025"))
+    with _scan_client(monkeypatch, keys) as c:
+        assert c.post("/api/public/scan", files={"file": ("p.jpg", photo, "image/jpeg")}).status_code == 200
+        db = SessionLocal()
+        ev = db.scalars(select(AuditEvent).where(AuditEvent.action == "public.scan")
+                        .order_by(AuditEvent.seq.desc())).first()
+        assert ev.details["sha256"] == hashlib.sha256(photo).hexdigest()
+        assert set(ev.details) == {"sha256", "qr_found", "status", "kid"}
+        db.close()
+        bad = ("p.png", b"\x89PNG\r\n\x1a\nbad", "image/png")
+        codes = [c.post("/api/public/scan", files={"file": bad}).status_code for _ in range(25)]
+        assert 429 in codes
+
+
+def test_public_registry_lookup_needs_a_valid_signature(monkeypatch):
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from pramana.api import public
+    from pramana.verification.signed_qr import sign_payload
+
+    k, keys = _issuer_key()
+    tok = sign_payload({"noc": "FES/PUN/2025/04417", "issued_to": "Shree Test Institute",
+                        "valid_until": "2030-03-11"}, k, "fire-sim-2025")
+    monkeypatch.setattr(public.sim, "lookup", lambda code, ref: {
+        "simulated": True, "issuer": "Fire registry (SIMULATED)", "found": True, "mode": "sync",
+        "record": {"status": "valid", "fields": {"institution_name": "Shree Test Institute",
+                                                 "valid_until": "2030-03-11"}}})
+    with _scan_client(monkeypatch, keys) as c:
+        r = c.post("/api/public/scan/registry", json={"token": tok}).json()
+        assert r["simulated"] is True and r["found"] is True and all(x["match"] for x in r["compare"])
+        bad = sign_payload({"noc": "X"}, Ed25519PrivateKey.generate(), "fire-sim-2025")
+        assert c.post("/api/public/scan/registry", json={"token": bad}).status_code == 422

@@ -639,6 +639,29 @@ def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: flo
     return out.getvalue()
 
 
+def scan_samples(samples: list[tuple[str, str, bytes, str]]) -> None:
+    """Printable certificates for the public scan page: each page carries a banner saying what to expect."""
+    import pikepdf
+
+    d_ = OUT / "scan"
+    d_.mkdir(exist_ok=True)
+    out = pikepdf.new()
+    for i, (slug, banner, pdf, token) in enumerate(samples, start=1):
+        segno.make(token, error="l", micro=False).save(d_ / f"{i}_{slug}.png", scale=8, border=4)
+        b = io.BytesIO()
+        c = canvas.Canvas(b, pagesize=A4)
+        c.setFillColor(HexColor("#fdf4d6"))
+        c.rect(40, H - 46, W - 80, 16, fill=1, stroke=0)
+        c.setFillColor(HexColor("#8a5a00"))
+        c.setFont("Helvetica-Bold", 8)
+        c.drawCentredString(W / 2, H - 41, f"SCAN SAMPLE {i} of {len(samples)}: {banner}  |  SYNTHETIC")
+        c.save()
+        with pikepdf.open(io.BytesIO(pdf)) as src, pikepdf.open(io.BytesIO(b.getvalue())) as ov:
+            out.pages.append(src.pages[0])
+            out.pages[-1].add_overlay(out.copy_foreign(ov.pages[0].as_form_xobject()))
+    out.save(d_ / "scan_samples.pdf")
+
+
 # ---------------------------------------------------------------- build
 
 
@@ -968,6 +991,30 @@ def main() -> None:
          "extracted, grounded on the page and confirmed by the issuer, and the instruction line is flagged and "
          "never used.",
          extra={"expected_with_llm": ["SEC-INSTRUCTION-TEXT"]})
+
+    # Printable samples for the public scan page, one per result the page explains
+    i1, b1 = INST["I1"], base["I1"]
+    tok1 = fire_qr("I1", b1["noc"], d("2025-03-12"), d("2027-03-11"), i1["name"])
+    h, p, sig = tok1.split(".")
+    payload = json.loads(base64.urlsafe_b64decode(p + "=" * (-len(p) % 4)))
+    edited = base64.urlsafe_b64encode(json.dumps({**payload, "valid_until": "2029-03-11"}, separators=(",", ":"))
+                                      .encode()).rstrip(b"=").decode()
+    stranger = sign_payload(payload, Ed25519PrivateKey.generate(), "fire-sim-2023")
+    tok3 = fire_qr("I3", base["I3"]["noc"], d("2023-10-01"), d("2025-09-30"), INST["I3"]["name"])
+    scan_samples([
+        ("as_issued", "as issued, every printed value matches the signed QR",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2027-03-11"), b1["area"], qr_token=tok1)[0], tok1),
+        ("printed_date_changed", "same QR, printed validity changed to 11-03-2029",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2029-03-11"), b1["area"], qr_token=tok1)[0], tok1),
+        ("expired", "signed QR whose validity ended on 30-09-2025",
+         fire_noc(INST["I3"], base["I3"]["noc"], d("2023-10-01"), d("2025-09-30"), base["I3"]["area"],
+                  qr_token=tok3)[0], tok3),
+        ("qr_edited", "QR payload edited after signing, so the signature fails",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2029-03-11"), b1["area"], qr_token=f"{h}.{edited}.{sig}")[0],
+         f"{h}.{edited}.{sig}"),
+        ("unknown_key", "signed with a key the service does not publish",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2027-03-11"), b1["area"], qr_token=stranger)[0], stranger),
+    ])
 
     # Faculty registry and the remaining reference records
     for fid, r in faculty_registry.items():
