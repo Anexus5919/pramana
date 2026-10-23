@@ -42,9 +42,12 @@ def app():
         if not (OUT / "manifest.json").exists():
             _load("make_fixtures").main()
         _load("seed").main(validate=False)
+    from pramana.db import engine
     from pramana.main import app
 
-    return app
+    yield app
+    # Release the database file, so a later module can reseed it (Windows will not delete an open file)
+    engine.dispose()
 
 
 @pytest.fixture(autouse=True)
