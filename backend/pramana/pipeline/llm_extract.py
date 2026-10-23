@@ -81,14 +81,75 @@ def propose(prompt: str, names: list[str]) -> tuple[dict[str, Any] | None, str |
     return None, None, errors
 
 
-INJECTION = re.compile(
-    r"(ignore|disregard)\s+(all\s+|any\s+)?(previous|prior|above|earlier|the rest|other)\b"
-    r"|^\s*(system|assistant)\s*:"
-    r"|\b(note|message|instruction)s?\s+(to|for)\s+(the\s+)?(automated|ai|llm|model)"
-    r"|\b(ai|llm)\s+(assistant|system|model|reviewer)s?\b"
-    r"|\bautomated\s+(system|reader|reviewer|tool)s?\b.{0,40}\b(report|output|set|use|return)\b"
-    r"|you\s+are\s+(an?\s+|the\s+)?(ai|assistant|language model)",
+# Lines addressed to an automated reader. Certificates talk about their holder, never to the software reading
+# them, so a line is flagged when it commands the reader to drop its instructions or checks, or when it addresses
+# an automated reader and gives it a directive. Mentioning systems, software or reviewers alone is not enough.
+# Checked against every benign document available: scripts/eval_instruction_lines.py
+_AI = (r"(?:\bai\b|\ba\.i\.|artificial\s+intelligence|\bllms?\b|\bgpt[\w.-]*|\bchat\s?gpt\b|\bchat\s?bots?\b|\bbots?\b"
+       r"|\blanguage\s+models?\b|\bmachine\s+learning\s+models?\b|\bneural\s+networks?\b|\bocr\b)")
+_READER = (r"(?:software|programs?|scripts?|pipelines?|parsers?|scanners?|readers?|reviewers?|checkers?|verifiers?"
+           r"|validators?|systems?|tools?|engines?|agents?|assistants?|models?|processors?|algorithms?)")
+_WHO = rf"(?:{_AI}|\b{_READER}\b)"
+_DET = r"(?:the|any|all|every|each|this|an?)"
+_WORDS = r"(?:[\w-]+\s+){0,2}?"
+# A command on its own: drop your instructions or checks; prompt and role-play markers; an AI told what it must do
+_COMMAND = re.compile(
+    r"(?:^\W*|[:;,.]\s*|\b(?:please|kindly|must|should|you|and|then|now|just|simply)\s+)"
+    r"(?:ignore|disregard|forget|override|bypass|skip)\s+(?:[\w'-]+\s+){0,4}?"
+    r"(?:instructions?|rules?|prompts?|guidelines?|directions?|checks?|checking|verification|validation|analysis"
+    r"|context|registry|dates?)\b"
+    r"|\bsystem\s+prompt\b|\bprompt\s+injection\b|\bjailbreak"
+    r"|\byou\s+are\s+now\s+(?:a|an|the|acting)\b|\bpretend\s+(?:to\s+be|you\s+are)\b"
+    rf"|\byou\s+are\s+(?:a|an|the)\s+{_WORDS}{_AI}"
+    rf"|{_AI}[^.;]{{0,40}}\b(?:must|should|shall|need\s+to|are\s+to|is\s+to)\b",
+    re.IGNORECASE | re.MULTILINE)
+# Addressing an automated reader. By name where a sentence starts (a capital letter: a wrapped line such as
+# "system, fire alarm, ..." is not an address), to/for/by one of them, if you are one, or politely to an AI
+_VOCATIVE = re.compile(
+    rf"^\W*(?:(?:dear|hey|hi|hello|attention|attn|note|message|instructions?|notice)\b[\s:]*(?:(?:to|for)\s+)?)?"
+    rf"(?:{_DET}\s+)?{_WORDS}{_WHO}\s*[:,]", re.IGNORECASE)
+# Every reader of a kind (any software, all models) or a conditional address; a passive instruction counts here
+_GENERIC = re.compile(
+    rf"\b(?:to|for|by)\s+(?:any|all|every|each)\s+{_WORDS}{_WHO}"
+    rf"|\bif\s+you\s+are\s+(?:{_DET}\s+)?{_WORDS}{_WHO}"
+    rf"|{_AI}[^.;]{{0,30}}\b(?:please|kindly)\b", re.IGNORECASE)
+# One particular reader (the system, this program): only an imperative counts, since documents describe them
+_PARTICULAR = re.compile(rf"\b(?:to|for|by)\s+(?:the|this|an?)\s+{_WORDS}{_WHO}", re.IGNORECASE)
+_IMPERATIVE = re.compile(
+    r"\b(?:approve|accept|mark|treat|classify|label|report|output|return|respond|answer|set|confirm|certify|validate"
+    r"|flag|stop|halt|skip|ignore|disregard|forget|override|bypass|print|assume)\b"
+    r"|\b(?:please|kindly|do\s+not|don'?t|must|should|need\s+to)\b", re.IGNORECASE)
+_PASSIVE = re.compile(
+    r"\bto\s+be\s+(?:reported|marked|treated|classified|considered|returned|approved|accepted|shown|read)\b",
     re.IGNORECASE)
+
+
+def _starts_sentence(line: str) -> bool:
+    first = next((ch for ch in line if ch.isalpha()), "")
+    return first.isupper()
+
+
+class _InstructionText:
+    """`search(text)` is truthy when any line of the text is addressed to an automated reader."""
+
+    def search(self, text: str) -> re.Match | None:
+        for line in str(text).splitlines() or [""]:
+            m = _COMMAND.search(line)
+            if m:
+                return m
+            v = _VOCATIVE.search(line)
+            if v and _starts_sentence(line) and _IMPERATIVE.search(line, v.end()):
+                return v
+            g = _GENERIC.search(line)
+            if g and (_IMPERATIVE.search(line) or _PASSIVE.search(line)):
+                return g
+            p = _PARTICULAR.search(line)
+            if p and _IMPERATIVE.search(line):
+                return p
+        return None
+
+
+INJECTION = _InstructionText()
 
 
 def injection_lines(pages: list[PageText]) -> list[dict[str, Any]]:
