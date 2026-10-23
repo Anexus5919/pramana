@@ -1,4 +1,4 @@
-import { BookOpen, FileText, History, ListChecks, SendHorizontal, ShieldCheck, SquareDashed } from "lucide-react";
+import { BookOpen, FileText, History, ListChecks, SendHorizontal, ScanText, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { errorMessage } from "../../../api";
@@ -14,7 +14,7 @@ const SUGGESTIONS = ["Why is the fire NOC flagged?", "What is still unverified?"
 
 const KIND_ICON: Record<AskEvidence["kind"], ReactNode> = {
   finding: <ListChecks />,
-  region: <SquareDashed />,
+  region: <ScanText />,
   document: <FileText />,
   verification: <ShieldCheck />,
   rule: <BookOpen />,

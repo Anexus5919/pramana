@@ -301,14 +301,16 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
         const d = docs[r.docId];
         return (
           <div className="min-w-0">
-            <div className="truncate font-medium text-ink">{d ? label(d.declared_type) : r.docId}</div>
+            <div className="font-medium text-ink">{d ? label(d.declared_type) : r.docId}</div>
             <div className="truncate font-mono text-xs text-ink-3">{d?.original_filename}</div>
           </div>
         );
       },
       sortValue: (r) => (docs[r.docId] ? label(docs[r.docId].declared_type) : r.docId),
+      className: "py-2",
     },
-    ...CHANNELS.map(
+    // Channels no document used would be a column of "Not applicable"; leave them out
+    ...CHANNELS.filter((c) => rows.some((r) => r.cells[c])).map(
       (c): Column<Row> => ({
         id: c,
         header: (
@@ -320,7 +322,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
         ),
         cell: (r) => {
           const cell = r.cells[c];
-          if (!cell) return <span className="text-xs text-ink-4">Not applicable</span>;
+          if (!cell) return <span className="text-xs whitespace-nowrap text-ink-3">Not applicable</span>;
           const a = cell.latest;
           const statusLabel = verificationMeta[a.status]?.label ?? humanize(a.status);
           return (
@@ -351,7 +353,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
         )}
       </p>
       <Panel padding="none">
-        <DataTable label="Verification by document and channel" rows={rows} rowKey={(r) => r.docId} columns={columns} />
+        <DataTable label="Verification by document and channel" density="compact" rows={rows} rowKey={(r) => r.docId} columns={columns} />
       </Panel>
 
       <Drawer

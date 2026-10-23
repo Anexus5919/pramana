@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileClock, PenLine, SquareDashed } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileClock, PenLine, ScanSearch } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as RPointerEvent } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -533,7 +533,7 @@ function RevisionItem({ r, selected, onSelect }: { r: Revision; selected: boolea
                 }}
                 className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-control px-2 text-sm font-medium text-ink-2 transition-colors duration-150 hover:bg-surface-2 hover:text-ink"
               >
-                <SquareDashed aria-hidden className="size-3.5" /> Show on the page
+                <ScanSearch aria-hidden className="size-3.5" /> Show on the page
               </button>
             )}
           </div>

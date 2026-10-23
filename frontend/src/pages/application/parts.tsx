@@ -1,4 +1,4 @@
-import { ArrowUpRight, Database, FileClock, FileText, GitCompareArrows, Link2, MapPin, PenLine, ShieldCheck, SquareDashed } from "lucide-react";
+import { ArrowUpRight, Database, FileClock, FileText, GitCompareArrows, Link2, MapPin, PenLine, ShieldCheck, ScanSearch, ScanText } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { fmtValue } from "../../lib/format";
@@ -156,7 +156,7 @@ export function TraceInputs({ inputs, missing }: { inputs: FactInput[]; missing?
               <Button
                 size="sm"
                 variant="ghost"
-                leadingIcon={<SquareDashed />}
+                leadingIcon={<ScanSearch />}
                 onClick={() => openDoc({ docId: p.document_id!, page: p.page, bbox: p.bbox, label: pathLabel(inp.path) })}
               >
                 Show on page
@@ -270,7 +270,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
             return (
               <Item
                 key={i}
-                icon={<SquareDashed />}
+                icon={<ScanText />}
                 title={
                   <>
                     {pathLabel(e.label ?? "Region")}
@@ -282,7 +282,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                     <Button
                       size="sm"
                       variant="ghost"
-                      leadingIcon={<SquareDashed />}
+                      leadingIcon={<ScanSearch />}
                       onClick={() => openDoc({ docId, page: e.page, bbox: e.bbox, label: pathLabel(e.label ?? "Region") })}
                     >
                       {located ? "Show on page" : "Open document"}
@@ -400,7 +400,7 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
                         <Button
                           size="sm"
                           variant="ghost"
-                          leadingIcon={<SquareDashed />}
+                          leadingIcon={<ScanSearch />}
                           onClick={() => openDoc({ docId, page: e.page, bbox: e.bbox, label: "Changed in a later revision" })}
                         >
                           Show on page

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Equal, SquareDashed } from "lucide-react";
+import { ArrowUpRight, Equal, ScanSearch } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api } from "../../api";
 import { workspacePath } from "../../shell/nav";
@@ -62,7 +62,7 @@ export function SealCompare({ e }: { e: ImageMatchEvidence }) {
         {e.exact ? "The embedded images are pixel-identical." : `Perceptual hash distance ${e.distance} of 256 bits.`} {e.peer_institution} submitted the other document.
       </p>
       <div className="mt-2 flex flex-wrap gap-1">
-        <Button size="sm" variant="ghost" leadingIcon={<SquareDashed />} onClick={() => openDoc({ docId: e.document_id, page: e.page, bbox: e.bbox, label: "Seal image" })}>
+        <Button size="sm" variant="ghost" leadingIcon={<ScanSearch />} onClick={() => openDoc({ docId: e.document_id, page: e.page, bbox: e.bbox, label: "Seal image" })}>
           Show on page {e.page}
         </Button>
         <Link

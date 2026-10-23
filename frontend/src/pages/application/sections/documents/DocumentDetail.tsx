@@ -86,7 +86,7 @@ export function DocumentDetail({ docId }: { docId: string }) {
     return (
       <div className="space-y-4">
         {back}
-        <div role="status" className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div role="status" className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <span className="sr-only">Loading the document</span>
           <Skeleton className={FRAME_HEIGHT} />
           <Skeleton className="h-96" />
@@ -131,7 +131,7 @@ export function DocumentDetail({ docId }: { docId: string }) {
         )
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="min-w-0 xl:sticky xl:top-20">
           {panel === "revisions" ? (
             <RevisionStage doc={doc} className={FRAME_HEIGHT} />

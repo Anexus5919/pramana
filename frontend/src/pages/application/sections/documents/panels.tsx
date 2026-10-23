@@ -1,4 +1,4 @@
-import { ArrowUpRight, ScanSearch, SquareDashed } from "lucide-react";
+import { ArrowUpRight, ScanSearch } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { fmtBytes, fmtConfidence, fmtDateTime, fmtValue, pluralize } from "../../../../lib/format";
@@ -37,7 +37,7 @@ function SubHeading({ children, aside }: { children: ReactNode; aside?: ReactNod
 
 function LocateButton({ onClick, label = "Locate" }: { onClick: () => void; label?: string }) {
   return (
-    <Button size="sm" variant="ghost" leadingIcon={label === "Locate" ? <ScanSearch /> : <SquareDashed />} onClick={onClick} className="shrink-0">
+    <Button size="sm" variant="ghost" leadingIcon={<ScanSearch />} onClick={onClick} className="shrink-0">
       {label}
     </Button>
   );
