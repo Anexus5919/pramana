@@ -157,10 +157,28 @@ def test_seal_distance_is_a_plain_int():
     # into the finding's evidence, and saving the run failed
     from pramana.forensics.seals import distance
 
-    a = {"sha256": "a", "phash": "0" * 64, "dhash": "0" * 64}
-    b = {"sha256": "b", "phash": "0" * 63 + "3", "dhash": "0" * 64}
+    a = {"sha256": "a", "phash32": "0" * 256}
+    b = {"sha256": "b", "phash32": "0" * 255 + "3"}
     assert type(distance(a, b)) is int and distance(a, b) == 2
     assert json.dumps({"distance": distance(a, b)}) == '{"distance": 2}'
+
+
+def test_seals_of_one_template_for_two_cities_do_not_match_but_copies_do():
+    # Found by the random evaluation: stamps that differ only in the city name came within 7 of 256 bits
+    import io
+
+    from PIL import Image
+
+    from pramana.forensics.seals import PHASH_MAX_DISTANCE, distance
+
+    cs = _load("calibrate_seals")
+    kochi, salem = cs.municipal("Kochi"), cs.municipal("Salem")
+    a, b = cs.fingerprint(kochi), cs.fingerprint(salem)
+    assert distance(a, b) > PHASH_MAX_DISTANCE
+    im = Image.open(io.BytesIO(kochi)).convert("RGB")
+    assert distance(a, cs.fingerprint(kochi)) == 0
+    assert distance(a, cs.fingerprint(im, fmt="JPEG", quality=60)) <= PHASH_MAX_DISTANCE
+    assert distance(a, cs.fingerprint(im.resize((270, 270)))) <= PHASH_MAX_DISTANCE
 
 
 def test_blind_run_end_to_end(tmp_path):
