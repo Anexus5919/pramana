@@ -77,6 +77,7 @@ export function DocViewer({
   onHover,
   className,
   stageClassName,
+  pageUrl,
 }: {
   doc: DocumentDetail;
   findings: Finding[];
@@ -90,6 +91,8 @@ export function DocViewer({
   onHover?: (b: OverlayBox | null) => void;
   className?: string;
   stageClassName?: string;
+  /** Page image source for a file that is not stored as an application document */
+  pageUrl?: (page: number) => string;
 }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
@@ -254,7 +257,7 @@ export function DocViewer({
             ) : (
               <img
                 key={`${doc.id}-${page}`}
-                src={api.pageImageUrl(doc.id, page)}
+                src={pageUrl ? pageUrl(page) : api.pageImageUrl(doc.id, page)}
                 alt={`Page ${page} of ${doc.original_filename}`}
                 draggable={false}
                 onLoad={(e) => onLoad(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
