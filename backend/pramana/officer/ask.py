@@ -141,9 +141,12 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
 
     if run:
         s = run.summary or {}
+        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_h(s.get('document_status', {}).get(d.id))}"
+                           for d in docs.values() if s.get("document_status", {}).get(d.id))
         items["RUN"] = {"id": "RUN", "kind": "run", "label": "Latest run",
                         "text": f"Latest validation run {run.id}, round {run.round}, status {run.status}, as of "
-                                f"{s.get('as_of')}, ruleset {run.ruleset_id}, {s.get('findings', 0)} findings.",
+                                f"{s.get('as_of')}, ruleset {run.ruleset_id}, {s.get('findings', 0)} findings. "
+                                f"Authenticity status by document: {by_doc or 'none recorded'}.",
                         "statuses": [run.status], "target": {"type": "run", "run_id": run.id},
                         "say": f"The latest run is {run.id}, as of {s.get('as_of')}."}
 
