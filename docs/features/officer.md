@@ -40,7 +40,7 @@ Code: `backend/pramana/officer/` (routes, letter, report, pack, verify_pack, ask
 - The clause text is never taken from the editor. The client sends a rule id and the server copies the source, section, page and quote from the active ruleset.
 - Finalising reuses the existing rectification endpoint function (`request_rectification`), so finding statuses, the snapshot used for out-of-scope detection and the round counter behave exactly as before. If an open request without a letter already covers the same findings, the letter attaches to it instead of opening another round.
 - Institution-facing text: request items for forensic and cross-application findings take the letter's wording and a neutral code (the cited rule id, or `NOTICE-ITEM-n`), so the portal does not show detector names, page forensics or another institution's name. Institutions get letters without finding ids or detector codes, only final letters, and only for their own applications (other ids return 404).
-- Text checks: the server rejects letter text that calls a document forged, fake, fraudulent or genuine, and response dates in the past.
+- Text checks: the server rejects letter text that uses the banned judgemental vocabulary about documents (`FORBIDDEN_WORDS` in `officer/common.py`, the words the product rules forbid), and response dates in the past.
 
 ### What it does not do
 
@@ -127,7 +127,7 @@ A side panel in the workspace where the officer asks about the current applicati
   - cites no valid evidence id;
   - contains a date, number or reference code that is not in the items it cites (dates are normalised across formats);
   - uses a status word its cited items contradict (for example "verified" when none of them is verified, "expired" when none is expired, "not verified" when all are verified);
-  - calls a document forged, fake, fraudulent or genuine;
+  - uses the banned judgemental vocabulary about a document (`FORBIDDEN_WORDS`);
   - states or recommends a decision on the application.
 - **Fallback.** Without a reachable model, template answers are assembled from the same items for the common questions (why flagged, still unverified, which rule needs a document, what changed after signing) and go through the same post-check. When every model sentence fails the check, the template answer is shown instead, labelled "Template answer, model sentences failed the check", and the dropped model sentences stay visible with their reasons.
 - **Audit.** Every question and answer is recorded as `ask.answered` with the mode, model, kept sentences with citations, dropped sentences with reasons, and latency.
