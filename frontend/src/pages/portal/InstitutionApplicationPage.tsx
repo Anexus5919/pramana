@@ -21,6 +21,7 @@ import { useToast } from "../../ui/Toast";
 import { appStatusTone } from "../../ui/tone";
 import { DeclaredView, NumbersEditor, ProgrammesEditor } from "./DeclaredEditor";
 import { fieldErrors, fromDraft, programmeErrors, toDraft, type DeclaredDraft } from "./declared";
+import { RectificationLetter } from "./RectificationLetter";
 import { StatusStepper } from "./StatusStepper";
 import { UploadSlot } from "./UploadSlot";
 
@@ -78,6 +79,7 @@ function RectificationPanel({ app }: { app: ApplicationDetail }) {
                 Round {r.round}, requested {fmtDateTime(r.created_at)}
               </p>
               {r.message && <p className="mt-2 rounded-control bg-surface/70 px-3 py-2 text-sm text-ink-2 text-pretty">{r.message}</p>}
+              <RectificationLetter appId={app.id} rectificationId={r.id} />
               <ol className="mt-3 space-y-2">
                 {r.items.map((it, i) => (
                   <li key={it.finding_id} className="flex gap-3 rounded-control border border-line bg-surface px-3 py-2.5">
