@@ -135,8 +135,7 @@ export function CaptureSection({ a }: { a: Analysis }) {
           { label: "Software", value: e.software ?? "Not recorded" },
           {
             label: "Geotag",
-            value: e.gps ? e.gps.map((v) => v.toFixed(5)).join(", ") : "No GPS position in the file",
-            mono: !!e.gps,
+            value: e.gps ? <span className="font-mono">{e.gps.map((v) => v.toFixed(5)).join(", ")}</span> : "No GPS position in the file",
             hint: e.gps ? "The distance from the campus is measured only inside an application." : undefined,
           },
           { label: "Image", value: ph.width && ph.height ? `${ph.width} x ${ph.height} px` : "Not read" },
@@ -165,7 +164,7 @@ export function CredentialsSection({ a }: { a: Analysis }) {
     <ReportPanel
       id="photo"
       title="Content Credentials"
-      description="C2PA provenance signed into the file, checked against the DEMO trust list."
+      description="C2PA provenance signed into the file."
       actions={ph.c2pa_status ? <VerificationBadge status={ph.c2pa_status.status} /> : <StatusBadge tone={st.tone}>{st.label}</StatusBadge>}
     >
       <p className="text-sm font-medium text-ink">{st.label}</p>

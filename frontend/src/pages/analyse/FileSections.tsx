@@ -76,51 +76,53 @@ export function FileStructureSection({ a, onFocus }: { a: Analysis; onFocus: (f:
   const fonts = (a.document.forensic_facts?.metadata?.fonts ?? []).map((f) => f.replace(/^\/?[A-Z]{6}\+/, "").replace(/^\//, ""));
   return (
     <ReportPanel id="file" title="File structure" description="Context for the indicators. Metadata is easy to edit, so it is never evidence on its own.">
-      <div className="grid min-w-0 items-start gap-x-8 gap-y-6 lg:grid-cols-2 xl:grid-cols-3">
-        <Group title="Revisions">
-          <Revisions count={a.revision_count} />
-          {(a.revision_count ?? 1) >= 2 && a.revisions && (
-            <a href={`#${anchorId("revisions")}`} className="mt-1 inline-block rounded text-sm text-ink underline-offset-2 hover:underline">
-              Open the time machine
-            </a>
-          )}
-        </Group>
+      <div className="grid min-w-0 items-start gap-x-8 gap-y-6 lg:grid-cols-2">
+        <div className="min-w-0 space-y-6">
+          <Group title="Revisions">
+            <Revisions count={a.revision_count} />
+            {(a.revision_count ?? 1) >= 2 && a.revisions && (
+              <a href={`#${anchorId("revisions")}`} className="mt-1 inline-block rounded text-sm text-ink underline-offset-2 hover:underline">
+                Open the time machine
+              </a>
+            )}
+          </Group>
+          <Group title={`Fonts (${fonts.length})`}>
+            {fonts.length === 0 ? (
+              <p className="text-sm text-ink-3">No embedded font resources.</p>
+            ) : (
+              <p className="font-mono text-xs break-words text-ink-2">{fonts.slice(0, 24).join(", ")}</p>
+            )}
+            <p className="mt-1 text-xs text-ink-3">A value in a font no other value uses is raised as an indicator.</p>
+          </Group>
+          <Group title={`Seal-sized images (${a.seal_images.length})`}>
+            {a.seal_images.length === 0 ? (
+              <p className="text-sm text-ink-3">No seal-sized raster image on the first pages.</p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {a.seal_images.map((s, i) => (
+                  <li key={`${s.sha256}-${i}`} className="flex items-center justify-between gap-3 py-2 first:pt-0">
+                    <div className="min-w-0">
+                      <p className="text-sm text-ink">
+                        Page {s.page}, {s.px[0]} x {s.px[1]} px
+                      </p>
+                      <p className="truncate font-mono text-xs text-ink-3" title={s.phash}>
+                        phash {s.phash.slice(0, 16)}
+                      </p>
+                    </div>
+                    {validBox(s.bbox) && (
+                      <RowAction leadingIcon={<SquareDashed />} onClick={() => onFocus({ page: s.page, bbox: s.bbox, label: "Seal-sized image" })}>
+                        Show
+                      </RowAction>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-1 text-xs text-ink-3">Fingerprinted by exact pixels and perceptual hash. Reuse across issuers is checked only inside applications.</p>
+          </Group>
+        </div>
         <Group title="Document information">
           <Metadata meta={a.metadata ?? {}} />
-        </Group>
-        <Group title={`Fonts (${fonts.length})`}>
-          {fonts.length === 0 ? (
-            <p className="text-sm text-ink-3">No embedded font resources.</p>
-          ) : (
-            <p className="font-mono text-xs break-words text-ink-2">{fonts.slice(0, 24).join(", ")}</p>
-          )}
-          <p className="mt-1 text-xs text-ink-3">A value in a font no other value uses is raised as an indicator.</p>
-        </Group>
-        <Group title={`Seal-sized images (${a.seal_images.length})`}>
-          {a.seal_images.length === 0 ? (
-            <p className="text-sm text-ink-3">No seal-sized raster image on the first pages.</p>
-          ) : (
-            <ul className="divide-y divide-line">
-              {a.seal_images.map((s, i) => (
-                <li key={`${s.sha256}-${i}`} className="flex items-center justify-between gap-3 py-2 first:pt-0">
-                  <div className="min-w-0">
-                    <p className="text-sm text-ink">
-                      Page {s.page}, {s.px[0]} x {s.px[1]} px
-                    </p>
-                    <p className="truncate font-mono text-xs text-ink-3" title={s.phash}>
-                      phash {s.phash.slice(0, 16)}
-                    </p>
-                  </div>
-                  {validBox(s.bbox) && (
-                    <RowAction leadingIcon={<SquareDashed />} onClick={() => onFocus({ page: s.page, bbox: s.bbox, label: "Seal-sized image" })}>
-                      Show
-                    </RowAction>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className="mt-1 text-xs text-ink-3">Fingerprinted by exact pixels and perceptual hash. Reuse across issuers is checked only inside applications.</p>
         </Group>
       </div>
     </ReportPanel>
