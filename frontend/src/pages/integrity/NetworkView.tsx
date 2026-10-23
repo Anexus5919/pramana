@@ -273,7 +273,7 @@ export function NetworkView({ query, datasets, dataset, onDataset }: ViewProps) 
         <Stat label="Linked clusters" value={s.clusters} hint={`Groups of applications joined by shared evidence`} />
         <Stat label="Applications linked" value={`${s.linked_applications} of ${s.applications}`} hint={`${s.applications - s.linked_applications} share nothing with another application`} />
         <Stat label="Shared items" value={s.shared_items} hint={kinds.map((k) => kindCount(k, s.by_kind[k])).join(", ")} />
-        <Stat label="Findings behind the links" value={totalFindings} hint="Each opens with its evidence" />
+        <Stat label="Findings behind the links" value={totalFindings} hint={data.synthetic ? "Held in the synthetic run's own database" : "Each opens with its evidence"} />
       </StatGroup>
 
       <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">

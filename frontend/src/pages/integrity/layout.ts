@@ -6,7 +6,7 @@ import type { NetworkPayload } from "./types";
 const COL = 190; // application to its shared-item column
 const ROW = 76; // between stacked shared items
 const CLUSTER_GAP = 96;
-const QUIET_COL = 170;
+const QUIET_COL = 160;
 
 export interface NetworkLayout {
   nodes: GNode[];
@@ -176,7 +176,8 @@ export function layoutNetwork(data: NetworkPayload, mode: "evidence" | "applicat
   if (quiet.length) {
     const frameId = "frame:unlinked";
     frames.push({ id: frameId, label: `No shared evidence found: ${quiet.length} ${quiet.length === 1 ? "application" : "applications"}` });
-    const perRow = Math.max(3, Math.min(6, Math.ceil(Math.max(maxW, 600) / QUIET_COL)));
+    // One row up to six, then as few rows of at most eight as fit them all
+    const perRow = quiet.length <= 6 ? quiet.length : Math.ceil(quiet.length / Math.ceil(quiet.length / 8));
     quiet.forEach((a, i) => {
       const row = Math.floor(i / perRow);
       const inRow = Math.min(perRow, quiet.length - row * perRow);
@@ -186,13 +187,13 @@ export function layoutNetwork(data: NetworkPayload, mode: "evidence" | "applicat
         kind: "application",
         label: `${a.short_name}\n${a.id}`,
         x: (col - (inRow - 1) / 2) * QUIET_COL,
-        y: y + 10 + row * 120,
+        y: y + 10 + row * 110,
         parent: frameId,
         quiet: true,
         title: a.institution,
       });
     });
-    y += Math.ceil(quiet.length / perRow) * 120;
+    y += Math.ceil(quiet.length / perRow) * 110;
     maxW = Math.max(maxW, (Math.min(perRow, quiet.length) - 1) * QUIET_COL);
   }
   const ys = nodes.map((n) => n.y);
