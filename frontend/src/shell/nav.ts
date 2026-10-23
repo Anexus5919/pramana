@@ -50,6 +50,7 @@ export const WORKSPACE_TAB_LABEL: Record<string, string> = {
   checklist: "Checklist",
   verification: "Verification",
   relationships: "Relationships",
+  campus: "Campus",
   runs: "Runs",
   audit: "Audit",
 };

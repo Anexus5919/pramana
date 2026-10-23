@@ -9,6 +9,7 @@ __pycache__/
 # Runtime data, keys and generated fixtures
 var/
 backend/trust/demo/
+backend/trust/demo-c2pa/
 fixtures/out/
 
 # Frontend
@@ -31,4 +32,5 @@ Thumbs.db
 fixtures/real/
 backend/training/data/
 backend/training/results/
+backend/models/
 *.gguf

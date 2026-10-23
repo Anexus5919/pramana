@@ -3,6 +3,7 @@ import type {
   Application,
   ApplicationDetail,
   AuditEvent,
+  CampusPayload,
   ChainVerification,
   Checkpoint,
   Dashboard,
@@ -150,6 +151,10 @@ export const api = {
   document: (docId: string) => get<DocumentDetail>(`/documents/${enc(docId)}`),
   pageImageUrl: (docId: string, page: number) => `/api/documents/${enc(docId)}/pages/${page}.png`,
   fileUrl: (docId: string) => `/api/documents/${enc(docId)}/file`,
+  photoUrl: (docId: string, size: "thumb" | "preview" = "thumb") => `/api/documents/${enc(docId)}/photo.jpg?size=${size}`,
+
+  // Campus map and photo evidence (officials only)
+  campus: (id: string) => get<CampusPayload>(`/applications/${enc(id)}/campus`),
 
   // Findings and verification
   reviewFinding: (findingId: string, action: ReviewAction, note: string | null) =>
@@ -192,6 +197,7 @@ export const qk = {
   findings: (id: string, runId?: string) => ["application", id, "findings", runId ?? "latest"] as const,
   verifications: (id: string) => ["application", id, "verifications"] as const,
   appAudit: (id: string) => ["application", id, "audit"] as const,
+  campus: (id: string) => ["application", id, "campus"] as const,
   run: (runId: string) => ["run", runId] as const,
   document: (docId: string) => ["document", docId] as const,
   history: (findingId: string) => ["finding-history", findingId] as const,

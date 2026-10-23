@@ -140,10 +140,11 @@ export const CHANNELS = [
   "applicant_signature",
   "signed_qr",
   "issuer_registry",
+  "content_credentials",
   "manual_confirmation",
 ] as const;
 
-const SIGNATURE_CHANNELS = new Set(["issuer_signature", "applicant_signature", "pdf_signature"]);
+const SIGNATURE_CHANNELS = new Set(["issuer_signature", "applicant_signature", "pdf_signature", "content_credentials"]);
 
 export function isSignatureChannel(channel: string): boolean {
   return SIGNATURE_CHANNELS.has(channel);
@@ -161,6 +162,10 @@ export const channelMeta: Record<string, { label: string; meaning: string }> = {
   pdf_signature: { label: "PDF signature", meaning: "Embedded PAdES/CMS signature validated against trust anchors." },
   signed_qr: { label: "Signed QR", meaning: "Issuer-signed QR token verified offline with the issuer's key." },
   issuer_registry: { label: "Issuer registry", meaning: "Reference number looked up with the issuing authority." },
+  content_credentials: {
+    label: "Content credentials",
+    meaning: "C2PA manifest embedded in a photo, validated against the DEMO capture trust list.",
+  },
   manual_confirmation: { label: "Manual confirmation", meaning: "Recorded by the verification cell after an offline check." },
 };
 

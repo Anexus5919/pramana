@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import admin, applications
+from .api import admin, applications, photos
 from .config import get_settings
 from .db import init_db
 
@@ -26,6 +26,7 @@ app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
                           "assistance. Decision support only: findings are for review by competent authorities.")
 app.include_router(applications.router)
 app.include_router(admin.router)
+app.include_router(photos.router)
 
 
 @app.middleware("http")
