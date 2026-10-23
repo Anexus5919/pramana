@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { api, errorMessage, qk } from "../../../api";
 import { fmtDateTime, fmtRelative, fmtValue, pluralize } from "../../../lib/format";
-import { humanize, roleLabel } from "../../../lib/labels";
+import { humanize, reviewActionLabel, roleLabel } from "../../../lib/labels";
 import type { AuditEvent, ChainVerification } from "../../../types";
 import { Button } from "../../../ui/Button";
 import { cn } from "../../../ui/cn";
@@ -15,6 +15,13 @@ import { EmptyState, ErrorState } from "../../../ui/States";
 import { useWorkspace } from "../context";
 
 const STEP_MS = 90;
+
+function actionText(action: string): string {
+  const [obj, verb] = action.includes(".") ? [action.slice(0, action.indexOf(".")), action.slice(action.indexOf(".") + 1)] : ["", action];
+  if (obj === "finding" && reviewActionLabel[verb]) return `Finding: ${reviewActionLabel[verb]}`;
+  if (action === "verification.manual_recorded") return "Manual verification recorded";
+  return humanize(`${obj} ${verb}`.trim());
+}
 
 type LinkState = "idle" | "ok" | "broken" | "after";
 
@@ -80,7 +87,7 @@ function EventBlock({ e, state, last, open, onToggle }: { e: AuditEvent; state: 
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-2">
               <span className="font-mono text-[11px] text-ink-3 tabular">#{e.seq}</span>
-              <span className="text-sm font-medium text-ink">{humanize(e.action.replace(".", " "))}</span>
+              <span className="text-sm font-medium text-ink">{actionText(e.action)}</span>
             </div>
             <div className="mt-0.5 text-xs text-ink-3">
               {[`${e.actor}${e.actor_role ? ` (${roleLabel[e.actor_role] ?? humanize(e.actor_role)})` : ""}`, e.ts ? `${fmtDateTime(e.ts)}, ${fmtRelative(e.ts)}` : null].filter(Boolean).join(", ")}
@@ -136,7 +143,7 @@ function Gap({ n, state }: { n: number; state: LinkState }) {
         <span aria-hidden className={cn("absolute -top-3 -bottom-3 w-0 border-l-2 border-dashed transition-colors duration-200", state === "ok" ? "border-verified-dot" : "border-line-2")} />
       </div>
       <p className="mb-3 py-1 text-xs text-ink-3">
-        {pluralize(n, "event")} from other applications sit between these in the shared chain
+        {pluralize(n, "event")} from other applications {n === 1 ? "sits" : "sit"} between these in the shared chain
       </p>
     </li>
   );

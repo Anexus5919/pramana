@@ -103,7 +103,7 @@ function ManualForm({ attempt, onRecorded }: { attempt: VerificationAttempt; onR
       <p className="mb-3 text-xs text-ink-3 text-pretty">
         Use this after an offline check with the issuer, such as a letter, an email or a portal lookup. It adds a new attempt and keeps this one unchanged.
       </p>
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,200px)_minmax(0,1fr)]">
+      <div className="grid gap-3">
         <Field label="Outcome">
           <Select value={status} onChange={(e) => setStatus(e.target.value)} selectSize="sm">
             {MANUAL_STATUSES.map((s) => (
