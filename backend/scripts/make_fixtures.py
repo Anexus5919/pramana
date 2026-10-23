@@ -30,6 +30,7 @@ from reportlab.pdfgen import canvas
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fixture_assets import emblem_png, seal_png  # noqa: E402
+from fixture_hindi import occupancy_hindi  # noqa: E402
 
 from pramana.verification import demo_pki  # noqa: E402
 from pramana.verification.signed_qr import sign_payload  # noqa: E402
@@ -825,9 +826,16 @@ def main() -> None:
     # A2 building older than 30 years without a structural stability certificate; accounts arrive as a scan
     docs = standard_docs("I2", oc_issue=d("1991-02-20"))
     docs["audited_accounts"] = scan(docs["audited_accounts"])
+    # The OC is a bilingual Hindi and English copy whose text layer is broken: Hindi labels must be read by OCR
+    pdf, hindi_truth = occupancy_hindi(Doc, INST["I2"], "नाशिक", base["I2"]["oc"], dmy(d("1991-02-20")),
+                                       base["I2"]["area"], municipal_seal(INST["I2"]))
+    docs["occupancy_certificate"] = demo_pki.sign_pdf(pdf, muni_signers["I2"], chain, reason="OC issued",
+                                                      location="Nashik")
     emit("A2", "I2", "EOA", docs, declared("I2"), ["APH-A21-SSC-REQUIRED"],
-         "Completion certificate from 1991: a Structural Stability Certificate is required but missing. "
-         "Audited accounts uploaded as a scan (OCR path).")
+         "Completion certificate from 1991: a Structural Stability Certificate is required but missing. The "
+         "occupancy certificate is bilingual with Hindi labels and a legacy-font text layer, so its date is read "
+         "by the Devanagari recogniser. Audited accounts uploaded as a scan (OCR path).",
+         extra={"hindi_ocr": {"document": "A2/occupancy_certificate.pdf", **hindi_truth}})
 
     # A3 expired fire certificate (rectification demo: a renewed certificate is provided separately)
     docs = standard_docs("I3", fire_issue=d("2023-10-01"), fire_valid=d("2025-09-30"))

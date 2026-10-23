@@ -160,3 +160,27 @@ def test_without_the_model_the_page_says_hindi_was_not_read(monkeypatch):
     words, info = devanagari.read(np.zeros((10, 10, 3), dtype=np.uint8), lines, "legacy font")
     assert [w[0] for w in words] == ["Main"]
     assert info["read"] is False and "not read" in info["note"] and "offline" in info["note"]
+
+
+def test_bilingual_certificate_is_read_with_the_devanagari_recogniser():
+    import pytest
+
+    from pramana.pipeline import devanagari
+    from pramana.pipeline.extract import classify
+
+    if devanagari.engine() is None:
+        pytest.skip(f"Devanagari recogniser unavailable: {devanagari.unavailable_reason()}")
+    mf = _script("make_fixtures")
+    hindi = _script("fixture_hindi")
+    inst = mf.INST["I2"]
+    pdf, truth = hindi.occupancy_hindi(mf.Doc, inst, "नाशिक", "NAS/BP/OC/2010/00941", "20-02-1991", 15300,
+                                       mf.municipal_seal(inst))
+    pages = extract_pdf(pdf)
+    assert pages[0].source == "ocr" and pages[0].ocr["script"] == "devanagari" and pages[0].ocr["read"]
+    rs = active_ruleset()
+    assert classify(pages, rs.doc_types)["type"] == "occupancy_certificate"
+    got = {f.name: f for f in extract_fields(pages, rs.doc_types["occupancy_certificate"])}
+    assert got["certificate_no"].value == truth["fields"]["certificate_no"]
+    assert got["issue_date"].value.isoformat() == "1991-02-20"
+    assert got["institution_name"].value == inst["name"]
+    assert all(got[k].bbox and got[k].page == 1 for k in ("certificate_no", "issue_date", "institution_name"))
