@@ -744,7 +744,11 @@ def insights(app_id: str, user: User = Depends(require_roles(*OFFICIAL_ROLES)), 
 
 
 def dashboard_alerts(db: Session, alerts: list[dict[str, Any]]) -> None:
-    """One review-queue alert per academic session: open findings for certificates that lapse during it."""
+    """One review-queue alert per academic session: open findings for certificates that lapse during it.
+
+    Called after the alerts are sorted. The alert is a one-line digest across the whole queue of a risk the
+    submission-date checks cannot show, so it comes right after any re-verification watch changes instead of
+    sinking below every high finding."""
     from ..api.applications import latest_run
 
     by_year: dict[str, list[tuple[Application, Finding]]] = {}
@@ -755,10 +759,11 @@ def dashboard_alerts(db: Session, alerts: list[dict[str, Any]]) -> None:
         for f in db.scalars(select(Finding).where(Finding.run_id == run.id, Finding.code == SESSION_CODE)):
             if f.review_status in OPEN_REVIEW:
                 by_year.setdefault(a.academic_year, []).append((a, f))
-    for year, items in sorted(by_year.items()):
+    for year, items in sorted(by_year.items(), reverse=True):
         n, apps = len(items), {a.id for a, _ in items}
         first_app, first = items[0]
-        alerts.append({
+        lead = next((i for i, x in enumerate(alerts) if x.get("kind") != "watch_change"), len(alerts))
+        alerts.insert(lead, {
             "application_id": first_app.id,
             "institution": first_app.institution.name if len(apps) == 1 else f"{len(apps)} applications",
             "finding_id": first.id, "severity": "medium", "category": "validity",

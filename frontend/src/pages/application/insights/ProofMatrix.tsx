@@ -234,7 +234,11 @@ function MatrixTable({ matrix, selected, onSelect }: { matrix: Matrix; selected:
                     })}
                     <td className="border-b border-line py-2.5 pr-5 pl-4 align-middle">
                       <span className={cn("block text-sm", verdictTone(row), row.verdict.kind === "contradicted" && "font-medium")}>{row.verdict.text}</span>
-                      {row.notes.length > 0 && <span className="mt-0.5 block text-xs text-ink-3">{row.notes.join(". ")}</span>}
+                      {row.notes.map((n) => (
+                        <span key={n} className={cn("mt-0.5 block text-xs", /session/.test(n) ? "font-medium text-expired-fg" : "text-ink-3")}>
+                          {n}
+                        </span>
+                      ))}
                     </td>
                   </tr>
                 );

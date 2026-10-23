@@ -225,7 +225,7 @@ export function ProofDrawer({ row, level, rung, onClose }: { row: ProofRow; leve
       title={`${row.label}: ${level.label}`}
       description={level.description}
     >
-      <div className="space-y-5">
+      <div className="space-y-5 px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge tone={STATE_TONE[rung.state]}>
             {STATE_LABEL[rung.state]}

@@ -123,7 +123,12 @@ function CertRow({ c, x, top, cov, hatchId }: { c: CoverageCert; x: (iso: string
       {c.end.date && !clippedRight && (
         <>
           <span aria-hidden className={cn("absolute top-[25px] h-[22px] w-[3px] -translate-x-1/2 rounded-full", CAP_TONE[c.status])} style={{ left: `${end}%` }} />
-          <span aria-hidden className="absolute top-2.5 text-xs whitespace-nowrap text-ink-2" style={pinStyle(end)}>
+          <span
+            aria-hidden
+            className="absolute top-2.5 text-xs whitespace-nowrap text-ink-2"
+            // Before the submission line the date sits to the left of its cap, clear of the line
+            style={c.end.date < cov.as_of && end > 12 ? { right: `${100 - end}%`, marginRight: 6 } : pinStyle(end)}
+          >
             {c.end.basis === "rule" ? `${fmtDate(c.end.date)} (by rule)` : fmtDate(c.end.date)}
           </span>
         </>

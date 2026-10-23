@@ -110,10 +110,10 @@ def dashboard(user: User = Depends(require_roles(*OFFICIAL_ROLES)), db: Session 
         rows.append({**ser.application(a, run), "open_findings": len(open_f),
                      "open_high": sum(1 for f in open_f if f.severity in ("critical", "high"))})
     watch_alerts(db, alerts)
-    session_alerts(db, alerts)
     rows.sort(key=lambda r: -((r["latest_run"] or {}).get("review_priority") or 0))
     sev_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3}
     alerts.sort(key=lambda x: sev_rank.get(x["severity"], 9))
+    session_alerts(db, alerts)
     return {"applications": rows, "status_counts": status_counts, "verification_counts": ver_counts,
             "open_findings_by_category": cat_counts, "open_findings": open_total, "alerts": alerts[:50]}
 
