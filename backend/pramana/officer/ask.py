@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..models import Application, Document, VerificationAttempt
-from ..pipeline.llm_extract import EXTERNAL, INJECTION, _post
+from ..pipeline.llm_extract import INJECTION, _post
 from ..rules.engine import active_ruleset
 from .common import FORBIDDEN_WORDS, citation, latest_run, rules_by_id, rules_needing, run_findings
 from .settings import officer_settings
@@ -257,42 +257,15 @@ def _ollama(prompt: str) -> dict[str, Any]:
     return json.loads(out["message"]["content"])
 
 
-def _groq(prompt: str) -> dict[str, Any]:
-    s, o = get_settings(), officer_settings()
-    if not s.groq_api_key:
-        raise RuntimeError("no Groq API key configured")
-    out = _post("https://api.groq.com/openai/v1/chat/completions", {
-        "model": s.groq_model, "temperature": 0, "response_format": {"type": "json_object"},
-        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
-    }, {"Authorization": f"Bearer {s.groq_api_key}"}, o.ask_timeout_s)
-    return json.loads(out["choices"][0]["message"]["content"])
-
-
-def _gemini(prompt: str) -> dict[str, Any]:
-    s, o = get_settings(), officer_settings()
-    if not s.gemini_api_key:
-        raise RuntimeError("no Gemini API key configured")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{s.gemini_model}:generateContent"
-    out = _post(url, {
-        "systemInstruction": {"parts": [{"text": SYSTEM}]},
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
-    }, {"x-goog-api-key": s.gemini_api_key}, o.ask_timeout_s)
-    return json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
-
-
-PROVIDERS = {"ollama": _ollama, "groq": _groq, "gemini": _gemini}
+PROVIDERS = {"ollama": _ollama}
 
 
 def model_name(provider: str) -> str:
-    s = get_settings()
-    return {"ollama": officer_settings().ask_model, "groq": s.groq_model, "gemini": s.gemini_model}[provider]
+    return {"ollama": officer_settings().ask_model}[provider]
 
 
 def enabled_providers() -> list[str]:
-    allow = get_settings().llm_allow_external
-    names = [p.strip() for p in officer_settings().ask_providers.split(",") if p.strip()]
-    return [p for p in names if p in PROVIDERS and (p not in EXTERNAL or allow)]
+    return [p for p in (x.strip() for x in officer_settings().ask_providers.split(",")) if p in PROVIDERS]
 
 
 def call_model(prompt: str) -> tuple[list[dict[str, Any]] | None, str | None, list[str]]:
@@ -486,7 +459,7 @@ def answer(db: Session, app: Application, question: str, *, use_model: bool = Tr
     used = {c for s in kept for c in s["cites"] + s["related"]}
     return {
         "question": question, "mode": mode, "provider": provider,
-        "model": model_name(provider) if provider else None, "external": provider in EXTERNAL if provider else False,
+        "model": model_name(provider) if provider else None,
         "sentences": kept, "dropped": dropped, "dropped_count": len(dropped), "proposed_count": proposed,
         "fallback": fallback, "first_pass_kept": first_kept,
         "evidence": {k: {kk: v[kk] for kk in ("id", "kind", "label", "text", "target")} for k, v in items.items()

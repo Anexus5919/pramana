@@ -1,7 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -30,20 +29,13 @@ class Settings(BaseSettings):
     fetch_models: bool = True
     # Fetch CRL/OCSP for India PKI signatures; off by default so demos work offline
     pki_fetch_revocation: bool = False
-    # Optional grounded LLM extraction for fields the patterns miss; the pipeline never requires it.
-    # Providers are tried in order. External providers also need llm_allow_external=true.
-    llm_providers: str = ""  # e.g. "ollama" or "ollama,groq,gemini"
-    llm_allow_external: bool = False
+    # Optional grounded extraction for fields the patterns miss, by our fine-tuned model on a local Ollama;
+    # the pipeline never requires it. Set llm_providers="ollama" to enable it
+    llm_providers: str = ""
     llm_timeout_s: int = 60
     ollama_url: str = "http://127.0.0.1:11434"
     # Fine-tuned Qwen3-1.7B extractor built by backend/training; any Ollama model name works here
     ollama_model: str = "pramana-extract"
-    groq_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GROQ_API_KEY", "GROQ_API_KEY"))
-    groq_model: str = "openai/gpt-oss-20b"
-    gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
-                                                                          "GEMINI_API_KEY", "GOOGLE_API_KEY"))
-    # gemini-2.5-flash is closed to new API keys; the alias tracks Google's current Flash release
-    gemini_model: str = "gemini-flash-latest"
     # Model weights outside data_dir, so a fresh data directory does not refetch them: the photo detector
     # (scripts/fetch_photo_assets.py) and the Devanagari recogniser, both pinned by SHA-256. The map tile URL
     # is for the Campus tab; empty disables tiles and the tab shows a plain plot instead

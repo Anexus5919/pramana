@@ -10,7 +10,7 @@ class OfficerSettings(BaseSettings):
 
     # Default response window printed on deficiency letters; an office setting, not a handbook rule
     letter_response_days: int = 15
-    # "Ask why" providers in order; external ones also need PRAMANA_LLM_ALLOW_EXTERNAL=true
+    # "Ask why" runs on a local Ollama model; set ask_providers="" to answer from templates only
     ask_providers: str = "ollama"
     ask_model: str = "qwen3:4b-instruct-2507-q4_K_M"
     ask_timeout_s: int = 90

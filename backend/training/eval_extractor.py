@@ -31,7 +31,6 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=100)
     a = ap.parse_args()
     os.environ["PRAMANA_LLM_PROVIDERS"] = a.provider
-    os.environ["PRAMANA_LLM_ALLOW_EXTERNAL"] = "true"
     if a.model:
         os.environ[f"PRAMANA_{a.provider.upper()}_MODEL"] = a.model
     from rapidfuzz import fuzz
