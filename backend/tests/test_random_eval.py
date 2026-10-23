@@ -181,6 +181,50 @@ def test_seals_of_one_template_for_two_cities_do_not_match_but_copies_do():
     assert distance(a, cs.fingerprint(im.resize((270, 270)))) <= PHASH_MAX_DISTANCE
 
 
+def _page(source, *lines):
+    from pramana.pipeline.text import PageText, Word, group_lines
+
+    words = [Word(w, 70 + 40 * i, 100 + 20 * n, 100 + 40 * i, 110 + 20 * n, conf=0.99 if source == "ocr" else None)
+             for n, line in enumerate(lines) for i, w in enumerate(line.split())]
+    pt = PageText(1, 595, 842, source, words)
+    pt.lines = group_lines(words)
+    return pt
+
+
+def test_ocr_pages_tolerate_merged_words_and_look_alike_digits_text_layers_do_not():
+    # Found by the random evaluation: OCR of scanned audit reports read "FinancialYear: 2024-25"
+    from pramana.pipeline.extract import extract_fields
+
+    spec = {"fields": [{"name": "financial_year", "patterns": [r"Financial Year\s*:?\s*(?P<v>\d{4}-\d{2})"]}]}
+    for line in ("FinancialYear: 2024-25", "Financial Year: 2O24-25", "Financial Year: 2024\u201325"):
+        ocr = extract_fields([_page("ocr", line)], spec)[0]
+        assert ocr.value == "2024-25" and ocr.raw == line.split(": ")[1], line
+        assert extract_fields([_page("digital", line)], spec)[0].status == "missing", line
+    assert extract_fields([_page("digital", "Financial Year: 2024-25")], spec)[0].value == "2024-25"
+
+
+def test_name_similarity_ignores_merged_words_not_different_names():
+    from pramana.rules.expr import _similar
+
+    assert _similar("Kota CharitableTrust", "Kota Charitable Trust") == 100
+    assert _similar("Jaipur Thiruvalluvar VidyaVikasMandal", "Jaipur Thiruvalluvar Vidya Vikas Mandal") == 100
+    assert _similar("Ahilya Institute of Technology", "Chanakya Institute of Technology") < 90
+    assert _similar("Pragati Education Society", "Krishna Education Society") < 85
+
+
+def test_instruction_lines_are_flagged_and_ordinary_certificate_text_is_not():
+    from pramana.pipeline.llm_extract import INJECTION
+
+    sets = json.loads((Path(__file__).parent / "data" / "instruction_lines.json").read_text(encoding="utf-8"))
+    assert all(INJECTION.search(x) for x in sets["known"] + sets["held_out_author"])
+    assert sum(1 for x in sets["held_out_independent"] if INJECTION.search(x)) >= 7
+    assert not any(INJECTION.search(x) for x in sets["benign_independent"])
+    for benign in ("Fire Alarm System: provided in all blocks", "Software: Tally ERP 9", "Reviewer: Dr. A. Rao",
+                   "Lab Assistant, Computer Engineering", "The automatic sprinkler system shall be maintained.",
+                   "Please ignore this reminder if the fee has been paid.", "Model: XR-200 smoke detector"):
+        assert not INJECTION.search(benign), benign
+
+
 def test_blind_run_end_to_end(tmp_path):
     out = tmp_path / "run"
     r = subprocess.run([sys.executable, str(SCRIPTS / "random_eval.py"), "--seed", "5", "--n", "4", "--out", str(out)],
