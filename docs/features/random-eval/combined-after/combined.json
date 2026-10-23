@@ -1,0 +1,2721 @@
+{
+ "generated": "2026-10-23T16:30:48+00:00",
+ "seeds": [
+  5505,
+  6606
+ ],
+ "score": {
+  "applications": 200,
+  "clean_applications": 55,
+  "conditions": 242,
+  "expected_pairs": 446,
+  "failed_runs": [],
+  "recall": {
+   "k": 446,
+   "n": 446,
+   "rate": 1.0,
+   "wilson95": [
+    0.9915,
+    1.0
+   ]
+  },
+  "precision": {
+   "k": 446,
+   "n": 446,
+   "rate": 1.0,
+   "wilson95": [
+    0.9915,
+    1.0
+   ]
+  },
+  "conditions_fully_detected": {
+   "k": 242,
+   "n": 242,
+   "rate": 1.0,
+   "wilson95": [
+    0.9844,
+    1.0
+   ]
+  },
+  "false_alarms_on_clean": {
+   "applications": 55,
+   "with_any_false_alarm": 0,
+   "codes": 0,
+   "per_clean_application": 0.0,
+   "by_code": {},
+   "fired": {}
+  },
+  "false_positives": [],
+  "false_negatives": [],
+  "by_kind": {
+   "accounts_other_entity": {
+    "title": "Audited accounts of another trust or society",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 5,
+    "pairs_found": 5,
+    "missing_codes": {}
+   },
+   "accounts_wrong_year": {
+    "title": "Audited accounts for an earlier financial year",
+    "instances": 13,
+    "detected": 13,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 13,
+    "pairs_found": 13,
+    "missing_codes": {}
+   },
+   "admin_area_short": {
+    "title": "Administrative or amenities area below the norm",
+    "instances": 1,
+    "detected": 1,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 1,
+    "pairs_found": 1,
+    "missing_codes": {}
+   },
+   "affidavit_other_app": {
+    "title": "Affidavit 2 generated for last year's application",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 5,
+    "pairs_found": 5,
+    "missing_codes": {}
+   },
+   "affidavit_unsigned": {
+    "title": "Affidavit 2 without a digital signature",
+    "instances": 6,
+    "detected": 6,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "bandwidth_short": {
+    "title": "Internet bandwidth below the handbook tier",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 7,
+    "pairs_found": 7,
+    "missing_codes": {}
+   },
+   "core_branches_unmet": {
+    "title": "Intake increase without three core branches, two outside CS",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 5,
+    "pairs_found": 5,
+    "missing_codes": {}
+   },
+   "eoa_seat_increase": {
+    "title": "Extension of Approval proposing more seats than approved",
+    "instances": 8,
+    "detected": 8,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 16,
+    "pairs_found": 16,
+    "missing_codes": {}
+   },
+   "faculty_count_mismatch": {
+    "title": "Declared faculty count differs from the roster",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 5,
+    "pairs_found": 5,
+    "missing_codes": {}
+   },
+   "faculty_shared": {
+    "title": "Faculty also listed and registered by another application",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 15,
+    "pairs_found": 15,
+    "missing_codes": {}
+   },
+   "faculty_short": {
+    "title": "Faculty below the faculty-student ratio",
+    "instances": 6,
+    "detected": 6,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "faculty_turnover": {
+    "title": "More than half of last year's faculty roster replaced",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 7,
+    "pairs_found": 7,
+    "missing_codes": {}
+   },
+   "fire_after_submission": {
+    "title": "Fire NOC issued after the application was submitted",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 5,
+    "pairs_found": 5,
+    "missing_codes": {}
+   },
+   "fire_copied": {
+    "title": "Fire NOC copied from another application with the name changed and its QR pasted",
+    "instances": 3,
+    "detected": 3,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 20,
+    "pairs_found": 20,
+    "missing_codes": {}
+   },
+   "fire_expired": {
+    "title": "Fire NOC expired before submission",
+    "instances": 2,
+    "detected": 2,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "fire_other_name": {
+    "title": "Fire NOC issued to a different institution name",
+    "instances": 4,
+    "detected": 4,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 4,
+    "pairs_found": 4,
+    "missing_codes": {}
+   },
+   "fire_overwritten_other_font": {
+    "title": "Fire NOC validity overwritten after issuer signing, in another font",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 57,
+    "pairs_found": 57,
+    "missing_codes": {}
+   },
+   "fire_overwritten_same_font": {
+    "title": "Fire NOC validity overwritten after issuer signing, same font",
+    "instances": 6,
+    "detected": 6,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 41,
+    "pairs_found": 41,
+    "missing_codes": {}
+   },
+   "fire_qr_mismatch": {
+    "title": "Printed fire NOC validity differs from its issuer-signed QR",
+    "instances": 3,
+    "detected": 3,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 11,
+    "pairs_found": 11,
+    "missing_codes": {}
+   },
+   "fire_unknown_number": {
+    "title": "Fire NOC the issuer has no record of, signed only by the applicant",
+    "instances": 3,
+    "detected": 3,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "fire_variant_instruction": {
+    "title": "Unfamiliar fire NOC layout with a line addressed to automated readers",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 25,
+    "pairs_found": 25,
+    "missing_codes": {}
+   },
+   "fire_variant_layout": {
+    "title": "Valid fire NOC in an issuer layout the patterns do not know",
+    "instances": 5,
+    "detected": 5,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 20,
+    "pairs_found": 20,
+    "missing_codes": {}
+   },
+   "intake_above_record": {
+    "title": "Approved intake declared above the AICTE record",
+    "instances": 1,
+    "detected": 1,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 4,
+    "pairs_found": 4,
+    "missing_codes": {}
+   },
+   "issuer_unsigned": {
+    "title": "Fire NOC or occupancy certificate without the issuer's signature",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 7,
+    "pairs_found": 7,
+    "missing_codes": {}
+   },
+   "late_submission": {
+    "title": "Application submitted after the deadline",
+    "instances": 3,
+    "detected": 3,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 3,
+    "pairs_found": 3,
+    "missing_codes": {}
+   },
+   "nba_unsupported": {
+    "title": "NBA accreditation claimed without a register entry",
+    "instances": 11,
+    "detected": 11,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 11,
+    "pairs_found": 11,
+    "missing_codes": {}
+   },
+   "oc_area_exceeded": {
+    "title": "Declared built-up area beyond the occupancy certificate",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 7,
+    "pairs_found": 7,
+    "missing_codes": {}
+   },
+   "oc_other_name": {
+    "title": "Occupancy certificate in another institution's name",
+    "instances": 6,
+    "detected": 6,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "photo_c2pa_edited": {
+    "title": "Photo edited after its Content Credentials were signed",
+    "instances": 3,
+    "detected": 3,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 3,
+    "pairs_found": 3,
+    "missing_codes": {}
+   },
+   "photo_geotag_far": {
+    "title": "Photo geotag far from the campus",
+    "instances": 8,
+    "detected": 8,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 8,
+    "pairs_found": 8,
+    "missing_codes": {}
+   },
+   "photo_reused": {
+    "title": "Infrastructure photo reused from another application",
+    "instances": 4,
+    "detected": 4,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 12,
+    "pairs_found": 12,
+    "missing_codes": {}
+   },
+   "registry_outage": {
+    "title": "Issuer registry unavailable during validation",
+    "instances": 11,
+    "detected": 11,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 11,
+    "pairs_found": 11,
+    "missing_codes": {}
+   },
+   "satmap_off_site": {
+    "title": "Satellite map point away from the campus on record",
+    "instances": 6,
+    "detected": 6,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "seal_other_issuer": {
+    "title": "Fire NOC carrying another city's fire brigade seal",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 21,
+    "pairs_found": 21,
+    "missing_codes": {}
+   },
+   "ssc_expired": {
+    "title": "Structural Stability Certificate older than five years",
+    "instances": 10,
+    "detected": 10,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 20,
+    "pairs_found": 20,
+    "missing_codes": {}
+   },
+   "ssc_missing": {
+    "title": "Building over 30 years old without a Structural Stability Certificate",
+    "instances": 8,
+    "detected": 8,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 8,
+    "pairs_found": 8,
+    "missing_codes": {}
+   },
+   "ssc_pending": {
+    "title": "Structural engineer register confirms asynchronously (pending)",
+    "instances": 6,
+    "detected": 6,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 6,
+    "pairs_found": 6,
+    "missing_codes": {}
+   },
+   "ter_not_received": {
+    "title": "TER fee not received according to the ledger",
+    "instances": 8,
+    "detected": 8,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 8,
+    "pairs_found": 8,
+    "missing_codes": {}
+   },
+   "ter_receipt_mismatch": {
+    "title": "TER receipt disagrees with the ledger (amount or transaction)",
+    "instances": 1,
+    "detected": 1,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 1,
+    "pairs_found": 1,
+    "missing_codes": {}
+   },
+   "yoy_built_up_decreased": {
+    "title": "Declared built-up area smaller than last year",
+    "instances": 4,
+    "detected": 4,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 4,
+    "pairs_found": 4,
+    "missing_codes": {}
+   },
+   "yoy_cert_reused": {
+    "title": "Fire NOC number from last year returns with a new validity",
+    "instances": 8,
+    "detected": 8,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 8,
+    "pairs_found": 8,
+    "missing_codes": {}
+   },
+   "yoy_land_decreased": {
+    "title": "Declared land area smaller than last year",
+    "instances": 7,
+    "detected": 7,
+    "partial": 0,
+    "missed": 0,
+    "pairs": 7,
+    "pairs_found": 7,
+    "missing_codes": {}
+   }
+  },
+  "by_code": {
+   "ADD26-26C-CORE-BRANCHES": {
+    "tp": 5,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-232D-TER-STATUS": {
+    "tp": 8,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-617H-SSC-VALID": {
+    "tp": 10,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-617I-FIRE-VALID": {
+    "tp": 21,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-639-AFF2-DSC": {
+    "tp": 6,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-A21-SSC-REQUIRED": {
+    "tp": 8,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-A31D-FIRE-BEFORE": {
+    "tp": 15,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-ANX33-ADMIN-AREA": {
+    "tp": 1,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-ANX41-BANDWIDTH": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "APH-ANX5-FSR": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-FIELD-OVERWRITTEN": {
+    "tp": 13,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-FONT-MISMATCH": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-IMG-GEOTAG-FAR": {
+    "tp": 12,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-PDF-OVERLAID-TEXT": {
+    "tp": 13,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-PDF-REVISION-TEXT-CHANGE": {
+    "tp": 13,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-PDF-WHITEOUT": {
+    "tp": 13,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-SEAL-REUSED": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "FX-SEAL-REUSED-LATER": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "PH-C2PA-MODIFIED-AFTER-SIGNING": {
+    "tp": 3,
+    "fn": 0,
+    "fp": 0
+   },
+   "PN2627-DEADLINE": {
+    "tp": 3,
+    "fn": 0,
+    "fp": 0
+   },
+   "SEC-INSTRUCTION-TEXT": {
+    "tp": 5,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER-SIGNATURE-ABSENT": {
+    "tp": 22,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER_REGISTRY-EXPIRED": {
+    "tp": 11,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER_REGISTRY-MANUAL_REVIEW_REQUIRED": {
+    "tp": 10,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER_REGISTRY-MISMATCH_DETECTED": {
+    "tp": 9,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER_REGISTRY-SOURCE_UNAVAILABLE": {
+    "tp": 11,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER_REGISTRY-VERIFICATION_PENDING": {
+    "tp": 16,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED": {
+    "tp": 13,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-SIGNED_QR-EXPIRED": {
+    "tp": 10,
+    "fn": 0,
+    "fp": 0
+   },
+   "VER-SIGNED_QR-MISMATCH_DETECTED": {
+    "tp": 5,
+    "fn": 0,
+    "fp": 0
+   },
+   "XA-FACULTY-MULTIPLE-INSTITUTIONS": {
+    "tp": 10,
+    "fn": 0,
+    "fp": 0
+   },
+   "XA-FACULTY-REGISTERED-ELSEWHERE": {
+    "tp": 5,
+    "fn": 0,
+    "fp": 0
+   },
+   "XA-NEAR-DUPLICATE-DETAILS": {
+    "tp": 6,
+    "fn": 0,
+    "fp": 0
+   },
+   "XA-PHOTO-REUSED": {
+    "tp": 4,
+    "fn": 0,
+    "fp": 0
+   },
+   "XA-PHOTO-REUSED-LATER": {
+    "tp": 4,
+    "fn": 0,
+    "fp": 0
+   },
+   "XA-SHARED-CERTIFICATE-NUMBER": {
+    "tp": 6,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-ACCOUNTS-ENTITY": {
+    "tp": 18,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-AFF2-APPLICATION": {
+    "tp": 5,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-FACULTY-COUNT": {
+    "tp": 5,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-FIRE-INSTITUTION": {
+    "tp": 14,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-OC-AREA": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-OC-INSTITUTION": {
+    "tp": 6,
+    "fn": 0,
+    "fp": 0
+   },
+   "XD-SATMAP-LOCATION": {
+    "tp": 6,
+    "fn": 0,
+    "fp": 0
+   },
+   "XR-EOA-NO-INCREASE": {
+    "tp": 9,
+    "fn": 0,
+    "fp": 0
+   },
+   "XR-INTAKE-RECORD": {
+    "tp": 1,
+    "fn": 0,
+    "fp": 0
+   },
+   "XR-NBA-CLAIMS": {
+    "tp": 11,
+    "fn": 0,
+    "fp": 0
+   },
+   "XR-TER-RECEIPT-MATCH": {
+    "tp": 1,
+    "fn": 0,
+    "fp": 0
+   },
+   "YOY-BUILT-UP-AREA-DECREASED": {
+    "tp": 4,
+    "fn": 0,
+    "fp": 0
+   },
+   "YOY-CERT-REUSED-NEW-VALIDITY": {
+    "tp": 10,
+    "fn": 0,
+    "fp": 0
+   },
+   "YOY-FACULTY-TURNOVER": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   },
+   "YOY-INTAKE-JUMP": {
+    "tp": 9,
+    "fn": 0,
+    "fp": 0
+   },
+   "YOY-LAND-AREA-DECREASED": {
+    "tp": 7,
+    "fn": 0,
+    "fp": 0
+   }
+  },
+  "condition_results": [
+   {
+    "id": "s5505-C001",
+    "kind": "fire_variant_instruction",
+    "app": "s5505-R012",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C002",
+    "kind": "satmap_off_site",
+    "app": "s5505-R003",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C003",
+    "kind": "yoy_built_up_decreased",
+    "app": "s5505-R090",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C004",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R076",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C005",
+    "kind": "fire_overwritten_other_font",
+    "app": "s5505-R093",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C006",
+    "kind": "late_submission",
+    "app": "s5505-R058",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C007",
+    "kind": "bandwidth_short",
+    "app": "s5505-R095",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C008",
+    "kind": "fire_variant_instruction",
+    "app": "s5505-R095",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C009",
+    "kind": "fire_unknown_number",
+    "app": "s5505-R043",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C010",
+    "kind": "photo_reused",
+    "app": "s5505-R043",
+    "partner": "s5505-R011",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C011",
+    "kind": "fire_after_submission",
+    "app": "s5505-R013",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C012",
+    "kind": "ssc_expired",
+    "app": "s5505-R013",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C013",
+    "kind": "fire_overwritten_same_font",
+    "app": "s5505-R006",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C014",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R083",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C015",
+    "kind": "bandwidth_short",
+    "app": "s5505-R051",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C016",
+    "kind": "ssc_expired",
+    "app": "s5505-R029",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C017",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R055",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C018",
+    "kind": "photo_reused",
+    "app": "s5505-R055",
+    "partner": "s5505-R042",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C019",
+    "kind": "fire_other_name",
+    "app": "s5505-R055",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C020",
+    "kind": "ssc_expired",
+    "app": "s5505-R060",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C021",
+    "kind": "fire_variant_instruction",
+    "app": "s5505-R060",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C022",
+    "kind": "oc_area_exceeded",
+    "app": "s5505-R036",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C023",
+    "kind": "intake_above_record",
+    "app": "s5505-R036",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C024",
+    "kind": "fire_overwritten_same_font",
+    "app": "s5505-R036",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C025",
+    "kind": "fire_overwritten_other_font",
+    "app": "s5505-R041",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C026",
+    "kind": "photo_c2pa_edited",
+    "app": "s5505-R041",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C027",
+    "kind": "satmap_off_site",
+    "app": "s5505-R054",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C028",
+    "kind": "fire_overwritten_same_font",
+    "app": "s5505-R054",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C029",
+    "kind": "fire_after_submission",
+    "app": "s5505-R080",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C030",
+    "kind": "ssc_missing",
+    "app": "s5505-R080",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C031",
+    "kind": "faculty_shared",
+    "app": "s5505-R080",
+    "partner": "s5505-R045",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C032",
+    "kind": "ssc_missing",
+    "app": "s5505-R042",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C033",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R042",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C034",
+    "kind": "ssc_missing",
+    "app": "s5505-R045",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C035",
+    "kind": "fire_after_submission",
+    "app": "s5505-R022",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C036",
+    "kind": "eoa_seat_increase",
+    "app": "s5505-R022",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C037",
+    "kind": "bandwidth_short",
+    "app": "s5505-R022",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C038",
+    "kind": "ssc_pending",
+    "app": "s5505-R050",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C039",
+    "kind": "fire_overwritten_same_font",
+    "app": "s5505-R024",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C040",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R024",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C041",
+    "kind": "fire_unknown_number",
+    "app": "s5505-R077",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C042",
+    "kind": "ter_not_received",
+    "app": "s5505-R077",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C043",
+    "kind": "faculty_turnover",
+    "app": "s5505-R040",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C044",
+    "kind": "affidavit_unsigned",
+    "app": "s5505-R040",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C045",
+    "kind": "fire_qr_mismatch",
+    "app": "s5505-R040",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C046",
+    "kind": "fire_after_submission",
+    "app": "s5505-R063",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C047",
+    "kind": "fire_after_submission",
+    "app": "s5505-R027",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C048",
+    "kind": "issuer_unsigned",
+    "app": "s5505-R017",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C049",
+    "kind": "affidavit_other_app",
+    "app": "s5505-R017",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C050",
+    "kind": "ssc_missing",
+    "app": "s5505-R017",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C051",
+    "kind": "fire_qr_mismatch",
+    "app": "s5505-R026",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C052",
+    "kind": "faculty_turnover",
+    "app": "s5505-R026",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C053",
+    "kind": "ter_receipt_mismatch",
+    "app": "s5505-R072",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C054",
+    "kind": "registry_outage",
+    "app": "s5505-R032",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C055",
+    "kind": "yoy_built_up_decreased",
+    "app": "s5505-R053",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C056",
+    "kind": "registry_outage",
+    "app": "s5505-R007",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C057",
+    "kind": "ter_not_received",
+    "app": "s5505-R070",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C058",
+    "kind": "fire_variant_instruction",
+    "app": "s5505-R056",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C059",
+    "kind": "yoy_built_up_decreased",
+    "app": "s5505-R079",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C060",
+    "kind": "yoy_cert_reused",
+    "app": "s5505-R031",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C061",
+    "kind": "yoy_cert_reused",
+    "app": "s5505-R096",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C062",
+    "kind": "ssc_missing",
+    "app": "s5505-R035",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C063",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R071",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C064",
+    "kind": "bandwidth_short",
+    "app": "s5505-R049",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C065",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R049",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C066",
+    "kind": "ter_not_received",
+    "app": "s5505-R002",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C067",
+    "kind": "satmap_off_site",
+    "app": "s5505-R002",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C068",
+    "kind": "eoa_seat_increase",
+    "app": "s5505-R008",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C069",
+    "kind": "yoy_cert_reused",
+    "app": "s5505-R019",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C070",
+    "kind": "photo_reused",
+    "app": "s5505-R098",
+    "partner": "s5505-R017",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C071",
+    "kind": "satmap_off_site",
+    "app": "s5505-R048",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C072",
+    "kind": "faculty_shared",
+    "app": "s5505-R048",
+    "partner": "s5505-R069",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C073",
+    "kind": "photo_geotag_far",
+    "app": "s5505-R048",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C074",
+    "kind": "registry_outage",
+    "app": "s5505-R088",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C075",
+    "kind": "affidavit_unsigned",
+    "app": "s5505-R091",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C076",
+    "kind": "registry_outage",
+    "app": "s5505-R047",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C077",
+    "kind": "fire_overwritten_other_font",
+    "app": "s5505-R047",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C078",
+    "kind": "seal_other_issuer",
+    "app": "s5505-R010",
+    "partner": "s5505-R007",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C079",
+    "kind": "ssc_expired",
+    "app": "s5505-R018",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C080",
+    "kind": "late_submission",
+    "app": "s5505-R015",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C081",
+    "kind": "oc_other_name",
+    "app": "s5505-R015",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C082",
+    "kind": "affidavit_unsigned",
+    "app": "s5505-R020",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C083",
+    "kind": "yoy_land_decreased",
+    "app": "s5505-R020",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C084",
+    "kind": "eoa_seat_increase",
+    "app": "s5505-R082",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C085",
+    "kind": "affidavit_other_app",
+    "app": "s5505-R046",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C086",
+    "kind": "nba_unsupported",
+    "app": "s5505-R046",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C087",
+    "kind": "faculty_count_mismatch",
+    "app": "s5505-R011",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C088",
+    "kind": "bandwidth_short",
+    "app": "s5505-R011",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C089",
+    "kind": "nba_unsupported",
+    "app": "s5505-R084",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C090",
+    "kind": "oc_other_name",
+    "app": "s5505-R078",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C091",
+    "kind": "fire_copied",
+    "app": "s5505-R062",
+    "partner": "s5505-R011",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C092",
+    "kind": "core_branches_unmet",
+    "app": "s5505-R062",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C093",
+    "kind": "fire_overwritten_other_font",
+    "app": "s5505-R001",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C094",
+    "kind": "affidavit_other_app",
+    "app": "s5505-R001",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C095",
+    "kind": "fire_overwritten_same_font",
+    "app": "s5505-R085",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C096",
+    "kind": "admin_area_short",
+    "app": "s5505-R085",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C097",
+    "kind": "fire_variant_layout",
+    "app": "s5505-R066",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C098",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R066",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C099",
+    "kind": "bandwidth_short",
+    "app": "s5505-R066",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C100",
+    "kind": "nba_unsupported",
+    "app": "s5505-R038",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C101",
+    "kind": "accounts_other_entity",
+    "app": "s5505-R038",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C102",
+    "kind": "satmap_off_site",
+    "app": "s5505-R064",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C103",
+    "kind": "faculty_turnover",
+    "app": "s5505-R033",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C104",
+    "kind": "nba_unsupported",
+    "app": "s5505-R086",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C105",
+    "kind": "photo_reused",
+    "app": "s5505-R086",
+    "partner": "s5505-R006",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C106",
+    "kind": "fire_expired",
+    "app": "s5505-R086",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C107",
+    "kind": "issuer_unsigned",
+    "app": "s5505-R097",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C108",
+    "kind": "photo_geotag_far",
+    "app": "s5505-R097",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C109",
+    "kind": "ssc_expired",
+    "app": "s5505-R069",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C110",
+    "kind": "ssc_pending",
+    "app": "s5505-R034",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C111",
+    "kind": "registry_outage",
+    "app": "s5505-R034",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s5505-C112",
+    "kind": "accounts_wrong_year",
+    "app": "s5505-R081",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C001",
+    "kind": "bandwidth_short",
+    "app": "s6606-R062",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C002",
+    "kind": "faculty_turnover",
+    "app": "s6606-R045",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C003",
+    "kind": "core_branches_unmet",
+    "app": "s6606-R031",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C004",
+    "kind": "fire_other_name",
+    "app": "s6606-R007",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C005",
+    "kind": "yoy_cert_reused",
+    "app": "s6606-R092",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C006",
+    "kind": "photo_geotag_far",
+    "app": "s6606-R092",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C007",
+    "kind": "registry_outage",
+    "app": "s6606-R092",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C008",
+    "kind": "accounts_other_entity",
+    "app": "s6606-R059",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C009",
+    "kind": "faculty_count_mismatch",
+    "app": "s6606-R059",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C010",
+    "kind": "affidavit_unsigned",
+    "app": "s6606-R052",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C011",
+    "kind": "accounts_wrong_year",
+    "app": "s6606-R077",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C012",
+    "kind": "fire_overwritten_other_font",
+    "app": "s6606-R077",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C013",
+    "kind": "faculty_turnover",
+    "app": "s6606-R055",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C014",
+    "kind": "issuer_unsigned",
+    "app": "s6606-R055",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C015",
+    "kind": "yoy_land_decreased",
+    "app": "s6606-R055",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C016",
+    "kind": "fire_variant_layout",
+    "app": "s6606-R048",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C017",
+    "kind": "accounts_wrong_year",
+    "app": "s6606-R001",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C018",
+    "kind": "nba_unsupported",
+    "app": "s6606-R014",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C019",
+    "kind": "issuer_unsigned",
+    "app": "s6606-R014",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C020",
+    "kind": "faculty_turnover",
+    "app": "s6606-R087",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C021",
+    "kind": "yoy_cert_reused",
+    "app": "s6606-R087",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C022",
+    "kind": "core_branches_unmet",
+    "app": "s6606-R087",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C023",
+    "kind": "fire_overwritten_same_font",
+    "app": "s6606-R012",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C024",
+    "kind": "nba_unsupported",
+    "app": "s6606-R012",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C025",
+    "kind": "yoy_land_decreased",
+    "app": "s6606-R012",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C026",
+    "kind": "eoa_seat_increase",
+    "app": "s6606-R024",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C027",
+    "kind": "fire_other_name",
+    "app": "s6606-R069",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C028",
+    "kind": "registry_outage",
+    "app": "s6606-R069",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C029",
+    "kind": "photo_c2pa_edited",
+    "app": "s6606-R099",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C030",
+    "kind": "yoy_cert_reused",
+    "app": "s6606-R013",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C031",
+    "kind": "issuer_unsigned",
+    "app": "s6606-R013",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C032",
+    "kind": "yoy_cert_reused",
+    "app": "s6606-R093",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C033",
+    "kind": "ssc_missing",
+    "app": "s6606-R093",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C034",
+    "kind": "nba_unsupported",
+    "app": "s6606-R063",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C035",
+    "kind": "seal_other_issuer",
+    "app": "s6606-R002",
+    "partner": "s6606-R097",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C036",
+    "kind": "faculty_short",
+    "app": "s6606-R002",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C037",
+    "kind": "fire_copied",
+    "app": "s6606-R027",
+    "partner": "s6606-R028",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C038",
+    "kind": "faculty_short",
+    "app": "s6606-R027",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C039",
+    "kind": "nba_unsupported",
+    "app": "s6606-R056",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C040",
+    "kind": "oc_area_exceeded",
+    "app": "s6606-R056",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C041",
+    "kind": "fire_variant_instruction",
+    "app": "s6606-R033",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C042",
+    "kind": "oc_area_exceeded",
+    "app": "s6606-R033",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C043",
+    "kind": "oc_other_name",
+    "app": "s6606-R033",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C044",
+    "kind": "core_branches_unmet",
+    "app": "s6606-R091",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C045",
+    "kind": "faculty_count_mismatch",
+    "app": "s6606-R054",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C046",
+    "kind": "fire_variant_layout",
+    "app": "s6606-R054",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C047",
+    "kind": "photo_geotag_far",
+    "app": "s6606-R054",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C048",
+    "kind": "faculty_short",
+    "app": "s6606-R060",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C049",
+    "kind": "affidavit_other_app",
+    "app": "s6606-R060",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C050",
+    "kind": "oc_other_name",
+    "app": "s6606-R049",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C051",
+    "kind": "faculty_count_mismatch",
+    "app": "s6606-R049",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C052",
+    "kind": "yoy_land_decreased",
+    "app": "s6606-R049",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C053",
+    "kind": "seal_other_issuer",
+    "app": "s6606-R090",
+    "partner": "s6606-R051",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C054",
+    "kind": "accounts_other_entity",
+    "app": "s6606-R090",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C055",
+    "kind": "faculty_shared",
+    "app": "s6606-R005",
+    "partner": "s6606-R035",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C056",
+    "kind": "eoa_seat_increase",
+    "app": "s6606-R047",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C057",
+    "kind": "fire_variant_layout",
+    "app": "s6606-R047",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C058",
+    "kind": "photo_geotag_far",
+    "app": "s6606-R047",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C059",
+    "kind": "fire_overwritten_other_font",
+    "app": "s6606-R071",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C060",
+    "kind": "oc_other_name",
+    "app": "s6606-R071",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C061",
+    "kind": "ssc_pending",
+    "app": "s6606-R015",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C062",
+    "kind": "ter_not_received",
+    "app": "s6606-R015",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C063",
+    "kind": "seal_other_issuer",
+    "app": "s6606-R015",
+    "partner": "s6606-R095",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C064",
+    "kind": "eoa_seat_increase",
+    "app": "s6606-R082",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C065",
+    "kind": "ter_not_received",
+    "app": "s6606-R082",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C066",
+    "kind": "fire_qr_mismatch",
+    "app": "s6606-R082",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C067",
+    "kind": "yoy_built_up_decreased",
+    "app": "s6606-R075",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C068",
+    "kind": "photo_geotag_far",
+    "app": "s6606-R097",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C069",
+    "kind": "ssc_expired",
+    "app": "s6606-R097",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C070",
+    "kind": "yoy_cert_reused",
+    "app": "s6606-R029",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C071",
+    "kind": "eoa_seat_increase",
+    "app": "s6606-R058",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C072",
+    "kind": "fire_expired",
+    "app": "s6606-R011",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C073",
+    "kind": "faculty_turnover",
+    "app": "s6606-R021",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C074",
+    "kind": "nba_unsupported",
+    "app": "s6606-R021",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C075",
+    "kind": "oc_area_exceeded",
+    "app": "s6606-R021",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C076",
+    "kind": "faculty_count_mismatch",
+    "app": "s6606-R079",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C077",
+    "kind": "yoy_land_decreased",
+    "app": "s6606-R089",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C078",
+    "kind": "accounts_wrong_year",
+    "app": "s6606-R089",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C079",
+    "kind": "ter_not_received",
+    "app": "s6606-R089",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C080",
+    "kind": "fire_variant_layout",
+    "app": "s6606-R032",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C081",
+    "kind": "yoy_land_decreased",
+    "app": "s6606-R032",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C082",
+    "kind": "ssc_pending",
+    "app": "s6606-R070",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C083",
+    "kind": "issuer_unsigned",
+    "app": "s6606-R009",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C084",
+    "kind": "seal_other_issuer",
+    "app": "s6606-R009",
+    "partner": "s6606-R041",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C085",
+    "kind": "fire_other_name",
+    "app": "s6606-R078",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C086",
+    "kind": "accounts_other_entity",
+    "app": "s6606-R043",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C087",
+    "kind": "faculty_shared",
+    "app": "s6606-R037",
+    "partner": "s6606-R064",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C088",
+    "kind": "ssc_expired",
+    "app": "s6606-R037",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C089",
+    "kind": "oc_area_exceeded",
+    "app": "s6606-R037",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C090",
+    "kind": "late_submission",
+    "app": "s6606-R036",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C091",
+    "kind": "faculty_short",
+    "app": "s6606-R008",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C092",
+    "kind": "affidavit_unsigned",
+    "app": "s6606-R008",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C093",
+    "kind": "eoa_seat_increase",
+    "app": "s6606-R042",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C094",
+    "kind": "affidavit_other_app",
+    "app": "s6606-R067",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C095",
+    "kind": "seal_other_issuer",
+    "app": "s6606-R086",
+    "partner": "s6606-R060",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C096",
+    "kind": "faculty_shared",
+    "app": "s6606-R085",
+    "partner": "s6606-R017",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C097",
+    "kind": "fire_unknown_number",
+    "app": "s6606-R085",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C098",
+    "kind": "affidavit_unsigned",
+    "app": "s6606-R039",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C099",
+    "kind": "registry_outage",
+    "app": "s6606-R039",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C100",
+    "kind": "photo_geotag_far",
+    "app": "s6606-R050",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C101",
+    "kind": "issuer_unsigned",
+    "app": "s6606-R050",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C102",
+    "kind": "ssc_missing",
+    "app": "s6606-R010",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C103",
+    "kind": "nba_unsupported",
+    "app": "s6606-R010",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C104",
+    "kind": "ssc_expired",
+    "app": "s6606-R098",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C105",
+    "kind": "fire_overwritten_other_font",
+    "app": "s6606-R098",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C106",
+    "kind": "ssc_pending",
+    "app": "s6606-R072",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C107",
+    "kind": "yoy_land_decreased",
+    "app": "s6606-R061",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C108",
+    "kind": "photo_c2pa_edited",
+    "app": "s6606-R035",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C109",
+    "kind": "ter_not_received",
+    "app": "s6606-R035",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C110",
+    "kind": "fire_copied",
+    "app": "s6606-R035",
+    "partner": "s6606-R024",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C111",
+    "kind": "registry_outage",
+    "app": "s6606-R096",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C112",
+    "kind": "oc_area_exceeded",
+    "app": "s6606-R041",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C113",
+    "kind": "ssc_expired",
+    "app": "s6606-R041",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C114",
+    "kind": "accounts_wrong_year",
+    "app": "s6606-R046",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C115",
+    "kind": "faculty_short",
+    "app": "s6606-R095",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C116",
+    "kind": "ssc_missing",
+    "app": "s6606-R028",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C117",
+    "kind": "oc_area_exceeded",
+    "app": "s6606-R073",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C118",
+    "kind": "oc_other_name",
+    "app": "s6606-R073",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C119",
+    "kind": "faculty_short",
+    "app": "s6606-R100",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C120",
+    "kind": "ssc_expired",
+    "app": "s6606-R100",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C121",
+    "kind": "seal_other_issuer",
+    "app": "s6606-R100",
+    "partner": "s6606-R065",
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C122",
+    "kind": "photo_geotag_far",
+    "app": "s6606-R081",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C123",
+    "kind": "satmap_off_site",
+    "app": "s6606-R081",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C124",
+    "kind": "accounts_other_entity",
+    "app": "s6606-R051",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C125",
+    "kind": "registry_outage",
+    "app": "s6606-R051",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C126",
+    "kind": "nba_unsupported",
+    "app": "s6606-R017",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C127",
+    "kind": "registry_outage",
+    "app": "s6606-R065",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C128",
+    "kind": "ter_not_received",
+    "app": "s6606-R068",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C129",
+    "kind": "ssc_pending",
+    "app": "s6606-R064",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   },
+   {
+    "id": "s6606-C130",
+    "kind": "core_branches_unmet",
+    "app": "s6606-R064",
+    "partner": null,
+    "status": "detected",
+    "missing": []
+   }
+  ]
+ },
+ "runs": [
+  {
+   "seed": 5505,
+   "timing": {
+    "generate_s": 123.8,
+    "seeding_s": 30.6,
+    "processing_s": 928.8,
+    "validation_s": 155.4,
+    "wall_s": 1241.4,
+    "documents": 794,
+    "per_document_processing_s": 1.17,
+    "per_application_s": {
+     "mean": 10.84,
+     "median": 10.56,
+     "p90": 15.34,
+     "max": 18.34
+    },
+    "validation_per_application_s": {
+     "mean": 1.552,
+     "max": 2.559
+    },
+    "wall_per_application_s": 12.41
+   }
+  },
+  {
+   "seed": 6606,
+   "timing": {
+    "generate_s": 43.7,
+    "seeding_s": 33.5,
+    "processing_s": 765.0,
+    "validation_s": 319.7,
+    "wall_s": 1164.7,
+    "documents": 784,
+    "per_document_processing_s": 0.976,
+    "per_application_s": {
+     "mean": 10.84,
+     "median": 10.46,
+     "p90": 14.54,
+     "max": 19.88
+    },
+    "validation_per_application_s": {
+     "mean": 3.193,
+     "max": 11.36
+    },
+    "wall_per_application_s": 11.65
+   }
+  }
+ ]
+}
