@@ -4,6 +4,7 @@ cross-application signals, and pin everything needed to reproduce the result."""
 import logging
 import shutil
 import time
+from collections.abc import Callable
 from datetime import date
 from typing import Any
 
@@ -165,11 +166,22 @@ def _classify_signatures(results: list[vb.VerificationResult], vspec: dict[str, 
     return out
 
 
-def _verify_document(doc: Document, spec: dict[str, Any], as_of: date, inst: Institution) -> list[vb.VerificationResult]:
+def _verify_document(doc: Document, spec: dict[str, Any], as_of: date, inst: Institution,
+                     on_checks: Callable[[list[vb.VerificationResult]], None] | None = None) -> list[vb.VerificationResult]:
     results: list[vb.VerificationResult] = []
     vspec = spec.get("verification") or {}
+    reported = 0
+
+    def report() -> None:
+        # Live progress: hand over each group of checks as soon as it finishes
+        nonlocal reported
+        if on_checks and len(results) > reported:
+            on_checks(results[reported:])
+        reported = len(results)
+
     if doc.mime == "application/pdf":
         results.extend(_classify_signatures(validate_signatures(load_document(doc.storage_name)), vspec, inst))
+        report()
     tokens = (doc.analysis or {}).get("qr", [])
     for tok in tokens:
         chk = verify_token(tok["text"])
@@ -198,6 +210,7 @@ def _verify_document(doc: Document, spec: dict[str, Any], as_of: date, inst: Ins
             "signed_qr", status, chk.issuer["issuer"], bool(chk.issuer.get("simulated")), detail,
             {"page": tok["page"], "kid": chk.kid, "bbox": tok["bbox"]}, {"payload": chk.payload}, comps,
             claim="Signature over the QR payload verified with the issuer's published key."))
+    report()
     issuer_code = vspec.get("issuer")
     if issuer_code:
         adapter = adapters().get(issuer_code)
@@ -213,6 +226,7 @@ def _verify_document(doc: Document, spec: dict[str, Any], as_of: date, inst: Ins
                 f"Reference number ({ref_field}) could not be read from the document, so the issuer was not queried."))
         else:
             results.append(adapter.verify(ref, fields, as_of))
+    report()
     return results
 
 
@@ -281,18 +295,27 @@ def document_status(results: list[vb.VerificationResult]) -> str:
 
 
 def run_validation(db: Session, app: Application, actor: str, actor_role: str, *, ruleset: Ruleset | None = None,
-                   as_of: date | None = None, replay_of: str | None = None) -> ValidationRun:
+                   as_of: date | None = None, replay_of: str | None = None, run: ValidationRun | None = None,
+                   progress: Callable[..., None] | None = None) -> ValidationRun:
+    """Synchronous run. Background jobs (pramana.jobs) pass a queued `run` and a `progress` callback."""
     rs = ruleset or active_ruleset()
     _archive_ruleset(rs)
     as_of = as_of or as_of_date(app)
-    run = ValidationRun(application_id=app.id, round=app.round, ruleset_id=f"{rs.id}@{rs.version}",
-                        ruleset_hash=rs.sha256, engine_version=ENGINE_VERSION, triggered_by=actor)
-    db.add(run)
+    if run is None:
+        run = ValidationRun(application_id=app.id, round=app.round, ruleset_id=f"{rs.id}@{rs.version}",
+                            ruleset_hash=rs.sha256, engine_version=ENGINE_VERSION, triggered_by=actor)
+        db.add(run)
+    else:
+        run.round, run.ruleset_id, run.ruleset_hash = app.round, f"{rs.id}@{rs.version}", rs.sha256
+        run.engine_version, run.status = ENGINE_VERSION, "running"
     db.flush()
     stages: list[dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
+    emit = progress or (lambda *a, **k: None)
 
     def stage(name: str, t0: float, **info: Any) -> None:
         stages.append({"stage": name, "ms": round((time.perf_counter() - t0) * 1000), **info})
+        emit("stage.finished", **stages[-1], findings=len(findings))
 
     try:
         docs = list(db.scalars(select(Document).where(Document.application_id == app.id,
@@ -304,15 +327,14 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         for d in docs:
             if d.processing_status != "processed":
                 try:
-                    process_document(db, d, rs, campus)
+                    process_document(db, d, rs, campus, progress)
                     processed += 1
                 except Exception as e:  # noqa: BLE001  one bad file must not sink the run
                     log.exception("processing failed for %s", d.id)
                     d.processing_status, d.processing_error = "failed", str(e)[:500]
+            emit("doc.done", document_id=d.id, declared_type=d.declared_type, status=d.processing_status)
         db.flush()
         stage("document_processing", t0, documents=len(docs), newly_processed=processed)
-
-        findings: list[dict[str, Any]] = []
 
         t0 = time.perf_counter()
         for d in docs:
@@ -393,7 +415,9 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
             if d.processing_status != "processed":
                 continue
             spec = rs.doc_types.get(d.declared_type, {})
-            vres = _verify_document(d, spec, as_of, app.institution)
+            vres = _verify_document(d, spec, as_of, app.institution, lambda vs, d=d: [emit(
+                "check", document_id=d.id, declared_type=d.declared_type, channel=v.channel, status=v.status,
+                simulated=v.simulated, source=v.source_name) for v in vs])
             if d is latest.get(d.declared_type):
                 for v in vres:
                     ver_facts.setdefault(d.declared_type, {})[v.channel] = (v.status, d.id, v.source_name)
@@ -432,6 +456,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         facts = build_facts(db, app, docs, rs, ver_facts, as_of)
         results = evaluate(rs, facts, category=app.category, as_of=as_of)
         findings += _rule_findings(rs, results, app)
+        emit("rules", evaluated=len(results), outcomes=_count([{"o": r.outcome} for r in results], "o"))
         checklist = [{
             "rule_id": r.rule["id"], "title": r.rule["title"], "category": r.rule.get("category"),
             "outcome": r.outcome, "message": r.message, "severity": r.rule.get("severity"),

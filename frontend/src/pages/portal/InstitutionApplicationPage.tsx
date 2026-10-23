@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CircleAlert, ClipboardList, Pencil, Quote, Send, ShieldCheck } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, api, qk } from "../../api";
 import { fmtDate, fmtDateTime } from "../../lib/format";
@@ -22,6 +22,7 @@ import { appStatusTone } from "../../ui/tone";
 import { DeclaredView, NumbersEditor, ProgrammesEditor } from "./DeclaredEditor";
 import { fieldErrors, fromDraft, programmeErrors, toDraft, type DeclaredDraft } from "./declared";
 import { StatusStepper } from "./StatusStepper";
+import { SubmissionProgress } from "./SubmissionProgress";
 import { UploadSlot } from "./UploadSlot";
 
 const EDITABLE = new Set(["draft", "rectification_requested"]);
@@ -333,7 +334,18 @@ export default function InstitutionApplicationPage() {
   const qc = useQueryClient();
   const toast = useToast();
   const [confirm, setConfirm] = useState(false);
+  const [liveRun, setLiveRun] = useState<string | null>(null);
   const q = useQuery({ queryKey: qk.application(appId), queryFn: () => api.application(appId), enabled: !!appId });
+  // A check still running after a reload is followed again from its saved progress
+  const active = useQuery({ queryKey: qk.activeRun(appId), queryFn: () => api.activeRun(appId), enabled: !!appId });
+  useEffect(() => {
+    if (active.data?.run && !liveRun) setLiveRun(active.data.run.id);
+  }, [active.data, liveRun]);
+  const checkDone = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: qk.application(appId) });
+    void qc.invalidateQueries({ queryKey: qk.applications });
+    void qc.invalidateQueries({ queryKey: qk.findings(appId) });
+  }, [qc, appId]);
   const app = q.data;
   const docs = useMemo(() => currentDocs(app?.documents ?? []), [app?.documents]);
 
@@ -346,9 +358,14 @@ export default function InstitutionApplicationPage() {
         qc.invalidateQueries({ queryKey: qk.applications }),
       ]);
       const r = res.run;
+      if (r?.background) setLiveRun(r.id);
       toast.success(
         "Submitted to AICTE",
-        r?.status === "complete" ? `The automatic check finished for round ${r.round}. An officer reviews it next.` : "The automatic check has been recorded.",
+        r?.background
+          ? "The automatic check is running. Its progress shows on this page."
+          : r?.status === "complete"
+            ? `The automatic check finished for round ${r.round}. An officer reviews it next.`
+            : "The automatic check has been recorded.",
       );
     },
   });
@@ -435,8 +452,9 @@ export default function InstitutionApplicationPage() {
           </div>
           <aside className="order-first min-w-0 space-y-6 xl:sticky xl:top-24 xl:order-none">
             {editable && <SubmitCard app={app} docs={docs} onSubmit={() => setConfirm(true)} />}
-            <RunCard app={app} />
-            {!editable && !app.latest_run && (
+            {liveRun && <SubmissionProgress runId={liveRun} onDone={checkDone} />}
+            {!liveRun && <RunCard app={app} />}
+            {!editable && !app.latest_run && !liveRun && (
               <SectionCard eyebrow="Automatic check" title="Not run yet">
                 <p className="text-sm text-ink-3">The check runs when the application is submitted.</p>
               </SectionCard>

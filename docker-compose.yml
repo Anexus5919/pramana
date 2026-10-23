@@ -1,0 +1,48 @@
+# Deployment documentation: PostgreSQL plus the Pramana app. Not run in this prototype (no Docker on the
+# build machine); the app was tested against PostgreSQL 16 separately. Put an HTTPS reverse proxy in front.
+#
+#   export POSTGRES_PASSWORD=...            # any strong password
+#   export PRAMANA_MASTER_KEY=$(python -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())")
+#   docker compose up -d --build
+#   docker compose run --rm app sh -c "python scripts/make_fixtures.py && python scripts/seed.py"   # synthetic demo data
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pramana
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: pramana
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pramana -d pramana"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PRAMANA_DATABASE_URL: postgresql+psycopg://pramana:${POSTGRES_PASSWORD}@db/pramana
+      # Wraps every document's data key; keep it in a secret store, never in the data volume
+      PRAMANA_MASTER_KEY: ${PRAMANA_MASTER_KEY:?set PRAMANA_MASTER_KEY}
+      # Behind HTTPS: __Host- session cookie and HSTS
+      PRAMANA_COOKIE_SECURE: "true"
+      PRAMANA_DEMO_MODE: "false"
+      PRAMANA_JOB_WORKERS: "2"
+      PRAMANA_SANDBOX_WORKERS: "2"
+      PRAMANA_SANDBOX_MEMORY_MB: "2048"
+      PRAMANA_LLM_PROVIDERS: ""
+    volumes:
+      - appdata:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  appdata:

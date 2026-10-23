@@ -1,5 +1,4 @@
 import hashlib
-import io
 import re
 import uuid
 from datetime import UTC, datetime
@@ -10,11 +9,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import audit
+from .. import audit, jobs, sandbox
 from .. import serializers as ser
 from ..auth import OFFICIAL_ROLES, current_user, load_application, require_roles
 from ..config import get_settings
-from ..crypto import load_document, store_document
+from ..crypto import cache_get, cache_put, load_document, store_document
 from ..db import get_db
 from ..models import (
     Application,
@@ -29,7 +28,6 @@ from ..models import (
     utcnow,
 )
 from ..pipeline.intake import UploadRejected, validate_upload
-from ..pipeline.text import render_pdf_page
 from ..pipeline.validate import ruleset_by_hash, run_validation
 from ..rules.engine import active_ruleset
 
@@ -39,8 +37,11 @@ EDITABLE = {"draft", "rectification_requested"}
 
 
 def latest_run(db: Session, app_id: str) -> ValidationRun | None:
-    return db.scalars(select(ValidationRun).where(ValidationRun.application_id == app_id)
-                      .order_by(ValidationRun.started_at.desc()).limit(1)).first()
+    # The last complete result stays current while a background run is queued or running, and after one fails;
+    # a failed or interrupted run is only shown when nothing has completed yet
+    q = select(ValidationRun).where(ValidationRun.application_id == app_id).order_by(ValidationRun.started_at.desc())
+    return (db.scalars(q.where(ValidationRun.status == "complete").limit(1)).first()
+            or db.scalars(q.where(ValidationRun.status.notin_(jobs.ACTIVE)).limit(1)).first())
 
 
 @router.get("/applications")
@@ -179,6 +180,13 @@ def submit(app_id: str, user: User = Depends(require_roles("institution")), db: 
     audit.record(db, actor=user.username, actor_role=user.role, action="application.submitted",
                  object_type="application", object_id=app.id, application_id=app.id, details={"round": app.round})
     db.commit()
+    if get_settings().background_runs:
+        # A run already in progress started before this submission, so the new inputs get a run of their own
+        queued, _ = jobs.enqueue(db, app, "system", "system", reason="submitted", reuse_active=False)
+        db.commit()
+        brief = {k: ser.run_brief(queued)[k] for k in ser.INSTITUTION_RUN_KEYS}
+        return {"application": ser.application(app, latest_run(db, app.id), for_institution=True),
+                "run": {**brief, "background": True}}
     run = run_validation(db, app, "system", "system")
     brief = ser.run_brief(run)
     # Institutions learn that validation ran, not the counts of indicators under review
@@ -192,6 +200,10 @@ def validate(app_id: str, user: User = Depends(require_roles("officer", "verifie
     app = load_application(db, user, app_id)
     if app.status in ("draft",):
         raise HTTPException(409, "application has not been submitted")
+    if get_settings().background_runs:
+        queued, created = jobs.enqueue(db, app, user.username, user.role, reason="validate")
+        db.commit()
+        return {**ser.run_brief(queued), "background": True, "queued": created}
     run = run_validation(db, app, user.username, user.role)
     return ser.run_full(run)
 
@@ -280,18 +292,15 @@ def page_image(doc_id: str, page_no: int, user: User = Depends(current_user), db
     load_application(db, user, doc.application_id)
     if page_no < 1 or page_no > max(doc.page_count, 1):
         raise HTTPException(404, "no such page")
-    cache = get_settings().cache_dir / f"{doc.id}_p{page_no}.png"
-    if not cache.exists():
-        data = load_document(doc.storage_name)
-        if doc.mime == "application/pdf":
-            img = render_pdf_page(data, page_no - 1, 110)
-        else:
-            from PIL import Image
-
-            with Image.open(io.BytesIO(data)) as im:
-                img = im.convert("RGB")
-        img.save(cache, "PNG", optimize=True)
-    return Response(cache.read_bytes(), media_type="image/png", headers={"Cache-Control": "private, max-age=600"})
+    name = f"{doc.id}_p{page_no}.png"
+    png = cache_get(name)
+    if png is None:
+        try:
+            png = sandbox.render_png(load_document(doc.storage_name), doc.mime, page_no - 1, 110)
+        except sandbox.SandboxError as e:
+            raise HTTPException(422, f"page could not be rendered safely: {e}") from e
+        cache_put(name, png)
+    return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=600"})
 
 
 @router.get("/documents/{doc_id}/file")

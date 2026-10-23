@@ -15,14 +15,18 @@ import type {
   Institution,
   NewApplicationBody,
   PdfVerifyResult,
+  PlatformStatus,
+  QueuedRun,
   RectificationItem,
   ReplayResult,
+  RetentionPlan,
   ReviewAction,
   ReviewEntry,
   RuleImpact,
   RunBrief,
   RunFull,
   RunMetrics,
+  RunProgress,
   SessionInfo,
   SimIssuer,
   SimLookup,
@@ -131,8 +135,14 @@ export const api = {
     fd.append("file", file, file.name);
     return post<DocumentSummary>(`/applications/${enc(id)}/documents`, fd);
   },
-  submit: (id: string) => post<{ application: Application; run: RunBrief | null }>(`/applications/${enc(id)}/submit`),
-  validate: (id: string) => post<RunFull>(`/applications/${enc(id)}/validate`),
+  submit: (id: string) =>
+    post<{ application: Application; run: (RunBrief & { background?: boolean }) | null }>(`/applications/${enc(id)}/submit`),
+  validate: (id: string) => post<RunFull | QueuedRun>(`/applications/${enc(id)}/validate`),
+  reprocess: (id: string) => post<QueuedRun>(`/applications/${enc(id)}/reprocess`),
+  retryRun: (runId: string) => post<QueuedRun>(`/runs/${enc(runId)}/retry`),
+  activeRun: (id: string) => get<{ run: RunBrief | null }>(`/applications/${enc(id)}/active-run`),
+  runProgress: (runId: string, after: number) => get<RunProgress>(`/runs/${enc(runId)}/progress?after=${after}`),
+  runEventsUrl: (runId: string, after: number) => `/api/runs/${enc(runId)}/events?after=${after}`,
   runs: (id: string) => get<RunBrief[]>(`/applications/${enc(id)}/runs`),
   run: (runId: string) => get<RunFull>(`/runs/${enc(runId)}`),
   replay: (runId: string) => post<ReplayResult>(`/runs/${enc(runId)}/replay`),
@@ -179,6 +189,11 @@ export const api = {
     return post<PdfVerifyResult>("/tools/verify-pdf", fd);
   },
 
+  // Platform
+  platformStatus: () => get<PlatformStatus>("/admin/platform"),
+  retentionPlan: () => get<RetentionPlan>("/admin/retention"),
+  retentionPurge: (dryRun: boolean) => post<RetentionPlan>("/admin/retention/purge", { dry_run: dryRun }),
+
   // Simulated issuers
   simIssuers: () => get<SimIssuer[]>("/sim/issuers"),
   setIssuerAvailability: (code: string, available: boolean) =>
@@ -199,12 +214,15 @@ export const qk = {
   appAudit: (id: string) => ["application", id, "audit"] as const,
   campus: (id: string) => ["application", id, "campus"] as const,
   run: (runId: string) => ["run", runId] as const,
+  activeRun: (id: string) => ["application", id, "active-run"] as const,
   document: (docId: string) => ["document", docId] as const,
   history: (findingId: string) => ["finding-history", findingId] as const,
   ruleset: ["ruleset"] as const,
   impact: ["rule-impact"] as const,
   audit: ["audit"] as const,
   issuers: ["sim-issuers"] as const,
+  platform: ["platform"] as const,
+  retention: ["retention"] as const,
 };
 
 export function errorMessage(err: unknown): string {

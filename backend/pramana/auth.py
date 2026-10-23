@@ -16,6 +16,11 @@ from .models import Application, AuthSession, User, utcnow
 COOKIE = "pramana_session"
 CSRF_HEADER = "x-csrf-token"
 
+
+def cookie_name() -> str:
+    # Over HTTPS the __Host- prefix makes browsers insist on Secure, Path=/ and no Domain attribute
+    return f"__Host-{COOKIE}" if get_settings().cookie_secure else COOKIE
+
 ROLES = {
     "institution": "Institution applicant",
     "officer": "AICTE scrutiny officer",
@@ -53,22 +58,24 @@ def start_session(db: Session, user: User, response: Response) -> AuthSession:
     )
     db.add(sess)
     response.set_cookie(
-        COOKIE, token, httponly=True, samesite="strict", secure=s.cookie_secure, max_age=s.session_ttl_minutes * 60
+        cookie_name(), token, httponly=True, samesite="strict", secure=s.cookie_secure, path="/",
+        max_age=s.session_ttl_minutes * 60
     )
     return sess
 
 
 def end_session(db: Session, request: Request, response: Response) -> None:
-    token = request.cookies.get(COOKIE)
+    token = request.cookies.get(cookie_name())
     if token:
         sess = db.get(AuthSession, _token_hash(token))
         if sess:
             db.delete(sess)
-    response.delete_cookie(COOKIE)
+    response.delete_cookie(cookie_name(), path="/", secure=get_settings().cookie_secure, httponly=True,
+                           samesite="strict")
 
 
 def current_session(request: Request, db: Session = Depends(get_db)) -> AuthSession:
-    token = request.cookies.get(COOKIE)
+    token = request.cookies.get(cookie_name())
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "not signed in")
     sess = db.get(AuthSession, _token_hash(token))

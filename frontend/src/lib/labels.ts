@@ -133,6 +133,8 @@ export const appStatusMeta: Record<string, { label: string; tone: Tone }> = {
   under_review: { label: "Under review", tone: "primary" },
   rectification_requested: { label: "Rectification requested", tone: "manual" },
   rectified: { label: "Rectified, resubmitted", tone: "pending" },
+  closed: { label: "Closed", tone: "unchecked" },
+  withdrawn: { label: "Withdrawn", tone: "unchecked" },
 };
 
 export const CHANNELS = [

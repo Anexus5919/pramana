@@ -124,6 +124,12 @@ def validate_signatures(data: bytes) -> list[VerificationResult]:
         except AttributeError:
             root = None
         anchor = _anchor_for(root)
+        # Say exactly what revocation evidence was obtained: soft-fail mode would otherwise read as checked
+        ocsp, crl = (len(vc.ocsps), len(vc.crls)) if fetch else (0, 0)
+        rev_checked = fetch and (ocsp + crl) > 0
+        rev_note = (f" Revocation checked online: {ocsp} OCSP and {crl} CRL responses, not revoked." if rev_checked
+                    else " Revocation status could not be fetched (no OCSP or CRL response), so it was not checked."
+                    if fetch else " Revocation status was not fetched (offline mode).")
         mod = str(st.modification_level.name) if st.modification_level is not None else "UNKNOWN"
         cov = str(st.coverage.name) if st.coverage is not None else "UNKNOWN"
         resp = {
@@ -142,7 +148,9 @@ def validate_signatures(data: bytes) -> list[VerificationResult]:
             "validated_at": moment.isoformat() if moment else "now",
             "time_source": "timestamp token" if st.timestamp_validity else
             ("signer-reported (self-asserted)" if moment else "validation time"),
-            "revocation_checked": fetch,
+            "revocation_checked": rev_checked,
+            "revocation_fetching": fetch,
+            "revocation_responses": {"ocsp": ocsp, "crl": crl},
         }
         src = "pyHanko PAdES validation"
         if not st.intact or not st.valid:
@@ -176,7 +184,7 @@ def validate_signatures(data: bytes) -> list[VerificationResult]:
                 "pdf_signature", VERIFIED, src, demo,
                 f"Signature '{name}' by {signer} is intact and chains to {anchor.label if anchor else 'a trust anchor'}."
                 + (" This anchor is a prototype DEMO root, not India PKI." if demo else "")
-                + ("" if fetch else " Revocation status was not fetched (offline mode)."),
+                + rev_note,
                 response=resp,
                 claim="Document bytes are unchanged since signing by the named certificate holder.",
             ))

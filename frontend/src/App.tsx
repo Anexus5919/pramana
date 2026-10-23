@@ -6,6 +6,7 @@ import AuditLogPage from "./pages/audit/AuditLogPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import IssuerSimulatorPage from "./pages/issuers/IssuerSimulatorPage";
 import NotFoundPage from "./pages/not-found/NotFoundPage";
+import PlatformPage from "./pages/platform/PlatformPage";
 import InstitutionApplicationPage from "./pages/portal/InstitutionApplicationPage";
 import MyApplicationsPage from "./pages/portal/MyApplicationsPage";
 import NewApplicationPage from "./pages/portal/NewApplicationPage";
@@ -68,6 +69,7 @@ export function App() {
           <Route path="/issuers" element={only(OFFICIAL, <IssuerSimulatorPage />)} />
           <Route path="/verify-pdf" element={only(OFFICIAL, <VerifyPdfPage />)} />
           <Route path="/audit" element={only(["officer", "admin"], <AuditLogPage />)} />
+          <Route path="/platform" element={only(["officer", "admin"], <PlatformPage />)} />
           <Route path="/portal" element={only(["institution"], <MyApplicationsPage />)} />
           <Route path="/portal/new" element={only(["institution"], <NewApplicationPage />)} />
           <Route path="/portal/applications/:appId" element={only(["institution"], <InstitutionApplicationPage />)} />
