@@ -83,16 +83,7 @@ Every finding has an evidence class, from strongest to weakest:
 
 ## Five-minute demo script
 
-| Time | Screen | What to say and show |
-|---|---|---|
-| 0:00-0:30 | Title, headlines | "353 teachers listed at multiple colleges. Forged fire NOCs with forged signatures. These pass document-by-document review. Pramana checks evidence across documents, issuers and institutions, and shows its work." |
-| 0:30-1:00 | Officer dashboard | Review queue ordered by open high-severity findings; alerts for an unavailable source and a pending verification. Open A7. |
-| 1:00-2:00 | A7 findings, document viewer | Fire NOC looks valid until 2027. Show the overwritten-field finding with both regions highlighted, the revision diff, the issuer signature "modified after signing", and the signed QR still certifying 2025. "Four independent signals, each pointing at the page." |
-| 2:00-2:40 | Relationships tab (A6) | Graph: three faculty IDs shared with Panchganga Institute, registered there. Open A5: the NOC number belongs to Krishna Valley College, and the pasted QR still names that college. |
-| 2:40-3:10 | A8 and Verify a PDF | A8: valid DSC, but it is the chairman's; the issuer has no record. Upload the real e-Gazette PDF: verified against CCA India 2022, not simulated. |
-| 3:10-3:50 | A3 rectification | Officer requests rectification with a reason. Switch to the institution: upload the renewed certificate, submit. Back as officer: expiry resolved, out-of-scope edit flagged. |
-| 3:50-4:30 | Checklist and Rules | A rule with its clause, page and quote; insufficient-evidence and not-applicable outcomes; replay shows "Reproduced identically". |
-| 4:30-5:00 | Audit and close | Verify the audit chain. "37 of 37 planted conditions found, zero false alarms on the clean controls, about one second per application on a laptop CPU. All free and open source. Decision support only." |
+The click-by-click script with timings and narration is in [demo-script.md](demo-script.md).
 
 ## Seeded scenarios
 
@@ -108,3 +99,4 @@ Every finding has an evidence class, from strongest to weakest:
 | A8 | Deccan Institute, Hyderabad | Fabricated NOC signed only by the applicant | registry mismatch |
 | A9 | Marathwada Polytechnic, Chhatrapati Sambhajinagar | Municipal registry down, engineer register asynchronous, faculty short | source unavailable, pending, FSR |
 | A10 | Tapi Valley Institute, Jalgaon | Intake increase with two non-CS core branches, map point 2.6 km away, reused photo | core-branch rule, map location, photo reuse, geotag |
+| A11 | Bhima Valley College of Engineering, Solapur | Valid fire NOC in an unfamiliar issuer layout, with a line instructing automated readers | instruction text flagged; without a model the fields go to manual review |
