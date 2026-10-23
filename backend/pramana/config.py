@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
                                                                           "GEMINI_API_KEY", "GOOGLE_API_KEY"))
     gemini_model: str = "gemini-2.5-flash"
+    # Photo evidence: detector weights fetched by scripts/fetch_photo_assets.py (pinned SHA-256), and the map
+    # tile URL for the Campus tab; empty disables tiles and the tab shows a plain plot instead
+    models_dir: Path = BACKEND_DIR / "models"
+    map_tile_url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 
     @property
     def db_url(self) -> str:
