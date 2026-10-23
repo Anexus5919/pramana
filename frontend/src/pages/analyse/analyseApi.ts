@@ -1,6 +1,7 @@
 import { request } from "../../api";
 import type { BBox, Comparison, ContentCredentials, DocumentDetail, PdfSignatureCheck, RoomReading, VerificationStatus } from "../../types";
 import type { Revisions } from "../application/history/api";
+import type { LifeStoryData } from "../application/insights/storyApi";
 
 // Mirrors backend/pramana/analyse/core.py
 
@@ -84,6 +85,8 @@ export interface Analysis {
   seal_images: SealImage[];
   photo: AnalysedPhoto | null;
   cannot_know: { what: string; why: string }[];
+  /** Life story from the in-memory analysis; null when it could not be built */
+  story?: LifeStoryData | null;
   expires_at: string;
 }
 

@@ -49,7 +49,9 @@ export interface IndexEntry {
 /** The report's sections in reading order, for the in-page index. Mirrors what Report renders. */
 export function reportIndex(a: Analysis): IndexEntry[] {
   const pdf = isPdf(a);
-  const out: IndexEntry[] = [{ id: "report", label: "Report" }, { id: "intake", label: "Intake" }];
+  const out: IndexEntry[] = [{ id: "report", label: "Report" }];
+  if (a.story) out.push({ id: "story", label: "Life story" });
+  out.push({ id: "intake", label: "Intake" });
   if (!pdf) out.push({ id: "capture", label: "Capture metadata" }, { id: "photo", label: "Content Credentials" }, { id: "room", label: "Room detection" });
   out.push({ id: "text", label: "Text" }, { id: "type", label: "Document type" });
   if (pdf || a.document.fields.length > 0) out.push({ id: "fields", label: "Fields" });
