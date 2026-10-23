@@ -306,6 +306,8 @@ def scan(data: bytes, fields: list[dict[str, Any]]) -> dict[str, Any]:
         a["printed_under"] = _words_text([c for c in printed[a["page"]] if _inside(c, r)])
         # Overlapping annotations share the flattened glyphs, so only one that draws text claims them
         flat = _words_text([c for c in drawn[a["page"]] if _inside(c, r)]) if a["draws_text"] else ""
+        if "(cid:" in flat or not any(ch.isalnum() for ch in flat):
+            flat = ""  # glyphs without a Unicode mapping; the annotation's own text says more
         text = a["text"] if a["subtype"] in ("FreeText", "Widget") else ""
         a["shown"], a["shown_by"] = (flat, "appearance") if flat else (
             (text, "annotation text") if text else ("", None))
