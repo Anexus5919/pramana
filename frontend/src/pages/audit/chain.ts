@@ -70,20 +70,6 @@ export function family(action: string): string {
   return action.split(".")[0] ?? action;
 }
 
-/** Block colour per family, from the status and brand tokens so dark mode follows. */
-export const familyColor: Record<string, string> = {
-  auth: "var(--unchecked-dot)",
-  application: "var(--brand-500)",
-  document: "var(--pending-dot)",
-  validation: "var(--ev-6)",
-  finding: "var(--expired-dot)",
-  rectification: "var(--manual-fg)",
-  verification: "var(--ev-3)",
-  tool: "var(--brand-300)",
-  sim: "var(--unavail-dot)",
-  system: "var(--ink-3)",
-};
-
 const ACTION_LABEL: Record<string, string> = {
   "auth.login": "Signed in",
   "auth.logout": "Signed out",
