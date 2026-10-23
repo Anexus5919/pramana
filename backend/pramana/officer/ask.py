@@ -193,6 +193,7 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
                   f"{_h(f.review_status)}." + (f" Rule item {rid}." if rid else ""))
         fid = add("F", "finding", text, {f.outcome, f.review_status}, {"type": "finding", "finding_id": f.id},
                   f.title[:60], f"{f.title}: {msg}")
+        items[fid]["related"] = [rid] if rid else []
         for e in f.evidence or []:
             if e.get("kind") not in ("region", "revision_diff") or not e.get("page") or not e.get("bbox"):
                 continue
@@ -207,12 +208,13 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
                         f"'{_value(e.get('text_underneath') or e.get('removed_text'))}'")
             if f.code == "SEC-INSTRUCTION-TEXT":
                 what = "instruction text (withheld)"
-            add("P", "region", f"Page region for {fid}: {labels.get(d.declared_type, d.declared_type)} page "
+            pid = add("P", "region", f"Page region for {fid}: {labels.get(d.declared_type, d.declared_type)} page "
                                f"{e['page']}, {what}.", {f.outcome},
                 {"type": "region", "document_id": did, "page": e["page"], "bbox": e["bbox"],
                  "label": e.get("label") or f.title, "finding_id": f.id},
                 f"{labels.get(d.declared_type, d.declared_type)} p.{e['page']}",
                 f"On page {e['page']} of the {labels.get(d.declared_type, d.declared_type)}: {what}.")
+            items[fid]["related"].append(pid)
 
     attempts = db.scalars(select(VerificationAttempt).where(VerificationAttempt.run_id == run.id)
                           .order_by(VerificationAttempt.started_at)).all() if run else []
@@ -449,8 +451,10 @@ def answer(db: Session, app: Application, question: str, *, use_model: bool = Tr
         if reason:
             dropped.append({"text": text[:300], "cites": [str(c) for c in cites][:6], "reason": reason})
         else:
-            kept.append({"text": text, "cites": valid})
-    used = {c for s in kept for c in s["cites"]}
+            # Deterministic links from a cited finding to its rule and page regions, shown as extra chips
+            related = [r for c in valid for r in items[c].get("related", []) if r not in valid]
+            kept.append({"text": text, "cites": valid, "related": list(dict.fromkeys(related))[:3]})
+    used = {c for s in kept for c in s["cites"] + s["related"]}
     return {
         "question": question, "mode": mode, "provider": provider,
         "model": model_name(provider) if provider else None, "external": provider in EXTERNAL if provider else False,

@@ -161,7 +161,7 @@ function ItemCard({
 
 function Preview({ letter, saving }: { letter: Letter | null; saving: boolean }) {
   const pages = letter?.page_count ?? 0;
-  const version = letter?.updated_at ?? letter?.finalised_at ?? "0";
+  const version = (letter?.status === "final" ? letter.finalised_at : letter?.updated_at) ?? "0";
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
