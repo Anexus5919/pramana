@@ -135,7 +135,7 @@ def test_edited_certificate_gets_every_per_document_check_and_nothing_is_filed(a
     ev = db.scalars(select(AuditEvent).order_by(AuditEvent.seq.desc())).first()
     db.close()
     assert ev.action == "tool.analyse" and ev.details["sha256"] == a["sha256"] and ev.actor == "officer"
-    assert set(ev.details) == {"sha256", "mime", "pages", "detected_type", "signatures", "signals"}
+    assert set(ev.details) == {"sha256", "mime", "pages", "detected_type", "signatures", "signals", "incomplete"}
 
 
 def test_held_bytes_are_private_forgettable_and_expire(app, monkeypatch):
@@ -155,6 +155,26 @@ def test_held_bytes_are_private_forgettable_and_expire(app, monkeypatch):
     later = time.monotonic() + store.TTL_S + 1
     monkeypatch.setattr(store.time, "monotonic", lambda: later)
     assert officer.get(f"/api/analyse/{tok}/pages/1.png").status_code == 404
+
+
+def test_a_reading_timeout_keeps_the_signature_and_a_crash_stops_the_analysis(app, monkeypatch):
+    from pramana import sandbox
+
+    c = _login(app, "officer")
+
+    def stopped(reason):
+        def op(*_a, **_k):
+            raise sandbox.SandboxUnsafe(reason)
+        return op
+
+    monkeypatch.setattr(sandbox, "read_pages", stopped("the parser exceeded the 120 s time limit and was stopped"))
+    a = _analyse(c, OUT / "A7" / "fire_noc.pdf").json()
+    assert "time limit" in a["incomplete"]["reason"] and a["document"]["fields"] == []
+    assert a["signatures"][0]["status"] == "mismatch_detected" and a["revision_count"] == 3
+
+    monkeypatch.setattr(sandbox, "read_pages", stopped("the parser crashed (exit code 3) and was stopped"))
+    r = _analyse(c, OUT / "A7" / "fire_noc.pdf")
+    assert r.status_code == 422 and "Review this file manually" in r.json()["detail"]
 
 
 def test_store_is_bounded_by_entries_and_bytes(monkeypatch):

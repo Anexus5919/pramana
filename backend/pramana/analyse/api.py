@@ -79,6 +79,7 @@ def analyse_file(file: UploadFile = File(...), user: User = Depends(require_role
                      "detected_type": result["doc_type"]["type"],
                      "signatures": [s["status"] for s in result["signatures"]],
                      "signals": sum(1 for s in result["document"].get("forensic_signals", []) if s["severity"] != "info"),
+                     "incomplete": bool(result["incomplete"]),
                  })
     db.commit()
     return result

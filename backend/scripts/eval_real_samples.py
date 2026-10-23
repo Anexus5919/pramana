@@ -55,6 +55,7 @@ def row(s: dict) -> dict:
         "indicators": sorted({x["code"] for x in a["document"]["forensic_signals"] if x["severity"] != "info"}),
         "instruction_lines": len(a["document"].get("instruction_lines") or []),
         "detail": sig["detail"] if sig else a["signatures"][0]["detail"] if a["signatures"] else None,
+        "incomplete": (a["incomplete"] or {}).get("reason"),
     }
 
 
@@ -73,6 +74,8 @@ def main() -> int:
             print(f"| {r['file']} | | could not be analysed: {r['error']} | | | | | |")
             continue
         ind = ", ".join(r["indicators"]) or "none"
+        if r["incomplete"]:
+            ind = f"text and forensics not completed: {r['incomplete']}"
         print(f"| {r['file']} | {r['pages']} | {r['signature']} | {r['anchor']} | {r['revisions']} | "
               f"{r['hindi_lines']} | {ind} | {r['seconds']} s |")
     return 0

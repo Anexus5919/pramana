@@ -12,6 +12,7 @@ from collections.abc import Callable
 from datetime import date
 from typing import Any
 
+from .. import sandbox
 from .. import serializers as ser
 from ..crypto import sha256_hex
 from ..forensics.pdf_struct import revision_offsets
@@ -155,7 +156,8 @@ def _timed(steps: list[dict[str, Any]], name: str, fn: Callable[[], Any]) -> Any
 
 
 def analyse(data: bytes, filename: str, intake: IntakeResult, token: str) -> dict[str, Any]:
-    """Run the per-document stages on `data`. Raises sandbox.SandboxError when the file cannot be read safely."""
+    """Run the per-document stages on `data`. Raises sandbox.SandboxError when the file cannot be read safely;
+    when only the time limit was reached, the result says so in `incomplete` and carries what did run."""
     steps: list[dict[str, Any]] = []
 
     def progress(_event: str, **info: Any) -> None:
@@ -167,7 +169,15 @@ def analyse(data: bytes, filename: str, intake: IntakeResult, token: str) -> dic
                    sha256=sha, size_bytes=len(data), mime=intake.mime, page_count=intake.page_count,
                    storage_name="", classification={}, fingerprints={}, analysis={})
     rs = active_ruleset()
-    process_document(_NoSession(), doc, rs, None, progress=progress, data=data)
+    incomplete = None
+    try:
+        process_document(_NoSession(), doc, rs, None, progress=progress, data=data)
+    except sandbox.SandboxUnsafe as e:
+        # A long OCR job can outlast the sandbox's time limit; signatures and revisions are still worth showing.
+        # A crash or the memory cap stops the analysis, as it stops a validation run
+        if "time limit" not in str(e):
+            raise
+        incomplete = {"reason": str(e), "after": steps[-1]["step"] if steps else None}
     for i, f in enumerate(doc.fields, start=1):
         f.id = f.id or f"{token}-f{i}"  # column defaults apply only on insert, and nothing is inserted
     pdf = intake.mime == "application/pdf"
@@ -195,7 +205,7 @@ def analyse(data: bytes, filename: str, intake: IntakeResult, token: str) -> dic
     ocr = an.get("ocr_scripts") or []
     labels = {k: v.get("label", k) for k, v in rs.doc_types.items()}
     return {
-        "token": token, "filename": filename, "sha256": sha, "size_bytes": len(data), "mime": intake.mime,
+        "token": token, "incomplete": incomplete, "filename": filename, "sha256": sha, "size_bytes": len(data), "mime": intake.mime,
         "page_count": intake.page_count, "ruleset": {"id": rs.id, "version": rs.version},
         "intake": {"mime": intake.mime, "page_count": intake.page_count, "active_content": intake.active_content,
                    "notes": intake.notes},
