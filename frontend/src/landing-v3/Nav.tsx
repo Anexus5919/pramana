@@ -3,9 +3,9 @@ import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useEffect, useState } from "react";
 import { Wordmark } from "../brand";
 import { spring } from "../landing/kit";
-import { WORKSPACE_URL } from "./links";
+import { WorkspaceLink } from "./workspace";
 
-// v1 navigation; the workspace button points at the backend origin because v3 runs on its own port
+// v1 navigation; the workspace button follows the session like v1 and only leaves the origin in the standalone build
 const LINKS = [
   { id: "how", label: "How it works" },
   { id: "edits", label: "Edits" },
@@ -69,12 +69,9 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-        <a
-          href={WORKSPACE_URL}
-          className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-(--lp-brand-500) px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgb(139_61_255/0.8)] transition-colors hover:bg-(--lp-brand-600) active:scale-[0.97]"
-        >
+        <WorkspaceLink className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-(--lp-brand-500) px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgb(139_61_255/0.8)] transition-colors hover:bg-(--lp-brand-600) active:scale-[0.97]">
           Open workspace <ArrowRight className="size-3.5" aria-hidden />
-        </a>
+        </WorkspaceLink>
       </nav>
     </header>
   );

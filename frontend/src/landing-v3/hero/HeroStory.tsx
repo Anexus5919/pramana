@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { OutlineButton } from "../../landing/kit";
-import { WORKSPACE_URL } from "../links";
+import { WorkspaceLink } from "../workspace";
 import { type Beats, computeLayout, Engine, type Layout, T } from "./engine";
 import { FallbackGround, FallbackHands } from "./Fallback";
 import StaticStory from "./StaticStory";
@@ -63,12 +63,11 @@ function HeroCopy({ wide }: { wide: boolean }) {
         Signatures, records and rules, verified at the source. Officials decide; Pramana shows the proof.
       </p>
       <div className="mt-6 flex flex-wrap items-center gap-2.5 sm:mt-7">
-        <a
-          href={WORKSPACE_URL}
+        <WorkspaceLink
           className={`${btnBase} ${wide ? "h-12 px-6 text-[15px]" : "h-11 px-5 text-[14px]"} bg-(--lp-brand-500) text-white shadow-[0_10px_30px_-10px_rgb(139_61_255/0.7),inset_0_1px_0_rgb(255_255_255/0.25)] hover:bg-(--lp-brand-600)`}
         >
           Open the workspace <ArrowRight className="size-4" aria-hidden />
-        </a>
+        </WorkspaceLink>
         <OutlineButton onClick={() => jumpTo("how")} className={wide ? "" : "h-11! px-5! text-[14px]!"}>
           See how it works
         </OutlineButton>
