@@ -289,26 +289,28 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                 label={ringLabel(data)}
                 className="w-36 shrink-0 sm:w-full"
               />
-              <dl className="min-w-0 flex-1 space-y-1.5 sm:mt-5">
-                {data.groups
-                  .filter((g) => g.items.length > 0)
-                  .map((g) => {
-                    const met = g.items.filter((i) => i.status === "met").length;
-                    return (
-                      <div
-                        key={g.id}
-                        className="flex items-baseline justify-between gap-3 text-sm"
-                        onMouseEnter={() => setActiveGroup(g.id)}
-                        onMouseLeave={() => setActiveGroup(null)}
-                      >
-                        <dt className="text-ink-2">{g.label}</dt>
-                        <dd className="text-ink-3">
-                          {met} of {g.items.length} met
-                        </dd>
-                      </div>
-                    );
-                  })}
-                <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1.5 text-xs text-ink-3" aria-hidden>
+              <div className="min-w-0 flex-1 sm:mt-5">
+                <dl className="space-y-1.5">
+                  {data.groups
+                    .filter((g) => g.items.length > 0)
+                    .map((g) => {
+                      const met = g.items.filter((i) => i.status === "met").length;
+                      return (
+                        <div
+                          key={g.id}
+                          className="flex items-baseline justify-between gap-3 text-sm"
+                          onMouseEnter={() => setActiveGroup(g.id)}
+                          onMouseLeave={() => setActiveGroup(null)}
+                        >
+                          <dt className="text-ink-2">{g.label}</dt>
+                          <dd className="text-ink-3">
+                            {met} of {g.items.length} met
+                          </dd>
+                        </div>
+                      );
+                    })}
+                </dl>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 pt-3 text-xs text-ink-3" aria-hidden>
                   <span className="inline-flex items-center gap-1">
                     <StatusArc status="met" className="size-3.5" />
                     Met
@@ -342,7 +344,7 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                     </span>
                   )}
                 </div>
-              </dl>
+              </div>
             </div>
 
             {/* What it means and what to do */}

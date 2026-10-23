@@ -382,6 +382,7 @@ export default function InstitutionApplicationPage() {
           setConfirm(true);
         }}
         editing={editing}
+        readinessFix={editable && readiness?.application_id === app.id ? readiness.counts.fix : null}
       />
 
       {editable && !rect && (
@@ -406,7 +407,7 @@ export default function InstitutionApplicationPage() {
         required={required}
         pending={submit.isPending}
         error={submit.error}
-        readiness={editable ? readiness : null}
+        readiness={editable && readiness?.application_id === app.id ? readiness : null}
       />
     </Page>
   );
