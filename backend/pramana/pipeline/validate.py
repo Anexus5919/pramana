@@ -25,6 +25,7 @@ from ..models import (
     VerificationAttempt,
     utcnow,
 )
+from ..photos.findings import photo_stage
 from ..rules.engine import ERROR, FAIL, INSUFFICIENT, Ruleset, active_ruleset, evaluate, load_ruleset
 from ..verification import base as vb
 from ..verification.issuer import adapters, compare_values
@@ -453,6 +454,8 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     s["severity"] in ("high", "medium") else "heuristic",
                     "severity": s["severity"], "outcome": "indicator", "title": s["title"], "message": s["detail"],
                     "limitation": s.get("limitation"), "evidence": evs, "document_id": d.id})
+        # Content Credentials and room indicators for photos
+        findings += photo_stage(db, app, run, docs, doc_status)
         stage("forensics", t0)
 
         t0 = time.perf_counter()
