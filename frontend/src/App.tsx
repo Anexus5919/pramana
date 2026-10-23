@@ -20,6 +20,8 @@ import { ErrorState } from "./ui/States";
 const LandingPage = lazy(() => import("./landing-v3/LandingV3"));
 const LoginPage = lazy(() => import("./pages/login/LoginPage"));
 const ScanPage = lazy(() => import("./pages/scan/ScanPage"));
+// Cytoscape loads only with the integrity views
+const IntegrityPage = lazy(() => import("./pages/integrity/IntegrityPage"));
 // Living reference for design system v2; dev builds, or production with VITE_UI_KIT=1
 const UiKit = import.meta.env.DEV || import.meta.env.VITE_UI_KIT === "1" ? lazy(() => import("./ui2/Kit")) : null;
 
@@ -71,6 +73,7 @@ export function App() {
           <Route path="/applications/:appId/:tab?" element={only(OFFICIAL, <ApplicationWorkspace />)} />
           <Route path="/rules" element={only(OFFICIAL, <RulesPage />)} />
           <Route path="/issuers" element={only(OFFICIAL, <IssuerSimulatorPage />)} />
+          <Route path="/integrity/:view?" element={only(OFFICIAL, <IntegrityPage />)} />
           <Route path="/analyse" element={only(OFFICIAL, <AnalysePage />)} />
           {/* Verify a PDF is part of Analyse a document now; old links land there */}
           <Route path="/verify-pdf" element={<Navigate to="/analyse" replace />} />
