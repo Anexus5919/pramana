@@ -1,7 +1,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Maximize2 } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../api";
 import type { CampusPayload } from "../../../types";
 import "./campus.css";
@@ -58,6 +58,8 @@ export function CampusMap({
   failed.current = onTilesFailed;
   select.current = onSelect;
   const far = useMemo(() => points.filter((p) => (p.km ?? 0) > NEAR_KM), [points]);
+  const home = useRef<L.LatLngBounds | null>(null);
+  const [wide, setWide] = useState(false);
 
   useEffect(() => {
     const rec = data.record;
@@ -113,6 +115,7 @@ export function CampusMap({
       markers.current[p.id] = m;
       if ((p.km ?? 0) <= NEAR_KM) bounds.extend([p.lat, p.lon]);
     }
+    home.current = bounds;
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16, animate: false });
     return () => {
       window.clearTimeout(timer);
@@ -127,8 +130,10 @@ export function CampusMap({
     const p = points.find((x) => x.id === selected);
     if (!map || !p) return;
     const m = markers.current[p.id];
-    if ((p.km ?? 0) > NEAR_KM) map.flyToBounds(L.latLngBounds([[p.lat, p.lon], [data.record!.lat, data.record!.lon]]), { padding: [60, 60], animate: !reduced() });
-    else map.panTo([p.lat, p.lon], { animate: !reduced() });
+    if ((p.km ?? 0) > NEAR_KM) {
+      map.flyToBounds(L.latLngBounds([[p.lat, p.lon], [data.record!.lat, data.record!.lon]]), { padding: [60, 60], animate: !reduced() });
+      setWide(true);
+    } else map.panTo([p.lat, p.lon], { animate: !reduced() });
     m?.openPopup();
   }, [selected, points, data.record]);
 
@@ -138,12 +143,26 @@ export function CampusMap({
     const b = L.latLngBounds([[data.record.lat, data.record.lon]]);
     for (const p of points) b.extend([p.lat, p.lon]);
     map.flyToBounds(b, { padding: [50, 50], animate: !reduced() });
+    setWide(true);
+  };
+  const backHome = () => {
+    if (mapRef.current && home.current) mapRef.current.flyToBounds(home.current, { padding: [40, 40], maxZoom: 16, animate: !reduced() });
+    setWide(false);
   };
 
   return (
     <div className="pr-map relative overflow-hidden rounded-[14px] border border-line">
       <div ref={el} className="h-[440px] w-full" role="region" aria-label="Campus map: campus on record, declared map point and photo geotags" />
-      {far.length > 0 && data.record && (
+      {far.length > 0 && data.record && wide && (
+        <button
+          type="button"
+          onClick={backHome}
+          className="absolute top-3 right-3 z-[1000] inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-surface/95 px-2.5 text-xs font-medium text-ink-2 shadow-md backdrop-blur hover:text-ink"
+        >
+          <Minimize2 aria-hidden className="size-3.5" /> Back to the campus
+        </button>
+      )}
+      {far.length > 0 && data.record && !wide && (
         <div className="absolute top-3 right-3 z-[1000] max-w-[min(320px,calc(100%-90px))] rounded-[12px] border border-line bg-surface/95 p-2.5 shadow-md backdrop-blur">
           <p className="text-xs font-semibold text-ink">
             {far.length === 1 ? "1 point is" : `${far.length} points are`} outside this view

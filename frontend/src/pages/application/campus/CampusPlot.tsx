@@ -7,7 +7,7 @@ const W = 720;
 const H = 420;
 const CX = W / 2;
 const CY = H / 2;
-const EDGE = 28;
+const EDGE = 36;
 
 const fill: Record<string, string> = {
   record: "var(--brand-500)",
@@ -65,7 +65,7 @@ export function CampusPlot({
         </defs>
         <rect width={W} height={H} fill="url(#campus-grid)" />
         <circle cx={CX} cy={CY} r={ringR} style={{ fill: "var(--brand-400)", fillOpacity: 0.07, stroke: "var(--brand-500)" }} strokeWidth="1.5" strokeDasharray="6 5" />
-        <text x={CX} y={CY - ringR - 6} textAnchor="middle" fontSize="11" fontWeight="600" style={{ fill: "var(--brand-600)" }}>
+        <text x={CX + ringR * 0.72 + 4} y={CY + ringR * 0.72 + 14} textAnchor="start" fontSize="11" fontWeight="600" style={{ fill: "var(--brand-600)" }}>
           {data.threshold_km} km geotag threshold
         </text>
         {data.declared && tolR > 4 && (
