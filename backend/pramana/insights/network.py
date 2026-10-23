@@ -5,13 +5,15 @@ file, photo or seal is an indicator that needs confirmation by an official; noth
 an application or a person, and institutions never see these views.
 """
 
+import json
 import re
 from collections import defaultdict
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 import networkx as nx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,8 @@ from ..models import Application, Document, Finding, ReferenceRecord, User
 from ..pipeline.validate import _fp
 
 router = APIRouter(prefix="/api/insights", tags=["insights"])
+# A network built once from a random evaluation world (scripts/network_snapshot.py); synthetic, read-only
+SNAPSHOT = Path(__file__).with_name("synthetic_network.json")
 
 # Finding code -> the kind of shared item it records
 LINK_KIND = {
@@ -97,13 +101,13 @@ def _entity_of(f: Finding, candidates: dict[str, str]) -> str | None:
     return None
 
 
-def _peer(evidence: list[dict[str, Any]]) -> tuple[str | None, str | None]:
+def _peer(evidence: list[dict[str, Any]]) -> tuple[str | None, str | None, int | None, list[float] | None]:
     for e in evidence or []:
         if e.get("kind") == "peer_document":
-            return e.get("application_id"), e.get("document_id")
+            return e.get("application_id"), e.get("document_id"), e.get("page"), e.get("bbox")
         if e.get("kind") == "image_match":
-            return e.get("peer_application_id"), e.get("peer_document_id")
-    return None, None
+            return e.get("peer_application_id"), e.get("peer_document_id"), e.get("peer_page"), e.get("peer_bbox")
+    return None, None, None, None
 
 
 def _mine(f: Finding) -> tuple[str | None, int | None, list[float] | None]:
@@ -127,10 +131,11 @@ def _run_links(db: Session, app: Application) -> list[dict[str, Any]]:
             continue
         candidates = {_fp("xa", f.code, e): e for e in ents}
         ent = _entity_of(f, candidates)
-        peer_app, peer_doc = _peer(f.evidence)
+        peer_app, peer_doc, peer_page, peer_bbox = _peer(f.evidence)
         doc_id, page, bbox = _mine(f)
         out.append({"finding": f, "kind": kind, "entity": ent, "app": app.id, "doc": doc_id, "page": page,
-                    "bbox": bbox, "peer_app": peer_app, "peer_doc": peer_doc})
+                    "bbox": bbox, "peer_app": peer_app, "peer_doc": peer_doc, "peer_page": peer_page,
+                    "peer_bbox": peer_bbox})
     return out
 
 
@@ -237,11 +242,14 @@ def build_network(db: Session) -> dict[str, Any]:
                                "relation": _relation(kind, doc_type), "apps": {}}
         mine = it["apps"].setdefault(ln["app"], {"findings": [], "document_id": ln["doc"], "page": ln["page"],
                                                  "bbox": ln["bbox"]})
+        # The application's own finding locates its document best; a peer's reference is the fallback
+        if ln["page"] and not mine.get("own"):
+            mine.update(document_id=ln["doc"], page=ln["page"], bbox=ln["bbox"], own=True)
         if all(x["id"] != ln["finding"].id for x in mine["findings"]):
             mine["findings"].append(_finding_brief(ln["finding"]))
         if ln["peer_app"] in by_id:
-            it["apps"].setdefault(ln["peer_app"], {"findings": [], "document_id": ln["peer_doc"], "page": None,
-                                                   "bbox": None})
+            it["apps"].setdefault(ln["peer_app"], {"findings": [], "document_id": ln["peer_doc"],
+                                                   "page": ln["peer_page"], "bbox": ln["peer_bbox"]})
 
     shared = sorted((it for it in items.values() if len(it["apps"]) >= 2),
                     key=lambda it: (KIND_ORDER.index(it["kind"]), it["label"]))
@@ -441,9 +449,26 @@ def faculty_overlaps(db: Session, today: date | None = None) -> dict[str, Any]:
 OFFICIALS = require_roles(*OFFICIAL_ROLES)
 
 
+def load_snapshot() -> dict[str, Any] | None:
+    if not SNAPSHOT.exists():
+        return None
+    return json.loads(SNAPSHOT.read_text(encoding="utf-8"))
+
+
 @router.get("/network")
-def network(user: User = Depends(OFFICIALS), db: Session = Depends(get_db)):
-    return build_network(db)
+def network(dataset: str = Query("current", pattern="^(current|synthetic)$"), user: User = Depends(OFFICIALS),
+            db: Session = Depends(get_db)):
+    snap = load_snapshot()
+    if dataset == "synthetic":
+        if snap is None:
+            raise HTTPException(404, "no synthetic network snapshot")
+        return snap
+    out = build_network(db)
+    out["datasets"] = [{"id": "current", "label": "This cycle", "applications": out["stats"]["applications"]}]
+    if snap:
+        out["datasets"].append({"id": "synthetic", "label": "Synthetic world",
+                                "applications": snap["stats"]["applications"], "note": snap.get("note")})
+    return out
 
 
 @router.get("/faculty-overlaps")
