@@ -11,15 +11,18 @@ class Base(DeclarativeBase):
 
 
 _settings = get_settings()
-engine = create_engine(_settings.db_url, connect_args={"check_same_thread": False, "timeout": 30})
+_sqlite = _settings.db_url.startswith("sqlite")
+# SQLite needs cross-thread connections and a busy timeout; PostgreSQL (postgresql+psycopg://...) gets a checked pool
+engine = create_engine(_settings.db_url, connect_args={"check_same_thread": False, "timeout": 30} if _sqlite else {},
+                       pool_pre_ping=not _sqlite)
 
-
-@event.listens_for(engine, "connect")
-def _sqlite_pragmas(dbapi_conn, _):
-    cur = dbapi_conn.cursor()
-    cur.execute("PRAGMA journal_mode=WAL")
-    cur.execute("PRAGMA foreign_keys=ON")
-    cur.close()
+if _sqlite:
+    @event.listens_for(engine, "connect")
+    def _sqlite_pragmas(dbapi_conn, _):
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA journal_mode=WAL")
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.close()
 
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
@@ -37,3 +40,10 @@ def init_db() -> None:
     from . import models  # noqa: F401  registers tables
 
     Base.metadata.create_all(engine)
+
+
+def drop_all() -> None:
+    """Remove every table; the seed script uses it on a database server, where there is no file to delete."""
+    from . import models  # noqa: F401  registers tables
+
+    Base.metadata.drop_all(engine)
