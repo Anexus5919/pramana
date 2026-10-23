@@ -438,8 +438,11 @@ def test_retention_purge_deletes_bytes_of_closed_applications_and_keeps_the_reco
     assert len(officer.get(f"/api/applications/{A11}/findings").json()) == n_findings
     assert admin.post("/api/admin/retention/purge",
                       json={"dry_run": False, "reason": "Second pass finds nothing left"}).json()["documents_purged"] == 0
-    inst = _login(app, "inst10")
-    runs = inst.get("/api/applications/APP-2026-000110/runs").json()
+
+
+def test_institutions_see_when_checks_ran_not_their_counts(app):
+    _ensure_complete_run(A7)
+    runs = _login(app, "inst7").get(f"/api/applications/{A7}/runs").json()
     assert runs and all(set(r) <= {"id", "status", "round", "started_at", "finished_at", "as_of", "ruleset_id"}
                         for r in runs)
 
