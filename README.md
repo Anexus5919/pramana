@@ -33,7 +33,7 @@ Evidence-linked application validation, document authentication and compliance a
   - an evidence pack: a signed ZIP with the report, the data and an audit extract, checkable offline;
   - a re-verification watch that re-queries issuer-confirmed certificates after the scrutiny outcome and raises an alert when one changes;
   - a hash-chained audit trail and replayable validation runs.
-- **Hardened for deployment:** sign-in throttling, `__Host-` session cookie with HSTS, untrusted files parsed in sandboxed worker processes, per-document envelope encryption with key rotation, a retention policy with an audited purge, and PostgreSQL support.
+- **Hardened for deployment:** sign-in throttling, a `__Host-` session cookie with HSTS behind HTTPS, untrusted files parsed in sandboxed worker processes, per-document envelope encryption with key rotation, a retention policy with an audited purge, and PostgreSQL support.
 
 Start with `docs/usp-and-demo.md`. Research, requirements mapping, design decisions, security and measured results are in `docs/`. Each feature added in the October sprint has its own document:
 
