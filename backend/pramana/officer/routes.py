@@ -257,3 +257,39 @@ def finalise_letter(letter_id: str, body: FinaliseBody, user: User = Depends(req
     return {"letter": lt.letter_json(letter, page_count=lt.page_count(data),
                                      names=_names(db, letter.created_by, letter.finalised_by)),
             "rectification_id": rect_id, "rectification_created": created, "round": app.round}
+
+
+# ------------------------------------------------------------------ evidence packs
+
+
+class PackBody(BaseModel):
+    include_originals: bool = False
+
+
+@router.post("/applications/{app_id}/evidence-packs")
+def export_pack(app_id: str, body: PackBody, user: User = Depends(require_roles("officer")),
+                db: Session = Depends(get_db)):
+    from ..ratelimit import limit
+    from .pack import build_pack
+
+    app = load_application(db, user, app_id)
+    limit(f"pack:{user.id}", 6, 60)
+    return build_pack(db, app, user, include_originals=body.include_originals)
+
+
+@router.get("/applications/{app_id}/evidence-packs/{pack_id}.zip")
+def download_pack(app_id: str, pack_id: str, user: User = Depends(require_roles("officer")),
+                  db: Session = Depends(get_db)):
+    from .pack import load_pack
+
+    app = load_application(db, user, app_id)
+    data = load_pack(app.id, pack_id)
+    if data is None:
+        raise HTTPException(404, "evidence pack not found")
+    audit.record(db, actor=user.username, actor_role=user.role, action="evidence_pack.downloaded",
+                 object_type="application", object_id=app.id, application_id=app.id,
+                 details={"pack_id": pack_id, "zip_sha256": hashlib.sha256(data).hexdigest()})
+    db.commit()
+    return Response(data, media_type="application/zip", headers={
+        "Content-Disposition": f'attachment; filename="evidence-pack-{app.id}-{pack_id}.zip"',
+        "X-Content-Type-Options": "nosniff"})
