@@ -106,10 +106,10 @@ function Sandbox({ s }: { s: PlatformStatus }) {
           { label: "Processes", value: b.enforced.processes },
         ]}
       />
-      <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2.5 2xl:grid-cols-4">
         <Stat label="Parses" value={b.stats.calls} tone={b.stats.calls ? undefined : "muted"} />
         <Stat label="Stopped" value={b.stats.unsafe} tone={b.stats.unsafe ? "alert" : "muted"} />
-        <Stat label="Workers started" value={b.stats.spawned} />
+        <Stat label="Workers" value={b.stats.spawned} />
         <Stat label="Mean time" value={b.stats.mean_ms === null ? "-" : `${Math.round(b.stats.mean_ms)} ms`} />
       </div>
       {b.idle_workers.length > 0 && (
@@ -192,7 +192,11 @@ function SignIn({ s }: { s: PlatformStatus }) {
         items={[
           { label: "Per client address", value: `${t.max_attempts_per_ip} attempts per ${Math.round(t.window_s / 60)} min` },
           { label: "Per username", value: `${t.max_failures_per_username} failed passwords per ${Math.round(t.window_s / 60)} min`, hint: "Each lockout is written to the audit trail once." },
-          { label: "Session cookie", value: s.cookies.session_cookie, mono: true, hint: "httpOnly, SameSite=Strict, CSRF token on every change" },
+          {
+            label: "Session cookie",
+            value: <span className="font-mono text-[13px]">{s.cookies.session_cookie}</span>,
+            hint: "httpOnly, SameSite=Strict, CSRF token on every change",
+          },
           { label: "HTTPS mode", value: s.cookies.secure ? `On, ${s.cookies.hsts}` : "Off for the local http demo (PRAMANA_COOKIE_SECURE)" },
         ]}
       />
@@ -250,7 +254,7 @@ function Retention({ s, admin }: { s: PlatformStatus; admin: boolean }) {
             {POLICY_ROWS.map((r) => (
               <tr key={r.key} className="border-t border-line">
                 <td className="py-2 pr-3 text-ink">{r.label}</td>
-                <td className="py-2 pr-3 font-medium text-ink tabular">{pluralize(s.retention[r.key] ?? 0, "day")}</td>
+                <td className="py-2 pr-3 font-medium whitespace-nowrap text-ink tabular">{pluralize(s.retention[r.key] ?? 0, "day")}</td>
                 <td className="py-2 text-ink-3">{r.clock}</td>
               </tr>
             ))}
@@ -273,7 +277,7 @@ function Retention({ s, admin }: { s: PlatformStatus; admin: boolean }) {
             <ErrorState compact error={plan.error} onRetry={() => void plan.refetch()} />
           ) : p ? (
             <>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 2xl:grid-cols-4">
                 <Stat label="Files due" value={p.documents_eligible} tone={p.documents_eligible ? "alert" : "muted"} />
                 <Stat label="Previews" value={p.previews_eligible} tone={p.previews_eligible ? undefined : "muted"} />
                 <Stat label="Run events" value={p.run_events_eligible} tone={p.run_events_eligible ? undefined : "muted"} />

@@ -51,6 +51,7 @@ function useCrumbs(): Crumb[] {
     "/issuers": [{ label: "Issuer simulator" }],
     "/verify-pdf": [{ label: "Verify a PDF" }],
     "/audit": [{ label: "Audit log" }],
+    "/platform": [{ label: "Platform" }],
     "/portal": [{ label: "My applications" }],
     "/portal/new": [{ label: "My applications", to: "/portal" }, { label: "New application" }],
   };
