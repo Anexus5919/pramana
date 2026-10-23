@@ -38,7 +38,8 @@ export function computeLayout(
     irisR = Math.min(width * 0.62, height * 0.42);
     pupilR = irisR * 0.62;
   } else {
-    pupilR = halfDiag * 0.9 + 10;
+    // the lens must clear the copy block's corners, not just its sides
+    pupilR = halfDiag + 14;
     irisR = pupilR / 0.7;
     const maxIris = height * 0.6;
     if (irisR > maxIris) {

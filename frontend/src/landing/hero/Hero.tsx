@@ -4,7 +4,6 @@ import { lazy, type PointerEvent, Suspense, useEffect, useLayoutEffect, useRef, 
 import { OutlineButton, PrimaryLink, scrollToId, useWorkspaceHref } from "../kit";
 import { computeLayout, createEyeState, type EyeLayout, now } from "./eyeState";
 import StaticEye from "./StaticEye";
-import Tiles from "./Tiles";
 
 const EyeScene = lazy(() => import("./EyeScene"));
 
@@ -29,7 +28,6 @@ export default function Hero() {
   const [inView, setInView] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
   const [ready, setReady] = useState(false);
-  const [hinted, setHinted] = useState(false);
   const [glFailed, setGlFailed] = useState(() => !webglAvailable());
 
   // never leave the hero empty: fall back to the flat block eye if WebGL does not come up
@@ -82,7 +80,6 @@ export default function Hero() {
   });
   const copyOpacity = useTransform(scrollYProgress, [0, 0.42], [1, 0]);
   const copyY = useTransform(scrollYProgress, [0, 0.5], [0, -28]);
-  const layerOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
   // once the lids have closed, the block wall dissolves into the page instead of ending on a hard edge
   const handoff = useTransform(scrollYProgress, [0.72, 1], [0, 1]);
 
@@ -106,7 +103,6 @@ export default function Hero() {
     const p = toNdc(e);
     state.pulses.push({ x: p.x, y: p.y, t0: now() });
     if (state.pulses.length > 4) state.pulses.shift();
-    setHinted(true);
   };
 
   return (
@@ -141,11 +137,6 @@ export default function Hero() {
           </motion.div>
         )}
 
-        {layout && (ready || glFailed) && (
-          <motion.div className="absolute inset-0" style={{ opacity: layerOpacity }}>
-            <Tiles state={state} layout={layout} reduced={reduced} />
-          </motion.div>
-        )}
 
         <motion.div
           aria-hidden
@@ -194,16 +185,15 @@ export default function Hero() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
-              className="mt-5 max-w-[440px] text-[15px] leading-[1.55] text-(--lp-ink-2) sm:text-[16px]"
+              className="mt-4 max-w-[380px] text-[15px] leading-[1.5] text-(--lp-ink-2) sm:text-[16px]"
             >
-              Pramana reads each document, verifies signatures and issuer records, and links what one application hides to
-              what another reveals. Officials decide; Pramana shows the proof.
+              Signatures, records and rules, verified at the source. Officials decide; Pramana shows the proof.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.26 }}
-              className="mt-7 flex flex-wrap items-center justify-center gap-3"
+              className="mt-6 flex flex-wrap items-center justify-center gap-2.5"
             >
               <PrimaryLink to={href}>
                 Open the workspace <ArrowRight className="size-4" aria-hidden />
@@ -213,19 +203,6 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {!reduced && layout && !layout.compact && (
-          <motion.div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center" style={{ opacity: layerOpacity }}>
-            <motion.p
-              data-pill
-              className="lp-glass rounded-full px-4 py-1.5 text-[12px] font-medium text-(--lp-ink-2)"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: hinted ? 0 : 1 }}
-              transition={{ duration: 0.6, delay: hinted ? 0 : 2.2 }}
-            >
-              The eye follows your cursor. Click anywhere to send a scan. Hover a document to read its finding.
-            </motion.p>
-          </motion.div>
-        )}
       </div>
     </section>
   );

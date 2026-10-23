@@ -12,6 +12,9 @@
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
   color-scheme: light;
+  /* The landing is always light: shared brand components read app tokens, which a dark app theme would flip */
+  --ink: var(--lp-ink);
+  --surface: #ffffff;
 }
 
 .lp-display {
