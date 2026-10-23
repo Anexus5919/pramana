@@ -7,6 +7,7 @@ fact the expression reads is recorded, which is what makes the rule trace explai
 
 import ast
 import math
+import re
 from collections.abc import Callable
 from datetime import date
 from typing import Any
@@ -35,7 +36,16 @@ def _to_date(s: str) -> date:
 def _similar(a: Any, b: Any) -> float:
     from rapidfuzz import fuzz
 
-    return float(fuzz.token_sort_ratio(str(a).lower(), str(b).lower()))
+    a, b = str(a).lower(), str(b).lower()
+    score = fuzz.token_sort_ratio(a, b)
+    # OCR merges and splits words ("CharitableTrust"). The names as one string of letters and digits are a second
+    # signal, used only when they agree almost exactly, so names that differ in a word stay apart
+    ca, cb = re.sub(r"[^a-z0-9]", "", a), re.sub(r"[^a-z0-9]", "", b)
+    if ca and cb:
+        compact = fuzz.ratio(ca, cb)
+        if compact >= 95:
+            score = max(score, compact)
+    return float(score)
 
 
 def _geo_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
