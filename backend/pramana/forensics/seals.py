@@ -124,4 +124,5 @@ def distance(a: dict[str, Any], b: dict[str, Any]) -> int:
     """The larger of the two perceptual distances, so both hashes must agree before images match."""
     if a["sha256"] == b["sha256"]:
         return 0
-    return max(_h(a["phash"]) - _h(b["phash"]), _h(a["dhash"]) - _h(b["dhash"]))
+    # imagehash returns a numpy integer, which the finding's JSON evidence cannot hold
+    return int(max(_h(a["phash"]) - _h(b["phash"]), _h(a["dhash"]) - _h(b["dhash"])))
