@@ -19,8 +19,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from ..config import get_settings
-from ..crypto import load_document
+from .. import sandbox
+from ..crypto import cache_get, cache_put, load_document
 from ..models import Document
 from .letter import ACCENT, INK, INK_3, LINE, QUOTE_BG, _NumberedCanvas
 
@@ -64,22 +64,16 @@ def _kv(rows: list[tuple[str, Any]], st, widths=(38 * mm, 126 * mm), mono_keys: 
 
 
 def _page_image(doc: Document, page_no: int) -> Image.Image | None:
-    cache = get_settings().cache_dir / f"{doc.id}_p{page_no}.png"
-    if cache.exists():
-        with Image.open(cache) as im:
-            return im.convert("RGB")
+    """Same encrypted cache and sandboxed renderer as the page viewer; documents are never parsed in-process."""
+    name = f"{doc.id}_p{page_no}.png"
     try:
-        data = load_document(doc.storage_name)
-        if doc.mime == "application/pdf":
-            from ..pipeline.text import render_pdf_page
-
-            img = render_pdf_page(data, page_no - 1, 110)
-        else:
-            with Image.open(io.BytesIO(data)) as im:
-                img = im.convert("RGB")
-        img.save(cache, "PNG", optimize=True)
-        return img
-    except Exception:  # noqa: BLE001  a missing crop must not stop the export
+        png = cache_get(name)
+        if png is None:
+            png = sandbox.render_png(load_document(doc.storage_name), doc.mime, page_no - 1, 110)
+            cache_put(name, png)
+        with Image.open(io.BytesIO(png)) as im:
+            return im.convert("RGB")
+    except Exception:  # noqa: BLE001  a purged or unrenderable page leaves the crop out, not the export
         return None
 
 

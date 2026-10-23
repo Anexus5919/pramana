@@ -16,10 +16,10 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import audit
+from .. import audit, keyring
 from .. import serializers as ser
 from ..config import get_settings
-from ..crypto import audit_signing_key, fernet, load_document, public_key_b64, sha256_hex
+from ..crypto import DocumentPurged, audit_signing_key, load_document, public_key_b64, sha256_hex
 from ..models import (
     Application,
     AuditEvent,
@@ -163,8 +163,12 @@ def build_pack(db: Session, app: Application, user: User, *, include_originals: 
         path = None
         if include_originals:
             ext = Path(d.original_filename).suffix.lower()[:8]
-            path = f"documents/{_safe(d.declared_type)}_{d.id}{ext}"
-            files[path] = load_document(d.storage_name)
+            try:
+                data = load_document(d.storage_name)
+                path = f"documents/{_safe(d.declared_type)}_{d.id}{ext}"
+                files[path] = data
+            except DocumentPurged:
+                path = None  # removed under the retention policy; its digest stays in the manifest
         doc_rows.append({"id": d.id, "declared_type": d.declared_type, "filename": d.original_filename,
                          "sha256": d.sha256, "size_bytes": d.size_bytes, "round": d.round, "superseded": d.superseded,
                          "file": path})
@@ -207,7 +211,7 @@ def build_pack(db: Session, app: Application, user: User, *, include_originals: 
     blob = buf.getvalue()
     out_dir = get_settings().data_dir / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / f"{pack_id}.bin").write_bytes(fernet().encrypt(blob))
+    keyring.seal_to(out_dir / f"{pack_id}.bin", blob)
     (out_dir / f"{pack_id}.json").write_text(json.dumps({"application_id": app.id, "user": user.username}))
     stage("zip", t0)
 
@@ -237,5 +241,5 @@ def load_pack(app_id: str, pack_id: str) -> bytes | None:
     meta = d / f"{pack_id}.json"
     if not meta.exists() or json.loads(meta.read_text()).get("application_id") != app_id:
         return None
-    return fernet().decrypt((d / f"{pack_id}.bin").read_bytes())
+    return keyring.open_from(d / f"{pack_id}.bin")
 
