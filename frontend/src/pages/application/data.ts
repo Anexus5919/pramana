@@ -123,7 +123,6 @@ export interface LlmReport {
   errors?: string[];
   provider?: string | null;
   model?: string | null;
-  external?: boolean | null;
 }
 
 export function llmReportOf(doc: DocumentDetail): LlmReport | null {

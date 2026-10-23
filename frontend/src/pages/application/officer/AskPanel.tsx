@@ -86,7 +86,7 @@ function Answer({ a, fresh }: { a: AskAnswer; fresh: boolean }) {
       <div className="flex flex-wrap items-center gap-1.5">
         {a.mode === "model" ? (
           <Tag variant="neutral" title={a.provider ?? undefined}>
-            {a.external ? "External model" : "Local model"} {a.model}
+            Local model {a.model}
           </Tag>
         ) : a.model ? (
           <Tag variant="neutral" title={a.fallback ?? undefined}>

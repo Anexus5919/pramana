@@ -106,7 +106,6 @@ export interface AskAnswer {
   mode: "model" | "template";
   provider: string | null;
   model: string | null;
-  external: boolean;
   /** cites are the model's own citations; related are rule and page links of a cited finding */
   sentences: { text: string; cites: string[]; related?: string[] }[];
   dropped: { text: string; cites: string[]; reason: string }[];

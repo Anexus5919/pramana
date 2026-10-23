@@ -404,8 +404,7 @@ function ModelPanel({
         <div className="flex flex-wrap items-center gap-2">
           <Bot aria-hidden className="size-4 text-brand-500" />
           <span className="text-sm font-semibold text-ink">Model-assisted extraction</span>
-          {report && report.external === false && <Tag variant="neutral">Runs on this server</Tag>}
-          {report?.external && <Tag variant="demo">External service</Tag>}
+          {report && <Tag variant="neutral">Runs on this server</Tag>}
         </div>
         <p className="mt-1.5 text-xs text-ink-3 text-pretty">
           Rules extract what they can. For fields they miss, a language model proposes a value. Pramana keeps a proposal only if the same text is found on the page, and
