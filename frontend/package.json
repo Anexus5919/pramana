@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "dev:v2": "vite --config vite.v2.config.ts",
+    "dev:v3": "vite --config vite.v3.config.ts",
     "build": "tsc -b && vite build",
     "build:v2": "tsc -p v2/tsconfig.json && vite build --config vite.v2.config.ts",
+    "build:v3": "tsc -p v3/tsconfig.json && vite build --config vite.v3.config.ts",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview"
   },

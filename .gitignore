@@ -15,6 +15,7 @@ fixtures/out/
 node_modules/
 frontend/dist/
 frontend/dist-v2/
+frontend/dist-v3/
 *.local
 
 # Env and editors
