@@ -18,6 +18,13 @@ import { isPdf, signedOnly, TEXT_SOURCE } from "./summary";
 
 type OnFocus = (f: Focus) => void;
 
+const TEXT_TITLE: Record<string, string> = {
+  digital: "Read from the text layer",
+  ocr: "Read by OCR",
+  mixed: "Read from the text layer and by OCR",
+  unreadable: "Could not be read",
+};
+
 export function IntakeSection({ a }: { a: Analysis }) {
   const kind = isPdf(a) ? "PDF" : a.mime === "image/png" ? "PNG image" : "JPEG image";
   return (
@@ -69,7 +76,7 @@ export function TextSection({ a }: { a: Analysis }) {
     <Section
       id="text"
       eyebrow="Text"
-      title={`Read from ${(TEXT_SOURCE[a.text.source ?? ""] ?? "the page").toLowerCase()}`}
+      title={TEXT_TITLE[a.text.source ?? ""] ?? "Read from the page"}
       description="Pages with a usable text layer are read directly. Scanned pages, and pages whose Hindi text layer is broken, are rendered and read by OCR."
       aside={
         a.text.hindi_lines > 0 ? (

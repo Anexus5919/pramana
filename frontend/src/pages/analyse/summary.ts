@@ -126,7 +126,10 @@ export function tiles(a: Analysis): Tile[] {
     out.push({ id: "revisions", label: "Revisions", tone: n > 1 ? (after ? "mismatch" : "manual") : "verified", value: n > 1 ? `${n} revisions` : "One revision", note: n > 1 ? (after ? `${pluralize(after, "revision")} after the last signature` : "Appended content; see the time machine") : "Nothing appended after the first save" });
   }
   const ind = indicatorCount(a);
-  out.push({ id: "structure", label: pdf ? "Structure forensics" : "Photo forensics", tone: ind.high ? "mismatch" : ind.all ? "manual" : "verified", value: ind.all ? pluralize(ind.all, "indicator") : "No indicators", note: ind.high ? `${ind.high} high severity` : ind.all ? "Low or medium severity" : undefined });
+  // A valid signature over the whole file means these features were there when the issuer signed
+  const sealed = signedOnly(a).some((s) => s.status === "verified" && s.response.coverage === "ENTIRE_FILE");
+  const sev = ind.high ? `${ind.high} high severity` : "Low or medium severity";
+  out.push({ id: "structure", label: pdf ? "Structure forensics" : "Photo forensics", tone: ind.high ? "mismatch" : ind.all ? "manual" : "verified", value: ind.all ? pluralize(ind.all, "indicator") : "No indicators", note: ind.all ? (sealed ? `${sev}; all present when the file was signed` : sev) : undefined });
   const instr = a.document.instruction_lines ?? [];
   out.push({ id: "instructions", label: "Text aimed at AI readers", tone: instr.length ? "manual" : "verified", value: instr.length ? pluralize(instr.length, "line") : "None found" });
   if (a.photo) {
