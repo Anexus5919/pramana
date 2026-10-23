@@ -349,7 +349,8 @@ def application_watch(db: Session, app: Application) -> dict[str, Any]:
 
 
 def dashboard_alerts(db: Session, alerts: list[dict[str, Any]]) -> None:
-    """Open watch events as dashboard alerts; a finding alert for the same finding becomes the watch alert."""
+    """Open watch events as dashboard alerts, ahead of others of the same severity; the finding alert for the
+    same finding is replaced rather than repeated."""
     for e in db.scalars(select(WatchEvent).where(WatchEvent.open.is_(True))):
         f = db.get(Finding, e.finding_id) if e.finding_id else None
         if f is not None and f.review_status not in OPEN_REVIEW:
@@ -362,9 +363,9 @@ def dashboard_alerts(db: Session, alerts: list[dict[str, Any]]) -> None:
                  "kind": "watch_change", "watch_event_id": e.id}
         same = next((a for a in alerts if e.finding_id and a.get("finding_id") == e.finding_id), None)
         if same is not None:
-            same.update(alert)
-        else:
-            alerts.append(alert)
+            alerts.remove(same)
+        # Something changed after an official decided; it leads its severity group
+        alerts.insert(0, alert)
 
 
 async def _scheduler_loop() -> None:
