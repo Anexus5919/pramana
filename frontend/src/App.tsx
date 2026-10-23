@@ -20,7 +20,8 @@ import { ErrorState } from "./ui/States";
 const LandingPage = lazy(() => import("./landing-v3/LandingV3"));
 const LoginPage = lazy(() => import("./pages/login/LoginPage"));
 const ScanPage = lazy(() => import("./pages/scan/ScanPage"));
-const UiKit = import.meta.env.DEV ? lazy(() => import("./ui/Showcase")) : null;
+// Living reference for design system v2; dev builds, or production with VITE_UI_KIT=1
+const UiKit = import.meta.env.DEV || import.meta.env.VITE_UI_KIT === "1" ? lazy(() => import("./ui2/Kit")) : null;
 
 const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
 
