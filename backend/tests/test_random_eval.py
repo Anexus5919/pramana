@@ -126,6 +126,17 @@ def test_near_duplicate_needs_more_than_shared_office_fee_status_or_dates():
     assert not near(doc(noc_number="FES/PUN/2025/1", **office), doc(noc_number="FES/PUN/2025/2", **office))
 
 
+def test_seal_distance_is_a_plain_int():
+    # Found by the random evaluation: a seal match that was close but not pixel-identical put a numpy integer
+    # into the finding's evidence, and saving the run failed
+    from pramana.forensics.seals import distance
+
+    a = {"sha256": "a", "phash": "0" * 64, "dhash": "0" * 64}
+    b = {"sha256": "b", "phash": "0" * 63 + "3", "dhash": "0" * 64}
+    assert type(distance(a, b)) is int and distance(a, b) == 2
+    assert json.dumps({"distance": distance(a, b)}) == '{"distance": 2}'
+
+
 def test_blind_run_end_to_end(tmp_path):
     out = tmp_path / "run"
     r = subprocess.run([sys.executable, str(SCRIPTS / "random_eval.py"), "--seed", "5", "--n", "4", "--out", str(out)],
