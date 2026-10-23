@@ -36,7 +36,7 @@ function Delta({ s, flagged }: { s: ScalarChange; flagged: boolean }) {
   const up = s.delta > 0;
   const Icon = up ? ArrowUpRight : ArrowDownRight;
   return (
-    <span className={cn("inline-flex items-center gap-1 text-xs font-medium tabular", flagged ? "text-mismatch-fg" : up ? "text-verified-fg" : "text-ink-2")}>
+    <span className={cn("inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap tabular", flagged ? "text-mismatch-fg" : up ? "text-verified-fg" : "text-ink-2")}>
       <Icon aria-hidden className="size-3.5" />
       {up ? "+" : ""}
       {fmtValue(s.delta)}
@@ -140,8 +140,8 @@ function ScalarTable({ rows, flagged }: { rows: ScalarChange[]; flagged: Set<str
             return (
               <tr key={s.key} className={cn("border-t border-line", hit && "bg-mismatch-bg/50")}>
                 <th scope="row" className="px-3 py-2 text-left font-medium text-ink">{s.label}</th>
-                <td className="px-3 py-2 text-right tabular text-ink-3">{fmtNum(s.before, s.unit)}</td>
-                <td className="px-3 py-2 text-right font-medium tabular text-ink">{fmtNum(s.after, s.unit)}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular text-ink-3">{fmtNum(s.before, s.unit)}</td>
+                <td className="px-3 py-2 text-right font-medium whitespace-nowrap tabular text-ink">{fmtNum(s.after, s.unit)}</td>
                 <td className="px-3 py-2">
                   <Delta s={s} flagged={hit} />
                 </td>
@@ -393,7 +393,7 @@ export function SinceLastYearTab() {
         )}
       </motion.section>
 
-      <motion.div variants={fadeUp} className="grid min-w-0 items-start gap-5 xl:grid-cols-2">
+      <motion.div variants={fadeUp} className="grid min-w-0 items-start gap-5 2xl:grid-cols-2">
         <SectionCard eyebrow="Declared values" title="Campus and facilities" description={`${pluralize(changed, "value")} changed since AY ${d.previous?.academic_year}.`}>
           <ScalarTable rows={d.scalars ?? []} flagged={flaggedScalars} />
         </SectionCard>

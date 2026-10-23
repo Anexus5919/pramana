@@ -75,7 +75,7 @@ export function IssuerActions({ issuers }: { issuers: SimIssuer[] }) {
           </p>
         </div>
       </div>
-      <form onSubmit={submit} className="grid gap-3 md:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,1fr)] md:items-end">
+      <form onSubmit={submit} className="grid gap-3 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,1fr)] md:items-end">
         <Field label="Source">
           <Select value={code} onChange={(e) => setCode(e.target.value)}>
             {issuers.map((i) => (
@@ -88,7 +88,7 @@ export function IssuerActions({ issuers }: { issuers: SimIssuer[] }) {
         <Field label="Reference number">
           <Input value={ref} onChange={(e) => setRef(e.target.value)} placeholder="FES/KAR/2025/04502" className="font-mono" autoComplete="off" spellCheck={false} />
         </Field>
-        <Field label="Note from the issuer" hint="Optional, shown with the status">
+        <Field label="Note from the issuer (optional)">
           <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Inspection found the hydrant system not working" autoComplete="off" />
         </Field>
       </form>
