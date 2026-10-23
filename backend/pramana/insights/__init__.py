@@ -1,1 +1,1 @@
-"""Officer insights: per-application proof and coverage, and cycle-wide integrity links."""
+"""Insights: per-application proof and coverage, cycle-wide integrity links, and the institution readiness check."""

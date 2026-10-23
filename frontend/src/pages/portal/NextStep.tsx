@@ -20,6 +20,8 @@ export interface NextStepProps {
   onSubmit: () => void;
   /** The declared figures are being edited: their Save is the action, so this panel shows none */
   editing: boolean;
+  /** Items the readiness check lists to fix, once it has run */
+  readinessFix?: number | null;
 }
 
 function Sentence({ children }: { children: ReactNode }) {
@@ -30,7 +32,18 @@ function Sentence({ children }: { children: ReactNode }) {
  * What to do now, in one sentence, with the only primary action of the page.
  * During the automatic check it shows the live stage progress instead.
  */
-export function NextStepPanel({ app, stage, missing, itemCount, liveRun, onRunDone, onGoToDocuments, onSubmit, editing }: NextStepProps) {
+export function NextStepPanel({
+  app,
+  stage,
+  missing,
+  itemCount,
+  liveRun,
+  onRunDone,
+  onGoToDocuments,
+  onSubmit,
+  editing,
+  readinessFix,
+}: NextStepProps) {
   const n = missing.length;
   let body: ReactNode;
   let action: ReactNode = null;
@@ -49,7 +62,15 @@ export function NextStepPanel({ app, stage, missing, itemCount, liveRun, onRunDo
         );
         break;
       case "draft-ready":
-        body = <Sentence>Every required document is uploaded. Check your declared figures, then submit.</Sentence>;
+        body = (
+          <Sentence>
+            {readinessFix == null
+              ? "Every required document is uploaded. Check your declared figures, then submit."
+              : readinessFix === 0
+                ? "Every required document is uploaded and the readiness check found nothing to fix. Submit when you are ready."
+                : `Every required document is uploaded. The readiness check below lists ${pluralize(readinessFix, "item")} AICTE is likely to raise; fix ${readinessFix === 1 ? "it" : "them"} first, or submit.`}
+          </Sentence>
+        );
         action = (
           <Button variant="primary" size="lg" leadingIcon={<Send aria-hidden />} onClick={onSubmit}>
             Submit for review

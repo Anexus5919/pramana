@@ -134,6 +134,7 @@ export function NumbersEditor({ draft, setDraft, errors }: { draft: DeclaredDraf
       {DECLARED_FIELDS.map((f) => (
         <Field key={f.key} label={f.label} hint={f.hint} error={errors[f.key]}>
           <Input
+            id={`declared-${f.key}`}
             value={draft.fields[f.key] ?? ""}
             inputMode={f.type === "number" ? "decimal" : undefined}
             placeholder={f.placeholder ? `For example ${f.placeholder}` : undefined}
