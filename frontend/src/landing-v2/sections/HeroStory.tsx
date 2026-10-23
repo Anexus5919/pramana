@@ -253,14 +253,14 @@ function StaticHeroStory() {
             <h2 className="mt-4 font-display text-[2.2rem] leading-[1.02] font-[780]">{STORY_COPY.check.title}</h2>
             <p className="mt-3 max-w-[34rem] text-[1.02rem] leading-relaxed text-ink-2">{STORY_COPY.check.body}</p>
             <div className="mt-8 flex flex-wrap items-start gap-6">
-              <div className="relative">
+              <div className="flex flex-col items-center">
                 <Certificate
                   id="panchganga"
                   width={360}
                   signature="intact"
                   highlight={{ signature: "ok", qr: "ok", number: "ok" }}
                 />
-                <span className="absolute -top-4 right-10 rounded-full bg-ok px-4 py-2 text-[0.85rem] font-bold text-white">
+                <span className="mt-4 rounded-full bg-ok px-4 py-2 text-[0.85rem] font-bold whitespace-nowrap text-white">
                   3 of 3 checks hold
                 </span>
               </div>
@@ -411,16 +411,23 @@ function ScrollHeroStory() {
               />
               <AnimatePresence>
                 {confirmed && step < 2 && (
-                  <motion.span
-                    initial={{ scale: 0.4, opacity: 0, rotate: -10 }}
-                    animate={{ scale: 1, opacity: 1, rotate: -3 }}
+                  <motion.div
+                    key="badge"
+                    className="absolute inset-x-0 -top-14 flex justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 380, damping: 16 }}
-                    className="absolute -top-5 right-16 rounded-full bg-ok px-4 py-2 text-[0.85rem] font-bold whitespace-nowrap text-white shadow-[0_4px_0_rgba(18,122,62,0.3)]"
-                    role="status"
                   >
-                    3 of 3 checks hold
-                  </motion.span>
+                    <motion.span
+                      initial={{ scale: 0.4, rotate: -10, y: 16 }}
+                      animate={{ scale: 1, rotate: -3, y: 0 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 16 }}
+                      className="rounded-full bg-ok px-4 py-2 text-[0.85rem] font-bold whitespace-nowrap text-white shadow-[0_4px_0_rgba(18,122,62,0.3)]"
+                      role="status"
+                    >
+                      3 of 3 checks hold
+                    </motion.span>
+                  </motion.div>
                 )}
               </AnimatePresence>
               {step === 1 && seq1 === 0 && <Scan ref={scanRef} />}

@@ -8,7 +8,7 @@ export function FinalCta() {
   return (
     <section aria-labelledby="cta-title" className="relative overflow-hidden bg-sun px-5 pt-24 pb-[300px] sm:px-10 sm:pt-32 md:pb-36">
       <div className="relative z-10 mx-auto flex max-w-[56rem] flex-col items-center text-center">
-        <h2 id="cta-title" className="font-display text-[clamp(3.4rem,10vw,9rem)] leading-[0.92] font-[800]">
+        <h2 id="cta-title" className="font-display text-[clamp(3.4rem,8vw,9rem)] leading-[0.92] font-[800]">
           Look closer.
         </h2>
         <p className="mt-6 max-w-[36rem] text-[1.12rem] leading-relaxed text-ink-2">
@@ -35,7 +35,7 @@ export function FinalCta() {
           eye={{ look: "auto" }}
           lean={{ max: 6, enabled: true, extra: invite ? 9 : 0 }}
           height={640}
-          className="absolute bottom-[-40px] left-[-4%] h-[290px] w-auto transition-transform duration-500 md:bottom-[-9%] md:left-[3%] md:h-[min(92%,560px)]"
+          className="absolute bottom-[-40px] left-[-4%] h-[290px] w-auto overflow-visible transition-transform duration-500 md:bottom-[-9%] md:left-[3%] md:h-[min(92%,560px)]"
           style={{ transform: invite ? "translateY(-18px)" : undefined }}
         />
         <Hand
@@ -44,7 +44,7 @@ export function FinalCta() {
           eye={{ look: "auto" }}
           lean={{ max: 6, enabled: true, extra: invite ? -9 : 0 }}
           height={640}
-          className="absolute right-[-4%] bottom-[-40px] h-[290px] w-auto transition-transform duration-500 md:right-[3%] md:bottom-[-9%] md:h-[min(92%,560px)]"
+          className="absolute right-[-4%] bottom-[-40px] h-[290px] w-auto overflow-visible transition-transform duration-500 md:right-[3%] md:bottom-[-9%] md:h-[min(92%,560px)]"
           style={{ transform: invite ? "translateY(-18px)" : undefined }}
         />
       </div>
