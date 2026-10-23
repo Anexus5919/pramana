@@ -24,6 +24,7 @@ import { toneClass } from "../../ui/tone";
 import { Tooltip } from "../../ui/Tooltip";
 import { useDocTypeLabel, useWorkspace } from "./context";
 import { appPath, bboxParam, evidenceDocId, methodLabel, validBox } from "./data";
+import { SealCompare } from "./SealCompare";
 
 export function CautionNote({ children, title = "Limitation", className }: { children: ReactNode; title?: ReactNode; className?: string }) {
   return (
@@ -427,6 +428,8 @@ export function EvidenceList({ evidence, fallbackDocId }: { evidence: Evidence[]
               </Item>
             );
           }
+          case "image_match":
+            return <SealCompare key={i} e={e} />;
           case "geo":
             return (
               <Item key={i} icon={<MapPin />} title={`Photo geotag ${fmtValue(e.distance_km)} km from the campus on record`}>

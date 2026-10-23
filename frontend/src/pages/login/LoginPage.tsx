@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Building2, KeyRound, LoaderCircle, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, KeyRound, LoaderCircle, QrCode, ShieldCheck, User } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type FormEvent, lazy, Suspense, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
@@ -270,6 +270,20 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-line" />
           </div>
           <DemoAccounts pending={pending} onPick={pick} />
+
+          <Link
+            to="/scan"
+            className="group mt-6 flex items-center gap-3 rounded-[14px] border border-dashed border-line-2 px-3.5 py-3 text-left transition-colors duration-200 hover:border-brand-300 hover:bg-brand-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-brand-50 text-brand-700">
+              <QrCode className="size-4" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13.5px] font-semibold text-ink">Holding a certificate with a QR code?</span>
+              <span className="block text-[12px] text-ink-3">Scan it to check the issuer's signature. No sign-in needed.</span>
+            </span>
+            <ArrowRight className="size-4 shrink-0 text-ink-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600" aria-hidden />
+          </Link>
         </motion.div>
 
         <p className="text-[12px] leading-relaxed text-ink-3">

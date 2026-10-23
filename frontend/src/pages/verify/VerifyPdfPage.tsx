@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import { History, ShieldCheck, Trash2 } from "lucide-react";
+import { ArrowUpRight, History, QrCode, ShieldCheck, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../api";
 import { shortHash } from "../../lib/format";
 import { verificationMeta } from "../../lib/labels";
@@ -185,6 +186,18 @@ export default function VerifyPdfPage() {
         <div className="min-w-0 space-y-6">
           <DropZone onFile={start} busy={mut.isPending} compact={!!view} />
           {!view && <Intro />}
+          {!view && (
+            <Link
+              to="/scan"
+              className="group flex items-center gap-3 rounded-card border border-dashed border-line-2 px-4 py-3 text-sm transition-colors duration-200 hover:border-brand-300 hover:bg-brand-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            >
+              <QrCode className="size-4 shrink-0 text-brand-ink" aria-hidden />
+              <span className="min-w-0 flex-1 text-ink-2">
+                <b className="font-semibold text-ink">Checking a printed certificate?</b> The public QR scanner reads an issuer-signed QR from a phone photo.
+              </span>
+              <ArrowUpRight className="size-4 shrink-0 text-ink-4 group-hover:text-brand-ink" aria-hidden />
+            </Link>
+          )}
           {view && (
             <motion.div key={view.token} className="space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: dur.ui }}>
               <ReadingCard

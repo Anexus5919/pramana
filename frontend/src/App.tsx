@@ -18,6 +18,7 @@ import { ErrorState } from "./ui/States";
 
 const LandingPage = lazy(() => import("./landing/LandingPage"));
 const LoginPage = lazy(() => import("./pages/login/LoginPage"));
+const ScanPage = lazy(() => import("./pages/scan/ScanPage"));
 const UiKit = import.meta.env.DEV ? lazy(() => import("./ui/Showcase")) : null;
 
 const OFFICIAL: Role[] = ["officer", "verifier", "admin"];
@@ -56,6 +57,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/scan" element={<ScanPage />} />
         <Route
           element={
             <Guard>

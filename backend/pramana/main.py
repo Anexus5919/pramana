@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import jobs, sandbox
-from .api import admin, applications, live, ops, photos
+from .api import admin, applications, live, ops, photos, public
 from .config import get_settings
 from .db import init_db
 from .history import api as history_api
@@ -44,6 +44,7 @@ app.include_router(photos.router)
 app.include_router(history_api.router)
 app.include_router(live.router)
 app.include_router(ops.router)
+app.include_router(public.router)
 
 
 @app.middleware("http")

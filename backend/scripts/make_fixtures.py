@@ -32,6 +32,11 @@ from pramana.config import get_settings  # noqa: E402
 from pramana.photos import demo_capture  # noqa: E402
 from pramana.photos.assets import DETECTOR, SAMPLE_PHOTOS, Asset, fetch  # noqa: E402
 from pramana.photos.credentials import DEMO_CA_FILE  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixture_assets import emblem_png, seal_png  # noqa: E402
+from fixture_hindi import occupancy_hindi  # noqa: E402
+
 from pramana.verification import demo_pki  # noqa: E402
 from pramana.verification.signed_qr import sign_payload  # noqa: E402
 
@@ -203,6 +208,13 @@ class Doc:
         c.drawCentredString(x, y - 2, "SEAL")
         c.restoreState()
 
+    def seal_image(self, png: bytes, x: float, y: float, size: float = 80):
+        """A raster seal centred on (x, y), as issuers stamp scanned or digital certificates."""
+        self.c.drawImage(ImageReader(io.BytesIO(png)), x - size / 2, y - size / 2, size, size)
+
+    def emblem(self):
+        self.c.drawImage(ImageReader(io.BytesIO(EMBLEM)), 44, H - 92, 40, 40)
+
     def signature(self, x: float, y: float, name: str, role: str, seed: int):
         c = self.c
         r = random.Random(seed)
@@ -257,9 +269,23 @@ class Doc:
 
 # ---------------------------------------------------------------- document templates
 
+EMBLEM = emblem_png()
+
+
+def fire_seal(inst: dict) -> bytes:
+    city = inst["city"]
+    return seal_png(f"Fire and Emergency Services {city}", ["Chief Fire Officer", city], "#1d4ed8",
+                    sum(map(ord, city)))
+
+
+def municipal_seal(inst: dict) -> bytes:
+    city = inst["city"]
+    return seal_png(f"{city} Municipal Corporation", ["City Engineer", city], "#166534", sum(map(ord, city)) + 7)
+
+
 
 def fire_noc(inst: dict, noc: str, issue: date, valid: date, area: int, issued_to: str | None = None,
-             qr_token: str | None = None) -> tuple[bytes, dict]:
+             qr_token: str | None = None, seal: bytes | None = None) -> tuple[bytes, dict]:
     doc = Doc()
     doc.frame(f"{inst['state']} Fire and Emergency Services (SIMULATED ISSUER)",
               f"Office of the Chief Fire Officer, {inst['city']}  |  Synthetic issuer for prototype testing")
@@ -280,7 +306,8 @@ def fire_noc(inst: dict, noc: str, issue: date, valid: date, area: int, issued_t
              "certificate is valid up to the date stated above, subject to the facilities being maintained in "
              "working order. Any alteration to the premises requires fresh inspection.")
     doc.signature(70, 190, "Chief Fire Officer", f"{inst['city']} Fire Brigade (simulated)", seed=len(noc))
-    doc.seal(300, 205, f"FIRE AND EMERGENCY SERVICES {inst['city'].upper()} ")
+    doc.seal_image(seal or fire_seal(inst), 300, 205)
+    doc.emblem()
     if qr_token:
         doc.qr(qr_token, W - 205, 140)
     return doc.bytes(), doc.marks
@@ -332,7 +359,8 @@ def occupancy(inst: dict, cert: str, issue: date, area: int, ctype: str = "Full"
              "completion of which has been certified by the licensed architect and structural engineer. The "
              "building shall be used only for the purpose stated above.")
     doc.signature(70, 200, "City Engineer", f"{inst['city']} Municipal Corporation (simulated)", seed=len(cert))
-    doc.seal(330, 215, f"{inst['city'].upper()} MUNICIPAL CORPORATION ", "#166534")
+    doc.seal_image(municipal_seal(inst), 330, 215)
+    doc.emblem()
     return doc.bytes(), doc.marks
 
 
@@ -615,17 +643,44 @@ def scan(pdf: bytes) -> bytes:
     return b.getvalue()
 
 
-def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: float) -> bytes:
-    """Cover a printed value with a white box and draw a new value in an incremental update."""
+def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: float,
+                font_name: str = "Helvetica") -> bytes:
+    """Cover a printed value with a white box and draw a new value in an incremental update.
+
+    A font_name other than Helvetica mimics an editor that substitutes its own font; Helvetica widths keep
+    the glyphs where a reader expects them, so only the font name gives the edit away."""
     from pyhanko.pdf_utils import generic
     from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+    from reportlab.pdfbase.pdfmetrics import getFont
 
     w = IncrementalPdfFileWriter(io.BytesIO(signed))
-    font = w.add_object(generic.DictionaryObject({
+    fd = {
         generic.NameObject("/Type"): generic.NameObject("/Font"),
         generic.NameObject("/Subtype"): generic.NameObject("/Type1"),
-        generic.NameObject("/BaseFont"): generic.NameObject("/Helvetica"),
-    }))
+        generic.NameObject("/BaseFont"): generic.NameObject(f"/{font_name}"),
+    }
+    if font_name != "Helvetica":
+        widths = getFont("Helvetica").widths
+        fd.update({
+            generic.NameObject("/Encoding"): generic.NameObject("/WinAnsiEncoding"),
+            generic.NameObject("/FirstChar"): generic.NumberObject(32),
+            generic.NameObject("/LastChar"): generic.NumberObject(126),
+            generic.NameObject("/Widths"): generic.ArrayObject([generic.NumberObject(int(widths[i]))
+                                                                for i in range(32, 127)]),
+            generic.NameObject("/FontDescriptor"): w.add_object(generic.DictionaryObject({
+                generic.NameObject("/Type"): generic.NameObject("/FontDescriptor"),
+                generic.NameObject("/FontName"): generic.NameObject(f"/{font_name}"),
+                generic.NameObject("/Flags"): generic.NumberObject(32),
+                generic.NameObject("/FontBBox"): generic.ArrayObject(
+                    [generic.NumberObject(v) for v in (-665, -325, 2000, 1006)]),
+                generic.NameObject("/ItalicAngle"): generic.NumberObject(0),
+                generic.NameObject("/Ascent"): generic.NumberObject(905),
+                generic.NameObject("/Descent"): generic.NumberObject(-212),
+                generic.NameObject("/CapHeight"): generic.NumberObject(716),
+                generic.NameObject("/StemV"): generic.NumberObject(80),
+            })),
+        })
+    font = w.add_object(generic.DictionaryObject(fd))
     wid = stringWidth(old, "Helvetica", size) + 4
     ops = (f"q 1 1 1 rg {x - 1:.2f} {y - 3:.2f} {wid:.2f} {size + 4:.2f} re f Q "
            f"BT /FX1 {size} Tf {x:.2f} {y:.2f} Td ({new}) Tj ET").encode()
@@ -710,6 +765,29 @@ def previous_year(app: dict, inst: dict, b: dict, docs: dict[str, dict], yrng: r
         "internet_bandwidth_mbps": 100 if idx % 2 else decl["internet_bandwidth_mbps"],
         "labs": labs, "nba_claims": [p["code"] for p in progs if p["nba_accredited"]], "certificates": certs,
     }
+
+
+def scan_samples(samples: list[tuple[str, str, bytes, str]]) -> None:
+    """Printable certificates for the public scan page: each page carries a banner saying what to expect."""
+    import pikepdf
+
+    d_ = OUT / "scan"
+    d_.mkdir(exist_ok=True)
+    out = pikepdf.new()
+    for i, (slug, banner, pdf, token) in enumerate(samples, start=1):
+        segno.make(token, error="l", micro=False).save(d_ / f"{i}_{slug}.png", scale=8, border=4)
+        b = io.BytesIO()
+        c = canvas.Canvas(b, pagesize=A4)
+        c.setFillColor(HexColor("#fdf4d6"))
+        c.rect(40, H - 46, W - 80, 16, fill=1, stroke=0)
+        c.setFillColor(HexColor("#8a5a00"))
+        c.setFont("Helvetica-Bold", 8)
+        c.drawCentredString(W / 2, H - 41, f"SCAN SAMPLE {i} of {len(samples)}: {banner}  |  SYNTHETIC")
+        c.save()
+        with pikepdf.open(io.BytesIO(pdf)) as src, pikepdf.open(io.BytesIO(b.getvalue())) as ov:
+            out.pages.append(src.pages[0])
+            out.pages[-1].add_overlay(out.copy_foreign(ov.pages[0].as_form_xobject()))
+    out.save(d_ / "scan_samples.pdf")
 
 
 # ---------------------------------------------------------------- build
@@ -903,17 +981,25 @@ def main() -> None:
     p1[0]["nba_accredited"] = True
     docs["nba_certificate"] = nba_for("I1", p1[0], d("2024-07-01"), d("2027-06-30"))
     emit("A1", "I1", "EOA", docs, declared("I1", **({"facilities": lab1} if "cmi_lab" in samples else {})),
-         ["XA-PHOTO-REUSED-LATER"],
+         ["XA-PHOTO-REUSED-LATER", "FX-SEAL-REUSED-LATER"],
          "Clean application: issuer-signed fire NOC with signed QR, NBA QR, all registries match. The lab photo "
-         "carries Content Credentials from a DEMO campus camera.",
+         "carries Content Credentials from a DEMO campus camera. Its fire brigade seal image later "
+         "turns up on A8's NOC, so it carries a low note.",
          {"lab_photo.jpg": lab_original})
 
     # A2 building older than 30 years without a structural stability certificate; accounts arrive as a scan
     docs = standard_docs("I2", oc_issue=d("1991-02-20"))
     docs["audited_accounts"] = scan(docs["audited_accounts"])
+    # The OC is a bilingual Hindi and English copy whose text layer is broken: Hindi labels must be read by OCR
+    pdf, hindi_truth = occupancy_hindi(Doc, INST["I2"], "नाशिक", base["I2"]["oc"], dmy(d("1991-02-20")),
+                                       base["I2"]["area"], municipal_seal(INST["I2"]))
+    docs["occupancy_certificate"] = demo_pki.sign_pdf(pdf, muni_signers["I2"], chain, reason="OC issued",
+                                                      location="Nashik")
     emit("A2", "I2", "EOA", docs, declared("I2"), ["APH-A21-SSC-REQUIRED"],
-         "Completion certificate from 1991: a Structural Stability Certificate is required but missing. "
-         "Audited accounts uploaded as a scan (OCR path).")
+         "Completion certificate from 1991: a Structural Stability Certificate is required but missing. The "
+         "occupancy certificate is bilingual with Hindi labels and a legacy-font text layer, so its date is read "
+         "by the Devanagari recogniser. Audited accounts uploaded as a scan (OCR path).",
+         extra={"hindi_ocr": {"document": "A2/occupancy_certificate.pdf", **hindi_truth}})
 
     # A3 expired fire certificate (rectification demo: a renewed certificate is provided separately)
     docs = standard_docs("I3", fire_issue=d("2023-10-01"), fire_valid=d("2025-09-30"))
@@ -988,7 +1074,7 @@ def main() -> None:
     # A7 issuer-signed fire NOC whose validity date is edited after signing
     docs = standard_docs("I7", fire_issue=d("2023-07-01"), fire_valid=d("2025-06-30"))
     x, y, old, size = base["I7"]["fire_marks"]["valid_until"]
-    docs["fire_noc"] = tamper_date(docs["fire_noc"], x, y, old, "30-06-2027", size)
+    docs["fire_noc"] = tamper_date(docs["fire_noc"], x, y, old, "30-06-2027", size, font_name="ArialMT")
     photos7, exp7, story7 = {}, [], ""
     if "kmclu_lab" in samples:
         taken7 = datetime(2025, 12, 2, 11, 48)
@@ -1001,21 +1087,23 @@ def main() -> None:
     emit("A7", "I7", "EOA", docs, declared("I7"),
          ["VER-ISSUER_SIGNATURE-MISMATCH_DETECTED", "APH-617I-FIRE-VALID", "VER-SIGNED_QR-EXPIRED",
           "VER-ISSUER_REGISTRY-EXPIRED", "FX-FIELD-OVERWRITTEN", "FX-PDF-REVISION-TEXT-CHANGE", "FX-PDF-OVERLAID-TEXT",
-          "FX-PDF-WHITEOUT", "XA-FACULTY-MULTIPLE-INSTITUTIONS", *exp7],
-         "Fire NOC expired 30-06-2025; the date was covered and overwritten as 30-06-2027 in an incremental update "
-         "after the issuer signed. The text layer still holds the original date, so the expiry, QR and registry "
+          "FX-PDF-WHITEOUT", "FX-FONT-MISMATCH", "XA-FACULTY-MULTIPLE-INSTITUTIONS", *exp7],
+         "Fire NOC expired 30-06-2025; the date was covered and overwritten as 30-06-2027 in ArialMT, a font no "
+         "other value uses, in an incremental update after the issuer signed. The text layer still holds the original date, so the expiry, QR and registry "
          "checks see 2025 while the page shows 2027. Shares three faculty with A6." + story7,
          photos7)
 
     # A8 fabricated fire NOC: no issuer signature or QR, number unknown to the issuer, applicant DSC only
     docs = standard_docs("I8")
-    pdf, _ = fire_noc(INST["I8"], "FES/HYD/2025/07734", d("2025-05-02"), d("2027-05-01"), base["I8"]["area"])
+    pdf, _ = fire_noc(INST["I8"], "FES/HYD/2025/07734", d("2025-05-02"), d("2027-05-01"), base["I8"]["area"],
+                      seal=fire_seal(INST["I1"]))
     docs["fire_noc"] = demo_pki.sign_pdf(pdf, applicant["I8"], chain, reason="Uploaded", location="Hyderabad")
     registry["records"] = [r for r in registry["records"] if r["ref_no"] != base["I8"]["noc"]]
     emit("A8", "I8", "EOA", docs, declared("I8", fire_noc_number="FES/HYD/2025/07734"),
-         ["VER-ISSUER_REGISTRY-MISMATCH_DETECTED"],
+         ["VER-ISSUER_REGISTRY-MISMATCH_DETECTED", "FX-SEAL-REUSED"],
          "Fire NOC carries a valid DSC, but it is the applicant chairman's, not the fire department's. The issuer "
-         "has no record of the NOC number (pattern from the 2026 Hyderabad fake NOC cases).")
+         "has no record of the NOC number (pattern from the 2026 Hyderabad fake NOC cases). Its seal image is the "
+         "Pune fire brigade's, lifted from A1's certificate.")
 
     # A9 municipal registry unavailable at validation time; structural engineer register answers asynchronously
     docs = standard_docs("I9", oc_issue=d("1994-08-10"))
@@ -1085,6 +1173,30 @@ def main() -> None:
             if "expected_with_llm" in a:
                 a["expected_with_llm"] = sorted(set(a["expected_with_llm"]) | {code})
             a["story"] += f" Year over year: {note}"
+
+    # Printable samples for the public scan page, one per result the page explains
+    i1, b1 = INST["I1"], base["I1"]
+    tok1 = fire_qr("I1", b1["noc"], d("2025-03-12"), d("2027-03-11"), i1["name"])
+    h, p, sig = tok1.split(".")
+    payload = json.loads(base64.urlsafe_b64decode(p + "=" * (-len(p) % 4)))
+    edited = base64.urlsafe_b64encode(json.dumps({**payload, "valid_until": "2029-03-11"}, separators=(",", ":"))
+                                      .encode()).rstrip(b"=").decode()
+    stranger = sign_payload(payload, Ed25519PrivateKey.generate(), "fire-sim-2023")
+    tok3 = fire_qr("I3", base["I3"]["noc"], d("2023-10-01"), d("2025-09-30"), INST["I3"]["name"])
+    scan_samples([
+        ("as_issued", "as issued, every printed value matches the signed QR",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2027-03-11"), b1["area"], qr_token=tok1)[0], tok1),
+        ("printed_date_changed", "same QR, printed validity changed to 11-03-2029",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2029-03-11"), b1["area"], qr_token=tok1)[0], tok1),
+        ("expired", "signed QR whose validity ended on 30-09-2025",
+         fire_noc(INST["I3"], base["I3"]["noc"], d("2023-10-01"), d("2025-09-30"), base["I3"]["area"],
+                  qr_token=tok3)[0], tok3),
+        ("qr_edited", "QR payload edited after signing, so the signature fails",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2029-03-11"), b1["area"], qr_token=f"{h}.{edited}.{sig}")[0],
+         f"{h}.{edited}.{sig}"),
+        ("unknown_key", "signed with a key the service does not publish",
+         fire_noc(i1, b1["noc"], d("2025-03-12"), d("2027-03-11"), b1["area"], qr_token=stranger)[0], stranger),
+    ])
 
     # Faculty registry and the remaining reference records
     for fid, r in faculty_registry.items():

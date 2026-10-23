@@ -40,13 +40,12 @@ def warmup() -> bool:
     return True
 
 
-def ocr_image(img: Image.Image) -> list[tuple[str, float, float, float, float, float]] | None:
-    """[(text, x0, top, x1, bottom, confidence)] in image pixels, or None if OCR is unavailable."""
-    eng = _get_engine()
-    if eng is None:
-        return None
-    with _lock:  # onnxruntime sessions are shared; serialise to keep memory flat on a laptop
-        res = eng(np.array(img.convert("RGB")), return_word_box=True)
+def _run(eng, arr):
+    # RapidOCR keeps call switches between calls, so state them all
+    return eng(arr, use_det=True, use_cls=False, use_rec=True, return_word_box=True, text_score=0.5)
+
+
+def _boxes(res) -> list[tuple[str, float, float, float, float, float]]:
     out = []
     for text, conf, quad in _word_items(res.word_results):
         if text.strip():
@@ -54,6 +53,31 @@ def ocr_image(img: Image.Image) -> list[tuple[str, float, float, float, float, f
             ys = [p[1] for p in quad]
             out.append((text, float(min(xs)) - 2, float(min(ys)), float(max(xs)) + 2, float(max(ys)), float(conf)))
     return out
+
+
+def ocr_image(img: Image.Image) -> list[tuple[str, float, float, float, float, float]] | None:
+    """[(text, x0, top, x1, bottom, confidence)] in image pixels, or None if OCR is unavailable."""
+    eng = _get_engine()
+    if eng is None:
+        return None
+    with _lock:  # onnxruntime sessions are shared; serialise to keep memory flat on a laptop
+        res = _run(eng, np.array(img.convert("RGB")))
+    return _boxes(res)
+
+
+def ocr_page(img: Image.Image, devanagari_hint: str | None = None) -> tuple[list | None, dict]:
+    """Like ocr_image, choosing the recogniser by script, plus a note on how the script was handled."""
+    from . import devanagari
+
+    eng = _get_engine()
+    if eng is None:
+        return None, {}
+    arr = np.array(img.convert("RGB"))
+    with _lock:
+        # Keep the lines below the usual score threshold: they are where another script hides
+        res = eng(arr, use_det=True, use_cls=False, use_rec=True, return_word_box=True, text_score=0.0)
+        words, info = devanagari.read(arr, devanagari.lines_of(res), devanagari_hint)
+    return [(t, b[0] - 2, b[1], b[2] + 2, b[3], c) for t, b, c in words], info
 
 
 def _word_items(word_results):

@@ -34,6 +34,7 @@ class Signal:
     severity: str  # info | low | medium | high
     evidence: list[dict[str, Any]] = field(default_factory=list)
     limitation: str | None = None
+    evidence_class: str | None = None  # overrides the class validate derives from the code and severity
 
 
 def revision_offsets(data: bytes) -> list[int]:

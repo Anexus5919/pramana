@@ -11,6 +11,8 @@ import pdfplumber
 import pypdfium2 as pdfium
 from PIL import Image
 
+from .devanagari import text_layer_hint
+
 OCR_DPI = 200
 MIN_DIGITAL_CHARS = 25
 
@@ -59,6 +61,7 @@ class PageText:
     words: list[Word]
     mean_conf: float | None = None
     lines: list[Line] = field(default_factory=list)
+    ocr: dict | None = None  # how OCR handled the page's script, when the page was OCR'd
 
     @property
     def text(self) -> str:
@@ -71,6 +74,7 @@ class PageText:
     def as_dict(self) -> dict:
         d = asdict(self)
         d.pop("lines")
+        d.pop("ocr")
         return d
 
 
@@ -119,10 +123,11 @@ def render_pdf_page(data: bytes, page_index: int, dpi: int = 110) -> Image.Image
         pdf.close()
 
 
-def _ocr_page(img: Image.Image, scale: float, page_no: int, width: float, height: float) -> PageText:
-    from .ocr import ocr_image
+def _ocr_page(img: Image.Image, scale: float, page_no: int, width: float, height: float,
+              devanagari_hint: str | None = None) -> PageText:
+    from .ocr import ocr_page
 
-    result = ocr_image(img)
+    result, info = ocr_page(img, devanagari_hint)
     if result is None:
         return PageText(page_no, width, height, "unreadable", [])
     words = [
@@ -130,7 +135,7 @@ def _ocr_page(img: Image.Image, scale: float, page_no: int, width: float, height
         for t, x0, top, x1, bottom, conf in result
     ]
     confs = [w.conf for w in words if w.conf is not None]
-    pt = PageText(page_no, width, height, "ocr", words, sum(confs) / len(confs) if confs else None)
+    pt = PageText(page_no, width, height, "ocr", words, sum(confs) / len(confs) if confs else None, ocr=info)
     pt.lines = group_lines(words)
     return pt
 
@@ -145,14 +150,16 @@ def extract_pdf(data: bytes) -> list[PageText]:
                 for w in raw
             ]
             n_chars = sum(len(w.text) for w in words)
-            # Broken Devanagari text layers map conjuncts to Private Use Area code points; OCR those pages
+            # Broken Devanagari text layers map conjuncts to Private Use Area code points or store glyphs in
+            # visual order; OCR those pages, with the Devanagari recogniser
             pua = sum(1 for w in words for ch in w.text if 0xE000 <= ord(ch) <= 0xF8FF or ch == "�")
-            if n_chars >= MIN_DIGITAL_CHARS and pua / n_chars < 0.03:
+            hint = text_layer_hint([w.text for w in words])
+            if n_chars >= MIN_DIGITAL_CHARS and pua / n_chars < 0.03 and hint is None:
                 pt = PageText(i + 1, float(page.width), float(page.height), "digital", words)
                 pt.lines = group_lines(words)
             else:
                 img = render_pdf_page(data, i, OCR_DPI)
-                pt = _ocr_page(img, OCR_DPI / 72, i + 1, float(page.width), float(page.height))
+                pt = _ocr_page(img, OCR_DPI / 72, i + 1, float(page.width), float(page.height), hint)
             pages.append(pt)
     return pages
 
