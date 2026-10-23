@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { useId, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "./cn";
 import { spring } from "./motion";
@@ -42,6 +42,34 @@ export function Tabs<T extends string>({
   const auto = useId();
   const base = id ?? auto;
   const refs = useRef<Array<HTMLElement | null>>([]);
+  const listRef = useRef<HTMLDivElement>(null);
+  // Fade the edge that hides more tabs, so a clipped tab bar reads as scrollable
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const update = () =>
+      setEdges({ left: el.scrollLeft > 2, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 });
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [items.length]);
+
+  useEffect(() => {
+    const i = items.findIndex((t) => t.id === value);
+    refs.current[i]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [value, items]);
+
+  const mask =
+    edges.left || edges.right
+      ? `linear-gradient(to right, ${edges.left ? "transparent, black 40px" : "black"}, ${edges.right ? "black calc(100% - 40px), transparent" : "black"})`
+      : undefined;
 
   function onKeyDown(e: KeyboardEvent) {
     const enabled = items.map((t, i) => (t.disabled ? -1 : i)).filter((i) => i >= 0);
@@ -61,9 +89,11 @@ export function Tabs<T extends string>({
 
   return (
     <div
+      ref={listRef}
       role="tablist"
       aria-label={label}
       onKeyDown={onKeyDown}
+      style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
       className={cn(
         "relative flex max-w-full items-center overflow-x-auto scrollbar-none",
         variant === "underline" ? "gap-1 border-b border-line" : "gap-1 rounded-[10px] bg-surface-2 p-1",
