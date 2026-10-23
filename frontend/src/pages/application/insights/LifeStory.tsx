@@ -37,6 +37,19 @@ export function spanWords(seconds: number): string {
   return `${y} years${mo ? ` ${mo} months` : ""}`;
 }
 
+const IST_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" });
+const dayNumber = (v: string) => Math.round(Date.parse(`${IST_DAY.format(new Date(Date.parse(v)))}T00:00:00Z`) / 86400000);
+
+/** The real interval between two neighbours; a date printed without a time is compared by calendar day. */
+function intervalWords(a: StoryEvent, b: StoryEvent, seconds: number): string {
+  if (a.time.precision === "day" || b.time.precision === "day") {
+    const days = Math.abs(dayNumber(b.time.at!) - dayNumber(a.time.at!));
+    if (days === 0) return "same day";
+    return days < 60 ? (days === 1 ? "next day" : `${days} days`) : spanWords(days * 86400);
+  }
+  return gapWords(seconds);
+}
+
 function gapWords(seconds: number): string {
   if (seconds < 1) return "same second";
   if (seconds < 90) return `+${Math.round(seconds)} s`;
@@ -313,7 +326,8 @@ function useLayout(story: LifeStoryData, width: number) {
 
     const lineFrom = (xs[0] ?? GUTTER) - 28;
     const lineTo = (xs[n - 1] ?? GUTTER) + 28;
-    return { xs, gaps, xOf, spans, rows: rows.length, top, yFile, yAxis, yPram, height, contentW, uncovered, lineFrom, lineTo, thumbs, thumbOf };
+    const labelW = Math.min(step - 8, 156);
+    return { xs, gaps, xOf, spans, rows: rows.length, top, yFile, yAxis, yPram, height, contentW, uncovered, lineFrom, lineTo, thumbs, thumbOf, labelW };
   }, [story, width]);
 }
 
@@ -373,10 +387,10 @@ function markerTone(e: StoryEvent): string {
   return "border-line-2 bg-surface text-ink-2";
 }
 
-function EventLabel({ e, x, y, selected }: { e: StoryEvent; x: number; y: number; selected: boolean }) {
+function EventLabel({ e, x, y, width, selected }: { e: StoryEvent; x: number; y: number; width: number; selected: boolean }) {
   const w = fmtWhen(e, false);
   return (
-    <div aria-hidden className="pointer-events-none absolute text-center" style={{ left: x - (STEP - 12) / 2, top: y, width: STEP - 12 }}>
+    <div aria-hidden className="pointer-events-none absolute text-center" style={{ left: x - width / 2, top: y, width }}>
       <div className={cn("truncate text-xs font-medium", selected ? "text-ink" : "text-ink-2", e.tone === "warning" && "text-mismatch-fg")}>{e.title}</div>
       <div className="truncate text-xs text-ink-2 tabular-nums">{w.date}</div>
       <div className="flex items-center justify-center gap-1 text-xs text-ink-3 tabular-nums">
@@ -551,7 +565,7 @@ function Timeline(props: LifeStoryProps) {
               const known = !!e.time.at && !!ev[i - 1].time.at;
               const xm = (L.xs[i - 1] + L.xs[i]) / 2;
               const brk = g > BREAK_S;
-              const label = known ? gapWords(g) : null;
+              const label = known ? intervalWords(ev[i - 1], e, g) : null;
               return (
                 <g key={`gap-${e.id}`}>
                   {brk &&
@@ -577,13 +591,15 @@ function Timeline(props: LifeStoryProps) {
             {L.spans.map((s) => {
               const y = s.row * ROW_H + 18;
               const dashed = s.tone === "info" || s.tone === "low";
+              const point = s.x2 - s.x1 < 2;
+              const end = L.thumbOf.size ? L.top : L.yFile - 16;
               return (
                 <g key={s.key}>
-                  <text x={s.x1 - 4} y={y - 5} className={cn("text-xs font-medium", TONE_TEXT[s.tone])}>
+                  <text x={point ? s.x1 + 8 : s.x1 - 4} y={point ? y + 4 : y - 5} className={cn("text-xs font-medium", TONE_TEXT[s.tone])}>
                     {s.label}
                   </text>
                   <path
-                    d={s.x2 - s.x1 < 2 ? `M${s.x1} ${y}v${L.yFile - y - 16}` : `M${s.x1} ${y + 5}V${y}H${s.x2}V${y + 5}`}
+                    d={point ? `M${s.x1} ${y - 4}V${end}` : `M${s.x1} ${y + 5}V${y}H${s.x2}V${y + 5}`}
                     fill="none"
                     className={TONE_STROKE[s.tone]}
                     strokeWidth="1.5"
@@ -635,7 +651,7 @@ function Timeline(props: LifeStoryProps) {
                 >
                   <KindGlyph kind={e.kind} />
                 </button>
-                <EventLabel e={e} x={L.xs[i]} y={y + 20} selected={on} />
+                <EventLabel e={e} x={L.xs[i]} y={y + 20} width={L.labelW} selected={on} />
               </div>
             );
           })}

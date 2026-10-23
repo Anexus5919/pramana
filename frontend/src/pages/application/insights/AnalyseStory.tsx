@@ -22,7 +22,12 @@ export function AnalyseStory({ a, onShow }: { a: Analysis; onShow: (page: number
   const pdf = a.mime === "application/pdf";
   const machine = pdf && !!a.revisions && (a.revision_count ?? 1) >= 2;
 
-  const thumbUrl = (t: StoryThumb) => (t.photo ? analyseApi.photoUrl(a.token) : pdf ? analyseApi.revisionPageUrl(a.token, t.rev ?? 1, t.page ?? 1) : null);
+  // The current page is the one the viewer loads too; only earlier revisions need their own renders
+  const thumbUrl = (t: StoryThumb) => {
+    if (t.photo) return analyseApi.photoUrl(a.token);
+    if (!pdf) return null;
+    return (t.rev ?? 1) >= (a.revision_count ?? 1) ? analyseApi.pageUrl(a.token, t.page ?? 1) : analyseApi.revisionPageUrl(a.token, t.rev ?? 1, t.page ?? 1);
+  };
   const pageSize = (p: number) => {
     const pg = a.document.pages.find((x) => x.page_no === p);
     return pg && pg.width && pg.height ? { width: pg.width, height: pg.height } : null;

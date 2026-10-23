@@ -46,7 +46,13 @@ export function DocumentStory({ doc, onFocus }: { doc: DocumentDetail; onFocus: 
     });
   };
 
-  const thumbUrl = (t: StoryThumb) => (t.photo ? api.photoUrl(doc.id, "thumb") : pdf ? historyApi.revisionPageUrl(doc.id, t.rev ?? 1, t.page ?? 1) : null);
+  // The current page is the one the viewer loads too; only earlier revisions need the time machine's renders
+  const thumbUrl = (t: StoryThumb) => {
+    if (t.photo) return api.photoUrl(doc.id, "thumb");
+    if (!pdf) return null;
+    const count = q.data?.revision_count ?? 1;
+    return (t.rev ?? 1) >= count ? api.pageImageUrl(doc.id, t.page ?? 1) : historyApi.revisionPageUrl(doc.id, t.rev ?? 1, t.page ?? 1);
+  };
   const pageSize = (p: number) => {
     const pg = doc.pages.find((x) => x.page_no === p);
     return pg && pg.width && pg.height ? { width: pg.width, height: pg.height } : null;
@@ -76,6 +82,11 @@ export function DocumentStory({ doc, onFocus }: { doc: DocumentDetail; onFocus: 
   };
 
   const onOpen = (l: StoryLink, e: { title: string }) => {
+    // The viewer and the side panels sit below the story; bring them into view with the evidence
+    if (["revision", "region", "page", "signature", "credentials", "photo", "fields"].includes(l.to)) {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      window.setTimeout(() => document.getElementById("doc-stage")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }), 60);
+    }
     switch (l.to) {
       case "revision":
         setParams({ panel: "revisions", rev: l.rev, hl: null, hlabel: null });

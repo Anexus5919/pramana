@@ -134,7 +134,7 @@ export function DocumentDetail({ docId }: { docId: string }) {
 
       {officer && <DocumentStory doc={doc} onFocus={setFocus} />}
 
-      <div className="grid items-start gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div id="doc-stage" className="grid scroll-mt-20 items-start gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="min-w-0 xl:sticky xl:top-20">
           {panel === "revisions" ? (
             <RevisionStage doc={doc} className={FRAME_HEIGHT} />

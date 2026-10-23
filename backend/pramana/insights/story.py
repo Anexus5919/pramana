@@ -230,7 +230,7 @@ def _issued(st: _Story, fields: list[dict[str, Any]], pages: list[dict[str, Any]
         except ValueError:
             continue
         region = {"page": f["page"], "bbox": f["bbox"]} if f.get("page") and f.get("bbox") else None
-        return st.add("issued", "Issued, as printed", f"{label} printed on the page: {f.get('raw') or f['value']}. "
+        return st.add("issued", "Issued (printed)", f"{label} printed on the page: {f.get('raw') or f['value']}. "
                       "This is what the document says about itself; the issuer can confirm it.",
                       _time(day, "printed", f.get("raw") or str(f["value"]), precision="day"),
                       link={"to": "region", **region} if region else None, region=region, field=name)
@@ -242,7 +242,7 @@ def _issued(st: _Story, fields: list[dict[str, Any]], pages: list[dict[str, Any]
         except ValueError:
             day = None
         if day:
-            return st.add("issued", "Dated, as printed", f"The masthead on page 1 reads '{_short(m.group(0), 80)}'. "
+            return st.add("issued", "Dated (printed)", f"The masthead on page 1 reads '{_short(m.group(0), 80)}'. "
                           "This is the date the document states, read from the page text.",
                           _time(day, "printed", m.group(0), precision="day"), link={"to": "page", "page": 1})
     m = GAZETTE_CODE.search(text[:3000])
@@ -251,7 +251,7 @@ def _issued(st: _Story, fields: list[dict[str, Any]], pages: list[dict[str, Any]
             day = datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)), tzinfo=IST)
         except ValueError:
             return None
-        return st.add("issued", "Dated, as printed", f"The gazette number on page 1, {m.group(0)}, carries this "
+        return st.add("issued", "Dated (printed)", f"The gazette number on page 1, {m.group(0)}, carries this "
                       "publication date. It was read from the page text.",
                       _time(day, "printed", m.group(0), precision="day"), link={"to": "page", "page": 1})
     return None
@@ -290,7 +290,7 @@ def _pdf_events(st: _Story, data: bytes, revisions: dict[str, Any] | None, sig_r
             through = "revision 1" if n == 1 else f"revisions 1 to {n}"
             status = s.get("status")
             e = st.add(
-                "signed", f"Signed by {_signer_word(role)}" if role in ("issuer", "applicant") else "Signed",
+                "signed", {"issuer": "Issuer signed", "applicant": "Applicant signed"}.get(role, "Signed"),
                 f"{who} signed revision {n} of {count}. The signature covers {through}"
                 + (", the whole file." if n == count else f"; revision{'s' if count - n > 1 else ''} after it "
                    "are not covered.")
@@ -315,15 +315,15 @@ def _pdf_events(st: _Story, data: bytes, revisions: dict[str, Any] | None, sig_r
         new_tool = info.get("Producer") if info.get("Producer") != prev.get("Producer") else None
         after = bool(r.get("after_last_signature")) or any(k < n for k in sig_events)
         if changes:
-            kind, title = "edited", f"Edited in revision {n}"
+            kind, title = "edited", f"Edited, revision {n}"
             detail = "; ".join(_change_line(c) for c in changes[:2]) + ("" if len(changes) <= 2 else
                                                                         f"; {len(changes) - 2} more changes") + "."
         elif annots:
-            kind, title = "annotated", f"Annotation added in revision {n}"
+            kind, title = "annotated", f"Annotated, revision {n}"
             detail = ("An annotation was added. Annotations draw on top of the page and do not change its text "
                       "layer, so the time machine shows what it looks like.")
         else:
-            kind, title = "updated", f"Saved again as revision {n}"
+            kind, title = "updated", f"Re-saved, revision {n}"
             detail = "The file was saved again with no visible text change, typical of metadata or form updates."
         detail += (f" The saving tool recorded is {new_tool}." if new_tool else "")
         detail += "" if timed else " This revision did not record a new modification time."
@@ -384,6 +384,12 @@ def _pdf_anomalies(st: _Story, created: dict[str, Any], issued: dict[str, Any] |
                 "It shows the institution vouches for this copy, not that the issuer issued it. The issuer's "
                 "signature, register or signed QR is what confirms the issue.", s, s, "structure")
 
+    if issuer_doc and not signed:
+        st.flag("STORY-NO-SIGNATURE", "info", "No digital signature in the file",
+                "Nothing in the file ties it to a signer, so every time and tool it records is a claim that anyone "
+                "re-saving it could change. The issuer's register or signed QR can still confirm the document.",
+                created, created, "structure")
+
     editors = editors_named(tool or "")
     if issuer_doc and editors:
         st.flag("STORY-EDITOR-CREATED", "medium", "Made with a desktop editor or converter",
@@ -427,7 +433,7 @@ def _photo_events(st: _Story, facts: dict[str, Any], photo: dict[str, Any]) -> N
         org = (c2pa.get("signer") or {}).get("organization")
         when = _iso(c2pa.get("signed_time") or c2pa.get("capture_time"))
         signed = st.add(
-            "credentials", "Signed with Content Credentials",
+            "credentials", "Credentials signed",
             f"{who}{f' ({org})' if org else ''} signed a manifest describing the capture"
             + (f", made with {c2pa['claim_generator']}" if c2pa.get("claim_generator") else "") + ". "
             + ("The signature validates." if c2pa.get("signature_valid") else "The signature does not validate.")
@@ -439,13 +445,13 @@ def _photo_events(st: _Story, facts: dict[str, Any], photo: dict[str, Any]) -> N
             if a.get("action") in ("c2pa.created", "c2pa.opened"):
                 continue
             label = str(a.get("action") or "action").removeprefix("c2pa.").replace("_", " ")
-            st.add("c2pa_action", f"Recorded in credentials: {label}",
+            st.add("c2pa_action", f"Credentials: {label}",
                    f"The signed manifest records the action '{label}'"
                    + (f" by {a['software']}" if a.get("software") else "") + ". Recorded actions are disclosed edits.",
                    _time(_iso(a.get("when")), "device" if a.get("when") else "structure", a.get("when")),
                    tool=a.get("software"), link={"to": "credentials"})
         if c2pa.get("hash_matches") is False:
-            mod = st.add("modified", "Modified after signing",
+            mod = st.add("modified", "Changed after signing",
                          "The image no longer matches the hash its Content Credentials signed, so its pixels or "
                          "metadata changed after the camera signed it. The file records no time for that change.",
                          _time(None, "structure"), link={"to": "credentials"}, tone="warning")
