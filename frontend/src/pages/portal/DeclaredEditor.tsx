@@ -55,10 +55,10 @@ function ProgrammeRow({
       </div>
       <div className="grid gap-3 sm:grid-cols-[104px_minmax(0,1fr)_176px]">
         <Field label="Code" error={err("code")}>
-          <Input value={p.code} onChange={(e) => onChange({ code: e.target.value.toUpperCase() })} placeholder="CE" className="font-mono" maxLength={12} />
+          <Input value={p.code} onChange={(e) => onChange({ code: e.target.value.toUpperCase() })} className="font-mono" maxLength={12} />
         </Field>
         <Field label="Programme name" error={err("name")}>
-          <Input value={p.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="B.Tech Computer Engineering" />
+          <Input value={p.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="For example B.Tech Civil Engineering" />
         </Field>
         <Field label="Level">
           <Select value={p.level} onChange={(e) => onChange({ level: e.target.value })}>
