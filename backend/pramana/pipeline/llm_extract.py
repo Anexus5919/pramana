@@ -40,8 +40,9 @@ def build_prompt(label: str, fields: dict[str, str], text: str) -> str:
 
 
 def _post(url: str, body: dict[str, Any], headers: dict[str, str], timeout: int) -> dict[str, Any]:
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json",
-                                                                             **headers})
+    # Groq's edge rejects urllib's default User-Agent with Cloudflare error 1010
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={
+        "Content-Type": "application/json", "User-Agent": "pramana/0.3", **headers})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())
 
@@ -77,7 +78,9 @@ def _gemini(prompt: str, names: list[str]) -> dict[str, Any]:
     out = _post(url, {
         "systemInstruction": {"parts": [{"text": SYSTEM}]},
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0, "responseMimeType": "application/json", "responseSchema": {
+        # Copying printed values needs no long reasoning; low thinking cuts latency severalfold
+        "generationConfig": {"temperature": 0, "thinkingConfig": {"thinkingLevel": "low"},
+                             "responseMimeType": "application/json", "responseSchema": {
             "type": "OBJECT", "properties": {n: {"type": "STRING", "nullable": True} for n in names},
             "required": names}},
     }, {"x-goog-api-key": s.gemini_api_key}, s.llm_timeout_s)
