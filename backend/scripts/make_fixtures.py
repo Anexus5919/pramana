@@ -919,6 +919,14 @@ def main() -> None:
         "reference_records": refs, "issuer_registry": registry, "issuer_keys": issuer_keys,
         "applications": apps,
         "rectification": {"A3": {"declared_type": "fire_noc", "file": "rectification/A3_fire_noc_renewed.pdf"}},
+        # Outcomes an officer already recorded, so the re-verification watch has certificates to watch
+        "scrutiny_outcomes": [
+            {"application": "A1", "outcome": "no_deficiency",
+             "reason": "All documents confirmed with the issuers and AICTE records; no deficiency found."},
+            {"application": "A6", "outcome": "deficiencies_recorded",
+             "reason": "Three faculty are also listed by Panchganga Institute; roster deficiency communicated. "
+                       "Issuer-confirmed certificates accepted."},
+        ],
         "demo_accounts": [
             {"username": "officer", "display_name": "R. Sharma (Scrutiny Officer)", "role": "officer"},
             {"username": "verifier", "display_name": "L. Iyer (Verification Cell)", "role": "verifier"},

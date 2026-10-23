@@ -35,5 +35,6 @@ def get_db() -> Iterator[Session]:
 
 def init_db() -> None:
     from . import models  # noqa: F401  registers tables
+    from .history import models as _history  # noqa: F401
 
     Base.metadata.create_all(engine)

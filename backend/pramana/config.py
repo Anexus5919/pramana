@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = Field(None, validation_alias=AliasChoices("PRAMANA_GEMINI_API_KEY",
                                                                           "GEMINI_API_KEY", "GOOGLE_API_KEY"))
     gemini_model: str = "gemini-2.5-flash"
+    # Re-verification watch: how often issuer-verified certificates are re-queried after a scrutiny outcome
+    watch_interval_hours: float = 24.0
+    watch_scheduler: bool = True
 
     @property
     def db_url(self) -> str:

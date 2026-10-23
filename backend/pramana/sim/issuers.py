@@ -9,12 +9,14 @@ Availability can be switched off to demonstrate the source-unavailable path.
 import json
 import threading
 import time
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 from ..config import get_settings
 
 _lock = threading.Lock()
+RECORD_STATUSES = ("valid", "revoked", "suspended")
 
 
 class SourceUnavailable(Exception):
@@ -69,3 +71,22 @@ def lookup(code: str, ref_no: str) -> dict[str, Any]:
                     "mode": issuer.get("mode", "sync")}
     return {"simulated": True, "issuer": issuer["name"], "found": False, "record": None,
             "mode": issuer.get("mode", "sync")}
+
+
+def set_record_status(code: str, ref_no: str, status: str, note: str | None = None) -> dict[str, Any]:
+    """Play the issuer: revoke, suspend or restore a record, as the authority would in its own register."""
+    data = load()
+    if code not in data["issuers"]:
+        raise KeyError("unknown issuer")
+    norm = ref_no.strip().upper().replace(" ", "")
+    for r in data["records"]:
+        if r["issuer"] == code and r["ref_no"].upper().replace(" ", "") == norm:
+            r["status"] = status
+            r["status_changed_on"] = date.today().isoformat()
+            if note:
+                r["status_note"] = note
+            else:
+                r.pop("status_note", None)
+            save(data)
+            return r
+    raise KeyError("no such reference in the simulated registry")

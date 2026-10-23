@@ -139,6 +139,9 @@ def main(validate: bool = True) -> None:
                 sim.set_availability(code, True)
             print(f"{spec['key']:4} {app.id} {run.status:9} findings={run.summary.get('findings')} "
                   f"{time.perf_counter() - t0:5.1f}s  {spec['story'][:70]}")
+        from pramana.history.watch import seed_outcomes
+
+        seed_outcomes(db, m, users["officer"])
         audit.checkpoint(db)
         db.commit()
         print(f"validated {len(timings)} applications, mean {sum(timings) / len(timings):.1f}s")
