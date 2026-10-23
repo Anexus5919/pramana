@@ -85,6 +85,8 @@ def document(d: Document, *, detail: bool = False) -> dict[str, Any]:
             "forensic_facts": an.get("forensic_facts", {}),
             "qr": [{"page": q["page"], "bbox": q["bbox"], "length": len(q["text"])} for q in an.get("qr", [])],
             "rows": an.get("rows"),
+            "llm": an.get("llm"),
+            "instruction_lines": an.get("instruction_lines", []),
             "fingerprints": {k: v for k, v in (d.fingerprints or {}).items() if k != "minhash"},
         })
     return out

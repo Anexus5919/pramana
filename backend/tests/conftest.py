@@ -6,6 +6,8 @@ from pathlib import Path
 # Isolate every test session from the developer's var/ directory before pramana is imported
 _TMP = Path(tempfile.mkdtemp(prefix="pramana-test-"))
 os.environ["PRAMANA_DATA_DIR"] = str(_TMP)
+# Tests are deterministic: no language model, whatever backend/.env enables for demos
+os.environ["PRAMANA_LLM_PROVIDERS"] = ""
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import logging  # noqa: E402

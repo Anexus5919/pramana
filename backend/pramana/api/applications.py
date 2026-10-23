@@ -180,7 +180,10 @@ def submit(app_id: str, user: User = Depends(require_roles("institution")), db: 
                  object_type="application", object_id=app.id, application_id=app.id, details={"round": app.round})
     db.commit()
     run = run_validation(db, app, "system", "system")
-    return {"application": ser.application(app, run), "run": ser.run_brief(run)}
+    brief = ser.run_brief(run)
+    # Institutions learn that validation ran, not the counts of indicators under review
+    brief = {k: brief[k] for k in ser.INSTITUTION_RUN_KEYS}
+    return {"application": ser.application(app, run, for_institution=True), "run": brief}
 
 
 @router.post("/applications/{app_id}/validate")
@@ -260,7 +263,7 @@ def get_document(doc_id: str, user: User = Depends(current_user), db: Session = 
     load_application(db, user, doc.application_id)
     out = ser.document(doc, detail=True)
     if user.role == "institution":
-        for k in ("forensic_signals", "forensic_facts", "fingerprints"):
+        for k in ("forensic_signals", "forensic_facts", "fingerprints", "llm", "instruction_lines"):
             out.pop(k, None)
     else:
         out["verifications"] = [ser.attempt(v) for v in db.scalars(
