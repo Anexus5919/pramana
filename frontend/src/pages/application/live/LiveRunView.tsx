@@ -1,26 +1,27 @@
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fmtMs, pluralize } from "../../../lib/format";
-import { channelMeta, humanize, isSignatureChannel, stageLabel, verificationMeta } from "../../../lib/labels";
-import { Tag } from "../../../ui/Badge";
-import { BlockProgress, StatusCube, type BlockStage } from "../../../ui/Blocks";
-import { cn } from "../../../ui/cn";
-import { Counter } from "../../../ui/Counter";
-import { dur, ease } from "../../../ui/motion";
-import { toneClass, verificationTone } from "../../../ui/tone";
+import { channelMeta, humanize, stageLabel } from "../../../lib/labels";
+import { cn, DescriptionList, SimulatedTag, Stepper, VerificationBadge, type Step } from "../../../ui2";
 import { useDocTypeLabel } from "../context";
 import { currentStage, DOC_STEPS, findingsSoFar, RUN_STAGES, type DocStep, type LiveCheck, type LiveDoc, type LiveState } from "./useLiveRun";
 
 const STEP_LABEL: Record<DocStep, string> = {
-  read: "Read and OCR",
-  extract: "Extraction",
+  read: "Read",
+  extract: "Fields",
   fingerprints: "Fingerprints",
   forensics: "Forensics",
   qr: "QR codes",
 };
-const STEP_SHORT: Record<DocStep, string> = { read: "Read", extract: "Fields", fingerprints: "Prints", forensics: "Forensic", qr: "QR" };
 
 type CellState = "done" | "cached" | "current" | "failed" | "pending";
+
+const CELL_TEXT: Record<CellState, string> = {
+  done: "Done",
+  cached: "Cached",
+  current: "Running",
+  failed: "Stopped",
+  pending: "Waiting",
+};
 
 /** Elapsed seconds since a timestamp, ticking only while the run is live. */
 export function useElapsed(from: string | null, to: string | null, live: boolean): number {
@@ -35,18 +36,21 @@ export function useElapsed(from: string | null, to: string | null, live: boolean
   return Math.max(0, (end - new Date(from).getTime()) / 1000);
 }
 
-function stageBlocks(s: LiveState): BlockStage[] {
+function stageSteps(s: LiveState): Step[] {
   const cur = currentStage(s);
   const failed = s.status === "failed" || s.status === "interrupted";
   const firstMissing = RUN_STAGES.find((k) => !s.stages[k]);
   return RUN_STAGES.map((k) => {
     const st = s.stages[k];
-    return {
-      key: k,
-      label: stageLabel[k] ?? humanize(k),
-      state: st ? "done" : failed && k === firstMissing ? "failed" : k === cur ? "current" : "pending",
-      ms: st?.ms,
-    };
+    const status = st ? "complete" : failed && k === firstMissing ? "attention" : k === cur ? "current" : "upcoming";
+    const description = st
+      ? `${fmtMs(st.ms)}${st.findings != null ? `, ${pluralize(st.findings, "finding")} so far` : ""}`
+      : status === "attention"
+        ? "Stopped here"
+        : status === "current"
+          ? "Running"
+          : undefined;
+    return { id: k, label: stageLabel[k] ?? humanize(k), status, description };
   });
 }
 
@@ -61,110 +65,7 @@ function docCells(d: LiveDoc, active: boolean, failed: boolean): CellState[] {
   });
 }
 
-function docDetail(d: LiveDoc, active = false): string {
-  if (d.cached) return "Read in an earlier run";
-  if (d.status === "failed") return "Could not be read safely";
-  const next = DOC_STEPS.find((k) => !d.steps[k]);
-  if (active && next && !d.status) return `Now: ${STEP_LABEL[next]}`;
-  const parts: string[] = [];
-  const read = d.steps.read?.info;
-  if (read) {
-    const src = String(read.text_source ?? "");
-    parts.push(src === "ocr" ? "OCR" : src === "digital" ? "Text layer" : src === "mixed" ? "Text and OCR" : humanize(src));
-    if (typeof read.pages === "number") parts.push(pluralize(read.pages, "page"));
-  }
-  const ex = d.steps.extract?.info;
-  if (ex && typeof ex.fields === "number") parts.push(pluralize(ex.fields, "field"));
-  const fx = d.steps.forensics?.info;
-  if (fx && typeof fx.signals === "number" && fx.signals > 0) parts.push(pluralize(fx.signals, "indicator"));
-  const ms = DOC_STEPS.reduce((t, k) => t + (d.steps[k]?.ms ?? 0), 0);
-  if (ms) parts.push(fmtMs(ms));
-  return parts.join(", ") || "Waiting";
-}
-
-function Cell({ state, label }: { state: CellState; label: string }) {
-  return (
-    <span
-      title={label}
-      className={cn(
-        "relative block h-3 overflow-hidden rounded-[4px] transition-colors duration-300",
-        state === "done" && "bg-brand-500",
-        state === "cached" && "bg-brand-200 dark:bg-brand-300/40",
-        state === "current" && "bg-brand-200",
-        state === "failed" && "bg-mismatch-dot",
-        state === "pending" && "bg-surface-3",
-      )}
-    >
-      {state === "done" && <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-white/35" />}
-      {state === "current" && <span aria-hidden className="absolute inset-0 shimmer-bg animate-shimmer" />}
-    </span>
-  );
-}
-
-function DocRow({ d, label, active, failed }: { d: LiveDoc; label: string; active: boolean; failed: boolean }) {
-  const cells = docCells(d, active, failed);
-  const done = cells.filter((c) => c === "done" || c === "cached").length;
-  return (
-    <li
-      className={cn(
-        "grid grid-cols-[minmax(0,1fr)_minmax(150px,44%)] items-center gap-3 rounded-[10px] px-2.5 py-2 transition-colors duration-300",
-        active && "bg-brand-soft",
-      )}
-    >
-      <div className="min-w-0">
-        <div className={cn("truncate text-sm font-medium", d.status === "failed" ? "text-mismatch-fg" : "text-ink")}>
-          {label}
-          <span className="sr-only">
-            , {done} of {DOC_STEPS.length} steps done
-          </span>
-        </div>
-        <div className={cn("truncate text-xs", active ? "text-brand-ink" : "text-ink-3")}>{docDetail(d, active)}</div>
-      </div>
-      <div className="grid grid-cols-5 gap-1" aria-hidden>
-        {cells.map((c, i) => (
-          <Cell key={DOC_STEPS[i]} state={c} label={`${STEP_LABEL[DOC_STEPS[i]]}${d.steps[DOC_STEPS[i]] ? `, ${fmtMs(d.steps[DOC_STEPS[i]]!.ms)}` : ""}`} />
-        ))}
-      </div>
-    </li>
-  );
-}
-
-function CheckRow({ c }: { c: LiveCheck }) {
-  const tone = verificationTone(c.status);
-  const sim = c.simulated ? (isSignatureChannel(c.channel) ? "DEMO" : "SIMULATED") : null;
-  return (
-    <motion.li
-      layout="position"
-      initial={{ opacity: 0, x: -6, scale: 0.98 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      transition={{ duration: dur.ui, ease: ease.out }}
-      className="flex min-w-0 items-center gap-2 py-1"
-    >
-      <StatusCube status={c.status} size={13} />
-      <span className="min-w-0 truncate text-sm text-ink-2">{channelMeta[c.channel]?.label ?? humanize(c.channel)}</span>
-      <span className={cn("shrink-0 text-xs font-medium", toneClass[tone].fg)}>{verificationMeta[c.status]?.label ?? humanize(c.status)}</span>
-      {sim && <Tag variant="demo" className="shrink-0">{sim}</Tag>}
-    </motion.li>
-  );
-}
-
-function Tile({ label, children, tone }: { label: string; children: ReactNode; tone?: "alert" | "ok" | "muted" }) {
-  return (
-    <div className="min-w-0 rounded-[12px] border border-line bg-surface-2/60 px-3.5 py-2.5">
-      <div className="eyebrow mb-1 truncate">{label}</div>
-      <div
-        className={cn(
-          "font-display text-2xl leading-none font-semibold tabular",
-          tone === "alert" ? "text-mismatch-fg" : tone === "ok" ? "text-verified-fg" : tone === "muted" ? "text-ink-4" : "text-ink",
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/** What is happening now, in words, for the live region and the panel title. */
+/** What is happening now, in words, for the live region and the callout. */
 export function liveHeadline(s: LiveState): string {
   if (s.status === "queued") return "Queued, starting shortly";
   if (s.status === "complete") return "Validation complete";
@@ -183,7 +84,20 @@ export function liveHeadline(s: LiveState): string {
   return "Running";
 }
 
-/** The live body of a run: stage blocks, per-document steps, checks as they land and running counts. */
+function CheckRow({ c, docLabel }: { c: LiveCheck; docLabel: string }) {
+  return (
+    <li className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 py-2">
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm text-ink">{channelMeta[c.channel]?.label ?? humanize(c.channel)}</span>
+        <span className="block truncate text-xs text-ink-3">{docLabel}</span>
+      </span>
+      {c.simulated && <SimulatedTag />}
+      <VerificationBadge status={c.status} />
+    </li>
+  );
+}
+
+/** The live body of a run: stages, per-document steps, checks as they land and running counts. */
 export function LiveRunView({ s }: { s: LiveState }) {
   const label = useDocTypeLabel();
   const live = s.status === "running" || s.status === "queued";
@@ -193,95 +107,104 @@ export function LiveRunView({ s }: { s: LiveState }) {
   const processing = currentStage(s) === "document_processing";
   const activeDoc = processing ? s.docs.findIndex((d) => !d.status) : -1;
   const stalledDoc = failed && !s.stages.document_processing ? s.docs.findIndex((d) => !d.status) : -1;
-
-  const groups = useMemo(() => {
-    const order = s.docs.map((d) => d.id);
-    const by = new Map<string, LiveCheck[]>();
-    for (const c of s.checks) by.set(c.docId, [...(by.get(c.docId) ?? []), c]);
-    return [...by.entries()].sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-  }, [s.checks, s.docs]);
-  const problems = s.checks.filter((c) => c.status !== "verified" && c.status !== "not_checked").length;
-  const verifying = currentStage(s) === "verification";
   const docsDone = s.docs.filter((d) => d.status).length;
+  const verifying = currentStage(s) === "verification";
+
+  const checks = useMemo(() => {
+    const order = s.docs.map((d) => d.id);
+    return [...s.checks].sort((a, b) => order.indexOf(a.docId) - order.indexOf(b.docId) || a.seq - b.seq);
+  }, [s.checks, s.docs]);
 
   return (
-    <div>
-      <BlockProgress stages={stageBlocks(s)} showLabels />
+    <div className="space-y-6">
+      <DescriptionList
+        layout="stacked"
+        columns={4}
+        items={[
+          { label: "Elapsed", value: `${elapsed.toFixed(live ? 0 : 1)} s` },
+          { label: "Documents read", value: s.docs.length ? `${docsDone} of ${s.docs.length}` : "None yet" },
+          { label: "Checks done", value: String(s.checks.length) },
+          { label: live ? "Findings so far" : "Findings", value: String(found) },
+        ]}
+      />
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-        <section aria-label="Documents" className="min-w-0 rounded-[14px] border border-line p-3">
-          <div className="mb-2 flex items-center justify-between gap-3 px-1">
-            <h3 className="text-sm font-semibold text-ink">Documents</h3>
-            <span className="text-xs text-ink-3 tabular">
-              {docsDone} of {s.docs.length}
-            </span>
-          </div>
-          <div className="mb-1.5 grid grid-cols-[minmax(0,1fr)_minmax(150px,44%)] gap-3 px-2.5" aria-hidden>
-            <span />
-            <div className="grid grid-cols-5 gap-1">
-              {DOC_STEPS.map((k) => (
-                <span key={k} className="truncate text-center text-[11px] font-medium text-ink-4">
-                  {STEP_SHORT[k]}
-                </span>
-              ))}
-            </div>
-          </div>
-          {s.docs.length ? (
-            <ul className="space-y-0.5">
-              {s.docs.map((d, i) => (
-                <DocRow key={d.id ?? `${d.type}-${i}`} d={d} label={label(d.type)} active={i === activeDoc || i === stalledDoc} failed={failed} />
-              ))}
-            </ul>
-          ) : (
-            <p className="px-2.5 py-3 text-sm text-ink-3">{s.status === "queued" ? "Waiting for the worker to pick up this run." : "No documents."}</p>
-          )}
-        </section>
+      <section aria-labelledby="run-stages-h">
+        <h3 id="run-stages-h" className="mb-3 text-sm font-semibold text-ink">
+          Stages
+        </h3>
+        <Stepper steps={stageSteps(s)} label="Validation stages" orientation="vertical" />
+      </section>
 
-        <section aria-label="Verification checks" className="min-w-0 rounded-[14px] border border-line p-3">
-          <div className="mb-2 flex items-center justify-between gap-3 px-1">
-            <h3 className="text-sm font-semibold text-ink">Verification checks</h3>
-            <span className="text-xs text-ink-3 tabular">{pluralize(s.checks.length, "check")}</span>
+      <section aria-labelledby="run-docs-h">
+        <h3 id="run-docs-h" className="mb-2 text-sm font-semibold text-ink">
+          Documents
+        </h3>
+        {s.docs.length ? (
+          <div className="overflow-x-auto rounded-card border border-line">
+            <table className="w-full border-collapse text-xs">
+              <caption className="sr-only">Steps per document</caption>
+              <thead>
+                <tr className="border-b border-line">
+                  <th scope="col" className="h-8 px-3 text-left font-medium text-ink-3">
+                    Document
+                  </th>
+                  {DOC_STEPS.map((k) => (
+                    <th key={k} scope="col" className="h-8 px-2 text-left font-medium whitespace-nowrap text-ink-3">
+                      {STEP_LABEL[k]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {s.docs.map((d, i) => {
+                  const active = i === activeDoc || i === stalledDoc;
+                  const cells = docCells(d, active, failed);
+                  return (
+                    <tr key={d.id ?? `${d.type}-${i}`} className={cn("border-b border-line last:border-b-0", active && "bg-brand-soft")}>
+                      <th scope="row" className={cn("h-8 max-w-[180px] truncate px-3 text-left text-sm font-medium", d.status === "failed" ? "text-mismatch-fg" : "text-ink")}>
+                        {label(d.type)}
+                      </th>
+                      {cells.map((c, j) => {
+                        const step = d.steps[DOC_STEPS[j]];
+                        return (
+                          <td
+                            key={DOC_STEPS[j]}
+                            className={cn(
+                              "h-8 px-2 whitespace-nowrap",
+                              c === "done" ? "text-ink-2" : c === "current" ? "font-medium text-brand-ink" : c === "failed" ? "font-medium text-mismatch-fg" : "text-ink-4",
+                            )}
+                          >
+                            {c === "done" && step ? fmtMs(step.ms) : CELL_TEXT[c]}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          {groups.length ? (
-            <ul className="space-y-2.5 px-1">
-              {groups.map(([docId, cs]) => (
-                <li key={docId} className="min-w-0">
-                  <div className="truncate text-xs font-semibold text-ink-3">{label(cs[0].type)}</div>
-                  <ul className="mt-0.5">
-                    <AnimatePresence initial={false}>
-                      {cs.map((c) => (
-                        <CheckRow key={c.seq} c={c} />
-                      ))}
-                    </AnimatePresence>
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-1 py-3 text-sm text-ink-3">
-              {verifying ? "Opening the first document's signatures." : s.stages.verification ? "No checks apply to these documents." : "Checks start once every document has been read."}
-            </p>
-          )}
-        </section>
-      </div>
+        ) : (
+          <p className="text-sm text-ink-3">{s.status === "queued" ? "Waiting for the worker to pick up this run." : "No documents."}</p>
+        )}
+      </section>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile label={live ? "Findings so far" : "Findings"} tone={found ? "alert" : "muted"}>
-          <Counter value={found} duration={0.4} />
-        </Tile>
-        <Tile label="Checks with issues" tone={problems ? "alert" : s.checks.length ? "ok" : "muted"}>
-          <Counter value={problems} duration={0.4} />
-          <span className="ml-1 text-sm font-normal text-ink-3">/ {s.checks.length}</span>
-        </Tile>
-        <Tile label="Rules evaluated" tone={s.rules ? undefined : "muted"}>
-          {s.rules ? <Counter value={s.rules.evaluated} duration={0.4} /> : "-"}
-          {s.rules && (s.rules.outcomes.fail ?? 0) > 0 && <span className="ml-1 text-sm font-normal text-mismatch-fg">{s.rules.outcomes.fail} not met</span>}
-        </Tile>
-        <Tile label="Elapsed">
-          <span className="tabular">{elapsed.toFixed(1)}</span>
-          <span className="ml-0.5 text-sm font-normal text-ink-3">s</span>
-        </Tile>
-      </div>
+      <section aria-labelledby="run-checks-h">
+        <h3 id="run-checks-h" className="mb-1 text-sm font-semibold text-ink">
+          Verification checks
+        </h3>
+        {checks.length ? (
+          <ul className="divide-y divide-line">
+            {checks.map((c) => (
+              <CheckRow key={c.seq} c={c} docLabel={label(c.type)} />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-ink-3">
+            {verifying ? "Opening the first document's signatures." : s.stages.verification ? "No checks apply to these documents." : "Checks start once every document has been read."}
+          </p>
+        )}
+      </section>
     </div>
   );
 }
