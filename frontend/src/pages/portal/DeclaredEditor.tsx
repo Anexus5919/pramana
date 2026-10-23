@@ -137,7 +137,7 @@ export function NumbersEditor({ draft, setDraft, errors }: { draft: DeclaredDraf
             value={draft.fields[f.key] ?? ""}
             inputMode={f.type === "number" ? "decimal" : undefined}
             placeholder={f.placeholder ? `For example ${f.placeholder}` : undefined}
-            className={cn(f.type === "text" && "font-mono")}
+            className={cn(f.type === "text" && "font-mono placeholder:font-sans")}
             onChange={(e) => setDraft((d) => ({ ...d, fields: { ...d.fields, [f.key]: e.target.value } }))}
           />
         </Field>
@@ -158,27 +158,35 @@ function programmeFacts(p: Programme): string {
 /** Declared programmes as a plain table: code, name, approved and proposed seats, and the change. */
 export function ProgrammesTable({ programmes }: { programmes: Programme[] }) {
   if (programmes.length === 0) return <p className="text-sm text-ink-3">No programmes declared.</p>;
-  const th = "h-9 px-3 text-xs font-medium whitespace-nowrap text-ink-3 first:pl-0 last:pr-0";
-  const td = "px-3 py-2.5 align-top first:pl-0 last:pr-0";
+  // Code and change columns step aside on phones; padding is set per column so the first visible one stays flush
+  const th = "h-9 text-xs font-medium whitespace-nowrap text-ink-3";
+  const td = "py-2.5 align-top";
+  const col = {
+    code: "hidden w-20 pr-3 text-left sm:table-cell",
+    name: "pr-3 text-left sm:pl-3",
+    approved: "px-3 text-right",
+    proposed: "pl-3 text-right sm:pr-3",
+    change: "hidden pl-3 text-right whitespace-nowrap sm:table-cell",
+  };
   return (
     <div className="min-w-0 overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">Declared programmes</caption>
         <thead>
           <tr className="border-b border-line">
-            <th scope="col" className={cn(th, "w-20 text-left")}>
+            <th scope="col" className={cn(th, col.code)}>
               Code
             </th>
-            <th scope="col" className={cn(th, "text-left")}>
+            <th scope="col" className={cn(th, col.name)}>
               Programme
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, col.approved)}>
               Approved
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, col.proposed)}>
               Proposed
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, col.change)}>
               Change
             </th>
           </tr>
@@ -186,14 +194,17 @@ export function ProgrammesTable({ programmes }: { programmes: Programme[] }) {
         <tbody>
           {programmes.map((p, i) => (
             <tr key={`${p.code}-${i}`} className="border-b border-line last:border-b-0">
-              <td className={cn(td, "font-mono text-ink-2")}>{p.code}</td>
-              <td className={td}>
-                <span className="block text-ink">{p.name}</span>
+              <td className={cn(td, col.code, "font-mono text-ink-2")}>{p.code}</td>
+              <td className={cn(td, col.name)}>
+                <span className="block text-ink">
+                  <span className="font-mono text-ink-2 sm:hidden">{p.code} </span>
+                  {p.name}
+                </span>
                 <span className="block text-xs text-ink-3">{programmeFacts(p)}</span>
               </td>
-              <td className={cn(td, "text-right text-ink")}>{fmtValue(p.approved_intake)}</td>
-              <td className={cn(td, "text-right text-ink")}>{fmtValue(p.proposed_intake)}</td>
-              <td className={cn(td, "text-right whitespace-nowrap text-ink-2")}>{intakeChange(p.approved_intake, p.proposed_intake) || "Not given"}</td>
+              <td className={cn(td, col.approved, "text-ink")}>{fmtValue(p.approved_intake)}</td>
+              <td className={cn(td, col.proposed, "text-ink")}>{fmtValue(p.proposed_intake)}</td>
+              <td className={cn(td, col.change, "text-ink-2")}>{intakeChange(p.approved_intake, p.proposed_intake) || "Not given"}</td>
             </tr>
           ))}
         </tbody>
