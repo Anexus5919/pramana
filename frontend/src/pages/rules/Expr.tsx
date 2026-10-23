@@ -1,47 +1,16 @@
 import { Fragment, type ReactNode } from "react";
 import { humanize } from "../../lib/labels";
 import type { DocumentTypeSpec } from "../../types";
-import { cn } from "../../ui/cn";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip, cn } from "../../ui2";
 
-/** Where a value in a rule comes from. Colour is reserved for these so the eye can tell inputs apart. */
-export const NAMESPACES: Record<string, { label: string; meaning: string; cls: string; dot: string }> = {
-  doc: {
-    label: "Document",
-    meaning: "A value read from an uploaded document: doc.<document type>.<field>.",
-    cls: "text-pending-fg",
-    dot: "bg-pending-dot",
-  },
-  app: {
-    label: "Application",
-    meaning: "A value the institution declared in its application form.",
-    cls: "text-brand-ink",
-    dot: "bg-brand-500",
-  },
-  ref: {
-    label: "Reference record",
-    meaning: "A record AICTE already holds, such as fee payments or the approval history.",
-    cls: "text-verified-fg",
-    dot: "bg-verified-dot",
-  },
-  ver: {
-    label: "Verification",
-    meaning: "The outcome of a verification channel for a document, such as its digital signature.",
-    cls: "text-expired-fg",
-    dot: "bg-expired-dot",
-  },
-  derived: {
-    label: "Derived",
-    meaning: "A value computed from other facts, such as the faculty required for the declared intake.",
-    cls: "text-manual-fg",
-    dot: "bg-manual-dot",
-  },
-  inst: {
-    label: "Institution record",
-    meaning: "The institution's master record: name, society, location.",
-    cls: "text-sev-critical",
-    dot: "bg-sev-critical",
-  },
+/** Where a value in a rule comes from; hovering a value shows its meaning. */
+export const NAMESPACES: Record<string, { label: string; meaning: string }> = {
+  doc: { label: "Document", meaning: "A value read from an uploaded document: doc.<document type>.<field>." },
+  app: { label: "Application", meaning: "A value the institution declared in its application form." },
+  ref: { label: "Reference record", meaning: "A record AICTE already holds, such as fee payments or the approval history." },
+  ver: { label: "Verification", meaning: "The outcome of a verification channel for a document, such as its digital signature." },
+  derived: { label: "Derived", meaning: "A value computed from other facts, such as the faculty required for the declared intake." },
+  inst: { label: "Institution record", meaning: "The institution's master record: name, society, location." },
 };
 
 const FUNCTIONS: Record<string, string> = {
@@ -105,20 +74,20 @@ function nsTip(path: string, docTypes: Record<string, DocumentTypeSpec>): ReactN
   }
   return (
     <span className="block">
-      <span className="block font-semibold">{meta.label}</span>
+      <span className="block font-medium">{meta.label}</span>
       {detail}
       <span className="mt-0.5 block opacity-75">{meta.meaning}</span>
     </span>
   );
 }
 
-/** A rule expression with inputs tinted by where they come from; hover a value or a function for its meaning. */
+/** A rule expression in monospace; hover a value or a function for its meaning. */
 export function Expr({ src, docTypes, className }: { src: string; docTypes: Record<string, DocumentTypeSpec>; className?: string }) {
   const toks = tokenize(src);
   return (
     <code
       className={cn(
-        "block rounded-[10px] border border-line bg-surface-2/70 px-3 py-2 font-mono text-[12.5px] leading-relaxed break-words whitespace-pre-wrap text-ink-2",
+        "block rounded-control border border-line bg-surface-2 px-3 py-2 font-mono text-xs leading-5 break-words whitespace-pre-wrap text-ink-2",
         className,
       )}
     >
@@ -128,9 +97,8 @@ export function Expr({ src, docTypes, className }: { src: string; docTypes: Reco
             const [ns, ...rest] = t.v.split(".");
             return (
               <Tooltip key={i} content={nsTip(t.v, docTypes)}>
-                <span className={cn("cursor-help rounded-[3px] decoration-dotted underline-offset-[3px] hover:underline", NAMESPACES[ns].cls)}>
-                  <span className="font-semibold">{ns}</span>
-                  <span className="opacity-90">.{rest.join(".")}</span>
+                <span className="cursor-help text-ink decoration-dotted underline-offset-2 hover:underline">
+                  <span className="font-medium">{ns}</span>.{rest.join(".")}
                 </span>
               </Tooltip>
             );
@@ -138,17 +106,17 @@ export function Expr({ src, docTypes, className }: { src: string; docTypes: Reco
           case "fn":
             return FUNCTIONS[t.v] ? (
               <Tooltip key={i} content={FUNCTIONS[t.v]}>
-                <span className="cursor-help font-semibold text-ink decoration-dotted underline-offset-[3px] hover:underline">{t.v}</span>
+                <span className="cursor-help font-medium text-ink decoration-dotted underline-offset-2 hover:underline">{t.v}</span>
               </Tooltip>
             ) : (
-              <span key={i} className="font-semibold text-ink">
+              <span key={i} className="font-medium text-ink">
                 {t.v}
               </span>
             );
           case "ident":
             return IDENTS[t.v] ? (
               <Tooltip key={i} content={IDENTS[t.v]}>
-                <span className="cursor-help font-semibold text-ink italic decoration-dotted underline-offset-[3px] hover:underline">{t.v}</span>
+                <span className="cursor-help font-medium text-ink italic decoration-dotted underline-offset-2 hover:underline">{t.v}</span>
               </Tooltip>
             ) : (
               <span key={i} className="text-ink">
@@ -165,13 +133,13 @@ export function Expr({ src, docTypes, className }: { src: string; docTypes: Reco
             );
           case "num":
             return (
-              <span key={i} className="font-semibold text-ink">
+              <span key={i} className="font-medium text-ink">
                 {t.v}
               </span>
             );
           case "kw":
             return (
-              <span key={i} className="font-medium text-ink-3 italic">
+              <span key={i} className="text-ink-3 italic">
                 {t.v}
               </span>
             );
@@ -201,7 +169,7 @@ export function Template({ text, docTypes }: { text: string; docTypes: Record<st
     <>
       {parts.map((p, i) =>
         /^\{[a-z0-9_]+\}$/i.test(p) ? (
-          <span key={i} className="mx-0.5 rounded-[4px] bg-surface-3 px-1 font-mono text-[11.5px] text-ink-2">
+          <span key={i} className="mx-0.5 rounded bg-surface-2 px-1 font-mono text-xs text-ink-2">
             {label(p.slice(1, -1))}
           </span>
         ) : (
@@ -212,20 +180,3 @@ export function Template({ text, docTypes }: { text: string; docTypes: Record<st
   );
 }
 
-/** Colour key for the namespaces. */
-export function NamespaceLegend({ className }: { className?: string }) {
-  return (
-    <div className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-3", className)}>
-      <span className="font-medium text-ink-2">Values come from</span>
-      {Object.entries(NAMESPACES).map(([k, m]) => (
-        <Tooltip key={k} content={m.meaning}>
-          <span tabIndex={0} className="inline-flex cursor-help items-center gap-1.5 rounded-[5px] outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
-            <span aria-hidden className={cn("size-2 rounded-[2px]", m.dot)} />
-            <span className={cn("font-mono font-semibold", m.cls)}>{k}</span>
-            <span>{m.label}</span>
-          </span>
-        </Tooltip>
-      ))}
-    </div>
-  );
-}

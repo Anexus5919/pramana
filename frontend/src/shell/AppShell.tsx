@@ -1,13 +1,13 @@
-import { MotionConfig, AnimatePresence, motion, useIsPresent } from "motion/react";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { useLocation, useOutlet } from "react-router-dom";
+import { MotionConfig } from "motion/react";
+import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/session";
 import { EyeMark } from "../brand/EyeMark";
 import { Sheet } from "../ui/Dialog";
 import { ToastProvider } from "../ui/Toast";
 import { cn } from "../ui/cn";
-import { pageTransition } from "../ui/motion";
 import { CommandPalette } from "./CommandPalette";
-import { SIDEBAR_COLLAPSED_W, SIDEBAR_W, Sidebar, SidebarNav } from "./Sidebar";
+import { BrandLink, SIDEBAR_COLLAPSED_W, SIDEBAR_W, Sidebar, SidebarNav } from "./Sidebar";
 import { ThemeProvider } from "./theme";
 import { Topbar } from "./Topbar";
 
@@ -53,23 +53,28 @@ function readCollapsed(): boolean {
   }
 }
 
-/** Route key: workspace tabs share one key so switching tabs does not replay the page transition. */
+/** Route key: workspace sections share one key so switching sections keeps scroll position. */
 function pageKey(pathname: string): string {
   const ws = pathname.match(/^\/applications\/[^/]+/);
   return ws ? ws[0] : pathname;
 }
 
-/** Keeps rendering the outgoing page while it animates out. */
-function PresentOutlet() {
-  const outlet = useOutlet();
-  const present = useIsPresent();
-  const last = useRef(outlet);
-  if (present) last.current = outlet;
-  return <>{last.current}</>;
+/** Marks <html> as the signed-in app surface so the v2 tokens in index.css apply, including to portalled dialogs. */
+function useAppSurface() {
+  useLayoutEffect(() => {
+    const el = document.documentElement;
+    el.dataset.surface = "app";
+    return () => {
+      delete el.dataset.surface;
+    };
+  }, []);
 }
 
 export function AppShell() {
+  useAppSurface();
   const location = useLocation();
+  const { role } = useAuth();
+  const portal = role === "institution";
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [navOpen, setNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -87,6 +92,7 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
+    if (portal) return;
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -95,7 +101,7 @@ export function AppShell() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [portal]);
 
   useEffect(() => {
     setNavOpen(false);
@@ -105,7 +111,7 @@ export function AppShell() {
   return (
     <div
       className="min-h-dvh bg-canvas"
-      style={{ ["--sidebar-w" as string]: `${collapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W}px` }}
+      style={{ ["--sidebar-w" as string]: portal ? "0px" : `${collapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W}px` }}
     >
       <a
         href="#main"
@@ -113,31 +119,31 @@ export function AppShell() {
       >
         Skip to content
       </a>
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-[420px] opacity-60 [mask-image:linear-gradient(to_bottom,black,transparent)] bg-sky-soft dark:opacity-30"
-      />
-      <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} />
-      <Sheet open={navOpen} onClose={() => setNavOpen(false)} side="left" width={288} title="Navigation" bare>
-        <div className="flex h-16 items-center px-5">
-          <span className="font-display text-[19px] font-semibold tracking-[-0.03em] text-ink">Pramana</span>
-        </div>
-        <div className="px-3 pb-6">
-          <SidebarNav layoutGroup="drawer" onNavigate={() => setNavOpen(false)} />
-        </div>
-      </Sheet>
-      <div className="relative flex min-h-dvh flex-col transition-[padding] duration-300 ease-in-out lg:pl-[var(--sidebar-w)]">
-        <Topbar onOpenNav={() => setNavOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
-        <main id="main" tabIndex={-1} className="relative mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 lg:py-8">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div key={key} variants={pageTransition} initial="initial" animate="enter" exit="exit" className="min-w-0">
-              <PresentOutlet />
-            </motion.div>
-          </AnimatePresence>
+      {!portal && (
+        <>
+          <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} />
+          <Sheet open={navOpen} onClose={() => setNavOpen(false)} side="left" width={272} title="Navigation" bare>
+            <div className="flex h-14 items-center px-4">
+              <BrandLink />
+            </div>
+            <div className="px-3 pb-6">
+              <SidebarNav onNavigate={() => setNavOpen(false)} />
+            </div>
+          </Sheet>
+        </>
+      )}
+      <div className="flex min-h-dvh flex-col transition-[padding] duration-200 ease-out lg:pl-[var(--sidebar-w)]">
+        <Topbar portal={portal} onOpenNav={() => setNavOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
+        <main id="main" tabIndex={-1} className="w-full min-w-0 flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 lg:py-8">
+          <Outlet />
         </main>
-        <Footer />
+        <footer className="px-4 pb-6 sm:px-6 lg:px-8">
+          <p className={cn("mx-auto border-t border-line pt-4 text-xs text-ink-3", portal ? "max-w-[960px]" : "max-w-[1600px]")}>
+            {DISCLAIMER}
+          </p>
+        </footer>
       </div>
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      {!portal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
     </div>
   );
 }

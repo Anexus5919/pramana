@@ -1,67 +1,69 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FlaskConical } from "lucide-react";
-import { motion } from "motion/react";
-import { useState } from "react";
+import { RefreshCw, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, errorMessage, qk } from "../../api";
 import { useAuth } from "../../auth/session";
+import { pluralize } from "../../lib/format";
+import { humanize } from "../../lib/labels";
 import type { SimIssuer } from "../../types";
-import { Tag } from "../../ui/Badge";
-import { StatusCube } from "../../ui/Blocks";
-import { PageHeader } from "../../ui/Layout";
-import { fadeUp, stagger } from "../../ui/motion";
-import { Skeleton } from "../../ui/Skeleton";
-import { EmptyState, ErrorState } from "../../ui/States";
-import { useToast } from "../../ui/Toast";
+import { useRunWatch } from "../application/history/api";
+import {
+  Button,
+  Callout,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  Page,
+  PageHeader,
+  Panel,
+  SimulatedTag,
+  Skeleton,
+  StatusBadge,
+  Switch,
+  useToast,
+  type Column,
+} from "../../ui2";
 import { IssuerActions } from "./IssuerActions";
-import { IssuerCard, isOnline, issuerName } from "./IssuerCard";
+import { isOnline, issuerName, modeLabel } from "./issuer";
 import { LookupPanel } from "./LookupPanel";
 
-function Notice() {
+function SimulatorSkeleton() {
   return (
-    <div className="mb-6 flex items-start gap-3 rounded-card border border-dashed border-manual-dot/50 bg-manual-bg/70 p-4">
-      <FlaskConical className="mt-0.5 size-5 shrink-0 text-manual-fg" aria-hidden />
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag variant="demo">Simulated</Tag>
-          <span className="text-sm font-semibold text-manual-fg">No real issuer is contacted</span>
-        </div>
-        <p className="mt-1.5 max-w-3xl text-sm text-ink-2 text-pretty">
-          Real registries sit behind captcha protected portals or need formal authorisation before an API can be used. These stand-ins
-          answer from a synthetic registry with the same lookup shape, so validation, field comparison and the source unavailable path
-          can be shown end to end. Every response carries <span className="font-mono text-[13px]">simulated: true</span> and is labelled
-          wherever it appears.
-        </p>
+    <Page role="status" aria-live="polite">
+      <span className="sr-only">Loading the issuer simulator</span>
+      <Skeleton className="h-12 w-96" />
+      <Skeleton className="h-12" rounded="lg" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <Skeleton className="h-80" rounded="lg" />
+        <Skeleton className="h-80" rounded="lg" />
       </div>
-    </div>
-  );
-}
-
-function Summary({ issuers }: { issuers: SimIssuer[] }) {
-  const up = issuers.filter(isOnline).length;
-  return (
-    <span className="inline-flex items-center gap-2 text-xs text-ink-3">
-      <span className="inline-flex items-center gap-[3px]" aria-hidden>
-        {issuers.map((i) => (
-          <StatusCube key={i.code} tone={isOnline(i) ? "verified" : "unavail"} size={12} />
-        ))}
-      </span>
-      <span className="tabular">
-        {up} of {issuers.length} sources responding
-      </span>
-    </span>
+    </Page>
   );
 }
 
 export default function IssuerSimulatorPage() {
   const { is } = useAuth();
   const admin = is("admin");
+  const canChange = is("officer", "admin");
   const qc = useQueryClient();
   const toast = useToast();
+  const [params] = useSearchParams();
   const q = useQuery({ queryKey: qk.issuers, queryFn: api.simIssuers });
-  const issuers = q.data ?? [];
-  const [selected, setSelected] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const code = selected ?? issuers[0]?.code ?? "";
+  const issuers = useMemo(() => q.data ?? [], [q.data]);
+  const [selected, setSelected] = useState<string | null>(params.get("code"));
+  const [reference, setReference] = useState(params.get("ref") ?? "");
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const code = issuers.some((i) => i.code === selected) ? (selected as string) : (issuers[0]?.code ?? "");
+  const issuer = issuers.find((i) => i.code === code);
+
+  // ?code= and ?ref= prefill both forms, also when a link is followed while the page is open
+  const pCode = params.get("code");
+  const pRef = params.get("ref");
+  useEffect(() => {
+    if (pCode) setSelected(pCode);
+    if (pRef) setReference(pRef);
+  }, [pCode, pRef]);
 
   const toggle = useMutation({
     mutationFn: ({ c, available }: { c: string; available: boolean }) => api.setIssuerAvailability(c, available),
@@ -84,51 +86,166 @@ export default function IssuerSimulatorPage() {
     onSettled: () => qc.invalidateQueries({ queryKey: qk.issuers }),
   });
 
-  return (
-    <div>
-      <PageHeader
-        eyebrow="Verification sources"
-        title="Issuer simulator"
-        description="Stand-ins for the reference-number lookups that issuing authorities offer. During validation Pramana asks the issuer for its own record and compares it with the values read from the document."
-        meta={issuers.length ? <Summary issuers={issuers} /> : undefined}
-      />
-      <Notice />
-      {q.isPending ? (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-4">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-52 w-full" rounded="lg" />
-            ))}
-          </div>
-          <Skeleton className="h-80 w-full" rounded="lg" />
-        </div>
-      ) : q.error ? (
+  const watch = useRunWatch();
+  const runWatch = () =>
+    watch.mutate(undefined, {
+      onSuccess: (r) =>
+        r.changes.length
+          ? toast.info(
+              `Watch found ${pluralize(r.changes.length, "change")}`,
+              r.changes.map((c) => `${c.institution}: ${c.label} ${c.change.replace("_", " ")}`).join(". "),
+            )
+          : toast.success("Watch run complete", `${pluralize(r.run.checked, "certificate")} checked, no changes.`),
+      onError: (e) => toast.error("The watch did not run", errorMessage(e)),
+    });
+
+  const columns = useMemo<Column<SimIssuer>[]>(() => {
+    const cols: Column<SimIssuer>[] = [
+      {
+        id: "issuer",
+        header: "Issuer",
+        sortValue: (i) => issuerName(i),
+        cell: (i) => (
+          <span className="block min-w-0">
+            <span className="block">{issuerName(i)}</span>
+            <span className="block text-xs font-normal text-ink-3">
+              <code className="font-mono text-xs">{i.code}</code>
+              <span className="2xl:hidden">
+                {" "}
+                · {modeLabel(i)}
+                {i.latency_ms !== undefined ? `, ${i.latency_ms} ms` : ""}
+              </span>
+            </span>
+          </span>
+        ),
+      },
+      { id: "mode", header: "Mode", hideBelow: "2xl", sortValue: (i) => modeLabel(i), cell: (i) => <span className="text-ink-2">{modeLabel(i)}</span> },
+      {
+        id: "latency",
+        header: "Latency",
+        align: "right",
+        hideBelow: "2xl",
+        sortValue: (i) => i.latency_ms ?? null,
+        cell: (i) => <span className="text-ink-2">{i.latency_ms !== undefined ? `${i.latency_ms} ms` : "Not given"}</span>,
+      },
+      {
+        id: "compares",
+        header: "Compares",
+        hideBelow: "2xl",
+        cell: (i) =>
+          i.compare_fields?.length ? (
+            <span className="text-ink-2">{i.compare_fields.map(humanize).join(", ")}</span>
+          ) : (
+            <span className="text-ink-3">Existence only</span>
+          ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        sortValue: (i) => (isOnline(i) ? 0 : 1),
+        cell: (i) =>
+          isOnline(i) ? <StatusBadge tone="verified">Responding</StatusBadge> : <StatusBadge tone="unavail">Not responding</StatusBadge>,
+      },
+    ];
+    if (admin)
+      cols.push({
+        id: "available",
+        header: "Available",
+        width: "88px",
+        cell: (i) => (
+          <Switch
+            checked={isOnline(i)}
+            hideLabel
+            label={`${issuerName(i)} available`}
+            disabled={toggle.isPending && toggle.variables?.c === i.code}
+            onChange={(available) => toggle.mutate({ c: i.code, available })}
+          />
+        ),
+      });
+    return cols;
+  }, [admin, toggle]);
+
+  if (q.isPending) return <SimulatorSkeleton />;
+  if (q.error)
+    return (
+      <Page>
+        <PageHeader title="Issuer simulator" status={<SimulatedTag />} />
         <ErrorState error={q.error} title="Could not load the simulated sources" onRetry={() => void q.refetch()} retrying={q.isFetching} />
-      ) : !issuers.length ? (
-        <EmptyState title="No simulated sources configured" description="The demo registry file has no issuers." />
+      </Page>
+    );
+
+  const up = issuers.filter(isOnline).length;
+
+  return (
+    <Page>
+      <PageHeader
+        title="Issuer simulator"
+        status={<SimulatedTag />}
+        context={`Stand-in registries for the prototype. ${up} of ${issuers.length} responding.`}
+        menu={
+          canChange
+            ? [
+                {
+                  id: "watch",
+                  label: "Run re-verification watch now",
+                  description: "Recheck every watched certificate with its issuer.",
+                  icon: <RefreshCw />,
+                  onSelect: runWatch,
+                  disabled: watch.isPending,
+                },
+              ]
+            : undefined
+        }
+        primary={
+          issuers.length ? (
+            <Button variant="primary" leadingIcon={<Search />} onClick={() => selectRef.current?.focus()}>
+              Look up a record
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <Callout tone="neutral">
+        These issuers are simulated. Changing them shows how Pramana reacts; it never edits a real registry. Real registries need formal
+        authorisation before an API can be used, so each stand-in answers from a synthetic registry with the same lookup shape.
+      </Callout>
+
+      {issuers.length === 0 ? (
+        <Panel>
+          <EmptyState title="No simulated sources configured" description="Add issuers to the demo registry file, then reload this page." />
+        </Panel>
       ) : (
         <>
-          <IssuerActions issuers={issuers} />
-          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <motion.div variants={stagger(0.06)} initial="hidden" animate="show" className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              {issuers.map((i) => (
-                <motion.div key={i.code} variants={fadeUp} className="min-w-0">
-                  <IssuerCard
-                    issuer={i}
-                    selected={i.code === code}
-                    busy={busy === i.code}
-                    canToggle={admin}
-                    toggling={toggle.isPending && toggle.variables?.c === i.code}
-                    onSelect={() => setSelected(i.code)}
-                    onToggle={(available) => toggle.mutate({ c: i.code, available })}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-            <LookupPanel issuers={issuers} code={code} onCode={setSelected} onBusy={setBusy} className="min-w-0 xl:sticky xl:top-24" />
+          <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <Panel
+              title="Issuers"
+              description={admin ? "Select a row to use it below. Switch a source off to see how runs record source unavailable." : "Select a row to use it below."}
+              padding="none"
+            >
+              <div className="border-t border-line">
+                <DataTable
+                  label="Simulated issuers"
+                  rows={issuers}
+                  columns={columns}
+                  rowKey={(i) => i.code}
+                  onRowClick={(i) => setSelected(i.code)}
+                  selectedKey={code}
+                />
+              </div>
+            </Panel>
+            <LookupPanel
+              issuers={issuers}
+              code={code}
+              onCode={setSelected}
+              reference={reference}
+              onReference={setReference}
+              selectRef={selectRef}
+              className="xl:sticky xl:top-20"
+            />
           </div>
+          {canChange && <IssuerActions issuer={issuer} reference={reference} watch={watch} onRunWatch={runWatch} />}
         </>
       )}
-    </div>
+    </Page>
   );
 }
