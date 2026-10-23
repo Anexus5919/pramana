@@ -279,7 +279,7 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
         <>
           <div className="grid items-start gap-x-8 gap-y-6 sm:grid-cols-[188px_minmax(0,1fr)]">
             {/* The ring and its key */}
-            <div className="flex items-center gap-5 sm:block">
+            <div className="flex items-center gap-5 sm:sticky sm:top-20 sm:block">
               <ReadinessRing
                 groups={data.groups}
                 active={active}

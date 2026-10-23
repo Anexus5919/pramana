@@ -375,7 +375,8 @@ def _document_items(rs: Ruleset, app: Application, docs: dict[str, Any], facts: 
         d = docs.get(t)
         if d is None:
             it.status, it.title = "fix", f"{label} not uploaded"
-            it.detail = spec.get("description")
+            # The handbook quote says what the document is; the slot's own description is the fallback
+            it.detail = None if (it.clause or {}).get("quote") else spec.get("description")
             it.action = f"Upload the {_lower_first(label)}."
         elif d.processing_status == "failed":
             it.status, it.title = "fix", f"{label} could not be read"
@@ -490,8 +491,9 @@ def _validity_advice(rs: Ruleset, items: list[_Item], facts: FactStore, as_of: d
             or next((i for i in items if i.id == f"doc-{t}" and i.status == "met"), None)
         if host is None:
             continue
-        host.advice = {"text": f"Valid when you submit, but it lapses on {fmt_day(until)}, before the {year} "
-                               f"session ends on {fmt_day(end)}.",
+        when = (f"before the {year} session begins" if until < date(end.year - 1, 7, 1)
+                else f"before the {year} session ends on {fmt_day(end)}")
+        host.advice = {"text": f"Valid when you submit, but it lapses on {fmt_day(until)}, {when}.",
                        "action": f"Plan the renewal, or upload a {_lower_first(label)} valid until at least "
                                  f"{fmt_day(end)}."}
 
