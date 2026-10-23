@@ -33,8 +33,10 @@ def _unread_annotations(error: str):
 
 
 def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[float, float] | None,
-                     progress: Callable[..., None] | None = None) -> None:
-    """Untrusted parsing runs in the parser sandbox; a crash or timeout there raises sandbox.SandboxUnsafe."""
+                     progress: Callable[..., None] | None = None, data: bytes | None = None) -> None:
+    """Untrusted parsing runs in the parser sandbox; a crash or timeout there raises sandbox.SandboxUnsafe.
+
+    `data` passes the file's bytes directly, for a file that is analysed without being stored."""
     t0 = time.perf_counter()
 
     def step(name: str, **info: Any) -> None:
@@ -44,7 +46,8 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
                      ms=round((time.perf_counter() - t0) * 1000), **info)
         t0 = time.perf_counter()
 
-    data = load_document(doc.storage_name)
+    if data is None:
+        data = load_document(doc.storage_name)
     doc.pages.clear()
     doc.fields.clear()
     db.flush()

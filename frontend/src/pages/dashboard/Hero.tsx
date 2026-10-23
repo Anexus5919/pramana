@@ -180,8 +180,8 @@ export function Hero({ data, onRefresh, refreshing }: { data: Dashboard; onRefre
                 Open next in queue
               </Button>
             )}
-            <ButtonLink to="/verify-pdf" variant="secondary" size="lg" leadingIcon={<FileSearch />}>
-              Verify a PDF
+            <ButtonLink to="/analyse" variant="secondary" size="lg" leadingIcon={<FileSearch />}>
+              Analyse a document
             </ButtonLink>
             <Button variant="ghost" size="lg" leadingIcon={<RotateCcw />} onClick={onRefresh} loading={refreshing}>
               Refresh

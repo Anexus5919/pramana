@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import jobs, sandbox
+from .analyse import api as analyse_api
 from .api import admin, applications, live, ops, photos, public
 from .config import get_settings
 from .db import init_db
@@ -47,6 +48,7 @@ app.include_router(live.router)
 app.include_router(ops.router)
 app.include_router(public.router)
 app.include_router(officer.router)
+app.include_router(analyse_api.router)
 
 
 @app.middleware("http")

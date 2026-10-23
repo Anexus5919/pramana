@@ -49,7 +49,7 @@ function useCrumbs(): Crumb[] {
     "/dashboard": [{ label: "Dashboard" }],
     "/rules": [{ label: "Rules" }],
     "/issuers": [{ label: "Issuer simulator" }],
-    "/verify-pdf": [{ label: "Verify a PDF" }],
+    "/analyse": [{ label: "Analyse a document" }],
     "/audit": [{ label: "Audit log" }],
     "/platform": [{ label: "Platform" }],
     "/portal": [{ label: "My applications" }],

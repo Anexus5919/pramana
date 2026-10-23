@@ -69,7 +69,7 @@ function YesNo({ v, yes, no }: { v: boolean | null | undefined; yes: string; no:
   return <span className={v ? "text-verified-fg" : "text-mismatch-fg"}>{v ? yes : no}</span>;
 }
 
-function Credentials({ c }: { c: ContentCredentials }) {
+export function Credentials({ c }: { c: ContentCredentials }) {
   const st = credentialState(c);
   return (
     <div>
