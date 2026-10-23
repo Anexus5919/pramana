@@ -44,6 +44,7 @@ Start with `docs/usp-and-demo.md`. Research, requirements mapping, design decisi
 | [docs/features/officer.md](docs/features/officer.md) | Deficiency letter, evidence pack, Ask why |
 | [docs/features/history.md](docs/features/history.md) | Revision time machine, re-verification watch, year-over-year comparison |
 | [docs/features/photos.md](docs/features/photos.md) | Campus tab with map, Content Credentials (C2PA), room and seat indicator, photo attributions |
+| [docs/features/model-v2.md](docs/features/model-v2.md) | Version 2 of the fine-tuned extractor: training data changes, Kaggle run, comparison with version 1, A11 check |
 
 ## Quick start (Windows, macOS or Linux)
 

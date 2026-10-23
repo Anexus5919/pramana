@@ -86,6 +86,8 @@ By document type, field_exact for the general 4B, the fine-tuned 1.7B and GPT-OS
 
 The fine-tuned model is weakest on audited accounts, which is the next thing to train.
 
+Version 2 of the model (`pramana-extract-v2`) is retrained on more varied data and compared with this version, on the same test_unseen file and on a new held-out split, in `docs/features/model-v2.md`.
+
 **Gemini.** The provider works: verified live, it returned every field of a held-out example correctly. The free tier allows only 20 requests per day for the current Flash model, so the 200-example benchmark was not possible, and Gemini is not in the table. `gemini-2.5-flash` is closed to new API keys, so the default is now `gemini-flash-latest` with low thinking.
 
 **On A11, the unfamiliar layout:**
