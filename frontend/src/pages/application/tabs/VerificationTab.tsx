@@ -32,6 +32,8 @@ const SHORT: Record<string, string> = {
   manual_confirmation: "Manual",
 };
 const SPLIT_AT = 900;
+// One column per channel, so a new channel never pushes its header into the document column
+const MATRIX_COLS = `minmax(0,1fr) repeat(${CHANNELS.length}, minmax(48px,68px))`;
 const MIN_NOTE = 8;
 
 const when = (a: VerificationAttempt) => a.completed_at ?? a.started_at ?? "";
@@ -296,7 +298,7 @@ function MatrixRow({
   const any = CHANNELS.some((c) => row.cells[c]);
   return (
     <div role="rowgroup" className="border-t border-line first:border-t-0">
-      <div role="row" className="grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(52px,72px))] items-center px-3 transition-colors hover:bg-surface-2/50">
+      <div role="row" className="grid items-center px-3 transition-colors hover:bg-surface-2/50" style={{ gridTemplateColumns: MATRIX_COLS }}>
         <div role="rowheader" className="min-w-0 py-2.5 pr-3" style={{ gridColumn: 1, gridRow: 1 }}>
           <div className="truncate text-sm font-medium text-ink">{d ? label(d.declared_type) : row.docId}</div>
           <div className="truncate text-[11.5px] text-ink-3">{any ? d?.original_filename : "No channel applied"}</div>
@@ -445,7 +447,7 @@ export function VerificationTab({ query }: { query: UseQueryResult<VerificationA
       <div className={cn("grid items-start gap-4", split && "grid-cols-[minmax(0,1fr)_minmax(320px,400px)]")}>
         <div role="table" aria-label="Verification by document and channel" className="min-w-0 overflow-hidden rounded-card border border-line bg-surface shadow-xs">
           <div role="rowgroup">
-            <div role="row" className="grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(52px,72px))] items-end border-b border-line bg-surface-2/60 px-3 py-2">
+            <div role="row" className="grid items-end border-b border-line bg-surface-2/60 px-3 py-2" style={{ gridTemplateColumns: MATRIX_COLS }}>
               <div role="columnheader" className="eyebrow">Document</div>
               {CHANNELS.map((c) => (
                 <Tooltip key={c} content={channelMeta[c]?.meaning}>
