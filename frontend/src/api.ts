@@ -14,9 +14,11 @@ import type {
   Institution,
   NewApplicationBody,
   PdfVerifyResult,
+  PlatformStatus,
   QueuedRun,
   RectificationItem,
   ReplayResult,
+  RetentionPlan,
   ReviewAction,
   ReviewEntry,
   RuleImpact,
@@ -182,6 +184,11 @@ export const api = {
     return post<PdfVerifyResult>("/tools/verify-pdf", fd);
   },
 
+  // Platform
+  platformStatus: () => get<PlatformStatus>("/admin/platform"),
+  retentionPlan: () => get<RetentionPlan>("/admin/retention"),
+  retentionPurge: (dryRun: boolean) => post<RetentionPlan>("/admin/retention/purge", { dry_run: dryRun }),
+
   // Simulated issuers
   simIssuers: () => get<SimIssuer[]>("/sim/issuers"),
   setIssuerAvailability: (code: string, available: boolean) =>
@@ -208,6 +215,8 @@ export const qk = {
   impact: ["rule-impact"] as const,
   audit: ["audit"] as const,
   issuers: ["sim-issuers"] as const,
+  platform: ["platform"] as const,
+  retention: ["retention"] as const,
 };
 
 export function errorMessage(err: unknown): string {
