@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import jobs, sandbox
-from .api import admin, applications, live
+from .api import admin, applications, live, ops
 from .config import get_settings
 from .db import init_db
 
@@ -31,6 +31,7 @@ app = FastAPI(title="Pramana", version="0.3.0", lifespan=lifespan,
 app.include_router(applications.router)
 app.include_router(admin.router)
 app.include_router(live.router)
+app.include_router(ops.router)
 
 
 @app.middleware("http")
