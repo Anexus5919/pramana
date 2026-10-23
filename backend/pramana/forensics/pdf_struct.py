@@ -23,7 +23,20 @@ EDITOR_HINTS = [
     "ilovepdf", "smallpdf", "sejda", "pdf-xchange", "foxit phantompdf", "foxit pdf editor", "nitro",
     "pdfescape", "pdffiller", "acrobat pro", "adobe acrobat", "microsoft: print to pdf", "canva", "photoshop",
     "wondershare", "pdfelement", "libreoffice", "pikepdf", "pypdf",
+    # Word writes "Microsoft® Word ..."; matching ignores punctuation and symbols
+    "microsoft word", "microsoft office word", "openoffice", "wps office", "pdf24", "online2pdf", "pdfcandy",
+    "soda pdf", "pdf2go", "docfly",
 ]
+
+
+def _plain(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
+
+
+def editors_named(text: str) -> list[str]:
+    """Editor hints found in a Producer or Creator string, ignoring case, punctuation and symbols."""
+    t = _plain(text)
+    return [h for h in EDITOR_HINTS if _plain(h) in t]
 
 
 @dataclass
@@ -286,8 +299,7 @@ def analyse(data: bytes, doc_issue_date: datetime | None = None) -> tuple[list[S
             "Templates also use white boxes as backgrounds; meaningful mainly together with other signals.",
         ))
 
-    producer = (meta["info"].get("Producer", "") + " " + meta["info"].get("Creator", "")).lower()
-    editors = [h for h in EDITOR_HINTS if h in producer]
+    editors = editors_named(meta["info"].get("Producer", "") + " " + meta["info"].get("Creator", ""))
     created = parse_pdf_date(meta["info"].get("CreationDate"))
     modified = parse_pdf_date(meta["info"].get("ModDate"))
     facts["created"] = created.isoformat() if created else None

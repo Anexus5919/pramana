@@ -31,6 +31,7 @@ from ..models import (
 from ..photos.findings import photo_stage
 from ..rules.engine import ERROR, FAIL, INSUFFICIENT, Ruleset, active_ruleset, evaluate, load_ruleset
 from ..verification import base as vb
+from ..verification import issuer_copy
 from ..verification.issuer import adapters, compare_values
 from ..verification.signature import validate_signatures
 from ..verification.signed_qr import verify_token
@@ -460,6 +461,9 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                   "simulated": v.simulated, "comparisons": [c.as_dict() for c in v.comparisons]}],
                     "document_id": d.id})
             doc_status[d.id] = document_status(vres)
+            # Issuer documents without the issuer's signature, or as images (docs/features/edits.md)
+            copy = issuer_copy.findings(d, spec, vres, _fp)
+            findings += copy if d is latest.get(d.declared_type) else [{**f, "severity": "low"} for f in copy]
         stage("verification", t0, documents=len(doc_status))
 
         t0 = time.perf_counter()
