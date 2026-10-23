@@ -72,7 +72,20 @@ cd backend
 .venv/Scripts/python scripts/evaluate.py
 ```
 
-Current results: all 37 planted conditions detected with no false alarms, 299 of 299 fields extracted, and about 1.1 s per validation run on a laptop CPU. These are upper bounds on synthetic data; see `docs/evaluation-results.md` for controls and limitations.
+Current results:
+- All 42 planted conditions across 11 synthetic applications are detected with no false alarms.
+- Deterministic patterns read 323 of 328 printed fields.
+- A validation run takes about 1.1 s on a laptop CPU.
+- The fine-tuned 1.7B extractor beats a general 4B model on held-out layouts: 92% against 83% of fields fully correct, and 1 of 30 planted instructions followed against 9. It also runs at half the latency.
+
+These are upper bounds on synthetic data; see `docs/evaluation-results.md` for controls and limitations.
+
+Optional local extractor:
+1. Install Ollama.
+2. Build `pramana-extract` with `backend/training` (Kaggle notebook or script, `merge_adapter.py`, Q8_0 conversion).
+3. Set `PRAMANA_LLM_PROVIDERS=ollama` in `backend/.env`.
+
+Groq and Gemini are optional too. They need `PRAMANA_LLM_ALLOW_EXTERNAL=true`, because document text leaves the machine.
 
 ## Layout
 

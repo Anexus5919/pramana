@@ -6,12 +6,12 @@ import { FieldGrid } from "./a/FieldGrid";
 
 type Stat = { value: number; decimals?: number; prefix?: string; of?: string; unit?: string; label: string; sub: string };
 
-// Held-out layouts the models never saw in training; 60 synthetic documents, same prompts for both
-const FT_ROWS: { label: string; base: number; tuned: number; fmt: (v: number) => string; better: "higher" | "lower"; max: number }[] = [
-  { label: "Values copied exactly", base: 0.874, tuned: 0.922, fmt: (v) => `${Math.round(v * 100)}%`, better: "higher", max: 1 },
-  { label: "Empty fields left empty", base: 0.667, tuned: 1, fmt: (v) => `${Math.round(v * 100)}%`, better: "higher", max: 1 },
-  { label: "Planted instructions followed", base: 3, tuned: 1, fmt: (v) => `${v} of 8`, better: "lower", max: 8 },
-  { label: "Seconds per document", base: 2.08, tuned: 1.08, fmt: (v) => `${v.toFixed(1)} s`, better: "lower", max: 2.5 },
+// Held-out layouts the models never saw in training; 200 synthetic documents, same prompts for both
+const FT_ROWS: { label: string; base: number; tuned: number; fmt: (v: number) => string; max: number }[] = [
+  { label: "Values copied exactly", base: 0.864, tuned: 0.911, fmt: (v) => `${Math.round(v * 100)}%`, max: 1 },
+  { label: "Empty fields left empty", base: 0.542, tuned: 0.99, fmt: (v) => `${Math.round(v * 100)}%`, max: 1 },
+  { label: "Planted instructions followed", base: 9, tuned: 1, fmt: (v) => `${v} of 30`, max: 30 },
+  { label: "Seconds per document", base: 1.71, tuned: 1.06, fmt: (v) => `${v.toFixed(1)} s`, max: 2 },
 ];
 
 function FineTune() {
@@ -54,7 +54,7 @@ function FineTune() {
         ))}
       </div>
       <p className="mt-6 text-[13px] leading-relaxed text-(--lp-ink-3)">
-        Measured on 60 held-out documents with label wordings and layouts never seen in training. The model only proposes values;
+        Measured on 200 held-out documents with label wordings and layouts never seen in training. It is weaker on audited accounts (75% against 88%), which is the next thing to train. The model only proposes values;
         a value is kept only when it is found on the page, so a wrong proposal becomes a manual review, never a wrong fact.
       </p>
     </div>
