@@ -22,6 +22,9 @@ NAME_FIELDS = {"institution_name", "entity_name", "deponent_name", "holder_name"
 # Values different holders legitimately share: the issuing office, a status, a certificate type, a programme
 # code; amounts (fees, stamp duty) follow a schedule. None of them is a detail of one holder's certificate
 COMMON_VALUE_FIELDS = {"issuing_authority", "payment_status", "certificate_type", "programme_code"}
+# Where the issuer is looked up by who certified (a structural engineer's licence, which covers many buildings),
+# the certificate's own number is what one premises cannot share
+CERTIFICATE_NUMBER = {"engineer_registration_no": "certificate_no"}
 
 
 @dataclass
@@ -126,7 +129,7 @@ def cross_checks(db: Session, app: Application, docs: list[Document], ref_fields
                 if total >= 3 and shared / total >= FIELD_OVERLAP_MIN and beyond_dates:
                     links.append(Link(
                         "XA-NEAR-DUPLICATE-DETAILS", "Same certificate details in another institution's document",
-                        f"{shared} of {total} extracted values in '{d.original_filename}' (numbers and dates) are "
+                        f"{shared} of {total} extracted values in '{d.original_filename}' (numbers, dates, issuer) are "
                         f"identical to a {pd.declared_type} submitted by {inst} ({papp.id}).", "medium", "record",
                         f"fields:{d.declared_type}:{pd.id}", papp.id, inst,
                         [{"kind": "document", "document_id": d.id}, {"kind": "peer_document", "document_id": pd.id,
@@ -137,6 +140,7 @@ def cross_checks(db: Session, app: Application, docs: list[Document], ref_fields
                     ))
 
         rf = ref_fields.get(d.declared_type)
+        rf = CERTIFICATE_NUMBER.get(rf, rf)
         if rf:
             mine = next((f for f in d.fields if f.name == rf and f.value), None)
             if mine:
