@@ -52,7 +52,8 @@ from pramana.verification import demo_pki  # noqa: E402
 from pramana.verification.signed_qr import sign_payload  # noqa: E402
 
 # 2: genuine issuer documents are always DSC-signed, and an unsigned one is a condition, as main reports it
-VERSION = 2
+# 3: certificates cover the 2026-27 session unless a condition makes one lapse in it (XD-CERT-EXPIRES-IN-SESSION)
+VERSION = 3
 CLEAN_SHARE = (0.25, 0.30)
 CONDITIONS_PER_APP = ([1, 2, 3], [0.5, 0.35, 0.15])
 INCREASE_SHARE = 0.2
