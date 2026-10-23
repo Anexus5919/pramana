@@ -10,6 +10,7 @@ Writes report.json and report.md to the output directory.
     python scripts/random_eval.py --seed 11 --n 120 --out ../var/random-eval/s11
     python scripts/random_eval.py --combine DIR [DIR ...]     # pool several runs into one report
     python scripts/random_eval.py --revalidate DIR            # validate a processed run again and rescore
+    python scripts/random_eval.py --rescore DIR               # score a finished run again against its answer key
 """
 
 import argparse
@@ -313,6 +314,17 @@ def revalidate_seed(out: Path) -> dict[str, Any]:
     return rep
 
 
+def rescore(out: Path) -> dict[str, Any]:
+    """Score a finished run again against its answer_key.json, without running the pipeline."""
+    rep = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    key = json.loads((out / "answer_key.json").read_text(encoding="utf-8"))
+    rep.update(score=score(key, rep["results"]), rescored=datetime.now(UTC).isoformat(timespec="seconds"))
+    (out / "report.json").write_text(json.dumps(rep, indent=1), encoding="utf-8")
+    (out / "report.md").write_text(markdown(rep, f"Random evaluation, seed {rep['seeds'][0]}, {rep['n']} applications"),
+                                   encoding="utf-8")
+    return rep
+
+
 def combine(dirs: list[Path], out: Path) -> dict[str, Any]:
     """Pool runs: the answer keys and results of every run are scored together."""
     keys, results, seeds = {"conditions": [], "applications": []}, {}, []
@@ -347,8 +359,11 @@ def main() -> None:
     ap.add_argument("--combine", type=Path, nargs="+", metavar="DIR")
     ap.add_argument("--revalidate", type=Path, metavar="DIR",
                     help="validate an already processed run again and rescore it, after a validation-stage fix")
+    ap.add_argument("--rescore", type=Path, metavar="DIR", help="score a finished run again against its answer key")
     args = ap.parse_args()
-    if args.revalidate:
+    if args.rescore:
+        rep = rescore(args.rescore)
+    elif args.revalidate:
         rep = revalidate_seed(args.revalidate)
     elif args.combine:
         rep = combine(args.combine, args.out or args.combine[0].parent / "combined")
