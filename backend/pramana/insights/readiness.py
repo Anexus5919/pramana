@@ -244,7 +244,9 @@ def session_end(academic_year: str) -> date:
 
 
 def _label(rs: Ruleset, doc_type: str) -> str:
-    return rs.doc_types.get(doc_type, {}).get("label", doc_type.replace("_", " "))
+    """The slot's name without its parenthetical gloss: "Affidavit 2", "Faculty roster"."""
+    label = rs.doc_types.get(doc_type, {}).get("label", doc_type.replace("_", " "))
+    return re.sub(r"\s*\([^)]*\)", "", label).strip() or label
 
 
 def _lower_first(s: str) -> str:
@@ -418,6 +420,9 @@ def _rule_item(rs: Ruleset, app: Application, r: Any, facts: FactStore, as_of: d
     if r.outcome == FAIL:
         it.status, it.title = "fix", words.get("fix", rule["title"])
         it.detail = words.get("detail") or _readable(r.message)
+        if app.status == "draft":
+            it.detail = re.sub(r"the submission date (\d{1,2} \w+ \d{4})", lambda m: f"today, {m.group(1)}",
+                               it.detail)
         if rule["id"] == "APH-617I-FIRE-VALID":
             it.action = f"Upload a Fire Safety Certificate valid until at least {fmt_day(end)}."
         elif rule["id"] == "APH-617H-SSC-VALID":

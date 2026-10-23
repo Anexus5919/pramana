@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ApiError, api, qk } from "../../api";
 import { fmtDate } from "../../lib/format";
@@ -27,6 +27,7 @@ import { DeclaredFigures, INTAKE_HELP, NumbersEditor, ProgrammesEditor, Programm
 import { fieldErrors, fromDraft, programmeErrors, toDraft, type DeclaredDraft } from "./declared";
 import { NextStepPanel } from "./NextStep";
 import { EDITABLE, checklistSourceText, currentDocs, missingRequired, openRectification, portalStage, progressSteps } from "./progress";
+import { ReadinessPanel } from "./readiness/ReadinessPanel";
 import { DeficiencyLetterPanel, itemDocType } from "./RectificationLetter";
 import { RunHistoryPanel } from "./RunHistory";
 import { SubmitDialog } from "./SubmitDialog";
@@ -96,7 +97,23 @@ function DocumentsPanel({
   );
 }
 
-function DeclaredPanel({ app, editable, onEditing }: { app: ApplicationDetail; editable: boolean; onEditing: (on: boolean) => void }) {
+/** A request from the readiness check to open the figures for editing and put the keyboard on one field. */
+export interface FigureRequest {
+  key: string;
+  n: number;
+}
+
+function DeclaredPanel({
+  app,
+  editable,
+  onEditing,
+  request,
+}: {
+  app: ApplicationDetail;
+  editable: boolean;
+  onEditing: (on: boolean) => void;
+  request?: FigureRequest | null;
+}) {
   const qc = useQueryClient();
   const toast = useToast();
   const [draft, setDraftState] = useState<DeclaredDraft | null>(null);
@@ -123,6 +140,28 @@ function DeclaredPanel({ app, editable, onEditing }: { app: ApplicationDetail; e
   const errs = draft ? { ...programmeErrors(draft), ...fieldErrors(draft) } : {};
   const hasErr = Object.keys(errs).length > 0;
   const programmes = declaredProgrammes(app.declared);
+  // A readiness item asked for a field: open the editor once per request, then focus that field
+  const handled = useRef(0);
+  const focusKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!request || request.n === handled.current || !editable) return;
+    handled.current = request.n;
+    focusKey.current = request.key;
+    if (!draft) setDraft(toDraft(app.declared));
+  }, [request, editable, draft, setDraft, app.declared]);
+  useEffect(() => {
+    const key = focusKey.current;
+    if (!key || !draft) return;
+    focusKey.current = null;
+    const el =
+      key === "programmes"
+        ? document.getElementById("declared")?.querySelector<HTMLInputElement>("input")
+        : document.getElementById(`declared-${key}`);
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    el.focus({ preventScroll: true });
+  });
 
   return (
     <Panel
@@ -220,6 +259,7 @@ export default function InstitutionApplicationPage() {
   const [confirm, setConfirm] = useState(false);
   const [liveRun, setLiveRun] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [figure, setFigure] = useState<FigureRequest | null>(null);
 
   const q = useQuery({ queryKey: qk.application(appId), queryFn: () => api.application(appId), enabled: !!appId });
   // A check still running after a reload is followed again from its saved progress
@@ -342,11 +382,17 @@ export default function InstitutionApplicationPage() {
         editing={editing}
       />
 
+      {editable && !rect && (
+        <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} />
+      )}
       {rect && <DeficiencyLetterPanel appId={app.id} rect={rect} docLabel={docLabel} onShowDocument={showSlot} />}
+      {editable && rect && (
+        <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} />
+      )}
       <AskedAboutPanel findings={asked} rectifying={!!rect} />
 
       <DocumentsPanel app={app} docs={docs} editable={editable} firstMissing={missing[0]?.doc_type} flags={flags} />
-      <DeclaredPanel app={app} editable={editable} onEditing={setEditing} />
+      <DeclaredPanel app={app} editable={editable} onEditing={setEditing} request={figure} />
       <RunHistoryPanel appId={app.id} />
 
       <SubmitDialog
