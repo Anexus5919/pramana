@@ -585,6 +585,80 @@ def tamper_date(signed: bytes, x: float, y: float, old: str, new: str, size: flo
     return out.getvalue()
 
 
+# ---------------------------------------------------------------- previous year
+
+LABS = {"CE": ["Programming Lab", "Data Structures Lab", "Computer Networks Lab"],
+        "IT": ["Web Technologies Lab", "Database Systems Lab"],
+        "ME": ["Thermal Engineering Lab", "Fluid Mechanics Lab", "Central Workshop"],
+        "CV": ["Surveying Lab", "Concrete Technology Lab"],
+        "EE": ["Electrical Machines Lab", "Power Systems Lab"],
+        "EC": ["Analog Circuits Lab", "Communication Lab"]}
+COMMON_LABS = ["Engineering Physics Lab", "Engineering Chemistry Lab", "Language Lab"]
+# Year-over-year conditions planted through the previous year's application (code, what differs)
+YOY_PLANTED = {
+    "A2": ("YOY-CERT-REUSED-NEW-VALIDITY", "Last year's application carried the same fire NOC number with validity to "
+                                           "11-03-2026; this year the number shows validity to 11-03-2027."),
+    "A4": ("YOY-INTAKE-JUMP", "Last year's application had 60 approved CE seats; this EoA proposes 120."),
+    "A8": ("YOY-FACULTY-TURNOVER", "22 of the 36 faculty IDs on last year's roster are gone this year."),
+    "A10": ("YOY-LAND-AREA-DECREASED", "Last year's application declared 12.5 acres of land; this year 10.5."),
+}
+
+
+def labs_for(progs: list[dict]) -> list[str]:
+    return COMMON_LABS + [lab for p in progs for lab in LABS.get(p["code"], [])]
+
+
+def previous_year(app: dict, inst: dict, b: dict, docs: dict[str, dict], yrng: random.Random) -> dict:
+    """The institution's 2025-26 application as the approval portal would hold it.
+
+    Benign institutions differ in ordinary ways (a few faculty moved, bandwidth upgraded, fire NOC renewed
+    under a new number, a lab added). The apps in YOY_PLANTED differ in one implausible way."""
+    key, idx = app["key"], int(app["institution"][1:])
+    decl = app["declared"]
+    own = [r["faculty_id"] for r in b["fac"]]
+    moved = 22 if key == "A8" else 2 + idx % 3
+    joined = set(yrng.sample(own, moved))
+    left = [f"FID-{20000000 + idx * 1000 + i * 7:08d}" for i in range(moved)]
+    roster = [f for f in own if f not in joined] + left
+    progs = [{"code": p["code"], "name": p["name"], "level": p["level"], "approved_intake": p["approved_intake"],
+              "proposed_intake": p["approved_intake"], "nba_accredited": p["nba_accredited"]} for p in b["progs"]]
+    labs = list(decl["labs"])
+    if idx % 3 == 0:
+        labs.remove(labs[-1])
+    if idx % 4 == 1:
+        labs.append("Basic Electronics Lab")
+    certs = {}
+    fire = docs["fire_noc"]
+    if key == "A2":
+        certs["fire_noc"] = {"number": fire["number"], "valid_until": "2026-03-11"}
+    elif fire["valid_until"] < "2025-12-01":
+        # A certificate that was still valid when last year's application went in is simply carried over
+        certs["fire_noc"] = dict(fire)
+    else:
+        certs["fire_noc"] = {"number": f"FES/{inst['city'][:3].upper()}/2024/{3100 + idx * 23:05d}",
+                             "valid_until": "2025-03-11"}
+    for t in ("occupancy_certificate", "nba_certificate"):
+        if docs.get(t):
+            certs[t] = dict(docs[t])
+    certs["affidavit_2"] = {"number": f"IN-{'TG' if inst['state'] == 'Telangana' else 'MH'}"
+                                      f"{36120440119203 + idx * 6151:014d}X"}
+    certs["audited_accounts"] = {"number": f"24{200000 + idx * 613:06d}"
+                                           f"{''.join(yrng.choice('ABCDEFGHJKLMNPQRSTUVWXYZ0123456789') for _ in range(10))}"}
+    # A4 inflates this year's figure; last year it declared the area its occupancy certificate covers
+    built = b["area"] - 200 if key == "A4" else int(decl["built_up_area_sqm"]) - (idx % 3) * 200
+    return {
+        "academic_year": "2025-26", "application_id": f"APP-2025-{100 + idx:06d}", "category": "EOA",
+        "submitted_on": (date(2024, 12, 1) + timedelta(days=idx * 3)).isoformat(),
+        "programmes": progs, "faculty_ids": roster, "faculty_count": len(roster),
+        "land_area_acres": 12.5 if key == "A10" else decl["land_area_acres"],
+        "built_up_area_sqm": built,
+        "administrative_area_sqm": decl["administrative_area_sqm"] - (40 if idx % 2 else 0),
+        "amenities_area_sqm": decl["amenities_area_sqm"],
+        "internet_bandwidth_mbps": 100 if idx % 2 else decl["internet_bandwidth_mbps"],
+        "labs": labs, "nba_claims": [p["code"] for p in progs if p["nba_accredited"]], "certificates": certs,
+    }
+
+
 # ---------------------------------------------------------------- build
 
 
@@ -738,7 +812,7 @@ def main() -> None:
         out = {"programmes": [dict(p) for p in b["progs"]], "faculty_count": len(b["fac"]),
                "built_up_area_sqm": b["area"] - 200, "land_area_acres": 10.5, "internet_bandwidth_mbps": 200,
                "administrative_area_sqm": 820, "amenities_area_sqm": 560, "fire_noc_number": b["noc"],
-               "fee_transaction_id": b["txn"]}
+               "fee_transaction_id": b["txn"], "labs": labs_for(b["progs"])}
         out.update(over)
         return out
 
@@ -903,6 +977,30 @@ def main() -> None:
          "extracted, grounded on the page and confirmed by the issuer, and the instruction line is flagged and "
          "never used.",
          extra={"expected_with_llm": ["SEC-INSTRUCTION-TEXT"]})
+
+    # Previous-year applications for the year-over-year comparison, with a separate generator so the
+    # values above stay as they were
+    yrng = random.Random(2025)
+    for a in apps:
+        k = a["institution"]
+        inst, b = INST[k], base[k]
+        marks = b.get("fire_marks", {})
+        # The institution's own issuer-printed certificates, as generated above
+        cur = {"fire_noc": {"number": marks["noc_number"][2],
+                            "valid_until": datetime.strptime(marks["valid_until"][2], "%d-%m-%Y").date().isoformat()},
+               "occupancy_certificate": {"number": b["oc"]}}
+        nba = next((r["data"] for r in refs if r["record_type"] == "accreditation" and r["inst"] == k), None)
+        if nba:
+            cur["nba_certificate"] = {"number": nba["nba_ref"], "valid_until": nba["valid_until"]}
+        refs.append({"source": "AICTE approval portal, 2025-26 application (synthetic)",
+                     "record_type": "previous_application", "key": f"{inst['aicte_id']}:2025-26", "inst": k,
+                     "data": previous_year(a, inst, b, cur, yrng)})
+        if a["key"] in YOY_PLANTED:
+            code, note = YOY_PLANTED[a["key"]]
+            a["expected"] = sorted(set(a["expected"]) | {code})
+            if "expected_with_llm" in a:
+                a["expected_with_llm"] = sorted(set(a["expected_with_llm"]) | {code})
+            a["story"] += f" Year over year: {note}"
 
     # Faculty registry and the remaining reference records
     for fid, r in faculty_registry.items():

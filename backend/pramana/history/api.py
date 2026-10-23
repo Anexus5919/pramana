@@ -10,7 +10,7 @@ from ..crypto import load_document
 from ..db import get_db
 from ..models import Document, User, VerificationAttempt
 from ..sim import issuers as sim
-from . import revisions, watch
+from . import revisions, watch, yoy
 
 router = APIRouter(prefix="/api", tags=["history"])
 
@@ -86,6 +86,12 @@ def watch_status(user: User = Depends(require_roles(*OFFICIAL_ROLES)), db: Sessi
 @router.post("/watch/run")
 def run_watch_now(user: User = Depends(require_roles("officer", "verifier", "admin"))):
     return watch.run_watch("manual", user.username)
+
+
+@router.get("/applications/{app_id}/since-last-year")
+def since_last_year(app_id: str, user: User = Depends(require_roles(*OFFICIAL_ROLES)),
+                    db: Session = Depends(get_db)):
+    return yoy.comparison(db, load_application(db, user, app_id))
 
 
 class RecordStatus(BaseModel):

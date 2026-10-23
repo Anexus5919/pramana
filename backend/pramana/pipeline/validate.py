@@ -14,6 +14,7 @@ from .. import audit
 from ..config import get_settings
 from ..consistency.cross import cross_checks, relationship_graph
 from ..crypto import digest, load_document, sha256_hex
+from ..history.yoy import findings as yoy_findings
 from ..models import (
     Application,
     Document,
@@ -468,6 +469,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                     None)})
         graph = relationship_graph(db, app, links)
         findings += _rectification_scope(db, app, docs)
+        findings += yoy_findings(db, app, docs, rs)
         stage("cross_application", t0, links=len(links))
 
         # Reviewer decisions carry over when the same finding reappears in a later run
