@@ -75,16 +75,18 @@ def active_run(db: Session, app_id: str) -> ValidationRun | None:
 
 
 def enqueue(db: Session, app: Application, actor: str, actor_role: str, *, reason: str,
-            reprocess: str | None = None, retry_of: str | None = None) -> tuple[ValidationRun, bool]:
+            reprocess: str | None = None, retry_of: str | None = None,
+            reuse_active: bool = True) -> tuple[ValidationRun, bool]:
     """Queue a run for the application, or return the one already queued or running (created=False).
 
     reprocess: None, "failed" (re-read documents that failed) or "all" (re-read every current document).
+    reuse_active=False always queues a new run, e.g. after a submission changed the inputs.
     """
     from .pipeline.validate import ENGINE_VERSION
     from .rules.engine import active_ruleset
 
     existing = active_run(db, app.id)
-    if existing:
+    if existing and (reuse_active or existing.status == "queued"):
         return existing, False
     rs = active_ruleset()
     run = ValidationRun(application_id=app.id, round=app.round, status="queued", ruleset_id=f"{rs.id}@{rs.version}",

@@ -181,7 +181,8 @@ def submit(app_id: str, user: User = Depends(require_roles("institution")), db: 
                  object_type="application", object_id=app.id, application_id=app.id, details={"round": app.round})
     db.commit()
     if get_settings().background_runs:
-        queued, _ = jobs.enqueue(db, app, "system", "system", reason="submitted")
+        # A run already in progress started before this submission, so the new inputs get a run of their own
+        queued, _ = jobs.enqueue(db, app, "system", "system", reason="submitted", reuse_active=False)
         db.commit()
         brief = {k: ser.run_brief(queued)[k] for k in ser.INSTITUTION_RUN_KEYS}
         return {"application": ser.application(app, latest_run(db, app.id), for_institution=True),

@@ -60,7 +60,13 @@ export function useValidation(appId: string) {
   }, [qc, appId]);
 
   // A reload, or another officer's run, resumes from the persisted events
-  const active = useQuery({ queryKey: qk.activeRun(appId), queryFn: () => api.activeRun(appId), enabled: !!appId && phase === "idle" });
+  // While idle, look every few seconds so a run started elsewhere (an institution's submission) shows up live
+  const active = useQuery({
+    queryKey: qk.activeRun(appId),
+    queryFn: () => api.activeRun(appId),
+    enabled: !!appId && phase === "idle",
+    refetchInterval: 5000,
+  });
   useEffect(() => {
     const r = active.data?.run;
     if (phase !== "idle" || !r || TERMINAL.has(r.status)) return;
