@@ -17,8 +17,10 @@ EVIDENCE_LEVEL = {"cryptographic": 1, "issuer": 2, "record": 3, "rule": 4, "stru
 
 
 def latest_run(db: Session, app_id: str) -> ValidationRun | None:
-    return db.scalars(select(ValidationRun).where(ValidationRun.application_id == app_id)
-                      .order_by(ValidationRun.started_at.desc()).limit(1)).first()
+    # The workspace's notion of the current run, so a queued background run never hides the last result
+    from ..api.applications import latest_run as current
+
+    return current(db, app_id)
 
 
 def run_findings(db: Session, run: ValidationRun | None) -> list[Finding]:
