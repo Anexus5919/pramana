@@ -50,7 +50,9 @@ ISSUE_FIELDS = {"issue_date": "Date of issue", "sworn_date": "Date of affirmatio
 MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December"
 # Gazette mastheads print the date with the weekday: "New Delhi, Tuesday, January 7, 2025"
 PRINTED_LONG_DATE = re.compile(rf"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+({MONTHS})\s+"
-                               r"(\d{1,2}),\s*(\d{4})")
+                               r"(\d{1,2}),\s*(\d{4})", re.I)
+# The Gazette of India number carries the publication date: CG-DL-E-18062020-220000
+GAZETTE_CODE = re.compile(r"CG-[A-Z]{2}-[A-Z]-(\d{2})(\d{2})(\d{4})-\d+")
 PDF_DATE = re.compile(r"D?:?\s*(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?\s*(Z|[+-]\d{2}'?(?:\d{2}'?)?)?")
 # A save within this many seconds of a signature or the creation is the same moment, not a separate event
 SAME_MOMENT_S = 120
@@ -236,11 +238,21 @@ def _issued(st: _Story, fields: list[dict[str, Any]], pages: list[dict[str, Any]
     m = PRINTED_LONG_DATE.search(text[:3000])
     if m:
         try:
-            day = datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}", "%B %d %Y").replace(tzinfo=IST)
+            day = datetime.strptime(f"{m.group(1).title()} {m.group(2)} {m.group(3)}", "%B %d %Y").replace(tzinfo=IST)
+        except ValueError:
+            day = None
+        if day:
+            return st.add("issued", "Dated, as printed", f"The masthead on page 1 reads '{_short(m.group(0), 80)}'. "
+                          "This is the date the document states, read from the page text.",
+                          _time(day, "printed", m.group(0), precision="day"), link={"to": "page", "page": 1})
+    m = GAZETTE_CODE.search(text[:3000])
+    if m:
+        try:
+            day = datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)), tzinfo=IST)
         except ValueError:
             return None
-        return st.add("issued", "Dated, as printed", f"The masthead on page 1 reads '{_short(m.group(0), 80)}'. This "
-                      "is the date the document states; it was read from the page text.",
+        return st.add("issued", "Dated, as printed", f"The gazette number on page 1, {m.group(0)}, carries this "
+                      "publication date. It was read from the page text.",
                       _time(day, "printed", m.group(0), precision="day"), link={"to": "page", "page": 1})
     return None
 
@@ -348,7 +360,7 @@ def _pdf_anomalies(st: _Story, created: dict[str, Any], issued: dict[str, Any] |
         if not before:
             continue
         s = next((x for x in reversed(before) if x["role"] == "issuer"), before[-1])
-        who = s["actor"] or "the signer"
+        who = (s["actor"] or "the signer").split(",")[0]
         t0, t1 = _at(s), _at(e)
         gap = (t1 - t0).total_seconds() if t0 and t1 else None
         when = (f" By the file's own clocks this was {span(gap)} after {who} signed (signing time self-asserted, "
