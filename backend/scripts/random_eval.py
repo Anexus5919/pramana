@@ -84,18 +84,24 @@ def run_pipeline(world: Path) -> tuple[dict[str, Any], dict[str, float]]:
         for code in down:
             sim.set_availability(code, False)
         t = time.perf_counter()
-        run = run_validation(db, app, "system", "system")
+        status, error = "crashed", None
+        codes: dict[str, dict[str, Any]] = {}
+        try:
+            run = run_validation(db, app, "system", "system")
+            status, error = run.status, run.error
+            for f in db.scalars(select(Finding).where(Finding.run_id == run.id)):
+                c = codes.setdefault(f.code, {"n": 0, "severity": set(), "evidence_class": set()})
+                c["n"] += 1
+                c["severity"].add(f.severity)
+                c["evidence_class"].add(f.evidence_class)
+        except Exception as e:  # noqa: BLE001  a run that cannot even be saved is scored as finding nothing
+            db.rollback()
+            error = f"{type(e).__name__}: {str(e)[:300]}"
         vt = time.perf_counter() - t
         for code in down:
             sim.set_availability(code, True)
-        codes: dict[str, dict[str, Any]] = {}
-        for f in db.scalars(select(Finding).where(Finding.run_id == run.id)):
-            c = codes.setdefault(f.code, {"n": 0, "severity": set(), "evidence_class": set()})
-            c["n"] += 1
-            c["severity"].add(f.severity)
-            c["evidence_class"].add(f.evidence_class)
         results[spec["key"]] = {
-            "id": spec["id"], "status": run.status, "error": run.error,
+            "id": spec["id"], "status": status, "error": error,
             "codes": {k: {"n": v["n"], "severity": sorted(v["severity"]), "evidence_class": sorted(v["evidence_class"])}
                       for k, v in sorted(codes.items())},
             "documents": ndocs[spec["id"]], "processing_s": round(proc[spec["id"]], 3), "validation_s": round(vt, 3)}
