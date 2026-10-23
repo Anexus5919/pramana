@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, BookOpen, Check, Download, FileSignature, Trash2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, qk } from "../../../api";
 import { fmtDateTime, pluralize } from "../../../lib/format";
 import type { Rule } from "../../../types";
@@ -282,6 +282,11 @@ export function LetterEditor({
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
   const [sentRound, setSentRound] = useState(0);
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (stage === "confirm") requestAnimationFrame(() => reasonRef.current?.focus());
+  }, [stage]);
 
   const load = (l: Letter) => {
     setLetter(l);
@@ -443,7 +448,7 @@ export function LetterEditor({
                       for {pluralize(items.reduce((n, it) => n + it.finding_ids.length, 0), "finding")}. The institution can then download it.
                     </p>
                     <Field label="Reason for sending this notice" hint={`At least ${MIN_REASON} characters. Kept in the audit chain, not printed on the letter.`} error={shortReason ? `Give a reason of at least ${MIN_REASON} characters.` : undefined}>
-                      <Textarea data-autofocus rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Fire certificate expired before submission; renewal needed." />
+                      <Textarea ref={reasonRef} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Fire certificate expired before submission; renewal needed." />
                     </Field>
                     <Field label="Message shown with the request" hint="Optional. The letter subject is used when this is empty.">
                       <Textarea rows={2} value={message} onChange={(e) => setMessage(e.target.value)} />
