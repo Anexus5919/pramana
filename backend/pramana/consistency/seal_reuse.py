@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..forensics.seals import COMMON_ISSUERS, PHASH_MAX_DISTANCE, distance, issuer_key, issuer_of
+from ..forensics.seals import COMMON_ISSUERS, FINE_BITS, PHASH_MAX_DISTANCE, distance, issuer_key, issuer_of
 from ..models import Application, Document
 from .cross import Link, _peer_docs, _submitted_before
 
@@ -59,12 +59,12 @@ def seal_reuse(db: Session, app: Application, docs: list[Document]) -> list[Link
             seen.add((d.id, pd.id))
             dist = distance(im, hit)
             exact = im["sha256"] == hit["sha256"]
-            how = "pixel-identical" if exact else f"visually near-identical (perceptual hash distance {dist}/256)"
+            how = "pixel-identical" if exact else f"visually near-identical (perceptual hash distance {dist}/{FINE_BITS})"
             inst = papp.institution.name
             evidence = [
                 {"kind": "image_match", "document_id": d.id, "page": im["page"], "bbox": im["bbox"], "issuer": iss,
                  "peer_document_id": pd.id, "peer_application_id": papp.id, "peer_institution": inst,
-                 "peer_page": hit["page"], "peer_bbox": hit["bbox"], "peer_issuer": piss, "distance": dist,
+                 "peer_page": hit["page"], "peer_bbox": hit["bbox"], "peer_issuer": piss, "distance": dist, "bits": FINE_BITS,
                  "exact": exact},
                 {"kind": "region", "document_id": d.id, "page": im["page"], "bbox": im["bbox"],
                  "label": "seal image", "value": iss},

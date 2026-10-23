@@ -196,6 +196,7 @@ export interface ImageMatchEvidence {
   peer_bbox: BBox;
   peer_issuer: string;
   distance: number;
+  bits?: number;
   exact: boolean;
 }
 export interface UnknownEvidence {

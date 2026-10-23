@@ -254,9 +254,122 @@ After merging main into the branch, seed 4404 (fixed in advance, generator versi
 
 With this run the final compute was 3,225 + 521 + 1,253 s, about 83 minutes, within the 90-minute budget.
 
+## After the fixes
+
+The three causes above are weaknesses real documents share: many state fire services use one seal template that differs only in the city name, OCR merges words on scanned pages, and an injected instruction can be worded in many ways. They were fixed in general, without looking at which seeds or applications had shown them, and then measured on two new seeds.
+
+**Fixed in advance:** seeds 5505 and 6606, 100 applications each, generator version 2, on the branch with the fixes below. They were written here and committed before either was run, and were never used before.
+
+### What was fixed
+
+**Seal matching** (`forensics/seals.py`, calibrated by `scripts/calibrate_seals.py`). Seals are now matched on a 1024-bit perceptual hash (32 x 32 DCT) at a distance of 40 or less, or when pixel-identical. Calibration: 286 seals from one template, the fire and municipal seal of 143 cities (the seeded and randomised worlds' cities and 88 more city names), embedded in PDFs and fingerprinted as the pipeline does.
+
+| Pairs | Old rule (larger of two 256-bit hashes, match at 8 or less) | New rule (1024-bit hash, match at 40 or less) |
+|---|---|---|
+| Different cities' seals, 40,755 pairs | as close as 4 (1st percentile 16) | 50 or more (1st percentile 156) |
+| Exact copy | 0 | 0 |
+| Re-encoded as JPEG, quality 95 to 50 | up to 6 | up to 26 |
+| Rescaled by 0.5 to 1.5 | up to 4 | up to 10 |
+| Blurred, 0.8 to 1.5 px | up to 7 | up to 30 |
+| Printed and rescanned (imitation) | 54 to 64 | 274 to 334 |
+
+Under the old rule different offices' seals and harmless copies overlapped, so no threshold could separate them. The new rule leaves a margin of 10 on both sides. A printed and rescanned seal is as far from its source as a different seal is, so neither rule matches it. Fingerprints stored before this change match only when pixel-identical, so documents processed earlier should be processed again.
+
+**Instruction lines** (`pipeline/llm_extract.py`). Detection now works by grammar instead of fixed phrases. A line is flagged when it orders the reader to drop its instructions or checks, uses prompt or role-play markers, tells an AI what it must do, or addresses an automated reader (by name at the start of a sentence, any reader of a kind, "if you are" one, or politely) and gives it a directive. Mentioning systems, software or reviewers is not enough. The patterns were not extended to the evaluation's own lines.
+
+| Line set | Earlier patterns | Now |
+|---|---|---|
+| The five lines the generator plants | 2 of 5 | 5 of 5 |
+| Five more, written by the author before the patterns | 1 of 5 | 5 of 5 |
+| Eight by a separate agent, seen while designing (development data) | 3 of 8 | 7 of 8 |
+| **Ten by a second separate agent after the detector was frozen, scored once (blind)** | 1 of 10 | **4 of 10** |
+| Hard negatives from both agents (18 lines) | 0 flagged | 0 flagged |
+
+On every benign text available it flags nothing: the 98 seeded fixture files including the tamper lab and scan samples (2,041 lines), the 10 real documents (9 e-Gazette notifications and an AICTE control, 1,707 lines), and the 4,884 finding texts Pramana wrote in the five earlier runs, which Ask why screens with the same detector (`scripts/eval_instruction_lines.py`). The planted A11 line is still flagged. The first version of the new detector flagged a wrapped fire NOC line ("system, fire alarm, ... the date stated") in all 24 fire NOC files; that was corrected before the detector was frozen (an address must begin a capitalised sentence, and directives count only as imperatives). The blind lines it misses are a fake system output, a fake circular exempting "verification engines" from the registry, a threat, a passive policy sentence, a rhetorical question to an automated reviewer and a label "(to be reproduced as is)". It is better than the fixed phrases, and still a pattern list.
+
+**OCR on scanned pages** (`pipeline/extract.py`, `rules/expr.py`). On pages read by OCR, a space in a field pattern also matches no space ("FinancialYear: 2024-25"), and year ranges are read with look-alike characters fixed (O, l, S and similar). Text layers are matched exactly as before. Names are also compared as one string of letters and digits, which counts only when that agrees 95 or more ("Kota CharitableTrust"), so names that differ in a word keep their old score ("Ahilya" against "Chanakya Institute of Technology" stays at 87).
+
+### Checks after the fixes
+
+- Seeded evaluation: 53 of 53 planted conditions, 0 false positives; A8's copied seal is still found.
+- Full test suite: 119 passed.
+
+### Seeds 5505 and 6606
+
+| Measurement | Code | Recall over expected pairs | Precision over pairs that fired | Conditions with every finding | Clean applications with a false alarm |
+|---|---|---|---|---|---|
+| Seeds 1101, 2202, 3303 (before) | base, v1 | 662/667 = 99.2% (98.3 to 99.7) | 662/723 = 91.6% (89.3 to 93.4) | 354/359 = 98.6% | 11 of 85 |
+| Seed 4404 (before) | merged, v2 | 199/201 = 99.0% (96.5 to 99.7) | 199/209 = 95.2% (91.4 to 97.4) | 112/114 = 98.2% | 2 of 28 |
+| Seed 5505 (after) | fixed, v2 | 227/227 = 100% (98.3 to 100) | 227/227 = 100% (98.3 to 100) | 112/112 | 0 of 29 |
+| Seed 6606 (after) | fixed, v2 | 219/219 = 100% (98.3 to 100) | 219/219 = 100% (98.3 to 100) | 130/130 | 0 of 26 |
+| **5505 and 6606** | fixed, v2 | **446/446 = 100% (99.2 to 100)** | **446/446 = 100% (99.2 to 100)** | 242/242 = 100% (98.4 to 100) | **0 of 55** |
+
+Together: 200 applications (161 EoA, 39 increase in intake) in 45 and 44 cities, 1,578 documents, 242 conditions covering all 42 kinds, 446 expected pairs (418 planted, 22 on partners, 7 side effects) and 55 clean applications. All 200 validation runs completed. Nothing was missed and nothing fired that was not planted. 27 audit reports were scans, and none gave a false alarm (before: 9 of 34).
+
+| Condition | Instances | All found | Pairs found |
+|---|---|---|---|
+| accounts_other_entity | 5 | 5 | 5/5 |
+| accounts_wrong_year | 13 | 13 | 13/13 |
+| admin_area_short | 1 | 1 | 1/1 |
+| affidavit_other_app | 5 | 5 | 5/5 |
+| affidavit_unsigned | 6 | 6 | 6/6 |
+| bandwidth_short | 7 | 7 | 7/7 |
+| core_branches_unmet | 5 | 5 | 5/5 |
+| eoa_seat_increase | 8 | 8 | 16/16 |
+| faculty_count_mismatch | 5 | 5 | 5/5 |
+| faculty_shared | 5 | 5 | 15/15 |
+| faculty_short | 6 | 6 | 6/6 |
+| faculty_turnover | 7 | 7 | 7/7 |
+| fire_after_submission | 5 | 5 | 5/5 |
+| fire_copied | 3 | 3 | 20/20 |
+| fire_expired | 2 | 2 | 6/6 |
+| fire_other_name | 4 | 4 | 4/4 |
+| fire_overwritten_other_font | 7 | 7 | 57/57 |
+| fire_overwritten_same_font | 6 | 6 | 41/41 |
+| fire_qr_mismatch | 3 | 3 | 11/11 |
+| fire_unknown_number | 3 | 3 | 6/6 |
+| fire_variant_instruction | 5 | 5 | 25/25 |
+| fire_variant_layout | 5 | 5 | 20/20 |
+| intake_above_record | 1 | 1 | 4/4 |
+| issuer_unsigned | 7 | 7 | 7/7 |
+| late_submission | 3 | 3 | 3/3 |
+| nba_unsupported | 11 | 11 | 11/11 |
+| oc_area_exceeded | 7 | 7 | 7/7 |
+| oc_other_name | 6 | 6 | 6/6 |
+| photo_c2pa_edited | 3 | 3 | 3/3 |
+| photo_geotag_far | 8 | 8 | 8/8 |
+| photo_reused | 4 | 4 | 12/12 |
+| registry_outage | 11 | 11 | 11/11 |
+| satmap_off_site | 6 | 6 | 6/6 |
+| seal_other_issuer | 7 | 7 | 21/21 |
+| ssc_expired | 10 | 10 | 20/20 |
+| ssc_missing | 8 | 8 | 8/8 |
+| ssc_pending | 6 | 6 | 6/6 |
+| ter_not_received | 8 | 8 | 8/8 |
+| ter_receipt_mismatch | 1 | 1 | 1/1 |
+| yoy_built_up_decreased | 4 | 4 | 4/4 |
+| yoy_cert_reused | 8 | 8 | 8/8 |
+| yoy_land_decreased | 7 | 7 | 7/7 |
+
+**What this does and does not show.** The fixes aim at exactly the causes of every miss and false alarm before, so a clean result on new seeds is expected. Two of them also meet this world's own material: the seal threshold was calibrated on the generator's stamp template (its 55 cities are among the 143), and the generator plants the five known instruction lines, which the new detector catches by design. So the new seeds show that the fixes hold across random variation and broke nothing else; they are not evidence about real stamps or unseen wording. The out-of-sample figures are the blind 4 of 10 instruction lines and the unmatched print-and-scan seals. The OCR fixes were not calibrated on these scans.
+
+**Did any fix make something worse?**
+- **Heavily degraded seal copies.** A copy blurred more than 1.5 px or saved below JPEG quality 50 may now fall outside the match. The old, looser rule caught some of those, at the price of matching different offices' seals. Not measured beyond the calibration range.
+- **Old fingerprints.** Documents processed before this change match seals only when pixel-identical, until they are processed again.
+- **More text withheld.** The broader instruction detector also screens text for Ask why and for grounding model values. It withheld nothing benign in the corpus above; real documents may differ.
+- **Time.** No measurable cost: the cross-application stage averaged 1.4 s per application on seed 5505 against 1.7 to 1.9 s before. Seed 6606 ran about twice as slowly in every stage, including stages the fixes do not touch, while other jobs shared the laptop.
+- Nothing else got worse that these measurements can show: no expected finding was lost on the seeded world or the new seeds.
+
+| Seed | Generate | Seed database | Process documents | Validate | Wall | Per application |
+|---|---|---|---|---|---|---|
+| 5505 | 124 s | 31 s | 929 s (794 documents, 1.17 s each) | 155 s (1.55 s each) | 1,241 s | 12.4 s |
+| 6606 | 44 s | 34 s | 765 s (784, 0.98 s each) | 320 s (3.19 s each) | 1,165 s | 11.6 s |
+
+Compute after the laptop restart: the corpus check 683 s, the seeded evaluation 335 s, the test suite 460 s and the two seeds 2,408 s, about 65 minutes. Before the shutdown, the calibration and two interrupted corpus runs had used about 90 minutes.
+
 ### Result files
 
-`docs/features/random-eval/` holds, for each final seed (1101, 2202, 3303 and the merged-code seed 4404), the answer key, the report (`report.md`, `report.json` with every application's findings), and the first report and answer key from before the fix and the attribution change (`report.first.*`, `answer_key.first.json`), plus the pooled `combined/` and `combined-first/` for the three base-code seeds. The worlds themselves (about 43 MB of documents and a 74 MB database per seed) are not committed; `random_eval.py --seed <seed> --n 100` regenerates the same applications, names, numbers, dates and conditions with the same generator version, while signatures and keys are fresh on every run. Seeds 1101, 2202 and 3303 need generator version 1 (commit `3425f4a`); the current generator is version 2.
+`docs/features/random-eval/` holds, for each final seed (1101, 2202, 3303, the merged-code seed 4404 and the after-fixes seeds 5505 and 6606), the answer key, the report (`report.md`, `report.json` with every application's findings), and the first report and answer key from before the fix and the attribution change (`report.first.*`, `answer_key.first.json`), plus the pooled `combined/` and `combined-first/` for the three base-code seeds and `combined-after/` for 5505 and 6606. The worlds themselves (about 43 MB of documents and a 74 MB database per seed) are not committed; `random_eval.py --seed <seed> --n 100` regenerates the same applications, names, numbers, dates and conditions with the same generator version, while signatures and keys are fresh on every run. Seeds 1101, 2202 and 3303 need generator version 1 (commit `3425f4a`); the current generator is version 2.
 
 
 ## Bugs found and fixed
@@ -269,6 +382,9 @@ The development seeds (9001 to 9003, 112 applications) found two pipeline bugs a
 | seed 9003 | A whole validation run failed to save | `forensics/seals.distance` returned a numpy integer whenever two seals matched without being pixel-identical; the seeded world only had an exact match | `forensics/seals.py`: return a plain integer |
 | final seed 3303 | Two colleges certified by the same structural engineer reported as sharing one certificate (XA-SHARED-CERTIFICATE-NUMBER) | For a Structural Stability Certificate the issuer reference is the engineer's licence number, because the register is queried by licence, and the shared-number check compared it as a certificate number | `consistency/cross.py`: compare the certificate's own number for that field; the three final worlds were validated again |
 | seed 9003 | The evaluation stopped at the failed run | the runner let the save error escape | `random_eval.py` rolls back and scores such a run as finding nothing (none occurred in the final runs) |
+| final seeds, all four | 46 seal false positives: different cities' stamps matched | Stamps of one template differing only in the city name came within 4 of 256 bits, while copies moved up to 7 | `forensics/seals.py`: 1024-bit hash, threshold 40 from calibration (see After the fixes) |
+| final seeds 1101 to 4404 | 7 of 15 planted instruction lines missed | Fixed phrases | `pipeline/llm_extract.py`: detection by grammar, no false positive on any benign text available |
+| final seeds 1101 to 3303 | 15 false pairs on scanned audit reports | OCR merged words ("FinancialYear", "CharitableTrust") | `pipeline/extract.py` and `rules/expr.py`: OCR-only tolerance, compact name comparison |
 | seed 9001 (generator) | One application received no rule checks at all | all 29 rules take effect on 26 Nov 2025, the 2026-27 public notice, and the generator submitted applications from 20 Nov | submissions start on 27 Nov, when the portal opened |
 | seed 9001 (generator) | Society names ran out for common name parts | too few combinations | city-qualified society names |
 
@@ -278,7 +394,8 @@ The development seeds (9001 to 9003, 112 applications) found two pipeline bugs a
 - **The answer key restates the norms.** Rule and year-over-year side effects are derived from the plan with the handbook norms as the team reads them. A misreading of a norm would be shared by the key and the checks and would not show up here.
 - **Breadth of variation.** One fire NOC variant layout; dates printed as dd-mm-yyyy; reference numbers only in capital letters, digits, '/' and '-' (the extraction patterns accept no others, so formats with dots or spaces would go to manual review); scans only for audited accounts; no Hindi or bilingual documents (the seeded world covers one); one previous year.
 - **Photos.** Procedurally drawn rooms. The room and seat indicator is not exercised (no facilities are declared, because the detector does not recognise drawn desks), and no real photos are reused.
-- **Stamps share one design.** All synthetic stamps come from one template that differs by city name and a star shape. With 55 cities, 4 of 5,995 stamp pairs sit within the seal check's match threshold (7 to 8 of 256 bits; the code comment expected 10 or more, measured on 11 cities). Real office stamps are often this alike, so the risk is real, but its rate here depends on the synthetic template.
+- **Seals.** All synthetic stamps come from one template. Before the fixes, 4 of 5,995 stamp pairs of different cities sat within the old match threshold. The new threshold was calibrated on this template and separates them with a margin, but it has not been checked on real stamps, and a printed and rescanned seal is not matched at all.
+- **Instruction lines.** Of ten lines written blind after the detector was frozen, 4 are caught. Unaddressed claims, threats, fake circulars and output templates still pass.
 - **Fuzzy name matching.** Names are compared with a token similarity of at least 85. On development seed 9002, a fire NOC issued to "Ahilya Institute of Technology" passed for "Chanakya Institute of Technology" (similarity 87), since many names share "Institute of Technology". The final seeds had no such miss (9 of 9 fire and 10 of 10 occupancy name conditions found), but the risk remains for names that differ in one word.
 - **Simulated registries** answer instantly here (the demo adds 150 to 300 ms per lookup on purpose), so timings exclude that wait.
 - **Deterministic mode only.** The fine-tuned extractor was not used.
