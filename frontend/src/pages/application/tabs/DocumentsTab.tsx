@@ -465,6 +465,17 @@ function ModelPanel({
                   <span className="font-semibold text-mismatch-fg">Discarded: </span>
                   {r.reason}. The value was not used for any rule.
                 </p>
+                {(() => {
+                  const src = lines.find((l) => r.proposed && l.text.replace(/\s+/g, "").includes(r.proposed.replace(/\s+/g, "")));
+                  return src ? (
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-[8px] bg-surface/70 px-2.5 py-2">
+                      <span className="text-xs text-ink-2">The only place this value appears is a line addressed to an automated reader.</span>
+                      <button type="button" className={actionCls} onClick={() => onFocus({ page: src.page, bbox: src.bbox, label: "Where the proposal came from" })}>
+                        <SquareDashed aria-hidden className="size-3.5" /> Show the source line
+                      </button>
+                    </div>
+                  ) : null;
+                })()}
               </li>
             ))}
           </ul>
