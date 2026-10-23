@@ -34,7 +34,7 @@ export function IntakeSection({ a }: { a: Analysis }) {
           `Content is a ${kind}, matching the file extension`,
           `${pluralize(a.page_count, "page")}, ${fmtBytes(a.size_bytes)}, within the upload limits`,
           isPdf(a) ? "Not password protected and parsed without errors" : "Decoded safely, within the pixel limit",
-          "Never re-encoded, so signatures and revisions stay intact",
+          isPdf(a) ? "Never re-encoded, so signatures and revisions stay intact" : "Never re-encoded, so metadata and Content Credentials stay intact",
         ].map((t) => (
           <li key={t} className="flex items-start gap-2 text-ink-2">
             <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-verified-dot" />
@@ -335,7 +335,13 @@ export function IndicatorsSection({ a, onFocus }: { a: Analysis; onFocus: OnFocu
     <Section
       id="structure"
       eyebrow={pdf ? "Structure forensics" : "Photo forensics"}
-      title={signals.length ? pluralize(signals.length, "indicator") : "No indicators"}
+      title={
+        signals.some((x) => x.severity !== "info")
+          ? pluralize(signals.filter((x) => x.severity !== "info").length, "indicator")
+          : signals.length
+            ? `No indicators, ${pluralize(signals.length, "note")}`
+            : "No indicators"
+      }
       description={
         pdf
           ? "Overlaid and covered text, text changed in a later revision, a value in a font no other value uses, editor metadata. Each is a reason to look, not a conclusion."

@@ -168,7 +168,7 @@ export function CaptureSection({ a }: { a: Analysis }) {
 export function CredentialsSection({ a }: { a: Analysis }) {
   const ph = a.photo as AnalysedPhoto;
   return (
-    <Section id="photo" eyebrow="Photo: Content Credentials" title="Content Credentials (C2PA)" aside={ph.c2pa_status ? <StatusPill status={ph.c2pa_status.status} /> : undefined}>
+    <Section id="photo" eyebrow="Photo: provenance" title="Content Credentials (C2PA)" aside={ph.c2pa_status ? <StatusPill status={ph.c2pa_status.status} /> : undefined}>
       <Credentials c={ph.c2pa} />
       {ph.c2pa_status && <p className="mt-2 text-sm text-ink-2 text-pretty">{ph.c2pa_status.detail}</p>}
     </Section>

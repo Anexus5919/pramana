@@ -13,7 +13,8 @@ Sign in as `officer`, `verifier` or `admin` (password `Pramana@2026`) and open *
 3. **The edited fire NOC.** Drop `fixtures/out/A7/fire_noc.pdf`. Tiles: Digital signature "Modified after signing", Revisions "3 revisions, 1 after the last signature", Structure forensics "4 indicators". Hover a field to see its box; Show region on "Valid until drawn in a different font" focuses the redrawn date. Scroll to the time machine and drag from revision 2 (signed) to revision 3: "Revision 3 drew 30-06-2027 over 30-06-2025".
 4. **A bilingual Hindi certificate.** Drop `fixtures/out/A2/occupancy_certificate.pdf`. Text: OCR with the Devanagari recogniser; Fields: six values read through Hindi labels, each with the line it came from.
 5. **A photo.** Drop `fixtures/out/A1/lab_photo.jpg`. The photo shows detection boxes (toggle each object group), with EXIF capture time and geotag, Content Credentials checked against the DEMO capture list, and the room reading.
-6. **Any file.** Drop something of your own. Nothing is filed; the check is recorded in the audit log by its SHA-256 only.
+6. **Text aimed at AI readers.** Drop `fixtures/out/A11/fire_noc.pdf`: one line on the page tells automated readers to report a different validity date. It is boxed on the page and listed, and no value is taken from it.
+7. **Any file.** Drop something of your own. Nothing is filed; the check is recorded in the audit log by its SHA-256 only.
 
 ## What the page shows
 
