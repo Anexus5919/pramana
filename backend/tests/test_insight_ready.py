@@ -242,3 +242,18 @@ def test_access_and_audit_counts_only(world):
     assert set(ev.details) == {"met", "to_fix", "waiting", "advice", "files_read"}
     assert all(isinstance(v, int) for v in ev.details.values())
     db.close()
+
+
+def test_wrong_file_in_a_slot_and_missing_figures(world):
+    apps, app = world
+    c = _login(app, "inst1")
+    aid = _draft(c, apps["A1"], declared={"faculty_count": 36}, slots=["fire_noc"],
+                 files={"fire_noc": FIX / apps["A1"]["documents"][1]["file"]})
+    assert apps["A1"]["documents"][1]["declared_type"] == "occupancy_certificate"
+    res = c.post(f"/api/applications/{aid}/readiness").json()
+    fire = _items(res)["doc-fire_noc"]
+    assert fire["status"] == "fix" and "different document" in fire["title"]
+    assert "Occupancy" in fire["detail"]
+    bw = _by_title(res, "Internet bandwidth tier cannot be checked yet")
+    assert bw["targets"] == [{"kind": "figure", "key": "internet_bandwidth_mbps", "label": "Internet bandwidth"}]
+    assert _by_title(res, "Administrative and amenities areas cannot be checked yet")["targets"][0]["key"] == "programmes"

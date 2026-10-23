@@ -59,7 +59,7 @@ Wording, actions and targets come from a small table in `readiness.py` keyed by 
 ## 5. Files
 
 - `backend/pramana/insights/readiness.py`: the check and its router.
-- `backend/tests/test_insight_ready.py`: seven tests (missing documents and no side effects, expired certificate and norm shortfall, ready state with a lapse note and the cache, the conditional certificate, a rectification round before and after the corrected upload, no forensic or consistency output, access and audit counts).
+- `backend/tests/test_insight_ready.py`: eight tests (missing documents and no side effects, expired certificate and norm shortfall, ready state with a lapse note and the cache, the conditional certificate, a rectification round before and after the corrected upload, no forensic or consistency output, access and audit counts, a wrong file in a slot and missing figures). The module reuses the seeded world and restores the database afterwards, so later modules see it unchanged.
 - `frontend/src/pages/portal/readiness/`: `ReadinessPanel.tsx`, `ReadinessRing.tsx`, `useReadiness.ts`, `types.ts`.
 - Small additive edits: `backend/pramana/main.py` (router), `InstitutionApplicationPage.tsx` (placement, figure focus), `DeclaredEditor.tsx` (input ids), `SubmitDialog.tsx` (open items).
 

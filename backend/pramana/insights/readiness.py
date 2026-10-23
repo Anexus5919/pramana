@@ -70,40 +70,49 @@ SOURCE_NAMES = {"APH": "Approval Process Handbook", "ADD26": "Addendum to the ha
 
 # Plain wording per rule; anything not listed falls back to the rule's own title and message
 WORDING: dict[str, dict[str, str]] = {
-    "APH-617I-FIRE-VALID": {"met": "Fire Safety Certificate is valid", "fix": "Fire Safety Certificate has expired"},
+    "APH-617I-FIRE-VALID": {
+        "topic": "Fire Safety Certificate validity","met": "Fire Safety Certificate is valid", "fix": "Fire Safety Certificate has expired"},
     "APH-A31D-FIRE-BEFORE": {
+        "topic": "Fire Safety Certificate date",
         "met": "Fire Safety Certificate was issued before applying",
         "fix": "Fire Safety Certificate is dated after the submission date",
         "action": "Upload the Fire Safety Certificate you held before applying, dated on or before {as_of}."},
     "APH-617H-SSC-VALID": {
+        "topic": "Structural Stability Certificate validity",
         "met": "Structural Stability Certificate is within its five years",
         "fix": "Structural Stability Certificate is older than five years"},
     "APH-AFF2-FORM": {
+        "topic": "Affidavit 2 form",
         "met": "Affidavit 2 is on Rs 100 e-stamp paper and duly sworn",
         "fix": "Affidavit 2 is not in the prescribed form",
         "action": "Upload Affidavit 2 on e-stamp paper of at least Rs 100, sworn before a First Class Judicial "
                   "Magistrate, a Notary or an Oath Commissioner."},
     "APH-ANX5-FSR": {
+        "topic": "Faculty-student ratio",
         "met": "Faculty-student ratio meets Annexure 5",
         "fix": "Fewer faculty than Annexure 5 requires",
         "action": "List at least {required_faculty} faculty on the faculty roster, or check the approved intake "
                   "and duration of each programme."},
     "APH-ANX41-BANDWIDTH": {
+        "topic": "Internet bandwidth tier",
         "met": "Internet bandwidth meets the tier for your intake",
         "fix": "Internet bandwidth is below the tier for your intake",
         "action": "Raise the campus connection to at least {required_bandwidth_mbps} Mbps, then update Internet "
                   "bandwidth."},
     "APH-ANX33-ADMIN-AREA": {
+        "topic": "Administrative and amenities areas",
         "met": "Administrative and amenities areas meet the minimums",
         "fix": "Administrative or amenities area is below the minimum",
         "action": "Check the areas you declared: at least 750 sq m administrative and 500 sq m amenities for an "
                   "approved intake up to 300."},
     "ADD26-26C-CORE-BRANCHES": {
+        "topic": "Core branches for an increase in intake",
         "met": "Three core branches, two outside Computer Science",
         "fix": "Too few core branches for an increase in intake",
         "action": "An increase needs at least three core branches, two of them outside Computer Science and "
                   "allied disciplines. Check how each programme is marked."},
     "PN2627-DEADLINE": {
+        "topic": "Application window",
         "met": "Within the 2026-27 application window",
         "fix": "The 2026-27 application window has closed",
         "detail": "The last date for 2026-27, with the late fee, was 20 January 2026.",
@@ -257,6 +266,11 @@ def _lower_first(s: str) -> str:
     return s
 
 
+def _the(label: str) -> str:
+    """The label with its article: the Fire Safety Certificate, but Affidavit 2 (numbered forms take none)."""
+    return label if re.search(r"\d$", label) else f"the {_lower_first(label)}"
+
+
 def _clause(rs: Ruleset, rule: dict[str, Any] | None, fallback: dict[str, Any] | None = None) -> dict[str, Any] | None:
     """The handbook clause, verbatim from the ruleset, with the source named in words."""
     src = dict((rule or {}).get("source") or fallback or {})
@@ -377,7 +391,7 @@ def _document_items(rs: Ruleset, app: Application, docs: dict[str, Any], facts: 
             it.status, it.title = "fix", f"{label} not uploaded"
             # The handbook quote says what the document is; the slot's own description is the fallback
             it.detail = None if (it.clause or {}).get("quote") else spec.get("description")
-            it.action = f"Upload the {_lower_first(label)}."
+            it.action = f"Upload {_the(label)}."
         elif d.processing_status == "failed":
             it.status, it.title = "fix", f"{label} could not be read"
             it.detail = f"The file {d.original_filename} could not be opened or read."
@@ -387,8 +401,8 @@ def _document_items(rs: Ruleset, app: Application, docs: dict[str, Any], facts: 
             an = d.analysis or {}
             if seen and seen != t and t in rs.doc_types:
                 it.status, it.title = "fix", f"The {_lower_first(label)} slot holds a different document"
-                it.detail = f"{d.original_filename} reads like the {_lower_first(_label(rs, seen))}."
-                it.action = f"Check the file, then upload the {_lower_first(label)} in this slot."
+                it.detail = f"{d.original_filename} reads like {_the(_label(rs, seen))}."
+                it.action = f"Check the file, then upload {_the(label)} in this slot."
             unread = an.get("unreadable_pages") or []
             hindi = an.get("scripts_not_read") or [s.get("page") for s in an.get("ocr_scripts") or []
                                                    if s.get("read") is False]
@@ -420,8 +434,8 @@ def _rule_item(rs: Ruleset, app: Application, r: Any, facts: FactStore, as_of: d
     if r.outcome == NOT_APPLICABLE:
         if not r.missing or not set(r.missing) <= required:
             return None  # the rule does not apply, or rests on an optional document that was not uploaded
-        names = [_lower_first(_label(rs, t)) for t in r.missing]
-        it.status, it.detail = "waiting", f"Checked once the {' and '.join(names)} is uploaded."
+        names = [_the(_label(rs, t)) for t in r.missing]
+        it.status, it.detail = "waiting", f"Checked once {' and '.join(names)} {'is' if len(names) == 1 else 'are'} uploaded."
         return it
     if r.outcome == FAIL:
         it.status, it.title = "fix", words.get("fix", rule["title"])
@@ -443,30 +457,25 @@ def _rule_item(rs: Ruleset, app: Application, r: Any, facts: FactStore, as_of: d
     missing = r.missing[0] if r.missing else ""
     m = _PATH.match(missing)
     kind, a, b = (m.group(1), m.group(2), m.group(3)) if m else ("", "", None)
-    it.status, it.title = "fix", words.get("fix", rule["title"])
+    it.status, it.title = "fix", f"{words['topic']} cannot be checked yet" if "topic" in words else rule["title"]
     if r.outcome == ERROR:
-        it.title = rule["title"]
         it.detail = "A value needed for this rule could not be understood."
         it.action = "Check the figures and the documents this rule reads."
     elif kind == "doc" and a in rs.doc_types:
         label = _label(rs, a)
-        it.title = rule["title"]
-        it.detail = f"The {FIELD_WORDS.get(b or '', (b or 'value').replace('_', ' '))} could not be read from the " \
-                    f"{_lower_first(label)}."
-        it.action = f"Upload a clearer copy of the {_lower_first(label)}."
+        what = FIELD_WORDS.get(b or "", (b or "value").replace("_", " "))
+        it.detail = f"The {what} could not be read from {_the(label)}."
+        it.action = f"Upload a clearer copy of {_the(label)}."
         it.targets = [{"kind": "document", "key": a, "label": label}]
     elif kind == "app" and a in FIGURES:
-        it.title = rule["title"]
         it.detail = f"{FIGURES[a]} is not filled in, so this cannot be checked."
         it.action = f"Enter {_lower_first(FIGURES[a])} under Declared figures."
         it.targets = [{"kind": "figure", "key": a, "label": FIGURES[a]}]
     elif a in PROGRAMME_FACTS or kind == "derived":
-        it.title = rule["title"]
         it.detail = "Your programmes are not filled in, so this cannot be checked."
         it.action = "Add each programme with its level, duration and approved intake."
         it.targets = [{"kind": "figure", "key": "programmes", "label": FIGURES["programmes"]}]
     else:
-        it.title = rule["title"]
         it.detail = "A value needed for this rule is missing."
         it.action = "Check the figures and documents this rule reads."
     return it
