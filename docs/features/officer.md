@@ -87,7 +87,8 @@ One ZIP per application, built on request:
 - The export is recorded first (`evidence_pack.exported`) and a checkpoint signs the chain head at that event. The extract therefore ends exactly at a signed head, and the checker can tie the last event to the checkpoint without needing other applications' events.
 - Each event's hash is recomputed as `sha256(prev_hash + canonical_json(body))`, the same formula as `audit.py`.
 - After the ZIP is built, `evidence_pack.sealed` records the manifest SHA-256 and the ZIP SHA-256 in the chain. Downloads are recorded as `evidence_pack.downloaded`.
-- The ZIP is stored Fernet-encrypted under `var/exports` and downloaded through an officer-only endpoint that checks the pack belongs to the application.
+- The ZIP is sealed with the document keyring (envelope encryption) under `var/exports` and downloaded through an officer-only endpoint that checks the pack belongs to the application.
+- Original documents that the retention job has purged are left out; their digests stay in the manifest.
 - `verify_pack.py` checks: every listed file is present with its SHA-256; no file was added; the manifest signature verifies; each audit event recomputes; the checkpoint is signed by the same key and signs the last event; included originals match the submitted document digests.
 
 ### What it does not do
@@ -99,13 +100,13 @@ One ZIP per application, built on request:
 ### Limitations
 
 - Each export adds a checkpoint row. That is cheap, but a production system might checkpoint on a schedule and include a chain segment instead.
-- Page crops use the cached 110 dpi page images; small boxes are readable, full-width table rows are small.
+- Page crops use the 110 dpi page images; small boxes are readable, full-width table rows are small.
 
-### Measured (A7, 11 findings, 7 documents)
+### Measured (A7, 12 findings, 8 documents, after merging the sandbox and envelope-encryption work)
 
-- Build time 6.0 s on a cold cache (rendering page images dominates) and about 1.0 s once page images are cached; the report stage is 0.97 s of that.
-- ZIP about 313 KB without originals (10 files plus manifest and signature), about 433 KB with the 7 originals.
-- The checker passes on an exported pack. Appending bytes to `report.pdf` fails the file digest check; editing one audit event's details fails the chain recompute (both covered by tests).
+- Build time about 2 to 3.5 s. Page crops come from the same parser sandbox and encrypted page cache as the document viewer, so documents are never parsed in the web process; the report stage is about 1.8 s of the total.
+- ZIP about 0.9 MB without originals (report.pdf is most of it); the stored copy is sealed with the document keyring.
+- The checker passes on exported packs for A1, A7 and A10. Appending bytes to `report.pdf` fails the file digest check; editing one audit event's details fails the chain recompute (both covered by tests).
 
 ## 3. Ask why
 
