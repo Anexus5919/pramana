@@ -18,6 +18,7 @@ from ..consistency.seal_reuse import seal_reuse
 from ..crypto import digest, load_document, sha256_hex
 from ..forensics import signed_content
 from ..history.yoy import findings as yoy_findings
+from ..insights.proof import session_findings
 from ..models import (
     Application,
     Document,
@@ -478,6 +479,8 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         facts = build_facts(db, app, docs, rs, ver_facts, as_of)
         results = evaluate(rs, facts, category=app.category, as_of=as_of)
         findings += _rule_findings(rs, results, app)
+        # Certificates valid on the submission date that lapse before the session being approved ends
+        findings += session_findings(rs, app, docs, as_of, _fp)
         emit("rules", evaluated=len(results), outcomes=_count([{"o": r.outcome} for r in results], "o"))
         checklist = [{
             "rule_id": r.rule["id"], "title": r.rule["title"], "category": r.rule.get("category"),
