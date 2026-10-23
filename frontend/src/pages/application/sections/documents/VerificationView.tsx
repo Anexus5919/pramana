@@ -351,7 +351,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
         )}
       </p>
       <Panel padding="none">
-        <DataTable label="Verification by document and channel" density="compact" rows={rows} rowKey={(r) => r.docId} columns={columns} />
+        <DataTable label="Verification by document and channel" rows={rows} rowKey={(r) => r.docId} columns={columns} />
       </Panel>
 
       <Drawer

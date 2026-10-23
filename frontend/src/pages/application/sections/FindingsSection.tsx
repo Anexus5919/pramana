@@ -162,7 +162,7 @@ function FindingsView({ query }: { query: UseQueryResult<Finding[]> }) {
     <Toolbar end={filtersOn ? <Button variant="ghost" size="sm" onClick={clear}>Clear filters</Button> : undefined}>
       <ViewSwitch value="findings" openCount={openCount} ruleCount={run?.checklist.length} />
       <SearchInput value={q ?? ""} onChange={(v) => setQ(v)} label="Search findings" placeholder="Search findings" className="sm:w-56" />
-      <Select aria-label="Severity" value={sev ?? ""} onChange={(e) => setSev(e.target.value)} className="w-auto">
+      <Select selectSize="sm" aria-label="Severity" value={sev ?? ""} onChange={(e) => setSev(e.target.value)} className="w-auto">
         <option value="">All severities</option>
         {SEVERITIES.map((s) => (
           <option key={s} value={s}>
@@ -170,7 +170,7 @@ function FindingsView({ query }: { query: UseQueryResult<Finding[]> }) {
           </option>
         ))}
       </Select>
-      <Select aria-label="Evidence class" value={ev ?? ""} onChange={(e) => setEv(e.target.value)} className="w-auto">
+      <Select selectSize="sm" aria-label="Evidence class" value={ev ?? ""} onChange={(e) => setEv(e.target.value)} className="w-auto">
         <option value="">All evidence classes</option>
         {EVIDENCE_CLASSES.map((c) => (
           <option key={c} value={c}>
@@ -178,7 +178,7 @@ function FindingsView({ query }: { query: UseQueryResult<Finding[]> }) {
           </option>
         ))}
       </Select>
-      <Select aria-label="Review status" value={status ?? ""} onChange={(e) => setStatus(e.target.value)} className="w-auto">
+      <Select selectSize="sm" aria-label="Review status" value={status ?? ""} onChange={(e) => setStatus(e.target.value)} className="w-auto">
         <option value="">Open</option>
         <option value={STATUS_ALL}>All statuses</option>
         {Object.entries(reviewStatusMeta).map(([k, m]) => (
@@ -388,7 +388,7 @@ function ChecklistView() {
     <Toolbar end={q || outcome ? <Button variant="ghost" size="sm" onClick={() => setParams({ q: null, outcome: null })}>Clear filters</Button> : undefined}>
       <ViewSwitch value="checklist" openCount={openCount} ruleCount={run ? entries.length : undefined} />
       <SearchInput value={q ?? ""} onChange={(v) => setQ(v)} label="Search rules" placeholder="Search rules" className="sm:w-56" />
-      <Select aria-label="Outcome" value={outcome ?? ""} onChange={(e) => setOutcome(e.target.value)} className="w-auto">
+      <Select selectSize="sm" aria-label="Outcome" value={outcome ?? ""} onChange={(e) => setOutcome(e.target.value)} className="w-auto">
         <option value="">All outcomes</option>
         <option value="pass">Met</option>
         <option value="fail">Not met</option>
