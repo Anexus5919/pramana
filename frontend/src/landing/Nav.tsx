@@ -43,7 +43,7 @@ export default function Nav() {
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4">
       <nav
         aria-label="Primary"
-        className={`lp-glass pointer-events-auto mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-full pr-2 pl-4 transition-shadow duration-300 sm:pl-5 ${solid ? "lp-shadow-md" : ""}`}
+        className={`lp-glass pointer-events-auto mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-full pr-2 pl-4 transition-[box-shadow,background-color] duration-300 sm:pl-5 ${solid ? "lp-glass-solid lp-shadow-md" : ""}`}
       >
         <a href="#top" aria-label="Pramana, back to top" className="shrink-0 rounded-full">
           <Wordmark size={28} />

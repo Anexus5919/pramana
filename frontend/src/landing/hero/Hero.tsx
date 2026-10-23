@@ -83,6 +83,8 @@ export default function Hero() {
   const copyOpacity = useTransform(scrollYProgress, [0, 0.42], [1, 0]);
   const copyY = useTransform(scrollYProgress, [0, 0.5], [0, -28]);
   const layerOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  // once the lids have closed, the block wall dissolves into the page instead of ending on a hard edge
+  const handoff = useTransform(scrollYProgress, [0.72, 1], [0, 1]);
 
   const toNdc = (e: PointerEvent) => {
     const r = stageRef.current!.getBoundingClientRect();
@@ -144,6 +146,15 @@ export default function Hero() {
             <Tiles state={state} layout={layout} reduced={reduced} />
           </motion.div>
         )}
+
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: handoff,
+            background: "linear-gradient(to bottom, transparent 0%, transparent 35%, var(--lp-canvas) 92%)",
+          }}
+        />
 
         <div className="pointer-events-none absolute inset-0 grid place-items-center px-5">
           <motion.div
