@@ -1,7 +1,6 @@
 """Officer tool endpoints: deficiency letters, evidence packs and Ask why."""
 
 import hashlib
-import io
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -205,15 +204,18 @@ def letter_pdf(letter_id: str, user: User = Depends(current_user), db: Session =
 @router.get("/letters/{letter_id}/pages/{page_no}.png")
 def letter_page(letter_id: str, page_no: int, user: User = Depends(require_roles(*OFFICIAL_ROLES)),
                 db: Session = Depends(get_db)):
-    from ..pipeline.text import render_pdf_page
+    from .. import sandbox
 
     letter, app = _load_letter(db, user, letter_id)
     data = _render(db, letter, app)
     if page_no < 1 or page_no > lt.page_count(data):
         raise HTTPException(404, "no such page")
-    out = io.BytesIO()
-    render_pdf_page(data, page_no - 1, 110).save(out, "PNG", optimize=True)
-    return Response(out.getvalue(), media_type="image/png", headers={"Cache-Control": "no-store"})
+    # PDFium is not thread-safe, so pages render in the parser sandbox like every other page image
+    try:
+        png = sandbox.render_png(data, "application/pdf", page_no - 1, 110)
+    except sandbox.SandboxError as e:
+        raise HTTPException(422, f"the preview could not be rendered: {e}") from e
+    return Response(png, media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
 class FinaliseBody(BaseModel):

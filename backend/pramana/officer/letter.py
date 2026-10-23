@@ -273,10 +273,7 @@ def render_pdf(lt: DeficiencyLetter, app: Application, officer: User | None, *, 
 
 
 def page_count(pdf: bytes) -> int:
-    import pypdfium2 as pdfium
+    # pypdf is pure Python and safe to call from concurrent request threads
+    from pypdf import PdfReader
 
-    d = pdfium.PdfDocument(pdf)
-    try:
-        return len(d)
-    finally:
-        d.close()
+    return len(PdfReader(io.BytesIO(pdf)).pages)
