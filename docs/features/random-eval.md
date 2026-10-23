@@ -254,6 +254,14 @@ After merging main into the branch, seed 4404 (fixed in advance, generator versi
 
 With this run the final compute was 3,225 + 521 + 1,253 s, about 83 minutes, within the 90-minute budget.
 
+## After the fixes
+
+The three causes above are weaknesses real documents share: many state fire services use one seal template that differs only in the city name, OCR merges words on scanned pages, and an injected instruction can be worded in many ways. They were fixed in general, without looking at which seeds or applications had shown them, and then measured on two new seeds.
+
+**Fixed in advance:** seeds 5505 and 6606, 100 applications each, generator version 2, on the branch with the fixes below. They were written here and committed before either was run, and were never used before.
+
+AFTER_RESULTS
+
 ### Result files
 
 `docs/features/random-eval/` holds, for each final seed (1101, 2202, 3303 and the merged-code seed 4404), the answer key, the report (`report.md`, `report.json` with every application's findings), and the first report and answer key from before the fix and the attribution change (`report.first.*`, `answer_key.first.json`), plus the pooled `combined/` and `combined-first/` for the three base-code seeds. The worlds themselves (about 43 MB of documents and a 74 MB database per seed) are not committed; `random_eval.py --seed <seed> --n 100` regenerates the same applications, names, numbers, dates and conditions with the same generator version, while signatures and keys are fresh on every run. Seeds 1101, 2202 and 3303 need generator version 1 (commit `3425f4a`); the current generator is version 2.
