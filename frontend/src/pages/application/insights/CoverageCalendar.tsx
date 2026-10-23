@@ -125,7 +125,7 @@ function CertRow({ c, x, top, cov, hatchId }: { c: CoverageCert; x: (iso: string
           <span aria-hidden className={cn("absolute top-[25px] h-[22px] w-[3px] -translate-x-1/2 rounded-full", CAP_TONE[c.status])} style={{ left: `${end}%` }} />
           <span
             aria-hidden
-            className="absolute top-2.5 text-xs whitespace-nowrap text-ink-2"
+            className={cn("absolute top-2.5 rounded-[3px] px-1 text-xs whitespace-nowrap text-ink-2", end > sStart && end < sEnd ? "bg-surface-2" : "bg-surface")}
             // Before the submission line the date sits to the left of its cap, clear of the line
             style={c.end.date < cov.as_of && end > 12 ? { right: `${100 - end}%`, marginRight: 6 } : pinStyle(end)}
           >
@@ -144,7 +144,11 @@ function CertRow({ c, x, top, cov, hatchId }: { c: CoverageCert; x: (iso: string
           <span aria-hidden className={cn("absolute top-[30px] h-3 overflow-hidden rounded-[3px] border", gapTone)} style={{ left: `${gapFrom}%`, width: `${sEnd - gapFrom}%` }}>
             <Hatch id={hatchId} />
           </span>
-          <span aria-hidden className={cn("absolute top-[46px] text-xs font-medium whitespace-nowrap", HEADLINE_TONE[c.status])} style={pinStyle((gapFrom + sEnd) / 2)}>
+          <span
+            aria-hidden
+            className={cn("absolute top-[46px] rounded-[3px] bg-surface-2 px-1 text-xs font-medium whitespace-nowrap", HEADLINE_TONE[c.status])}
+            style={pinStyle((gapFrom + sEnd) / 2)}
+          >
             Session not covered for {uncovered} {uncovered === 1 ? "month" : "months"}
           </span>
         </>
@@ -181,7 +185,11 @@ function CertRow({ c, x, top, cov, hatchId }: { c: CoverageCert; x: (iso: string
                 {inner}
               </span>
             )}
-            <span aria-hidden className="absolute top-2.5 text-xs font-medium whitespace-nowrap text-mismatch-fg" style={pinStyle(ax)}>
+            <span
+              aria-hidden
+              className={cn("absolute top-2.5 rounded-[3px] px-1 text-xs font-medium whitespace-nowrap text-mismatch-fg", ax > sStart && ax <= sEnd ? "bg-surface-2" : "bg-surface")}
+              style={pinStyle(ax)}
+            >
               {lab}
             </span>
           </span>
