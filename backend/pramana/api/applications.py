@@ -37,10 +37,11 @@ EDITABLE = {"draft", "rectification_requested"}
 
 
 def latest_run(db: Session, app_id: str) -> ValidationRun | None:
-    # A queued or running background run has no findings yet; the previous result stays current until it ends
-    return db.scalars(select(ValidationRun).where(ValidationRun.application_id == app_id,
-                                                  ValidationRun.status.notin_(jobs.ACTIVE))
-                      .order_by(ValidationRun.started_at.desc()).limit(1)).first()
+    # The last complete result stays current while a background run is queued or running, and after one fails;
+    # a failed or interrupted run is only shown when nothing has completed yet
+    q = select(ValidationRun).where(ValidationRun.application_id == app_id).order_by(ValidationRun.started_at.desc())
+    return (db.scalars(q.where(ValidationRun.status == "complete").limit(1)).first()
+            or db.scalars(q.where(ValidationRun.status.notin_(jobs.ACTIVE)).limit(1)).first())
 
 
 @router.get("/applications")
