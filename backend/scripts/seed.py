@@ -54,6 +54,12 @@ def main(validate: bool = True) -> None:
     demo = s.trust_dir / "demo"
     demo.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(FIX / "trust" / "pramana-demo-root.pem", demo / "pramana-demo-root.pem")
+    from pramana.photos import credentials
+
+    if (FIX / "trust" / credentials.DEMO_CA_FILE).exists():
+        credentials.demo_ca_path().parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(FIX / "trust" / credentials.DEMO_CA_FILE, credentials.demo_ca_path())
+    credentials._trust_pem.cache_clear()
     signed_qr.issuer_keys.cache_clear()
     signature.trust_anchors.cache_clear()
 
