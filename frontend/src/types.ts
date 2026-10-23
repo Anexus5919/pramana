@@ -522,6 +522,19 @@ export interface DocumentDetail extends DocumentSummary {
   rows: TableRow[] | null;
   fingerprints?: Record<string, unknown>;
   verifications?: VerificationAttempt[];
+  /** Pages whose Devanagari text went through OCR, and how */
+  ocr_scripts?: OcrScriptNote[];
+}
+
+export interface OcrScriptNote {
+  page: number;
+  script: "devanagari" | "latin";
+  recogniser: string;
+  reason?: string;
+  read?: boolean;
+  note?: string;
+  model?: string;
+  lines_devanagari?: number;
 }
 
 export interface AuditEvent {

@@ -16,6 +16,7 @@ import { EmptyState, ErrorState } from "../../../ui/States";
 import { Segmented } from "../../../ui/Tabs";
 import { Tooltip } from "../../../ui/Tooltip";
 import { useDocTypeLabel, useWorkspace } from "../context";
+import { FieldSourceLine, ScriptNote } from "./ScriptNote";
 import { appPath, bboxParam, isLlmMethod, llmReportOf, methodLabel, parseBBox, useDocument, useWidth, validBox, type LlmReport } from "../data";
 import { CautionNote, ComparisonTable, PaneLabel, RevisionDiffView, SimTag } from "../parts";
 import { DocViewer, type Focus } from "../viewer/DocViewer";
@@ -121,6 +122,8 @@ function DocChip({ d, selected, status, onSelect, flagged }: { d: DocumentSummar
 function FieldsPanel({ doc, onLocate, onPeek, flash }: { doc: DocumentDetail; onLocate: (f: ExtractedField) => void; onPeek: (key: string | null) => void; flash: string | null }) {
   if (!doc.fields.length) return <EmptyState compact title="No fields defined" description="This document type has no fields to extract." />;
   return (
+    <>
+    <ScriptNote doc={doc} />
     <motion.ul variants={stagger(0.03)} initial="hidden" animate="show" className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
       {doc.fields.map((f) => {
         const located = !!f.page && validBox(f.bbox);
@@ -155,6 +158,7 @@ function FieldsPanel({ doc, onLocate, onPeek, flash }: { doc: DocumentDetail; on
                 </div>
                 <div className={cn("mt-0.5 font-mono text-[13px] break-words", missing ? "text-ink-4" : "text-ink")}>{missing ? "Not found on the page" : fmtValue(f.value)}</div>
                 {f.raw && f.raw !== f.value && <div className="mt-0.5 text-xs text-ink-3">Read on the page as "{f.raw}"</div>}
+                <FieldSourceLine doc={doc} f={f} />
                 <div className="mt-0.5 text-[11.5px] text-ink-3">
                   {[methodLabel(f.method), f.confidence !== null ? `confidence ${fmtConfidence(f.confidence)}` : null, f.page ? `page ${f.page}` : null].filter(Boolean).join(", ")}
                 </div>
@@ -169,6 +173,7 @@ function FieldsPanel({ doc, onLocate, onPeek, flash }: { doc: DocumentDetail; on
         );
       })}
     </motion.ul>
+    </>
   );
 }
 
