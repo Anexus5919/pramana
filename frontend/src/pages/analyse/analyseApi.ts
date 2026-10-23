@@ -57,6 +57,8 @@ export interface AnalysedPhoto {
 
 export interface Analysis {
   token: string;
+  /** Set when reading stopped at the sandbox time limit; the checks that do not need the text still ran */
+  incomplete: { reason: string; after: string | null } | null;
   filename: string;
   sha256: string;
   size_bytes: number;

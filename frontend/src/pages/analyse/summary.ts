@@ -90,7 +90,8 @@ export function tiles(a: Analysis): Tile[] {
     note: `${pluralize(a.page_count, "page")}, content matches the extension`,
   });
   const hindi = a.text.hindi_lines ? `, ${pluralize(a.text.hindi_lines, "Hindi line")} read` : "";
-  out.push({
+  if (a.incomplete) out.push({ id: "text", label: "Text source", tone: "manual", value: "Stopped at the time limit", note: "Needs review: text, fields and forensics are missing" });
+  else out.push({
     id: "text",
     label: "Text source",
     tone: a.text.unreadable_pages.length ? "manual" : "primary",

@@ -257,6 +257,14 @@ function Report({ e, onForget, forgetting }: { e: Entry; onForget: () => void; f
         <motion.div variants={fadeUp}>
           <ReadingHeader e={e} onForget={onForget} forgetting={forgetting} />
         </motion.div>
+        {a.incomplete && (
+          <motion.div variants={fadeUp}>
+            <CautionNote title="Reading stopped">
+              {a.incomplete.reason} Text, fields, QR codes and structure forensics are missing below. Intake, digital signatures and revisions do not depend on the text and still
+              ran.
+            </CautionNote>
+          </motion.div>
+        )}
         <motion.div variants={fadeUp}>
           <Overview items={items} onJump={jump} />
         </motion.div>
