@@ -41,6 +41,27 @@ class Settings(BaseSettings):
                                                                           "GEMINI_API_KEY", "GOOGLE_API_KEY"))
     gemini_model: str = "gemini-2.5-flash"
 
+    # Platform: background runs, parser sandbox, login throttling, key handling and retention (docs/features/platform.md)
+    # Validation leaves the request and streams progress; seed, evaluate and the test suite stay synchronous
+    background_runs: bool = True
+    job_workers: int = 1
+    parser_sandbox: bool = True
+    sandbox_workers: int = 2
+    sandbox_timeout_s: float = 120
+    sandbox_memory_mb: int = 1536
+    sandbox_max_tasks: int = 200
+    login_max_per_ip: int = 30
+    login_max_failures_per_user: int = 5
+    login_window_s: int = 900
+    hsts_max_age: int = 31536000
+    # Base64 256-bit key that wraps per-document data keys; generated into data_dir/keys/master if unset
+    master_key: str | None = None
+    # Days to keep each kind of data; documents count from when the application was closed or withdrawn
+    retention_document_days: int = 730
+    retention_preview_days: int = 30
+    retention_run_event_days: int = 180
+    retention_session_days: int = 7
+
     @property
     def db_url(self) -> str:
         return self.database_url or f"sqlite:///{(self.data_dir / 'pramana.db').as_posix()}"

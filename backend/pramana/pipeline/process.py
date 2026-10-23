@@ -1,54 +1,48 @@
 """Per-document processing: text, classification, fields, fingerprints, forensics, QR tokens."""
 
 import logging
+import time
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
 
+from .. import sandbox
 from ..crypto import load_document
-from ..forensics import fingerprints, pdf_struct
-from ..forensics import image as img_forensics
 from ..models import Document, DocumentPage, ExtractedField
 from ..rules.engine import Ruleset
-from ..verification.signed_qr import decode_qr
 from .extract import classify, extract_fields, extract_table
 from .llm_extract import fill_missing, injection_lines
-from .text import extract_image, extract_pdf, render_pdf_page
 
 log = logging.getLogger(__name__)
 
 
 def _qr_tokens(data: bytes, doc: Document) -> list[dict[str, Any]]:
-    out = []
-    if doc.mime == "application/pdf":
-        for i in range(min(doc.page_count, 3)):
-            # Dense signed tokens need more pixels per module; stop at the first resolution that decodes
-            for dpi in (150, 220, 300):
-                found = decode_qr(render_pdf_page(data, i, dpi))
-                if found:
-                    scale = dpi / 72
-                    out.extend({"page": i + 1, "text": t, "bbox": [round(v / scale, 2) for v in box]}
-                               for t, box in found)
-                    break
-    else:
-        import io
-
-        from PIL import Image
-
-        with Image.open(io.BytesIO(data)) as im:
-            for text, box in decode_qr(im):
-                out.append({"page": 1, "text": text, "bbox": [round(v, 2) for v in box]})
-    return out
+    return sandbox.qr_tokens(data, doc.mime, doc.page_count)
 
 
-def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[float, float] | None) -> None:
+def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[float, float] | None,
+                     progress: Callable[..., None] | None = None) -> None:
+    """Untrusted parsing runs in the parser sandbox; a crash or timeout there raises sandbox.SandboxUnsafe."""
+    t0 = time.perf_counter()
+
+    def step(name: str, **info: Any) -> None:
+        nonlocal t0
+        if progress:
+            progress("doc.step", document_id=doc.id, declared_type=doc.declared_type, step=name,
+                     ms=round((time.perf_counter() - t0) * 1000), **info)
+        t0 = time.perf_counter()
+
     data = load_document(doc.storage_name)
     doc.pages.clear()
     doc.fields.clear()
     db.flush()
-    pages = extract_pdf(data) if doc.mime == "application/pdf" else extract_image(data)
+    try:
+        pages = sandbox.read_pages(data, doc.mime)
+    except sandbox.SandboxUnsafe as e:
+        raise sandbox.SandboxUnsafe(f"Could not be read safely: {e}. Review this file manually.") from e
     sources = {p.source for p in pages}
     doc.text_source = sources.pop() if len(sources) == 1 else "mixed"
     for p in pages:
@@ -56,6 +50,7 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
             page_no=p.page_no, width=p.width, height=p.height, text_source=p.source, text=p.text,
             words=p.words_json(), ocr_mean_confidence=p.mean_conf,
         ))
+    step("read", pages=len(pages), text_source=doc.text_source)
 
     cls = classify(pages, rs.doc_types)
     doc.detected_type = cls["type"]
@@ -78,21 +73,27 @@ def process_document(db: Session, doc: Document, rs: Ruleset, campus: tuple[floa
     analysis: dict[str, Any] = {"llm": llm_report} if llm_report else {}
     if spec.get("table"):
         analysis["rows"] = extract_table(pages, spec["table"])
+    step("extract", fields=len(extracted))
 
-    full_text = "\n".join(p.text for p in pages)
-    doc.fingerprints = fingerprints.compute(data, doc.mime, full_text)
+    try:
+        full_text = "\n".join(p.text for p in pages)
+        doc.fingerprints = sandbox.fingerprints(data, doc.mime, full_text)
+        step("fingerprints")
 
-    if doc.mime == "application/pdf":
-        signals, facts = pdf_struct.analyse(data, issue_date)
-    else:
-        signals, facts = img_forensics.analyse(data, campus)
-    analysis["forensic_signals"] = [asdict(s) for s in signals]
-    analysis["forensic_facts"] = facts
+        signals, facts = sandbox.forensics(data, doc.mime, issue_date, campus)
+        analysis["forensic_signals"] = [asdict(s) for s in signals]
+        analysis["forensic_facts"] = facts
+        step("forensics", signals=sum(1 for s in signals if s.severity != "info"))
+    except sandbox.SandboxUnsafe as e:
+        raise sandbox.SandboxUnsafe(f"Could not be read safely: {e}. Review this file manually.") from e
     try:
         analysis["qr"] = _qr_tokens(data, doc)
+    except sandbox.SandboxUnsafe as e:
+        raise sandbox.SandboxUnsafe(f"Could not be read safely: {e}. Review this file manually.") from e
     except Exception as e:  # noqa: BLE001  QR decoding is best-effort
         log.warning("QR decode failed for %s: %s", doc.id, e)
         analysis["qr"] = []
+    step("qr", tokens=len(analysis["qr"]))
     analysis["unreadable_pages"] = [p.page_no for p in pages if p.source == "unreadable"]
     analysis["instruction_lines"] = injection_lines(pages)
     doc.analysis = analysis
