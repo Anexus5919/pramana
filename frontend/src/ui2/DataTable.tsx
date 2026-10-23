@@ -13,7 +13,7 @@ export interface Column<T> {
   /** CSS width, e.g. "120px" or "30%" */
   width?: string;
   /** Hide on narrow viewports; the row link column should never be hidden */
-  hideBelow?: "sm" | "md" | "lg" | "xl";
+  hideBelow?: "sm" | "md" | "lg" | "xl" | "2xl";
   className?: string;
 }
 
@@ -44,6 +44,7 @@ const HIDE: Record<string, string> = {
   md: "hidden md:table-cell",
   lg: "hidden lg:table-cell",
   xl: "hidden xl:table-cell",
+  "2xl": "hidden 2xl:table-cell",
 };
 
 function isInteractive(el: EventTarget | null): boolean {

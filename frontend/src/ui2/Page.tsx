@@ -5,8 +5,10 @@ import { cn } from "../ui/cn";
 import { ActionMenu, type ActionMenuItem } from "./ActionMenu";
 
 const WIDTH = {
-  /** Officer pages: tables, workspace */
+  /** Officer reading pages: rules, audit, platform, analyse */
   default: "max-w-[1280px]",
+  /** Data-dense officer pages: the review queue and the application workspace */
+  wide: "max-w-[1600px]",
   /** Institution portal, forms, wizards: one calm column */
   narrow: "max-w-[960px]",
   /** Document viewers and wide tables that need the whole canvas */
