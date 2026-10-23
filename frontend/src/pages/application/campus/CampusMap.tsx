@@ -4,34 +4,35 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../api";
 import type { CampusPayload } from "../../../types";
+import { Button } from "../../../ui2";
 import "./campus.css";
 import { bearing, distanceLabel, fmtKm, NEAR_KM, type MapPoint } from "./geo";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
-// Block motif markers: the campus on record is a solid violet block, the declared map point an outlined one
+// Flat markers: the campus on record is a solid square, the declared map point a diamond, photos are round thumbnails
 // CSS variables only resolve in style, not in SVG presentation attributes
-const BLOCK = (fill: string) =>
-  `<svg viewBox="0 0 20 22" width="22" height="24" aria-hidden="true" style="filter:drop-shadow(0 3px 4px rgb(28 22 34 / .35))"><path d="M10 1 19 6 10 11 1 6Z" style="fill:color-mix(in oklab, ${fill} 45%, white)"/><path d="M1 6 10 11 10 21 1 16Z" style="fill:${fill}"/><path d="M19 6 10 11 10 21 19 16Z" style="fill:color-mix(in oklab, ${fill} 70%, black)"/></svg>`;
+const SQUARE = (fill: string, diamond = false) =>
+  `<span aria-hidden="true" style="display:block;width:16px;height:16px;border-radius:3px;border:2px solid var(--surface);background:${fill};${diamond ? "transform:rotate(45deg);" : ""}"></span>`;
 
 function icon(p: MapPoint): L.DivIcon {
-  if (p.kind === "record") return L.divIcon({ className: "", html: BLOCK("var(--brand-500)"), iconSize: [22, 24], iconAnchor: [11, 20] });
+  if (p.kind === "record") return L.divIcon({ className: "", html: SQUARE("var(--brand-solid)"), iconSize: [16, 16], iconAnchor: [8, 8] });
   if (p.kind === "declared")
-    return L.divIcon({ className: "", html: BLOCK(p.outside ? "var(--manual-dot)" : "var(--ev-3)"), iconSize: [22, 24], iconAnchor: [11, 20] });
+    return L.divIcon({ className: "", html: SQUARE(p.outside ? "var(--manual-dot)" : "var(--ev-3)", true), iconSize: [16, 16], iconAnchor: [8, 8] });
   const ring = p.outside ? "var(--mismatch-dot)" : "var(--verified-dot)";
   return L.divIcon({
     className: "",
-    html: `<span style="display:block;width:38px;height:38px;border-radius:999px;border:3px solid ${ring};overflow:hidden;background:var(--surface-2);box-shadow:0 6px 16px -6px rgb(28 22 34 / .45)"><img src="${api.photoUrl(p.id)}" alt="" style="width:100%;height:100%;object-fit:cover"/></span>`,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
+    html: `<span style="display:block;width:36px;height:36px;border-radius:999px;border:3px solid ${ring};overflow:hidden;background:var(--surface-2)"><img src="${api.photoUrl(p.id)}" alt="" style="width:100%;height:100%;object-fit:cover"/></span>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
   });
 }
 
 function popup(p: MapPoint): string {
   const where = `<div style="color:var(--ink-3);font-size:12px">${esc(distanceLabel(p))}</div>`;
-  if (p.kind !== "photo" || !p.photo) return `<strong>${esc(p.label)}</strong>${where}<div style="font-family:var(--font-mono, monospace);font-size:11px;color:var(--ink-3)">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>`;
+  if (p.kind !== "photo" || !p.photo) return `<strong>${esc(p.label)}</strong>${where}<div style="font-family:var(--ff-mono, monospace);font-size:12px;color:var(--ink-3)">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>`;
   const ph = p.photo;
-  return `<div style="width:220px"><img src="${api.photoUrl(ph.document_id)}" alt="Photo ${esc(ph.filename)}" style="width:100%;border-radius:8px;display:block;margin-bottom:6px"/><strong>${esc(ph.filename)}</strong>${where}<div style="color:var(--ink-3);font-size:12px">Captured ${esc(ph.exif.captured ?? "unknown")}${ph.exif.camera ? ` on ${esc(ph.exif.camera)}` : ""}</div></div>`;
+  return `<div style="width:220px"><img src="${api.photoUrl(ph.document_id)}" alt="Photo ${esc(ph.filename)}" style="width:100%;border-radius:6px;display:block;margin-bottom:6px"/><strong>${esc(ph.filename)}</strong>${where}<div style="color:var(--ink-3);font-size:12px">Captured ${esc(ph.exif.captured ?? "unknown")}${ph.exif.camera ? ` on ${esc(ph.exif.camera)}` : ""}</div></div>`;
 }
 
 const reduced = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -151,34 +152,30 @@ export function CampusMap({
   };
 
   return (
-    <div className="pr-map relative overflow-hidden rounded-[14px] border border-line">
+    <div className="pr-map relative overflow-hidden rounded-control border border-line">
       <div ref={el} className="h-[440px] w-full" role="region" aria-label="Campus map: campus on record, declared map point and photo geotags" />
       {far.length > 0 && data.record && wide && (
-        <button
-          type="button"
-          onClick={backHome}
-          className="absolute top-3 right-3 z-[1000] inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-surface/95 px-2.5 text-xs font-medium text-ink-2 shadow-md backdrop-blur hover:text-ink"
-        >
-          <Minimize2 aria-hidden className="size-3.5" /> Back to the campus
-        </button>
+        <Button size="sm" variant="secondary" leadingIcon={<Minimize2 />} onClick={backHome} className="absolute top-3 right-3 z-[1000]">
+          Back to the campus
+        </Button>
       )}
       {far.length > 0 && data.record && !wide && (
-        <div className="absolute top-3 right-3 z-[1000] max-w-[min(320px,calc(100%-90px))] rounded-[12px] border border-line bg-surface/95 p-2.5 shadow-md backdrop-blur">
-          <p className="text-xs font-semibold text-ink">
+        <div className="absolute top-3 right-3 z-[1000] max-w-[min(320px,calc(100%-90px))] rounded-card border border-line bg-surface p-3 shadow-lg">
+          <p className="text-sm font-medium text-ink">
             {far.length === 1 ? "1 point is" : `${far.length} points are`} outside this view
           </p>
-          <ul className="mt-1 space-y-0.5 text-xs text-ink-3">
+          <ul className="mt-1 space-y-0.5 text-sm text-ink-3">
             {far.map((p) => (
               <li key={p.id}>
-                <button type="button" onClick={() => onSelect(p.id)} className="text-left underline-offset-2 hover:text-ink hover:underline focus-visible:text-ink">
+                <button type="button" onClick={() => onSelect(p.id)} className="rounded text-left underline-offset-2 hover:text-ink hover:underline focus-visible:text-ink">
                   {p.label}: {fmtKm(p.km)} {bearing([data.record!.lat, data.record!.lon], [p.lat, p.lon])}
                 </button>
               </li>
             ))}
           </ul>
-          <button type="button" onClick={showAll} className="mt-2 inline-flex h-7 items-center gap-1 rounded-[7px] bg-brand-soft px-2 text-xs font-medium text-brand-ink hover:bg-brand-100">
-            <Maximize2 aria-hidden className="size-3.5" /> Show all points
-          </button>
+          <Button size="sm" variant="secondary" leadingIcon={<Maximize2 />} onClick={showAll} className="mt-2">
+            Show all points
+          </Button>
         </div>
       )}
     </div>
