@@ -1,9 +1,9 @@
 import { ChevronLeft, ChevronRight, FileClock, PenLine, ShieldAlert, SquareDashed } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as RPointerEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fmtBytes, fmtDateTime, pluralize } from "../../../lib/format";
-import type { BBox, DocumentDetail } from "../../../types";
+import type { BBox, DocumentDetail, Finding } from "../../../types";
 import { Tag } from "../../../ui/Badge";
 import { StatusCube } from "../../../ui/Blocks";
 import { IconButton } from "../../../ui/Button";
@@ -12,7 +12,8 @@ import { dur, ease, fadeUp, spring, stagger } from "../../../ui/motion";
 import { Skeleton } from "../../../ui/Skeleton";
 import { EmptyState, ErrorState } from "../../../ui/States";
 import { Tooltip } from "../../../ui/Tooltip";
-import { validBox } from "../data";
+import { useWorkspace } from "../context";
+import { appPath, validBox } from "../data";
 import { CautionNote, PaneLabel, SimTag } from "../parts";
 import { historyApi, useRevisions, type Revision, type RevisionChange, type RevisionSignature, type Revisions } from "./api";
 
@@ -610,5 +611,23 @@ export function RevisionPanel({ doc }: { doc: DocumentDetail }) {
         <CautionNote title="What this does not show">{data.limitations!.join(" ")}</CautionNote>
       )}
     </div>
+  );
+}
+
+const TIME_MACHINE_CODES = new Set(["FX-PDF-REVISION-TEXT-CHANGE", "FX-FIELD-OVERWRITTEN", "FX-PDF-INCREMENTAL-UPDATE", "VER-ISSUER_SIGNATURE-MISMATCH_DETECTED"]);
+
+/** From a revision finding straight to the revision that introduced the change. */
+export function TimeMachineLink({ finding }: { finding: Finding }) {
+  const { app } = useWorkspace();
+  if (!finding.document_id || !TIME_MACHINE_CODES.has(finding.code)) return null;
+  const diff = finding.evidence.find((e) => e.kind === "revision_diff");
+  const rev = diff && diff.kind === "revision_diff" ? diff.to_revision : Number(finding.message.match(/revision (\d+)/i)?.[1]) || null;
+  return (
+    <Link
+      to={appPath(app.id, "documents", { doc: finding.document_id, panel: "revisions", rev })}
+      className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-brand-soft px-2.5 text-xs font-medium text-brand-ink transition-colors hover:bg-brand-100"
+    >
+      <FileClock aria-hidden className="size-3.5" /> Open the revision time machine{rev ? ` at revision ${rev}` : ""}
+    </Link>
   );
 }
