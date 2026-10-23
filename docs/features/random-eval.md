@@ -17,7 +17,7 @@ cd backend
 .venv/Scripts/python scripts/random_eval.py --seed <any number> --n 30
 ```
 
-It takes about 4 minutes on a laptop CPU: 235 s for seed 4242 (7.8 s per application, measured on the build laptop while it was shared with other jobs). The first run on a machine also loads the OCR and detector models. Results vary from seed to seed; seed 4242 gave recall 51 of 51 and precision 51 of 57, the 6 extra findings being the stamp collisions described under Results. A run with `--n 100` takes 17 to 20 minutes.
+It takes 4 to 6 minutes on a laptop CPU: seed 4242 took 235 s before the merge with main and 371 s on the merged code (12.3 s per application), measured on the build laptop while it was shared with other jobs. Results vary from seed to seed; on the merged code seed 4242 gave recall 59 of 60 (the miss an unrecognised instruction line) and precision 59 of 59. A run with `--n 100` takes 17 to 21 minutes.
 
 It writes `var/random-eval/seed-<seed>-n30/` with:
 - `world/`: the manifest and documents the pipeline was given;
@@ -133,7 +133,14 @@ The instruction lines were written before the detection patterns were read and w
 
 ## Results
 
-Final seeds 1101, 2202 and 3303, 100 applications each, run on 23 Oct 2026 in deterministic mode. Together: 300 applications (237 EoA, 63 increase in intake) in 50, 47 and 41 cities per seed, all 55 cities and 11 states overall, 2,371 documents, 359 planted conditions, 667 expected (application, finding) pairs (609 planted, 37 on partners, 21 side effects), 85 clean applications.
+Two measurements, both in deterministic mode on 23 Oct 2026:
+
+- **Seeds 1101, 2202 and 3303** (generator version 1) on the branch as it stood on main at `9025d72`, before main gained the issuer-signature and overlay changes. This is the main result.
+- **Seed 4404** (generator version 2) on the branch merged with main, to show that the result holds on the code that will ship. See "On the merged code" below.
+
+### Seeds 1101, 2202 and 3303
+
+100 applications each. Together: 300 applications (237 EoA, 63 increase in intake) in 50, 47 and 41 cities per seed, all 55 cities and 11 states overall, 2,371 documents, 359 planted conditions, 667 expected (application, finding) pairs (609 planted, 37 on partners, 21 side effects), 85 clean applications.
 
 | Seed | Applications (clean) | Conditions | Recall over expected pairs | Precision over pairs that fired | Conditions with every finding | Clean applications with a false alarm | False-alarm codes per clean application |
 |---|---|---|---|---|---|---|---|
@@ -148,7 +155,7 @@ Intervals are Wilson 95%. All 300 validation runs completed. Every partner findi
 
 **One answer-key change after the final runs.** Two faculty-ratio side effects in seed 2202 had been credited to `faculty_count_mismatch` on an application that also carried `intake_above_record`, which is what raises the norm. Attribution now follows the cause. As the rule above requires, every final seed was scored again: the answer keys were regenerated from the same seeds (`random_world.py --key-only`), the expected pairs are identical (checked), so every score above is unchanged and only the per-condition rows of those two kinds moved. The pipeline was not run a third time, since its input and the expected pairs did not change.
 
-### What was missed: 5 pairs
+#### What was missed: 5 pairs
 
 All 5 are SEC-INSTRUCTION-TEXT on `fire_variant_instruction` (every other finding of those conditions fired, including the manual review that keeps the unreadable NOC out of the decision). The pattern-based detector caught 2 of the 5 phrasings, which were written before the patterns were read:
 
@@ -162,7 +169,7 @@ All 5 are SEC-INSTRUCTION-TEXT on `fire_variant_instruction` (every other findin
 
 The patterns were not extended to these lines, since that would fit the detector to its own test. It is a limitation: a pattern list cannot anticipate every wording. In deterministic mode nothing is read from the unfamiliar layout, so the line has no effect on the result. With the model enabled, grounding skips only the lines the pattern recognises, so a missed line could ground a value the model proposes; model mode was not part of this evaluation.
 
-### What fired without being planted: 61 pairs
+#### What fired without being planted: 61 pairs
 
 | Cause | Pairs | Applications | Codes |
 |---|---|---|---|
@@ -174,7 +181,7 @@ The patterns were not extended to these lines, since that would fit the detector
 - **Scans.** 34 of the 300 audit reports were uploaded as print-and-scan images; 9 of them (26%) gave a false alarm. In 3, OCR read "CharitableTrust" as one word: the issuer registry, which compares letters and digits only, still matched, but the rule's name similarity splits on spaces and fell to 73 to 83, below 85. These are OCR limits on synthetic scans; neither the OCR nor the shared similarity function was changed for this evaluation.
 - With these two causes set aside, no clean application raised anything. That is a description of where the false alarms come from, not a claim about real documents.
 
-### By condition
+#### By condition
 
 Recall per condition kind (a false positive belongs to no condition, so precision is given per finding code in `combined.md`: of 51 codes that fired, 47 never fired unexpectedly).
 
@@ -222,7 +229,7 @@ Recall per condition kind (a false positive belongs to no condition, so precisio
 | yoy_cert_reused | 5 | 5 | 0 | 0 | 5/5 | - |
 | yoy_land_decreased | 12 | 12 | 0 | 0 | 12/12 | - |
 
-### Time
+#### Time
 
 | Seed | Generate | Seed database | Process documents | Validate | Wall | Per application |
 |---|---|---|---|---|---|---|
@@ -232,14 +239,29 @@ Recall per condition kind (a false positive belongs to no condition, so precisio
 
 The three final runs took 3,225 s (53.8 minutes) of wall clock, plus 521 s to validate them again after the fix: 62 minutes in all, within the 90-minute budget. Validation per application grows with the number of applications, because cross-application checks compare each application with every other (about 0.25 s at 12 applications, 1.9 s at 100). The laptop was shared with other jobs throughout.
 
+### On the merged code: seed 4404
+
+After merging main into the branch, seed 4404 (fixed in advance, generator version 2) ran on the merged code: 100 applications (74 EoA, 26 increase in intake) in 44 cities, 773 documents, 114 conditions, 201 expected pairs (183 planted, 13 on partners, 5 side effects), 28 clean applications.
+
+| Seed | Recall over expected pairs | Precision over pairs that fired | Conditions with every finding | Clean applications with a false alarm | False-alarm codes per clean application |
+|---|---|---|---|---|---|
+| 4404 (merged code, v2) | 199/201 = 99.0% (96.5 to 99.7) | 199/209 = 95.2% (91.4 to 97.4) | 112/114 = 98.2% (93.8 to 99.5) | 2 of 28 | 0.07 |
+
+- Misses: 2 pairs, both SEC-INSTRUCTION-TEXT on unrecognised instruction lines, as above.
+- False positives: 10 pairs, all stamp collisions (Sangli and Nashik, Surat and Noida). None of the 6 scanned audit reports in this seed gave a false alarm.
+- VER-ISSUER-SIGNATURE-ABSENT, the check main added, fired on all 5 applicant-signed or unsigned issuer documents planted, and on no genuine one.
+- Time: 1,253 s wall clock (12.5 s per application; 1.23 s per document; validation 2.1 s per application).
+
+With this run the final compute was 3,225 + 521 + 1,253 s, about 83 minutes, within the 90-minute budget.
+
 ### Result files
 
-`docs/features/random-eval/` holds, for each final seed, the answer key, the report (`report.md`, `report.json` with every application's findings), and the first report and answer key from before the fix and the attribution change (`report.first.*`, `answer_key.first.json`), plus the pooled `combined/` and `combined-first/`. The worlds themselves (about 43 MB of documents and a 74 MB database per seed) are not committed; `random_eval.py --seed <seed> --n 100` regenerates the same applications, names, numbers, dates and conditions, while signatures and keys are fresh on every run.
+`docs/features/random-eval/` holds, for each final seed (1101, 2202, 3303 and the merged-code seed 4404), the answer key, the report (`report.md`, `report.json` with every application's findings), and the first report and answer key from before the fix and the attribution change (`report.first.*`, `answer_key.first.json`), plus the pooled `combined/` and `combined-first/` for the three base-code seeds. The worlds themselves (about 43 MB of documents and a 74 MB database per seed) are not committed; `random_eval.py --seed <seed> --n 100` regenerates the same applications, names, numbers, dates and conditions with the same generator version, while signatures and keys are fresh on every run. Seeds 1101, 2202 and 3303 need generator version 1 (commit `3425f4a`); the current generator is version 2.
 
 
 ## Bugs found and fixed
 
-The development seeds (9001 to 9003, 112 applications) found two pipeline bugs and the first final run a third; the generator had two bugs of its own. Each pipeline fix is narrow and has a test in `tests/test_random_eval.py`. After the fixes the seeded world still scores 51 of 51 with 0 false positives, and the 73 existing tests still pass.
+The development seeds (9001 to 9003, 112 applications) found two pipeline bugs and the first final run a third; the generator had two bugs of its own. Each pipeline fix is narrow and has a test in `tests/test_random_eval.py`. After the fixes the seeded world still scores 51 of 51 with 0 false positives, and the 73 existing tests still pass. After merging main, the seeded world scores 53 of 53 (main added two expected findings) with 0 false positives and the full suite passes (115 tests).
 
 | Found on | Symptom | Cause | Fix |
 |---|---|---|---|
