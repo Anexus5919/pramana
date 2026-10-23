@@ -18,15 +18,55 @@ export interface NumberField {
 }
 
 export const DECLARED_FIELDS: NumberField[] = [
-  { key: "faculty_count", label: "Faculty count", type: "number", hint: "Regular faculty on the portal roster", placeholder: "36" },
-  { key: "built_up_area_sqm", label: "Built-up area", unit: "sq m", type: "number", placeholder: "14450" },
-  { key: "land_area_acres", label: "Land area", unit: "acres", type: "number", placeholder: "10.5" },
-  { key: "administrative_area_sqm", label: "Administrative area", unit: "sq m", type: "number", placeholder: "820" },
-  { key: "amenities_area_sqm", label: "Amenities area", unit: "sq m", type: "number", placeholder: "560" },
-  { key: "internet_bandwidth_mbps", label: "Internet bandwidth", unit: "Mbps", type: "number", placeholder: "200" },
-  { key: "building_age_years", label: "Building age", unit: "years", type: "number", hint: "Years since the Completion Certificate", placeholder: "12" },
-  { key: "fire_noc_number", label: "Fire NOC number", type: "text", placeholder: "FES/PUN/2025/04417" },
-  { key: "fee_transaction_id", label: "TER fee transaction ID", type: "text", placeholder: "TER26-88132554" },
+  { key: "faculty_count", label: "Faculty count", type: "number", hint: "Regular teachers on the faculty list you upload", placeholder: "36" },
+  {
+    key: "built_up_area_sqm",
+    label: "Built-up area",
+    unit: "sq m",
+    type: "number",
+    hint: "In square metres, as on the Occupancy or Completion Certificate",
+    placeholder: "14450",
+  },
+  { key: "land_area_acres", label: "Land area", unit: "acres", type: "number", hint: "In acres, as on your land documents", placeholder: "10.5" },
+  {
+    key: "administrative_area_sqm",
+    label: "Administrative area",
+    unit: "sq m",
+    type: "number",
+    hint: "In square metres: offices, records and the principal's office",
+    placeholder: "820",
+  },
+  {
+    key: "amenities_area_sqm",
+    label: "Amenities area",
+    unit: "sq m",
+    type: "number",
+    hint: "In square metres: canteen, common rooms and the medical room",
+    placeholder: "560",
+  },
+  { key: "internet_bandwidth_mbps", label: "Internet bandwidth", unit: "Mbps", type: "number", hint: "In Mbps, the speed of the campus connection", placeholder: "200" },
+  {
+    key: "building_age_years",
+    label: "Building age",
+    unit: "years",
+    type: "number",
+    hint: "In years since the Completion Certificate. Over 30 years also needs a Structural Stability Certificate",
+    placeholder: "12",
+  },
+  {
+    key: "fire_noc_number",
+    label: "Fire NOC number",
+    type: "text",
+    hint: "The number on your Fire Safety Certificate (NOC means No Objection Certificate)",
+    placeholder: "FES/PUN/2025/04417",
+  },
+  {
+    key: "fee_transaction_id",
+    label: "TER fee transaction ID",
+    type: "text",
+    hint: "From the receipt for the Technical Education Regulatory (TER) fee",
+    placeholder: "TER26-88132554",
+  },
 ];
 
 const KNOWN = new Set(["programmes", ...DECLARED_FIELDS.map((f) => f.key)]);
@@ -151,4 +191,14 @@ export function fieldErrors(d: DeclaredDraft): DraftErrors {
 
 export function levelLabel(v: string): string {
   return LEVELS.find((l) => l.value === v)?.label ?? v;
+}
+
+/** Seat change as plain text: "+60 seats", "-30 seats" or "No change". Empty when either figure is missing. */
+export function intakeChange(approved: unknown, proposed: unknown): string {
+  const a = Number(approved);
+  const p = Number(proposed);
+  if (approved === "" || proposed === "" || !Number.isFinite(a) || !Number.isFinite(p)) return "";
+  const d = p - a;
+  if (d === 0) return "No change";
+  return `${d > 0 ? "+" : "-"}${Math.abs(d)} ${Math.abs(d) === 1 ? "seat" : "seats"}`;
 }

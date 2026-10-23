@@ -49,6 +49,9 @@ norms:
     - {max_intake: 600, mbps: 300}
     - {max_intake: 900, mbps: 500}
     - {max_intake: 999999, mbps: 1000}
+  # Academic session an approval covers: configuration, not handbook law (source CONFIG). Used to show
+  # whether time-bound certificates stay valid through the year being approved.
+  academic_session: {start: "07-01", months: 12, source: CONFIG}
 
 document_types:
   affidavit_2:

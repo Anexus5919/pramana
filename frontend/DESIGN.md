@@ -1,5 +1,7 @@
 # Pramana design system
 
+> **Scope note.** Since the v2 redesign, this document governs only the landing pages, `/login` and `/scan`. Every signed-in screen follows `DESIGN-v2.md`, which is authoritative there.
+
 Pramana is Sanskrit for a valid means of knowledge. The first pramana is *pratyaksha*, direct perception: the eye. The product reads documents, checks them against evidence and shows its work. The visual language follows from that:
 
 - **The eye** is the brand. On the landing page it is a WebGL eye built from voxel blocks. In the app it is a small SVG mark whose iris shows that the system is working.

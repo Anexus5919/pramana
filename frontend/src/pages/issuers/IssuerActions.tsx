@@ -1,20 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Ban, CirclePause, RefreshCw, RotateCcw } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { Ban, CirclePause, RotateCcw } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { errorMessage } from "../../api";
-import { useAuth } from "../../auth/session";
 import { pluralize } from "../../lib/format";
 import type { SimIssuer } from "../../types";
-import { historyApi, useRunWatch } from "../application/history/api";
-import { Tag } from "../../ui/Badge";
-import { StatusCube } from "../../ui/Blocks";
-import { Button } from "../../ui/Button";
-import { Field, Input, Select } from "../../ui/Field";
-import { dur, ease } from "../../ui/motion";
-import { useToast } from "../../ui/Toast";
-import { issuerName } from "./IssuerCard";
+import { workspacePath } from "../../shell/nav";
+import { historyApi, type WatchRunResult } from "../application/history/api";
+import { Button, Callout, DescriptionList, Field, Input, Panel, SimulatedTag, useToast } from "../../ui2";
+import { issuerName } from "./issuer";
 
 const ACTIONS = [
   { status: "revoked", label: "Revoke", icon: <Ban />, done: "revoked" },
@@ -22,127 +16,146 @@ const ACTIONS = [
   { status: "valid", label: "Restore", icon: <RotateCcw />, done: "restored to valid" },
 ] as const;
 
+/** Revoking is decisive, so the issuer's note doubles as the reason. */
+const MIN_REASON = 10;
+
 interface Changed {
-  code: string;
   ref: string;
   status: string;
 }
 
+export interface IssuerActionsProps {
+  issuer: SimIssuer | undefined;
+  reference: string;
+  /** The page-level re-verification watch, shared with the header menu */
+  watch: { isPending: boolean; data?: WatchRunResult; reset: () => void };
+  onRunWatch: () => void;
+}
+
 /** Play the issuer: change a certificate's status in the simulated registry, then let the watch notice. */
-export function IssuerActions({ issuers }: { issuers: SimIssuer[] }) {
-  const { is } = useAuth();
+export function IssuerActions({ issuer, reference, watch, onRunWatch }: IssuerActionsProps) {
   const toast = useToast();
   const qc = useQueryClient();
-  const [params] = useSearchParams();
-  const [code, setCode] = useState(params.get("code") ?? "FIRE-SERVICES");
-  const [ref, setRef] = useState(params.get("ref") ?? "");
   const [note, setNote] = useState("");
   const [changed, setChanged] = useState<Changed | null>(null);
-  const run = useRunWatch();
+  const code = issuer?.code ?? "";
+  const ref = reference.trim();
+  const reasonOk = note.trim().length >= MIN_REASON;
+
   const m = useMutation({
-    mutationFn: (status: string) => historyApi.setRecordStatus(code, ref.trim(), status, note.trim() || null),
+    mutationFn: (status: string) => historyApi.setRecordStatus(code, ref, status, note.trim() || null),
     onSuccess: (r, status) => {
-      setChanged({ code, ref: String(r.record.ref_no ?? ref), status });
+      watch.reset();
+      setChanged({ ref: String(r.record.ref_no ?? ref), status });
       void qc.invalidateQueries({ queryKey: ["audit"] });
       const a = ACTIONS.find((x) => x.status === status);
       toast.success(`Certificate ${a?.done ?? status} in the simulated registry`, "Validation runs and the re-verification watch will see the new status.");
     },
     onError: (e) => toast.error("The registry was not changed", errorMessage(e)),
   });
-  if (!is("officer", "admin")) return null;
 
   const submit = (e: FormEvent) => e.preventDefault();
-  const runNow = () =>
-    run.mutate(undefined, {
-      onSuccess: (r) =>
-        r.changes.length
-          ? toast.info(`Watch found ${pluralize(r.changes.length, "change")}`, r.changes.map((c) => `${c.institution}: ${c.label} ${c.change.replace("_", " ")}`).join(". "))
-          : toast.success("Watch run complete", `${pluralize(r.run.checked, "certificate")} checked, no changes.`),
-      onError: (e) => toast.error("The watch did not run", errorMessage(e)),
-    });
-  const lastChange = run.data?.changes[0];
+  const done = changed ? (ACTIONS.find((a) => a.status === changed.status)?.done ?? changed.status) : null;
+  const changes = watch.data?.changes ?? [];
+
+  const watchLine = watch.isPending ? (
+    "Running the re-verification watch."
+  ) : watch.data ? (
+    changes.length ? (
+      <span>
+        The watch raised {pluralize(changes.length, "alert")}:{" "}
+        {changes.slice(0, 3).map((c, i) => (
+          <span key={c.id}>
+            {i > 0 && ", "}
+            <Link
+              to={c.finding_id ? workspacePath(c.application_id, "findings", { finding: c.finding_id }) : workspacePath(c.application_id)}
+              className="font-medium text-ink underline-offset-2 hover:underline"
+            >
+              {c.institution ?? c.application_id}
+            </Link>
+          </span>
+        ))}
+        {changes.length > 3 ? ` and ${changes.length - 3} more` : ""}.
+      </span>
+    ) : (
+      `The watch checked ${pluralize(watch.data.run.checked, "certificate")} and found no change.`
+    )
+  ) : (
+    "Certificates under the re-verification watch report the change on the next check."
+  );
 
   return (
-    <section aria-labelledby="issuer-actions-title" className="mb-6 rounded-panel border border-line bg-surface p-5 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="eyebrow mb-1">Issuer actions</div>
-          <h2 id="issuer-actions-title" className="flex flex-wrap items-center gap-2 font-display text-lg font-semibold tracking-title text-ink">
-            Change a certificate's status <Tag variant="demo">Simulated</Tag>
-          </h2>
-          <p className="mt-1 max-w-3xl text-sm text-ink-3 text-pretty">
-            Act as the issuing authority would in its own register: revoke, suspend or restore a reference. Certificates under re-verification watch report the change on the next check.
-          </p>
-        </div>
-      </div>
-      <form onSubmit={submit} className="grid gap-3 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,1fr)] md:items-end">
-        <Field label="Source">
-          <Select value={code} onChange={(e) => setCode(e.target.value)}>
-            {issuers.map((i) => (
-              <option key={i.code} value={i.code}>
-                {issuerName(i)}
-              </option>
+    <Panel
+      title="Change a record"
+      description="Act as the issuing authority would in its own register. The record is the issuer and reference selected above."
+    >
+      <form onSubmit={submit} className="grid gap-x-8 gap-y-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <DescriptionList
+          labelWidth={112}
+          items={[
+            {
+              label: "Issuer",
+              value: issuer ? (
+                <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {issuerName(issuer)} <code className="font-mono text-xs text-ink-2">{issuer.code}</code>
+                </span>
+              ) : null,
+            },
+            {
+              label: "Reference",
+              value: ref ? <span className="font-mono">{ref}</span> : <span className="text-ink-3">Enter a reference number under Look up a record</span>,
+            },
+          ]}
+        />
+        <div className="min-w-0 space-y-3">
+          <Field label="Note from the issuer" hint={`Required to revoke, as the reason. At least ${MIN_REASON} characters.`}>
+            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Inspection found the hydrant system not working" autoComplete="off" />
+          </Field>
+          <div className="flex flex-wrap items-center gap-2">
+            {ACTIONS.map((a) => (
+              <Button
+                key={a.status}
+                variant={a.status === "revoked" ? "danger" : "secondary"}
+                leadingIcon={a.icon}
+                disabled={!ref || !code || (a.status === "revoked" && !reasonOk)}
+                loading={m.isPending && m.variables === a.status}
+                onClick={() => m.mutate(a.status)}
+              >
+                {a.label}
+              </Button>
             ))}
-          </Select>
-        </Field>
-        <Field label="Reference number">
-          <Input value={ref} onChange={(e) => setRef(e.target.value)} placeholder="FES/KAR/2025/04502" className="font-mono" autoComplete="off" spellCheck={false} />
-        </Field>
-        <Field label="Note from the issuer (optional)">
-          <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Inspection found the hydrant system not working" autoComplete="off" />
-        </Field>
+          </div>
+        </div>
       </form>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {ACTIONS.map((a) => (
-          <Button
-            key={a.status}
-            variant={a.status === "revoked" ? "danger" : a.status === "valid" ? "ghost" : "secondary"}
-            size="sm"
-            leadingIcon={a.icon}
-            disabled={!ref.trim()}
-            loading={m.isPending && m.variables === a.status}
-            onClick={() => m.mutate(a.status)}
-          >
-            {a.label}
-          </Button>
-        ))}
-        <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden />
-        <Button variant="soft" size="sm" leadingIcon={<RefreshCw />} loading={run.isPending} onClick={runNow}>
-          Run re-verification watch now
-        </Button>
-      </div>
       <div aria-live="polite">
-        <AnimatePresence initial={false}>
-          {changed && (
-            <motion.p
-              key={`${changed.ref}-${changed.status}`}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: dur.panel, ease: ease.out }}
-              className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink-2"
-            >
-              <StatusCube status={changed.status === "valid" ? "verified" : "mismatch_detected"} size={14} />
-              <span className="font-mono text-[13px] text-ink">{changed.ref}</span>
-              <span>is now {changed.status} in the simulated registry.</span>
-            </motion.p>
-          )}
-          {lastChange && (
-            <motion.p
-              key={lastChange.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: dur.panel, ease: ease.out }}
-              className="mt-2 text-sm text-ink-2"
-            >
-              The watch raised an alert for {lastChange.institution}.{" "}
-              <Link to={`/applications/${encodeURIComponent(lastChange.application_id)}`} className="font-medium text-brand-ink hover:underline">
-                Open the application
-              </Link>
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {(changed || watch.data || watch.isPending) && (
+          <Callout
+            className="mt-5"
+            tone={changed && changed.status !== "valid" ? "warning" : "success"}
+            title={
+              changed ? (
+                <span className="inline-flex flex-wrap items-center gap-2">
+                  <span>
+                    <span className="font-mono">{changed.ref}</span> is now {done}
+                  </span>
+                  <SimulatedTag />
+                </span>
+              ) : (
+                "Re-verification watch"
+              )
+            }
+            action={
+              changed && !watch.data ? (
+                <Button size="sm" loading={watch.isPending} onClick={onRunWatch}>
+                  Run watch now
+                </Button>
+              ) : undefined
+            }
+          >
+            {watchLine}
+          </Callout>
+        )}
       </div>
-    </section>
+    </Panel>
   );
 }

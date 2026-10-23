@@ -12,6 +12,9 @@ from ..rules.engine import Ruleset
 # Product vocabulary: Pramana never calls a document any of these
 FORBIDDEN_WORDS = re.compile(r"\b(forged|forgery|forgeries|fake|faked|fakes|fraud|fraudulent|genuine|genuinely)\b",
                              re.IGNORECASE)
+# The only finding categories an institution may read about: deficiencies it can correct. Forensic indicators,
+# cross-application (consistency) indicators and issuer-verification results stay with officials.
+RECTIFIABLE_CATEGORIES = ("completeness", "compliance", "validity")
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
 EVIDENCE_LEVEL = {"cryptographic": 1, "issuer": 2, "record": 3, "rule": 4, "structural": 5, "heuristic": 6, "model": 7}
 

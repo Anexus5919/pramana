@@ -1,9 +1,7 @@
 import { Moon, Sun } from "lucide-react";
-import { motion } from "motion/react";
-import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { useTheme } from "../lib/theme";
-import { IconButton } from "../ui/Button";
-import { dur } from "../ui/motion";
+import { IconButton } from "../ui2/Button";
 
 type ThemeCtx = ReturnType<typeof useTheme>;
 const Ctx = createContext<ThemeCtx | null>(null);
@@ -23,26 +21,12 @@ export function useAppTheme(): ThemeCtx {
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggle } = useAppTheme();
   const dark = theme === "dark";
-  const mounted = useRef(false);
-  useEffect(() => {
-    mounted.current = true;
-  }, []);
   return (
     <IconButton
       label={dark ? "Switch to light theme" : "Switch to dark theme"}
       onClick={toggle}
       className={className}
-      icon={
-        <motion.span
-          key={theme}
-          initial={mounted.current ? { rotate: -90, scale: 0.4, opacity: 0 } : false}
-          animate={{ rotate: 0, scale: 1, opacity: 1 }}
-          transition={{ duration: dur.ui }}
-          className="inline-flex"
-        >
-          {dark ? <Moon /> : <Sun />}
-        </motion.span>
-      }
+      icon={dark ? <Moon aria-hidden /> : <Sun aria-hidden />}
     />
   );
 }

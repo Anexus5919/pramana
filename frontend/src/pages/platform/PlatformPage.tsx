@@ -1,146 +1,171 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, KeyRound, Lock, ServerCog, Timer, Trash2 } from "lucide-react";
-import { motion } from "motion/react";
+import { Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { api, qk } from "../../api";
 import { useAuth } from "../../auth/session";
-import { fmtBytes, fmtRelative, pluralize } from "../../lib/format";
+import { fmtBytes, fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
+import type { Tone } from "../../lib/labels";
+import { workspacePath } from "../../shell/nav";
 import type { PlatformStatus, RetentionPlan } from "../../types";
-import { Tag } from "../../ui/Badge";
-import { StatusCube } from "../../ui/Blocks";
-import { Button } from "../../ui/Button";
-import { SectionCard } from "../../ui/Card";
-import { cn } from "../../ui/cn";
-import { Dialog } from "../../ui/Dialog";
-import { KeyValue, PageHeader } from "../../ui/Layout";
-import { fadeUp, stagger } from "../../ui/motion";
-import { Skeleton } from "../../ui/Skeleton";
-import { ErrorState } from "../../ui/States";
-import { useToast } from "../../ui/Toast";
-import type { Tone } from "../../ui/tone";
+import {
+  Button,
+  Code,
+  DataTable,
+  DescriptionList,
+  Dialog,
+  ErrorState,
+  Field,
+  MetaList,
+  Page,
+  PageHeader,
+  Panel,
+  PanelDivider,
+  Skeleton,
+  StatusBadge,
+  Textarea,
+  cn,
+  useToast,
+  type Column,
+} from "../../ui2";
 
-const RUN_TONE: Record<string, Tone> = {
-  complete: "verified",
-  failed: "mismatch",
-  interrupted: "manual",
-  queued: "pending",
-  running: "pending",
+const RUN_STATUS: Record<string, { tone: Tone; label: string }> = {
+  complete: { tone: "verified", label: "Complete" },
+  failed: { tone: "mismatch", label: "Failed" },
+  interrupted: { tone: "manual", label: "Interrupted" },
+  queued: { tone: "pending", label: "Queued" },
+  running: { tone: "pending", label: "Running" },
 };
 
-function Stat({ label, value, tone }: { label: string; value: ReactNode; tone?: "alert" | "muted" }) {
+const MIN_REASON = 10;
+
+/** A row of up to four figures inside a panel: hairline-divided cells, not cards and not a nested panel. */
+function MiniStats({ items }: { items: { label: string; value: ReactNode; alert?: boolean }[] }) {
   return (
-    <div className="min-w-0 rounded-[12px] border border-line bg-surface-2/60 px-3 py-2.5">
-      <div className="eyebrow mb-1 truncate">{label}</div>
-      <div className={cn("font-display text-xl leading-none font-semibold tabular", tone === "alert" ? "text-mismatch-fg" : tone === "muted" ? "text-ink-4" : "text-ink")}>
-        {value}
-      </div>
-    </div>
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-4">
+      {items.map((it) => (
+        <div key={it.label} className="min-w-0 bg-surface px-4 py-3">
+          <dt className="truncate text-xs text-ink-3">{it.label}</dt>
+          <dd className={cn("mt-0.5 text-md font-semibold tabular-nums", it.alert ? "text-mismatch-fg" : "text-ink")}>{it.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
-/** Ten blocks filled in proportion, for a worker's peak memory against its cap. */
-function BlockMeter({ value, max, label }: { value: number; max: number; label: string }) {
-  const n = Math.max(0, Math.min(10, Math.round((value / Math.max(max, 1)) * 10)));
-  return (
-    <span className="inline-flex items-center gap-[3px]" role="img" aria-label={label}>
-      {Array.from({ length: 10 }, (_, i) => (
-        <span key={i} className={cn("block h-2.5 w-2 rounded-[2px]", i < n ? (n >= 9 ? "bg-mismatch-dot" : "bg-brand-500") : "bg-surface-3")} />
-      ))}
-    </span>
-  );
-}
+type RecentRun = PlatformStatus["jobs"]["recent"][number];
+
+const RUN_COLUMNS: Column<RecentRun>[] = [
+  { id: "app", header: "Application", cell: (r) => <span className="font-mono text-sm">{r.application_id}</span> },
+  { id: "round", header: "Round", hideBelow: "sm", cell: (r) => <span className="text-ink-2">{r.round}</span> },
+  {
+    id: "status",
+    header: "Status",
+    cell: (r) => <StatusBadge tone={RUN_STATUS[r.status]?.tone ?? "unchecked"}>{RUN_STATUS[r.status]?.label ?? r.status}</StatusBadge>,
+  },
+  {
+    id: "when",
+    header: "Finished",
+    align: "right",
+    cell: (r) => {
+      const at = r.finished_at ?? r.started_at;
+      return (
+        <span className="whitespace-nowrap text-ink-3" title={fmtDateTime(at)}>
+          {r.finished_at ? fmtRelative(at) : "Not finished"}
+        </span>
+      );
+    },
+  },
+];
 
 function Runs({ s }: { s: PlatformStatus }) {
   const j = s.jobs;
   return (
-    <SectionCard
-      eyebrow="Validation"
-      title="Background runs"
-      description="Submit, Run validation and Re-read leave the request at once and run on a worker thread; progress is streamed to the page."
+    <Panel
+      title="Runs"
+      description="Submit, Run validation and Re-read return at once and run on a worker thread; progress streams to the page."
+      padding="none"
     >
-      <KeyValue
-        labelWidth={150}
-        items={[
-          { label: "Mode", value: j.background_runs ? "Background, with live progress" : "Synchronous (background runs switched off)" },
-          { label: "Job workers", value: `${j.workers} (${s.database === "sqlite" ? "one on SQLite, so job writes never compete" : "up to two on PostgreSQL"})` },
-          { label: "Running now", value: j.active.length ? pluralize(j.active.length, "run") : "None" },
-        ]}
-      />
-      <div className="mt-3">
-        <div className="eyebrow mb-2">Recent runs</div>
-        <ul className="space-y-1">
-          {j.recent.map((r) => (
-            <li key={r.id} className="flex min-w-0 items-center gap-2.5 text-sm">
-              <StatusCube tone={RUN_TONE[r.status] ?? "unchecked"} size={13} />
-              <Link to={`/applications/${encodeURIComponent(r.application_id)}/runs`} className="min-w-0 truncate font-mono text-[13px] text-ink-2 hover:text-brand-ink">
-                {r.application_id}
-              </Link>
-              <span className={cn("shrink-0 text-xs font-medium capitalize", r.status === "failed" ? "text-mismatch-fg" : r.status === "interrupted" ? "text-manual-fg" : "text-ink-3")}>
-                {r.status}
-              </span>
-              <span className="ml-auto shrink-0 text-xs text-ink-4">{fmtRelative(r.finished_at ?? r.started_at)}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="px-5 pb-4">
+        <DescriptionList
+          labelWidth={132}
+          items={[
+            { label: "Mode", value: j.background_runs ? "Background, with live progress" : "Synchronous, background runs switched off" },
+            {
+              label: "Job workers",
+              value: j.workers,
+              hint: s.database === "sqlite" ? "One on SQLite, so job writes never compete" : "Up to two on PostgreSQL",
+            },
+            { label: "Running now", value: j.active.length ? pluralize(j.active.length, "run") : "None" },
+          ]}
+        />
       </div>
-    </SectionCard>
+      <div className="border-t border-line">
+        <DataTable
+          label="Recent validation runs"
+          rows={j.recent}
+          columns={RUN_COLUMNS}
+          rowKey={(r) => r.id}
+          rowHref={(r) => workspacePath(r.application_id, "activity")}
+          density="compact"
+          empty="No validation run yet."
+        />
+      </div>
+    </Panel>
   );
 }
 
 function Sandbox({ s }: { s: PlatformStatus }) {
   const b = s.sandbox;
+  const peaks = b.idle_workers.map((w) => w.peak_mb).filter((v): v is number => v !== null);
   return (
-    <SectionCard
-      eyebrow="Untrusted files"
+    <Panel
       title="Parser sandbox"
       description="Text and OCR, forensics, fingerprints, QR decoding, page rendering and upload checks run in separate worker processes."
-      actions={<Tag variant={b.enabled ? "brand" : "neutral"}>{b.enabled ? "On" : "Off"}</Tag>}
+      actions={<StatusBadge tone={b.enabled ? "verified" : "unchecked"}>{b.enabled ? "On" : "Off"}</StatusBadge>}
     >
-      <KeyValue
-        labelWidth={110}
+      <DescriptionList
+        labelWidth={132}
         items={[
           { label: "Isolation", value: b.enforced.isolation },
           { label: "Memory cap", value: b.enforced.memory },
           { label: "Time limit", value: b.enforced.timeout },
           { label: "Processes", value: b.enforced.processes },
+          {
+            label: "Idle workers",
+            value: b.idle_workers.length,
+            hint: peaks.length ? `Peak ${Math.round(Math.max(...peaks))} of ${b.memory_mb} MB` : undefined,
+          },
         ]}
       />
-      <div className="mt-3 grid grid-cols-2 gap-2.5 2xl:grid-cols-4">
-        <Stat label="Parses" value={b.stats.calls} tone={b.stats.calls ? undefined : "muted"} />
-        <Stat label="Stopped" value={b.stats.unsafe} tone={b.stats.unsafe ? "alert" : "muted"} />
-        <Stat label="Workers" value={b.stats.spawned} />
-        <Stat label="Mean time" value={b.stats.mean_ms === null ? "-" : `${Math.round(b.stats.mean_ms)} ms`} />
+      <div className="mt-4">
+        <MiniStats
+          items={[
+            { label: "Parses", value: b.stats.calls },
+            { label: "Stopped", value: b.stats.unsafe, alert: b.stats.unsafe > 0 },
+            { label: "Started", value: b.stats.spawned },
+            { label: "Mean time", value: b.stats.mean_ms === null ? "None yet" : `${Math.round(b.stats.mean_ms)} ms` },
+          ]}
+        />
       </div>
-      {b.idle_workers.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
-          {b.idle_workers.map((w) => (
-            <li key={w.pid} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
-              <span className="font-mono text-ink-2">pid {w.pid}</span>
-              <span>{pluralize(w.tasks, "parse")}</span>
-              {w.peak_mb !== null && (
-                <span className="inline-flex items-center gap-2">
-                  <BlockMeter value={w.peak_mb} max={b.memory_mb} label={`Peak ${w.peak_mb} MB of ${b.memory_mb} MB`} />
-                  <span className="tabular">
-                    peak {Math.round(w.peak_mb)} of {b.memory_mb} MB
-                  </span>
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
       {b.recent_unsafe.length > 0 && (
-        <div className="mt-3 rounded-[10px] border border-mismatch-dot/30 bg-mismatch-bg px-3 py-2 text-xs">
-          <div className="mb-1 font-semibold text-mismatch-fg">Recently stopped</div>
-          {b.recent_unsafe.map((u, i) => (
-            <div key={i} className="text-ink-2">
-              <span className="font-mono">{u.op}</span>: {u.reason}
-            </div>
-          ))}
-        </div>
+        <>
+          <PanelDivider label="Recently stopped" />
+          <ul className="divide-y divide-line">
+            {b.recent_unsafe.map((u, i) => (
+              <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 py-2 text-sm first:pt-0">
+                <span className="min-w-0 text-ink-2">
+                  <Code>{u.op}</Code>: {u.reason}
+                </span>
+                <span className="shrink-0 text-xs text-ink-3" title={fmtDateTime(u.at)}>
+                  {fmtRelative(u.at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
-    </SectionCard>
+    </Panel>
   );
 }
 
@@ -148,223 +173,269 @@ function Keys({ s }: { s: PlatformStatus }) {
   const k = s.keys;
   const total = Object.values(k.files_by_kid).reduce((a, b) => a + b, 0);
   return (
-    <SectionCard eyebrow="Storage" title="Document encryption" description="Each stored file has its own AES-256-GCM data key, wrapped by the master key.">
-      <KeyValue
-        labelWidth={150}
+    <Panel title="Document encryption" description="Each stored file has its own AES-256-GCM data key, wrapped by the master key.">
+      <DescriptionList
+        labelWidth={148}
         items={[
           { label: "Active master key", value: k.active_kid, mono: true },
           { label: "Master keys held", value: k.master_keys.join(", "), mono: true },
           {
             label: "Files per key",
-            value: Object.entries(k.files_by_kid).map(([kid, n]) => (
-              <span key={kid} className="mr-3 inline-flex items-center gap-1.5">
-                <StatusCube tone={kid === k.active_kid ? "verified" : "pending"} size={12} />
-                <span className="font-mono text-[13px]">{kid}</span>
-                <span className="text-ink-3 tabular">{n}</span>
-              </span>
-            )),
+            value: (
+              <MetaList
+                items={Object.entries(k.files_by_kid).map(([kid, n]) => (
+                  <span key={kid}>
+                    <Code>{kid}</Code> {n}
+                    {kid === k.active_kid && <span className="text-ink-3"> (active)</span>}
+                  </span>
+                ))}
+              />
+            ),
             hint: `${pluralize(total, "file")} encrypted, including cached page previews`,
           },
           {
             label: "Older format",
-            value: k.legacy_files ? <span className="text-manual-fg">{pluralize(k.legacy_files, "file")} still use the single storage key</span> : "None",
+            value: k.legacy_files ? `${pluralize(k.legacy_files, "file")} still use the single storage key` : "None",
             hint: k.legacy_files ? "Run scripts/keys.py migrate" : undefined,
           },
         ]}
       />
-      <p className="mt-3 flex items-start gap-2 rounded-[10px] bg-surface-2 px-3 py-2 text-xs text-ink-3">
-        <KeyRound aria-hidden className="mt-px size-3.5 shrink-0" />
-        <span>
-          Rotate with <span className="font-mono text-ink-2">python scripts/keys.py rotate --retire</span>: every data key is rewrapped under a new master
-          key and the files themselves are not rewritten.
-        </span>
+      <p className="mt-4 text-xs text-ink-3 text-pretty">
+        Rotate with <code className="font-mono text-xs text-ink-2">python scripts/keys.py rotate --retire</code>: every data key is rewrapped under a new master key and the files
+        themselves are not rewritten.
       </p>
-    </SectionCard>
+    </Panel>
   );
 }
 
 function SignIn({ s }: { s: PlatformStatus }) {
   const t = s.login_throttle;
+  const mins = Math.round(t.window_s / 60);
   return (
-    <SectionCard eyebrow="Accounts" title="Sign-in protection" actions={<Lock aria-hidden className="size-4 text-ink-3" />}>
-      <KeyValue
-        labelWidth={170}
+    <Panel title="Sign-in protection">
+      <DescriptionList
+        labelWidth={148}
         items={[
-          { label: "Per client address", value: `${t.max_attempts_per_ip} attempts per ${Math.round(t.window_s / 60)} min` },
-          { label: "Per username", value: `${t.max_failures_per_username} failed passwords per ${Math.round(t.window_s / 60)} min`, hint: "Each lockout is written to the audit trail once." },
+          { label: "Per client address", value: `${t.max_attempts_per_ip} attempts per ${mins} min` },
           {
-            label: "Session cookie",
-            value: <span className="font-mono text-[13px]">{s.cookies.session_cookie}</span>,
-            hint: "httpOnly, SameSite=Strict, CSRF token on every change",
+            label: "Per username",
+            value: `${t.max_failures_per_username} failed passwords per ${mins} min`,
+            hint: "Each lockout is written to the audit log once.",
           },
+          { label: "Session cookie", value: s.cookies.session_cookie, mono: true, hint: "httpOnly, SameSite=Strict, CSRF token on every change" },
           { label: "HTTPS mode", value: s.cookies.secure ? `On, ${s.cookies.hsts}` : "Off for the local http demo (PRAMANA_COOKIE_SECURE)" },
         ]}
       />
-    </SectionCard>
+    </Panel>
   );
 }
 
 const POLICY_ROWS: { key: string; label: string; clock: string }[] = [
-  { key: "documents_after_close_days", label: "Document files", clock: "after the application is closed or withdrawn" },
-  { key: "previews_days", label: "Page previews", clock: "after rendering" },
-  { key: "run_events_days", label: "Run progress events", clock: "after the run finished" },
-  { key: "sessions_after_expiry_days", label: "Sign-in sessions", clock: "after expiry" },
+  { key: "documents_after_close_days", label: "Document files", clock: "After the application is closed or withdrawn" },
+  { key: "previews_days", label: "Page previews", clock: "After rendering" },
+  { key: "run_events_days", label: "Run progress events", clock: "After the run finished" },
+  { key: "sessions_after_expiry_days", label: "Sign-in sessions", clock: "After expiry" },
+  { key: "always", label: "Hashes, findings, audit log", clock: "Never purged" },
 ];
 
 function Retention({ s, admin }: { s: PlatformStatus; admin: boolean }) {
   const qc = useQueryClient();
   const toast = useToast();
   const [confirm, setConfirm] = useState(false);
+  const [reason, setReason] = useState("");
+  const [touched, setTouched] = useState(false);
   const plan = useQuery({ queryKey: qk.retention, queryFn: api.retentionPlan, enabled: admin });
   const purge = useMutation({
-    mutationFn: () => api.retentionPurge(false),
+    mutationFn: () => api.retentionPurge(false, reason.trim()),
     onSuccess: (r: RetentionPlan) => {
       setConfirm(false);
+      setReason("");
+      setTouched(false);
       void qc.invalidateQueries({ queryKey: qk.retention });
       void qc.invalidateQueries({ queryKey: qk.platform });
-      toast.success("Retention purge complete", `${pluralize(r.documents_purged ?? 0, "document file")} deleted. Hashes, findings and the audit trail are kept.`);
+      toast.success("Retention purge complete", `${pluralize(r.documents_purged ?? 0, "document file")} deleted. Hashes, findings and the audit log are kept.`);
     },
   });
   const p = plan.data;
+  const due = p ? p.documents_eligible + p.previews_eligible + p.run_events_eligible + p.sessions_eligible : 0;
+  const reasonOk = reason.trim().length >= MIN_REASON;
+  const close = () => {
+    if (purge.isPending) return;
+    setConfirm(false);
+    setTouched(false);
+  };
+
+  const policyColumns: Column<(typeof POLICY_ROWS)[number]>[] = [
+    { id: "kind", header: "Kind", cell: (r) => r.label },
+    {
+      id: "kept",
+      header: "Kept for",
+      cell: (r) => <span className="whitespace-nowrap">{r.key === "always" ? "Always" : pluralize(s.retention[r.key] ?? 0, "day")}</span>,
+    },
+    { id: "clock", header: "Counted from", cell: (r) => <span className="text-ink-3">{r.clock}</span> },
+  ];
+
   return (
-    <SectionCard
-      eyebrow="Data"
+    <Panel
       title="Retention"
-      description="A purge deletes stored bytes past their retention period. Hashes, extracted fields, findings, runs and the audit chain are always kept, and each deleted file gets an audit event."
-      className="lg:col-span-2"
+      description="A purge deletes stored bytes past their retention period. Hashes, extracted fields, findings, runs and the audit log are always kept, and each deleted file gets an audit event."
+      padding="none"
+      className="xl:col-span-2"
       actions={
-        admin && p && p.documents_eligible + p.previews_eligible + p.run_events_eligible + p.sessions_eligible > 0 ? (
-          <Button variant="danger" size="sm" leadingIcon={<Trash2 />} onClick={() => setConfirm(true)}>
+        admin ? (
+          <Button
+            variant="danger"
+            size="sm"
+            leadingIcon={<Trash2 aria-hidden />}
+            disabled={!p || due === 0}
+            aria-describedby="retention-dry-run"
+            onClick={() => setConfirm(true)}
+          >
             Purge now
           </Button>
         ) : undefined
       }
     >
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <table className="w-full text-sm">
-          <caption className="sr-only">Retention policy</caption>
-          <thead>
-            <tr className="text-left text-xs text-ink-3">
-              <th className="pb-2 font-medium">Kind</th>
-              <th className="pb-2 font-medium">Kept for</th>
-              <th className="pb-2 font-medium">Counted from</th>
-            </tr>
-          </thead>
-          <tbody>
-            {POLICY_ROWS.map((r) => (
-              <tr key={r.key} className="border-t border-line">
-                <td className="py-2 pr-3 text-ink">{r.label}</td>
-                <td className="py-2 pr-3 font-medium whitespace-nowrap text-ink tabular">{pluralize(s.retention[r.key] ?? 0, "day")}</td>
-                <td className="py-2 text-ink-3">{r.clock}</td>
-              </tr>
-            ))}
-            <tr className="border-t border-line">
-              <td className="py-2 pr-3 text-ink">Hashes, findings, audit chain</td>
-              <td className="py-2 pr-3 font-medium text-ink">Always</td>
-              <td className="py-2 text-ink-3">never purged</td>
-            </tr>
-          </tbody>
-        </table>
-        <div>
-          <div className="eyebrow mb-2 flex items-center gap-1.5">
-            <Timer aria-hidden className="size-3.5" /> Dry run, now
-          </div>
-          {!admin ? (
-            <p className="text-sm text-ink-3">Only an administrator can preview or run a purge.</p>
-          ) : plan.isPending ? (
-            <Skeleton className="h-24" rounded="lg" />
-          ) : plan.error ? (
-            <ErrorState compact error={plan.error} onRetry={() => void plan.refetch()} />
-          ) : p ? (
-            <>
-              <div className="grid grid-cols-2 gap-2.5 2xl:grid-cols-4">
-                <Stat label="Files due" value={p.documents_eligible} tone={p.documents_eligible ? "alert" : "muted"} />
-                <Stat label="Previews" value={p.previews_eligible} tone={p.previews_eligible ? undefined : "muted"} />
-                <Stat label="Run events" value={p.run_events_eligible} tone={p.run_events_eligible ? undefined : "muted"} />
-                <Stat label="Sessions" value={p.sessions_eligible} tone={p.sessions_eligible ? undefined : "muted"} />
-              </div>
-              <p className="mt-2.5 text-xs text-ink-3">
-                {p.documents.length
-                  ? `${pluralize(p.documents.length, "file")} belong to closed or withdrawn applications; ${p.documents_eligible} past retention (${fmtBytes(p.bytes_eligible)}).`
-                  : "No application is closed or withdrawn, so no document file is on a retention clock yet."}
-              </p>
-            </>
-          ) : null}
-        </div>
+      <div className="border-t border-line">
+        <DataTable label="Retention policy" rows={POLICY_ROWS} columns={policyColumns} rowKey={(r) => r.key} density="compact" />
+      </div>
+      <div className="border-t border-line px-5 py-4">
+        <h3 className="mb-3 text-sm font-medium text-ink">Dry run, now</h3>
+        {!admin ? (
+          <p className="text-sm text-ink-3">Only an administrator can preview or run a purge.</p>
+        ) : plan.isPending ? (
+          <Skeleton className="h-12" rounded="lg" />
+        ) : plan.error ? (
+          <ErrorState compact error={plan.error} title="Could not load the dry run" onRetry={() => void plan.refetch()} retrying={plan.isFetching} />
+        ) : p ? (
+          <>
+            <DescriptionList
+              layout="stacked"
+              columns={4}
+              items={[
+                { label: "Document files due", value: p.documents_eligible, hint: p.documents_eligible ? fmtBytes(p.bytes_eligible) : undefined },
+                { label: "Page previews due", value: p.previews_eligible },
+                { label: "Run events due", value: p.run_events_eligible },
+                { label: "Sessions due", value: p.sessions_eligible },
+              ]}
+            />
+            <p id="retention-dry-run" className="mt-3 text-xs text-ink-3">
+              {p.documents.length
+                ? `${pluralize(p.documents.length, "file")} belong to closed or withdrawn applications; ${p.documents_eligible} past retention.`
+                : "No application is closed or withdrawn, so no document file is on a retention clock yet."}
+              {due === 0 && " Nothing is due for purging now."}
+            </p>
+          </>
+        ) : null}
       </div>
       <Dialog
         open={confirm}
-        onClose={() => !purge.isPending && setConfirm(false)}
-        title="Delete files past retention?"
+        onClose={close}
+        title="Purge files past retention"
         description="Deleted files cannot be recovered. Their hashes, findings and audit events stay, and each deletion is recorded."
         footer={
           <>
-            <Button variant="ghost" onClick={() => setConfirm(false)} disabled={purge.isPending}>
+            <Button variant="ghost" onClick={close} disabled={purge.isPending}>
               Cancel
             </Button>
-            <Button variant="danger" leadingIcon={<Trash2 />} loading={purge.isPending} onClick={() => purge.mutate()} data-autofocus>
-              Delete {pluralize(p?.documents_eligible ?? 0, "file")}
+            <Button
+              variant="danger"
+              leadingIcon={<Trash2 aria-hidden />}
+              loading={purge.isPending}
+              disabled={!reasonOk}
+              onClick={() => {
+                setTouched(true);
+                if (reasonOk) purge.mutate();
+              }}
+            >
+              Purge now
             </Button>
           </>
         }
       >
-        {purge.error && <ErrorState compact error={purge.error} title="Purge did not run" />}
+        <div className="space-y-5">
+          {p && (
+            <div>
+              <h3 className="mb-2 text-sm font-medium text-ink">What will be removed</h3>
+              <DescriptionList
+                labelWidth={168}
+                items={[
+                  { label: "Document files", value: p.documents_eligible ? `${p.documents_eligible} (${fmtBytes(p.bytes_eligible)})` : "0" },
+                  { label: "Page previews", value: String(p.previews_eligible) },
+                  { label: "Run progress events", value: String(p.run_events_eligible) },
+                  { label: "Sign-in sessions", value: String(p.sessions_eligible) },
+                ]}
+              />
+            </div>
+          )}
+          <Field
+            label="Reason"
+            required
+            hint={`At least ${MIN_REASON} characters. Say why the purge is needed now.`}
+            error={touched && !reasonOk ? `Write at least ${MIN_REASON} characters.` : undefined}
+          >
+            <Textarea value={reason} rows={3} onChange={(e) => setReason(e.target.value)} onBlur={() => setTouched(true)} data-autofocus />
+          </Field>
+          {purge.error && <ErrorState compact error={purge.error} title="The purge did not run" />}
+        </div>
       </Dialog>
-    </SectionCard>
+    </Panel>
+  );
+}
+
+function PlatformSkeleton() {
+  return (
+    <Page role="status" aria-live="polite">
+      <span className="sr-only">Loading the platform status</span>
+      <Skeleton className="h-12 w-80" />
+      <div className="grid gap-6 xl:grid-cols-2">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-72" rounded="lg" />
+        ))}
+      </div>
+    </Page>
   );
 }
 
 export default function PlatformPage() {
   const { is } = useAuth();
   const q = useQuery({ queryKey: qk.platform, queryFn: api.platformStatus, refetchInterval: 5000 });
+
+  if (q.isPending) return <PlatformSkeleton />;
+  if (!q.data)
+    return (
+      <Page>
+        <ErrorState error={q.error} title="Could not load the platform status" onRetry={() => void q.refetch()} retrying={q.isFetching} />
+      </Page>
+    );
+
+  const s = q.data;
   return (
-    <div>
+    <Page>
       <PageHeader
-        eyebrow="System"
         title="Platform"
-        description="What this server enforces right now. Every value on this page comes from the running server, and it refreshes every few seconds."
-        meta={
-          q.data && (
-            <>
-              <Tag variant="mono">{q.data.database}</Tag>
-              <span className="inline-flex items-center gap-1.5 text-xs text-ink-3">
-                <ServerCog aria-hidden className="size-3.5" />
-                {q.data.jobs.active.length ? `${pluralize(q.data.jobs.active.length, "run")} in progress` : "No run in progress"}
-              </span>
-              <Link to="/audit" className="inline-flex items-center gap-1 text-xs text-ink-3 hover:text-brand-ink">
-                Audit log <ArrowUpRight aria-hidden className="size-3" />
-              </Link>
-            </>
-          )
+        context={
+          <MetaList
+            items={[
+              <span key="db">
+                Database <Code>{s.database}</Code>
+              </span>,
+              s.jobs.active.length ? `${pluralize(s.jobs.active.length, "run")} in progress` : "No run in progress",
+              <Link key="audit" to="/audit" className="rounded text-ink-2 underline-offset-2 hover:text-ink hover:underline">
+                Audit log
+              </Link>,
+            ]}
+          />
         }
       />
-      {q.isPending ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-72" rounded="lg" />
-          ))}
-        </div>
-      ) : q.error || !q.data ? (
-        <ErrorState error={q.error} title="Could not load the platform status" onRetry={() => void q.refetch()} retrying={q.isFetching} />
-      ) : (
-        <motion.div variants={stagger(0.06)} initial="hidden" animate="show" className="grid items-start gap-6 lg:grid-cols-2">
-          <motion.div variants={fadeUp} className="min-w-0">
-            <Runs s={q.data} />
-          </motion.div>
-          <motion.div variants={fadeUp} className="min-w-0">
-            <Sandbox s={q.data} />
-          </motion.div>
-          <motion.div variants={fadeUp} className="min-w-0">
-            <Keys s={q.data} />
-          </motion.div>
-          <motion.div variants={fadeUp} className="min-w-0">
-            <SignIn s={q.data} />
-          </motion.div>
-          <motion.div variants={fadeUp} className="min-w-0 lg:col-span-2">
-            <Retention s={q.data} admin={is("admin")} />
-          </motion.div>
-        </motion.div>
-      )}
-    </div>
+      {q.error && <ErrorState compact error={q.error} title="Showing the last loaded status" />}
+      <div className="grid items-start gap-6 xl:grid-cols-2">
+        <Runs s={s} />
+        <Sandbox s={s} />
+        <Keys s={s} />
+        <SignIn s={s} />
+        <Retention s={s} admin={is("admin")} />
+      </div>
+    </Page>
   );
 }

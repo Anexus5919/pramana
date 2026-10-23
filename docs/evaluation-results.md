@@ -86,6 +86,8 @@ By document type, field_exact for the general 4B, the fine-tuned 1.7B and GPT-OS
 
 The fine-tuned model is weakest on audited accounts, which is the next thing to train.
 
+Version 2 of the model (`pramana-extract-v2`) is retrained on more varied data and compared with this version, on the same test_unseen file and on a new held-out split, in `docs/features/model-v2.md`. It is now the default extractor: 0.947 against 0.919 fields fully correct on test_unseen, 0 of 30 planted instructions followed, and it reads all five A11 fields.
+
 **Cloud models.** The Groq row was measured on 23 Oct 2026 for comparison only. Gemini answered a held-out example correctly in a live test, but its free tier allows only 20 requests a day for the current Flash model, so it could not be benchmarked. Since the local fine-tuned model scores best overall, leaves documents on the machine and has no quota, both cloud providers were removed from the product.
 
 **On A11, the unfamiliar layout:**

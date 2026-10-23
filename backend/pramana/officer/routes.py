@@ -16,10 +16,10 @@ from ..db import get_db
 from ..models import Application, DeficiencyLetter, Finding, RectificationRequest, User, utcnow
 from ..rules.engine import active_ruleset
 from . import letter as lt
-from .common import FORBIDDEN_WORDS, citation, latest_run, rules_by_id, run_findings
+from .common import FORBIDDEN_WORDS, RECTIFIABLE_CATEGORIES, citation, latest_run, rules_by_id, run_findings
 
 router = APIRouter(prefix="/api", tags=["officer"])
-LETTER_CATEGORIES = ("completeness", "compliance", "validity")
+LETTER_CATEGORIES = RECTIFIABLE_CATEGORIES
 
 
 def _names(db: Session, *ids: str | None) -> dict[str, str]:
@@ -227,7 +227,7 @@ class FinaliseBody(BaseModel):
 def finalise_letter(letter_id: str, body: FinaliseBody, user: User = Depends(require_roles("officer")),
                     db: Session = Depends(get_db)):
     """Render the final PDF, attach it to the rectification request and record its digest in the audit chain."""
-    from ..api.applications import RectifyBody, request_rectification
+    from ..api.applications import open_rectification
 
     letter, app = _load_letter(db, user, letter_id)
     if letter.status != "draft":
@@ -239,25 +239,27 @@ def finalise_letter(letter_id: str, body: FinaliseBody, user: User = Depends(req
     data = lt.render_pdf(letter, app, officer, final=True, finalised_on=now)
     sha = hashlib.sha256(data).hexdigest()
     ids = [fid for i in letter.items for fid in i["finding_ids"]]
+    # Every item the portal lists takes the letter's wording, so forensic, cross-application and verification
+    # findings reach the institution only as the neutral request the letter makes
+    wording = {}
+    for n, li in enumerate(letter.items, start=1):
+        for k, fid in enumerate(li["finding_ids"]):
+            wording[fid] = (li["title"], li["description"] if k == 0 else f"Covered by item {n} of the deficiency letter.")
     rect = _open_rectification(db, app)
     if rect and not _has_letter(db, rect.id) and {i["finding_id"] for i in rect.items} == set(ids):
         rect_id, created = rect.id, False
+        rect.items = [{**i, "title": wording[i["finding_id"]][0], "message": wording[i["finding_id"]][1], "neutral": True}
+                      for i in rect.items]
     else:
-        # The existing rectification flow sets finding statuses, snapshots the application and opens the round
-        res = request_rectification(app.id, RectifyBody(finding_ids=ids, message=message or letter.subject), user, db)
-        rect_id, created = res["id"], True
-        # The portal lists request items; forensic and cross-application ones take the letter's neutral wording
-        pos = {fid: (n, k, i) for n, i in enumerate(letter.items, start=1) for k, fid in enumerate(i["finding_ids"])}
-        rect = db.get(RectificationRequest, rect_id)
-        items = []
-        for it in rect.items:
-            f = db.get(Finding, it["finding_id"])
-            n, k, li = pos[it["finding_id"]]
-            if f and f.category in ("forensic", "consistency"):
-                it = {**it, "code": (li.get("citation") or {}).get("rule_id") or f"NOTICE-ITEM-{n}", "title": li["title"],
-                      "message": li["description"] if k == 0 else f"Covered by item {n} of the deficiency notice."}
-            items.append(it)
-        rect.items = items
+        # The shared rectification flow sets finding statuses, snapshots the application and opens the round
+        fs = []
+        for fid in dict.fromkeys(ids):
+            f = db.get(Finding, fid)
+            if not f or f.application_id != app.id:
+                raise HTTPException(400, f"finding {fid} does not belong to this application")
+            fs.append(f)
+        rect = open_rectification(db, app, fs, message or letter.subject, user, wording)
+        rect_id, created = rect.id, True
     letter = db.get(DeficiencyLetter, letter_id)
     letter.storage_name = f"letter_{letter.id}.bin"
     store_document(letter.storage_name, data)
