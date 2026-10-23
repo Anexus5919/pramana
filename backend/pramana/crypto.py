@@ -11,7 +11,9 @@ from typing import Any
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from fastapi import HTTPException
 
+from . import keyring
 from .config import get_settings
 
 log = logging.getLogger(__name__)
@@ -67,15 +69,46 @@ def public_key_b64(pk: Ed25519PublicKey) -> str:
     return base64.b64encode(pk.public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode()
 
 
+class DocumentPurged(HTTPException):
+    """The bytes were deleted under the retention policy; hashes, findings and the audit trail remain."""
+
+    def __init__(self, name: str):
+        super().__init__(410, "the document file was deleted under the retention policy; its hash and findings remain")
+        self.name = name
+
+
 def store_document(name: str, data: bytes) -> None:
-    path = get_settings().storage_dir / name
-    path.write_bytes(fernet().encrypt(data))
+    # Envelope encryption: a data key per file, wrapped by the master key (pramana.keyring)
+    keyring.seal_to(get_settings().storage_dir / name, data)
 
 
 def load_document(name: str) -> bytes:
     path = get_settings().storage_dir / name
-    return fernet().decrypt(path.read_bytes())
+    if not path.exists() and path.with_name(name + ".purged").exists():
+        raise DocumentPurged(name)
+    blob = path.read_bytes()
+    if keyring.is_envelope(blob):
+        return keyring.open_from(path, blob)
+    # Written before envelope encryption; scripts/keys.py migrate converts these
+    return fernet().decrypt(blob)
 
 
 def delete_document(name: str) -> None:
-    (get_settings().storage_dir / name).unlink(missing_ok=True)
+    path = get_settings().storage_dir / name
+    path.unlink(missing_ok=True)
+    keyring.key_path(path).unlink(missing_ok=True)
+
+
+def cache_get(name: str) -> bytes | None:
+    """Rendered page previews are cached encrypted too, so no plaintext page image sits on disk."""
+    path = get_settings().cache_dir / name
+    if not path.exists() or not keyring.key_path(path).exists():
+        return None
+    try:
+        return keyring.open_from(path)
+    except Exception:  # noqa: BLE001  a stale or foreign cache entry is simply rebuilt
+        return None
+
+
+def cache_put(name: str, data: bytes) -> None:
+    keyring.seal_to(get_settings().cache_dir / name, data)

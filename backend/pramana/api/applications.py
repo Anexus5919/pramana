@@ -13,7 +13,7 @@ from .. import audit, jobs, sandbox
 from .. import serializers as ser
 from ..auth import OFFICIAL_ROLES, current_user, load_application, require_roles
 from ..config import get_settings
-from ..crypto import load_document, store_document
+from ..crypto import cache_get, cache_put, load_document, store_document
 from ..db import get_db
 from ..models import (
     Application,
@@ -291,14 +291,15 @@ def page_image(doc_id: str, page_no: int, user: User = Depends(current_user), db
     load_application(db, user, doc.application_id)
     if page_no < 1 or page_no > max(doc.page_count, 1):
         raise HTTPException(404, "no such page")
-    cache = get_settings().cache_dir / f"{doc.id}_p{page_no}.png"
-    if not cache.exists():
+    name = f"{doc.id}_p{page_no}.png"
+    png = cache_get(name)
+    if png is None:
         try:
             png = sandbox.render_png(load_document(doc.storage_name), doc.mime, page_no - 1, 110)
         except sandbox.SandboxError as e:
             raise HTTPException(422, f"page could not be rendered safely: {e}") from e
-        cache.write_bytes(png)
-    return Response(cache.read_bytes(), media_type="image/png", headers={"Cache-Control": "private, max-age=600"})
+        cache_put(name, png)
+    return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=600"})
 
 
 @router.get("/documents/{doc_id}/file")
