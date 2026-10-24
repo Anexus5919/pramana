@@ -68,7 +68,7 @@ function describeDetail(detail: unknown, status: number, statusText: string): st
     });
     if (parts.length) return parts.join("; ");
   }
-  if (status === 0) return "The server could not be reached. Is the backend running on port 8000?";
+  if (status === 0) return `The Pramana server at ${window.location.origin} could not be reached. Check that it is running and reachable from this device.`;
   return `${status} ${statusText || "Request failed"}`;
 }
 
