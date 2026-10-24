@@ -22,6 +22,7 @@ from reportlab.platypus import (
 from .. import sandbox
 from ..crypto import cache_get, cache_put, load_document
 from ..models import Document, round_label
+from ..verification.base import channel_label
 from .letter import ACCENT, INK, INK_3, LINE, QUOTE_BG, _NumberedCanvas
 
 NOTICE = ("Decision support only. Findings are preliminary indicators for review by competent authorities. Pramana "
@@ -139,7 +140,7 @@ def _evidence_lines(f, docs: dict[str, Document], labels: dict[str, str]) -> lis
             out.append(f"Declared value {e.get('field') or e.get('label')}: {e.get('value')}")
         elif k == "verification":
             tag = " (SIMULATED)" if e.get("simulated") and "SIMULATED" not in str(e.get("source")) else ""
-            out.append(f"Verification via {str(e.get('channel', '')).replace('_', ' ')}: {e.get('source')}{tag}")
+            out.append(f"Verification via {channel_label(str(e.get('channel', '')))}: {e.get('source')}{tag}")
         elif k == "peer_document":
             out.append(f"Related document in application {e.get('application_id')} (not included in this pack)")
         elif k == "geo":

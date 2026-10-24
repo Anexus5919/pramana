@@ -24,6 +24,7 @@ from ..config import get_settings
 from ..models import Application, Document, VerificationAttempt, round_label
 from ..pipeline.llm_extract import INJECTION, _post
 from ..rules.engine import active_ruleset
+from ..verification.base import channel_label
 from .common import FORBIDDEN_WORDS, citation, latest_run, rules_by_id, rules_needing, run_findings
 from .settings import officer_settings
 
@@ -231,10 +232,10 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
         sig = v.channel in ("issuer_signature", "applicant_signature")
         sim = (" DEMO trust anchor." if sig else " SIMULATED source.") if v.simulated else ""
         first = _screen(v.detail, 300).split(". ")[0].rstrip(".")
-        add("V", "verification", f"Verification of {dl} via {v.channel.replace('_', ' ')} ({v.source_name}): status "
+        add("V", "verification", f"Verification of {dl} via {channel_label(v.channel)} ({v.source_name}): status "
                                  f"{_h(v.status)}.{sim} {_screen(v.detail, 300)}" + (f" Compared: {comps}." if comps else ""),
             {v.status}, {"type": "verification", "attempt_id": v.id, "document_id": v.document_id},
-            f"{dl}: {v.channel.replace('_', ' ')}", f"{dl}, {_h(v.channel)}: {_h(v.status)}. {first}.")
+            f"{dl}: {channel_label(v.channel)}", f"{dl}, {channel_label(v.channel)}: {_h(v.status)}. {first}.")
     return {"items": items, "run_id": run.id if run else None}
 
 

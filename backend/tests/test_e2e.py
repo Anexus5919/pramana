@@ -44,6 +44,8 @@ def test_planted_conditions_match_ground_truth(world):
     for a in manifest["applications"]:
         got = {f["code"] for f in c.get(f"/api/applications/{a['id']}/findings").json()}
         assert got == set(a["expected"]), a["key"]
+    titles = {f["title"] for f in c.get("/api/applications/APP-2026-000107/findings").json()}
+    assert "Fire Safety Certificate: expired (signed QR)" in titles
 
 
 def test_replay_reproduces_the_report(world):

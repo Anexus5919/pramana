@@ -11,6 +11,13 @@ MANUAL_REVIEW = "manual_review_required"
 NOT_CHECKED = "not_checked"
 
 STATUSES = [VERIFIED, MISMATCH, EXPIRED, PENDING, SOURCE_UNAVAILABLE, MANUAL_REVIEW, NOT_CHECKED]
+# Channels whose words are not their code with spaces
+CHANNEL_WORDS = {"signed_qr": "signed QR"}
+
+
+def channel_label(channel: str) -> str:
+    """A verification channel in words: 'issuer signature', 'signed QR'."""
+    return CHANNEL_WORDS.get(channel, channel.replace("_", " "))
 
 
 @dataclass

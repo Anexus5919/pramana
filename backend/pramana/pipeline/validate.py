@@ -470,7 +470,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                     "category": "verification",
                     "evidence_class": "cryptographic" if v.channel in ("issuer_signature", "applicant_signature", "signed_qr") else "issuer",
                     "severity": sev, "outcome": v.status,
-                    "title": f"{spec.get('label', d.declared_type)}: {v.status.replace('_', ' ')} ({v.channel.replace('_', ' ')})",
+                    "title": f"{spec.get('label', d.declared_type)}: {v.status.replace('_', ' ')} ({vb.channel_label(v.channel)})",
                     "message": v.detail, "limitation": None if not v.simulated else
                     "Result from a SIMULATED source or DEMO trust anchor; not a real-world confirmation.",
                     "evidence": [{"kind": "document", "document_id": d.id},
