@@ -292,7 +292,7 @@ function Eyeball({ shared, state, layout }: { shared: Shared; state: EyeState; l
 
 function Driver({ shared, state, layout, reduced }: { shared: Shared; state: EyeState; layout: EyeLayout; reduced: boolean }) {
   const size = useThree((s) => s.size);
-  const blink = useRef({ start: -1, next: now() + 5 });
+  const blink = useRef({ start: -1, next: now() + 4 });
   useFrame(() => {
     const t = now();
     shared.time.value = t;
@@ -315,7 +315,7 @@ function Driver({ shared, state, layout, reduced }: { shared: Shared; state: Eye
         else if (e < 1.05) b = 1 - (1 - Math.pow(1 - (e - 0.48) / 0.57, 3));
         else {
           bl.start = -1;
-          bl.next = t + 12 + Math.random() * 8;
+          bl.next = t + 8 + Math.random() * 5;
         }
       }
     }
