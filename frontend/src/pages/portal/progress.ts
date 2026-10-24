@@ -1,5 +1,5 @@
 import { fmtDate } from "../../lib/format";
-import { humanize, roundPhrase } from "../../lib/labels";
+import { correctionRound, humanize, roundPhrase } from "../../lib/labels";
 import type { ApplicationDetail, ChecklistSlot, DocumentSummary, Rectification } from "../../types";
 import type { Step } from "../../ui2";
 
@@ -128,7 +128,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
     case "rectification_requested":
       return build({
         details: ["complete"],
-        documents: ["attention", `Corrections requested, ${roundPhrase(rect ? rect.round + 1 : app.round)}`],
+        documents: ["attention", `${correctionRound(rect ? rect.round : app.round)} requested`],
         submitted: ["complete", submittedOn],
         review: ["upcoming"],
         decision: ["upcoming"],
