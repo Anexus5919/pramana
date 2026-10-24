@@ -91,6 +91,8 @@ def test_faculty_radar_ranks_the_shared_ids_with_their_lanes(app):
     data = _login(app, "verifier").get("/api/insights/faculty-overlaps").json()
     assert data["stats"]["faculty_ids"] == 3
     assert data["stats"]["applications_involved"] == 2
+    # A6 lists all three while the registry records them at A7's institution: three findings, three IDs
+    assert data["stats"]["registered_elsewhere"] == 3
     days = [p["overlap_days"] for p in data["people"]]
     assert days == sorted(days, reverse=True) and days[0] > 0
     for p in data["people"]:

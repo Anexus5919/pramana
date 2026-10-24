@@ -441,8 +441,10 @@ def faculty_overlaps(db: Session, today: date | None = None) -> dict[str, Any]:
         "stats": {"faculty_ids": len(people), "applications_involved": len(involved),
                   "applications_checked": len(apps), "rows_checked": sum(len(v) for v in claims.values()),
                   "claimed_by_two_or_more": sum(1 for p in people if p["claimed_by"] >= 2),
-                  "registered_elsewhere": sum(1 for p in people if p["registry"]
-                                              and not p["registry"]["listed_by_registry_institution"])},
+                  # As XA-FACULTY-REGISTERED-ELSEWHERE counts: on a roster of an institution the registry does not
+                  # record them at, whether or not the registered institution lists them too
+                  "registered_elsewhere": sum(1 for p in people if p["registry"] and any(
+                      ln["source"] == "roster" and not ln["registry"] for ln in p["lanes"]))},
     }
 
 

@@ -256,7 +256,7 @@ export function FacultyRadar({ query }: { query: UseQueryResult<FacultyOverlapPa
       <StatGroup label="Faculty overlap summary">
         <Stat label="Faculty IDs on more than one roster" value={s.claimed_by_two_or_more} hint={`Of ${s.rows_checked} roster rows checked`} />
         <Stat label="Applications involved" value={`${s.applications_involved} of ${s.applications_checked}`} hint={`AY ${data.academic_year ?? ""}`} />
-        <Stat label="Registered with another institution" value={s.registered_elsewhere} hint="Listed only where the registry does not record them" />
+        <Stat label="Registered with another institution" value={s.registered_elsewhere} hint="Listed by an institution other than the one in the registry" />
         <Stat label="Longest overlap" value={longest ? fmtSpan(longest) : "None"} hint="Listed by two institutions at once" />
       </StatGroup>
 
