@@ -6,7 +6,12 @@ export type LayerId = "fields" | "findings" | "qr" | "rows" | "instruction";
 
 export const LAYERS: { id: LayerId; label: string; color: string; meaning: string }[] = [
   { id: "fields", label: "Fields", color: "var(--ov-field)", meaning: "Values extracted from the page" },
-  { id: "findings", label: "Findings", color: "var(--ov-finding)", meaning: "Finding and forensic regions" },
+  {
+    id: "findings",
+    label: "Finding regions",
+    color: "var(--ov-finding)",
+    meaning: "Page regions marked by findings and indicators. A finding can mark several regions or none, so this is not the number of findings.",
+  },
   { id: "qr", label: "QR", color: "var(--ov-qr)", meaning: "Signed QR codes" },
   { id: "rows", label: "Rows", color: "var(--ov-row)", meaning: "Table rows such as the faculty list" },
   { id: "instruction", label: "Instructions", color: "var(--manual-dot)", meaning: "Text addressed to an automated reader" },
