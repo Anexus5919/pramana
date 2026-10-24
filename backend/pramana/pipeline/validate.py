@@ -9,7 +9,7 @@ from datetime import date
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, object_session
+from sqlalchemy.orm import Session
 
 from .. import audit
 from ..config import get_settings
@@ -47,15 +47,25 @@ STATUS_ORDER = [vb.MISMATCH, vb.EXPIRED, vb.SOURCE_UNAVAILABLE, vb.MANUAL_REVIEW
 
 
 def as_of_date(app: Application) -> date:
-    """Documents are judged on the date they were submitted; in a rectification round, on the response date."""
-    db = object_session(app)
-    if app.round > 1 and db is not None:
-        r = db.scalars(select(RectificationRequest).where(RectificationRequest.application_id == app.id,
-                                                          RectificationRequest.status == "responded")
-                       .order_by(RectificationRequest.responded_at.desc())).first()
-        if r and r.responded_at:
-            return r.responded_at.date()
+    """The application's reference date: the day it was first submitted, in every round.
+
+    A rectification round answers the corrections the officer asked for; it does not move the application to the
+    day of resubmission, so the previous financial year, the building's age and every other time-relative rule
+    stay as they were. Documents sent in a rectification round are judged on their own day (document_dates)."""
     return (app.submitted_at or app.created_at).date()
+
+
+def document_dates(db: Session, app: Application, docs: list[Document]) -> dict[str, date]:
+    """The day each document sent in a rectification round was submitted, by document id: the day its round was
+    resubmitted, or its upload while the round is still open. A renewed certificate must be valid, and issued, by
+    then. Documents of the original submission are judged on the reference date and are not listed."""
+    later = [d for d in docs if d.round > 1]
+    if not later:
+        return {}
+    # A request raised in round n is answered by the documents of round n + 1
+    answered = {r.round + 1: r.responded_at for r in db.scalars(select(RectificationRequest).where(
+        RectificationRequest.application_id == app.id, RectificationRequest.responded_at.is_not(None)))}
+    return {d.id: (answered.get(d.round) or d.uploaded_at or utcnow()).date() for d in later}
 
 
 def _archive_ruleset(rs: Ruleset) -> None:
@@ -324,6 +334,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
     try:
         docs = list(db.scalars(select(Document).where(Document.application_id == app.id,
                                                       Document.superseded.is_(False))))
+        doc_dates = document_dates(db, app, docs)
         campus = (app.institution.latitude, app.institution.longitude) if app.institution.latitude else None
 
         t0 = time.perf_counter()
@@ -434,7 +445,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
             if d.processing_status != "processed":
                 continue
             spec = rs.doc_types.get(d.declared_type, {})
-            vres = _verify_document(d, spec, as_of, app.institution, lambda vs, d=d: [emit(
+            vres = _verify_document(d, spec, doc_dates.get(d.id, as_of), app.institution, lambda vs, d=d: [emit(
                 "check", document_id=d.id, declared_type=d.declared_type, channel=v.channel, status=v.status,
                 simulated=v.simulated, source=v.source_name) for v in vs])
             if d is latest.get(d.declared_type):
@@ -476,11 +487,11 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         stage("verification", t0, documents=len(doc_status))
 
         t0 = time.perf_counter()
-        facts = build_facts(db, app, docs, rs, ver_facts, as_of)
+        facts = build_facts(db, app, docs, rs, ver_facts, as_of, doc_dates)
         results = evaluate(rs, facts, category=app.category, as_of=as_of)
         findings += _rule_findings(rs, results, app)
         # Certificates valid on the submission date that lapse before the session being approved ends
-        findings += session_findings(rs, app, docs, as_of, _fp)
+        findings += session_findings(rs, app, docs, as_of, _fp, doc_dates)
         emit("rules", evaluated=len(results), outcomes=_count([{"o": r.outcome} for r in results], "o"))
         checklist = [{
             "rule_id": r.rule["id"], "title": r.rule["title"], "category": r.rule.get("category"),
@@ -551,10 +562,14 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         canonical = sorted(({k: f.get(k) for k in ("code", "fingerprint", "severity", "outcome", "message", "evidence")}
                             for f in findings), key=lambda x: (x["fingerprint"], x["message"]))
         refs = db.scalars(select(ReferenceRecord).where(ReferenceRecord.institution_id == app.institution_id)).all()
+        dates = {k: v.isoformat() for k, v in sorted(doc_dates.items())}
         run.input_digest = digest({
             "documents": sorted([d.declared_type, d.sha256] for d in docs), "declared": app.declared,
             "category": app.category, "academic_year": app.academic_year, "ruleset": rs.sha256,
             "engine": ENGINE_VERSION, "as_of": as_of.isoformat(),
+            # Rectification rounds only, so the digest of a first-round run is unchanged
+            **({"document_dates": sorted([d.declared_type, dates[d.id]] for d in docs if d.id in dates)}
+               if dates else {}),
             "references": sorted(digest(r.data) for r in refs)})
         run.report_digest = digest({"findings": canonical,
                                     "checklist": [[c["rule_id"], c["outcome"]] for c in checklist],
@@ -563,7 +578,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
         for f in findings:
             by_sev[f["severity"]] = by_sev.get(f["severity"], 0) + 1
         run.summary = {
-            "as_of": as_of.isoformat(), "replay_of": replay_of,
+            "as_of": as_of.isoformat(), "document_dates": dates, "replay_of": replay_of,
             "findings": len(findings), "by_severity": by_sev,
             "by_category": _count(findings, "category"), "by_evidence_class": _count(findings, "evidence_class"),
             "checklist": checklist, "document_status": doc_status, "graph": graph,

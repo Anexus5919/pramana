@@ -54,7 +54,7 @@ Wording, actions and targets come from a small table in `readiness.py` keyed by 
 - **Drafts are not processed until submission.** Uploads are stored as `pending`; `run_validation` processes them on submit. The check therefore reads each pending file itself (sandboxed text, classification, field extraction, table rows, the same functions the pipeline uses, without forensics) into a stand-in object. The document row is never touched, so officers later see exactly what they would have seen without the check, and the submission run processes the file as before.
 - **Cache.** Results are cached per file hash, slot, MIME type and ruleset hash: in memory (512 entries) and encrypted on disk as `var/cache/readiness-<key>.json` through the same keyring as page previews.
 - **Speed.** Reading seven fresh fixture PDFs takes about 0.6 s; a repeat check takes about 25 ms. The test asserts the repeat stays under 5 s.
-- **As-of date.** Today, the date the institution would submit or resubmit, matching how a validation run judges a submission or a rectification response. For a draft, `app.submitted_on` is today.
+- **As-of date.** Today, the date the institution would submit or resubmit. A validation run judges a submission on its date, and in a rectification round judges the documents sent in that round on the day they were sent, so the two agree for what the institution uploads now. Everything else in a rectification round the run keeps on the application's first submission date (the previous financial year, for one), while this check reads it as of today. For a draft, `app.submitted_on` is today.
 
 ## 5. Files
 

@@ -100,6 +100,7 @@ Backend: Python 3.12, FastAPI and SQLAlchemy, on SQLite for the demo and Postgre
 
 - **Audit chain:** each audit event hashes canonical JSON together with the previous hash, and Ed25519 checkpoints sign the chain head.
 - **Pinned run inputs:** each validation run pins the ruleset hash, engine version, as-of date and an input digest (document hashes, declared values, reference records).
+- **As-of date in rectification rounds:** the as-of date is the application's first submission date in every round, so the previous financial year and every other time-relative rule stay where they were. A document sent in a rectification round is judged on the day it was sent: rules marked `as_of: document` (fire certificate valid and issued by then, Structural Stability Certificate within five years), its signed QR and issuer registry expiry, and the session lapse check. Those dates are pinned with the run.
 - **Replay:** recomputing the report digest shows whether the result is reproduced.
 - **What replay cannot freeze:** results that depend on external state are marked. These include peer applications and simulated source availability. Watch findings are added after a run finishes and are kept out of its report digest, so replay still reproduces the run.
 - **Export:** an evidence pack carries the application's events up to a checkpoint signed at the moment of export, so an auditor can verify the extract without other applications' events.

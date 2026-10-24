@@ -2,10 +2,12 @@
 
 import importlib.util
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
@@ -118,3 +120,24 @@ def test_rectification_round_resolves_and_flags_out_of_scope_changes(world):
     assert "RECT-OUT-OF-SCOPE-FIELD" in codes
     full = officer.get(f"/api/runs/{run['id']}").json()
     assert any(x["code"] == "APH-617I-FIRE-VALID" for x in full["resolved_since_previous"])
+
+    # The round keeps the application's reference date however late the institution resubmits: the 2024-25
+    # accounts still answer for the previous year, and the renewed certificate is judged on the day it was sent
+    from pramana.db import SessionLocal
+    from pramana.models import RectificationRequest
+
+    db = SessionLocal()
+    rect = db.scalars(select(RectificationRequest).where(RectificationRequest.application_id == aid)).one()
+    rect.responded_at = datetime(2027, 5, 3, 10, tzinfo=UTC)
+    db.commit()
+    db.close()
+    later = officer.post(f"/api/applications/{aid}/validate").json()
+    assert later["status"] == "complete" and later["as_of"] == "2025-12-10"
+    codes = {f["code"] for f in officer.get(f"/api/applications/{aid}/findings").json()}
+    assert not codes & {"XD-ACCOUNTS-ENTITY", "APH-A31D-FIRE-BEFORE", "APH-617I-FIRE-VALID"}
+    rules = {c["rule_id"]: c for c in later["checklist"]}
+    assert rules["XD-ACCOUNTS-ENTITY"]["outcome"] == "pass"
+    fire_rule = rules["APH-617I-FIRE-VALID"]
+    assert fire_rule["outcome"] == "pass" and "2027-05-03" in fire_rule["message"]
+    assert any(i["path"] == "doc.fire_noc.submitted_on" for i in fire_rule["inputs"])
+    assert rules["APH-A31D-FIRE-BEFORE"]["outcome"] == "pass"

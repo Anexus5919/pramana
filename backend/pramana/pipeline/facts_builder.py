@@ -38,7 +38,9 @@ def latest_by_type(docs: list[Document]) -> dict[str, Document]:
 
 
 def build_facts(db: Session, app: Application, docs: list[Document], rs: Ruleset | None = None,
-                ver: dict[str, dict[str, tuple]] | None = None, as_of: date | None = None) -> FactStore:
+                ver: dict[str, dict[str, tuple]] | None = None, as_of: date | None = None,
+                doc_dates: dict[str, date] | None = None) -> FactStore:
+    """doc_dates: the day each document sent in a rectification round was submitted, by document id."""
     fs = FactStore()
     as_of = as_of or (app.submitted_at or app.created_at).date()
     inst = app.institution
@@ -74,6 +76,10 @@ def build_facts(db: Session, app: Application, docs: list[Document], rs: Ruleset
 
     for t, d in latest_by_type(docs).items():
         fs.add(f"doc.{t}.document_id", d.id, "document", document_id=d.id, filename=d.original_filename)
+        if d.id in (doc_dates or {}):
+            # Rules marked `as_of: document` judge this document on the day it was submitted
+            fs.add(f"doc.{t}.submitted_on", doc_dates[d.id], "declared", document_id=d.id, round=d.round,
+                   form_field="submitted_at")
         for f in d.fields:
             v = _typed(f.value, f.value_type)
             if v is not None:

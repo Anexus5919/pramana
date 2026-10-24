@@ -302,6 +302,8 @@ def test_edge_edited_expired_certificate_uploaded_in_rectification_is_caught(wor
     over = found["FX-ANNOT-OVER-FIELD"]
     assert over["severity"] == "high"
     assert "shows '30-09-2027'" in over["message"] and "printed '30-09-2025'" in over["message"]
+    # Judged on the application's own date, so the previous financial year does not move to the resubmission
+    assert "XD-ACCOUNTS-ENTITY" not in found and "APH-617I-FIRE-VALID" in found
     # The institution sees the deficiency it must fix, never the forensic indicator
     assert "FX-ANNOT-OVER-FIELD" not in {f["code"] for f in inst.get(f"/api/applications/{aid}/findings").json()}
 

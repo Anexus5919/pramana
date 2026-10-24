@@ -120,8 +120,25 @@ def evaluate(rs: Ruleset, facts: FactStore, *, category: str, as_of: date) -> li
                 results.append(RuleResult(rule, INSUFFICIENT, f"Cannot decide applicability; missing {m.path}",
                                           missing=[m.path]))
                 continue
-        results.append(_check(rule, facts, as_of))
+        on, sent = _judged_on(rule, facts, as_of)
+        results.append(_check(rule, facts, on))
+        if sent:
+            results[-1].inputs.append(sent.describe())
     return results
+
+
+def _judged_on(rule: dict[str, Any], facts: FactStore, as_of: date) -> tuple[date, Any]:
+    """The date a rule compares with. A rule marked `as_of: document` judges a document's own validity on the day
+    that document was submitted, so a renewed certificate sent in a rectification round must be valid, and issued,
+    by the day it arrived. Every other rule, and every document of the original submission, uses as_of."""
+    if rule.get("as_of") != "document":
+        return as_of, None
+    sent = [f for t in (rule.get("applies_to") or {}).get("requires_docs", [])
+            if (f := facts.get(f"doc.{t}.submitted_on"))]
+    if not sent:
+        return as_of, None
+    latest = max(sent, key=lambda f: f.value)
+    return latest.value, latest
 
 
 def _check(rule: dict[str, Any], facts: FactStore, as_of: date) -> RuleResult:

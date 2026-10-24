@@ -148,8 +148,10 @@ def _latest_by_type(docs: list[Document]) -> dict[str, Document]:
 
 
 def session_findings(rs: Ruleset, app: Application, docs: list[Document], as_of: date,
-                     fp: Callable[..., str]) -> list[dict[str, Any]]:
-    """A finding per certificate that is valid on the submission date but lapses before the session ends."""
+                     fp: Callable[..., str], doc_dates: dict[str, date] | None = None) -> list[dict[str, Any]]:
+    """A finding per certificate that is valid on the submission date but lapses before the session ends.
+
+    doc_dates: the day each certificate sent in a rectification round was submitted, which is its submission date."""
     s = session_window(rs, app.academic_year)
     if not s:
         return []
@@ -160,7 +162,8 @@ def session_findings(rs: Ruleset, app: Application, docs: list[Document], as_of:
         if d is None or d.processing_status != "processed":
             continue
         w = cert_window(d, tb)
-        status, months = classify(w["end"], as_of, s)
+        on = (doc_dates or {}).get(d.id, as_of)
+        status, months = classify(w["end"], on, s)
         if status not in ("lapses_before_session", "expires_in_session"):
             continue
         label = rs.doc_types[t].get("label", t)
@@ -179,7 +182,7 @@ def session_findings(rs: Ruleset, app: Application, docs: list[Document], as_of:
             "evidence_class": "rule", "severity": "medium", "outcome": "fail",
             "title": (f"{label} expires during the {s['label']} session" if status == "expires_in_session"
                       else f"{label} lapses before the {s['label']} session starts"),
-            "message": (f"Valid until {_dmy(w['end'])}{basis}. It was valid on the submission date {_dmy(as_of)}, "
+            "message": (f"Valid until {_dmy(w['end'])}{basis}. It was valid on the submission date {_dmy(on)}, "
                         f"so the submission-date check passes, but it {when} (assumed session "
                         f"{_dmy(s['start'])} to {_dmy(s['end'])}). Ask for the renewed certificate or the "
                         "renewal application."),
@@ -573,6 +576,8 @@ def coverage(db: Session, app: Application, run: ValidationRun, rs: Ruleset, doc
     if not s:
         return None
     as_of = _parse_date((run.summary or {}).get("as_of")) or (app.submitted_at or app.created_at).date()
+    # Certificates sent in a rectification round are judged on the day they were submitted, as the run did
+    sent = {k: d for k, v in ((run.summary or {}).get("document_dates") or {}).items() if (d := _parse_date(v))}
     latest = _latest_by_type(docs)
     certs, open_ended = [], []
     tbs = time_bound_types(rs)
@@ -581,13 +586,14 @@ def coverage(db: Session, app: Application, run: ValidationRun, rs: Ruleset, doc
         if d is None:
             continue
         w = cert_window(d, tb)
-        status, months = classify(w["end"], as_of, s)
+        on = sent.get(d.id, as_of)
+        status, months = classify(w["end"], on, s)
         label = rs.doc_types[t].get("label", t)
         alts = _alternatives(db, app, d, w["end"], attempts, findings)
         conflict = any(a["differs"] for a in alts)
         # What the other sources would make of the session, so a conflict that changes the answer shows
         for a in alts:
-            a["status"] = classify(_parse_date(a["date"]), as_of, s)[0]
+            a["status"] = classify(_parse_date(a["date"]), on, s)[0]
         fnd = next((f for f in findings if f.document_id == d.id and (
             f.code == SESSION_CODE or (tb["rule"] and f.code == tb["rule"]["id"] and f.outcome == "fail"))), None)
         certs.append({
@@ -597,7 +603,7 @@ def coverage(db: Session, app: Application, run: ValidationRun, rs: Ruleset, doc
                     "rule": ({"id": tb["rule"]["id"], "title": tb["rule"]["title"], "days": tb["days"],
                               "citation": _citation(rs, tb["rule"])} if tb["rule"] else None)},
             "status": status, "months_into_session": round(months, 1) if months is not None else None,
-            "headline": _headline(status, months, w["end"], as_of, s), "alternatives": alts, "conflict": conflict,
+            "headline": _headline(status, months, w["end"], on, s), "alternatives": alts, "conflict": conflict,
             "finding_id": fnd.id if fnd else None,
         })
     for t, spec in rs.doc_types.items():

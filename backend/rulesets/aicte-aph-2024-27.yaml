@@ -284,6 +284,8 @@ rules:
     source: {doc: APH, section: Cl. 6.17(i); Annexure 3.1(d), page: 73,
              quote: "A valid Fire Safety Certificate shall be obtained from the Competent Authority."}
     check: {type: expression, expr: "doc.fire_noc.valid_until >= as_of"}
+    # A certificate sent in a rectification round is judged on the day it was submitted
+    as_of: document
     messages:
       pass: "Valid until {doc_fire_noc_valid_until}; submission date {as_of}."
       fail: "Fire Safety Certificate expired on {doc_fire_noc_valid_until}, before the submission date {as_of}."
@@ -299,6 +301,7 @@ rules:
     source: {doc: APH, section: Annexure 3.1(d), page: 102,
              quote: "Fire and life Safety Certificate from Fire Department of the concerned State Government authority is to be taken before submitting the application at AICTE."}
     check: {type: expression, expr: "doc.fire_noc.issue_date <= as_of"}
+    as_of: document
     messages: {fail: "Fire certificate is dated {doc_fire_noc_issue_date}, after the submission date {as_of}."}
 
   - id: APH-617H-SSC-VALID
@@ -311,6 +314,7 @@ rules:
     source: {doc: APH, section: Cl. 6.17(h), page: 73,
              quote: "Structural Stability Certificate is valid for a period of FIVE years from the date of issue."}
     check: {type: expression, expr: "days_between(doc.structural_stability.issue_date, as_of) <= 1826"}
+    as_of: document
     messages: {fail: "Structural Stability Certificate issued {doc_structural_stability_issue_date} is older than five years on {as_of}."}
 
   - id: APH-AFF2-FORM
