@@ -211,6 +211,16 @@ def test_campus_map_shows_the_a10_scenario(world):
     assert p["c2pa"]["present"] is False
     r = c.get(f"/api/documents/{p['document_id']}/photo.jpg?size=thumb")
     assert r.status_code == 200 and r.headers["content-type"] == "image/jpeg"
+    assert r.content[:3] == b"\xff\xd8\xff"
+    # The preview is cached encrypted, so no plaintext photo sits on disk and none counts as a legacy file
+    from pramana import keyring
+    from pramana.config import get_settings
+
+    s = get_settings()
+    cached = s.cache_dir / f"{p['document_id']}_thumb.jpg"
+    assert keyring.is_envelope(cached.read_bytes()) and keyring.key_path(cached).exists()
+    assert c.get(f"/api/documents/{p['document_id']}/photo.jpg?size=thumb").content == r.content
+    assert keyring.inventory([s.storage_dir, s.cache_dir])["legacy_files"] == 0
 
 
 def test_credentials_results_in_the_seeded_world(world):

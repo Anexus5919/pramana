@@ -79,9 +79,9 @@ def migrate() -> dict:
             continue
         keyring.seal_to(p, fernet().decrypt(blob))
         converted += 1
-    # Older previews were plain PNG files; drop them so they are rendered again, encrypted
-    for p in sorted(s.cache_dir.glob("*.png")):
-        if not keyring.key_path(p).exists():
+    # Older previews were plain PNG and JPEG files; drop them so they are rendered again, encrypted
+    for p in sorted(s.cache_dir.iterdir()):
+        if p.is_file() and p.suffix in (".png", ".jpg") and not keyring.key_path(p).exists():
             p.unlink()
             previews += 1
     out = {"documents_converted": converted, "plain_previews_removed": previews, "active_kid": keyring.active_kid()}

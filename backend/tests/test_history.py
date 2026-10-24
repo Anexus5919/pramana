@@ -87,6 +87,13 @@ def test_time_machine_shows_the_date_overwritten_after_signing(world):
     assert all(p.status_code == 200 and p.content[:8] == b"\x89PNG\r\n\x1a\n" for p in pngs)
     assert pngs[0].content != pngs[1].content
     assert c.get(f"/api/documents/{doc['id']}/revisions/4/pages/1.png").status_code == 404
+    # Revision renders are cached encrypted like page previews: no plaintext page image on disk
+    from pramana import keyring
+    from pramana.config import get_settings
+
+    cached = get_settings().cache_dir / f"{doc['id']}_r2_p1.png"
+    assert keyring.is_envelope(cached.read_bytes()) and keyring.key_path(cached).exists()
+    assert c.get(f"/api/documents/{doc['id']}/revisions/2/pages/1.png").content == pngs[0].content
 
     # The cut file is the revision: revision 2 has no trace of the later date
     from pramana.crypto import load_document

@@ -12,7 +12,7 @@ from typing import Any
 
 from pyhanko.pdf_utils.reader import PdfFileReader
 
-from ..config import get_settings
+from ..crypto import cache_get, cache_put
 from ..forensics.pdf_struct import revision_offsets
 from ..models import Document
 from ..pipeline.text import render_pdf_page
@@ -111,12 +111,15 @@ def describe(doc: Document, data: bytes, attempts: list[Any]) -> dict[str, Any]:
 
 
 def render(doc: Document, data: bytes, n: int, page_no: int) -> bytes:
-    """PNG of one page as it stood at revision n, cached like the current page images."""
+    """PNG of one page as it stood at revision n, cached encrypted like the current page images."""
     ends = revision_ends(data)
     if n < 1 or n > len(ends):
         raise IndexError("no such revision")
-    cache = get_settings().cache_dir / f"{doc.id}_r{n}_p{page_no}.png"
-    if not cache.exists():
-        img = render_pdf_page(data[: ends[n - 1]], page_no - 1, RENDER_DPI)
-        img.save(cache, "PNG", optimize=True)
-    return cache.read_bytes()
+    name = f"{doc.id}_r{n}_p{page_no}.png"
+    png = cache_get(name)
+    if png is None:
+        buf = io.BytesIO()
+        render_pdf_page(data[: ends[n - 1]], page_no - 1, RENDER_DPI).save(buf, "PNG", optimize=True)
+        png = buf.getvalue()
+        cache_put(name, png)
+    return png
