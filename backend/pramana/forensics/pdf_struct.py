@@ -10,7 +10,7 @@ import re
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import pdfplumber
@@ -261,17 +261,37 @@ def _is_white(color) -> bool:
     return all(v >= 0.98 for v in nums)
 
 
-def parse_pdf_date(s: str | None) -> datetime | None:
+IST = timezone(timedelta(hours=5, minutes=30))
+PDF_DATE = re.compile(r"D?:?\s*(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?\s*(Z|[+-]\d{2}'?(?:\d{2}'?)?)?")
+
+
+def pdf_date(s: Any) -> tuple[datetime | None, bool]:
+    """A PDF date string as an aware datetime, and whether the file recorded its zone (else read as IST)."""
     if not s:
-        return None
-    m = re.match(r"D?:?(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?", str(s))
+        return None, False
+    m = PDF_DATE.match(str(s).strip())
     if not m:
-        return None
-    parts = [int(p) if p else d for p, d in zip(m.groups(), (0, 1, 1, 0, 0, 0), strict=True)]
+        return None, False
+    parts = [int(p) if p else d for p, d in zip(m.groups()[:6], (0, 1, 1, 0, 0, 0), strict=True)]
+    tz = m.group(7)
+    zone = bool(tz)
+    if not tz:
+        tzinfo = IST
+    elif tz == "Z":
+        tzinfo = UTC
+    else:
+        digits = re.sub(r"\D", "", tz)
+        mins = int(digits[:2]) * 60 + (int(digits[2:4]) if len(digits) >= 4 else 0)
+        tzinfo = timezone(timedelta(minutes=mins if tz[0] == "+" else -mins))
     try:
-        return datetime(*parts, tzinfo=UTC)
+        return datetime(*parts, tzinfo=tzinfo), zone
     except ValueError:
-        return None
+        return None, False
+
+
+def parse_pdf_date(s: str | None) -> datetime | None:
+    """D:20261023233929+05'30' is 23:39:29 at UTC+05:30, not at UTC; a date without a zone is read as IST."""
+    return pdf_date(s)[0]
 
 
 def metadata(data: bytes) -> dict[str, Any]:

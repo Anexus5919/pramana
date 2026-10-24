@@ -5,7 +5,8 @@ import type { PdfVerifyResult, SignatureResponse } from "../../types";
 export function pdfDateIso(v: string): string | null {
   const m = /^D:(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(Z|[+-]\d{2}'?\d{2}'?)?/.exec(v.trim());
   if (!m) return null;
-  const tz = m[7] && m[7] !== "Z" ? `${m[7].slice(0, 3)}:${m[7].replace(/'/g, "").slice(3, 5) || "00"}` : "Z";
+  // Without a zone the date is read as IST, as the server and the life story read it
+  const tz = !m[7] ? "+05:30" : m[7] === "Z" ? "Z" : `${m[7].slice(0, 3)}:${m[7].replace(/'/g, "").slice(3, 5) || "00"}`;
   return `${m[1]}-${m[2] ?? "01"}-${m[3] ?? "01"}T${m[4] ?? "00"}:${m[5] ?? "00"}:${m[6] ?? "00"}${tz}`;
 }
 

@@ -315,3 +315,25 @@ def test_issuer_key_ignores_the_signatory_title():
 
     assert issuer_key("Chief Fire Officer, Pune Fire Brigade") == issuer_key("Divisional Fire Officer, Pune Fire Brigade")
     assert issuer_key("Chief Fire Officer, Pune Fire Brigade") != issuer_key("Chief Fire Officer, Hyderabad Fire Brigade")
+
+
+def test_file_facts_read_the_pdf_date_zone_once():
+    from datetime import UTC, datetime
+
+    import pikepdf
+
+    from pramana.forensics.pdf_struct import IST, parse_pdf_date
+
+    with pikepdf.open(io.BytesIO(_certificate())) as pdf:
+        pdf.docinfo["/CreationDate"] = "D:20261023233929+05'30'"
+        pdf.docinfo["/ModDate"] = "D:20261023181500Z"
+        out = io.BytesIO()
+        pdf.save(out)
+    facts = analyse(out.getvalue())[1]
+    # 23:39:29 IST is 18:09:29 UTC; reading the digits as UTC showed 05:09:29 the next day
+    assert facts["created"] == "2026-10-23T23:39:29+05:30"
+    assert datetime.fromisoformat(facts["created"]) == datetime(2026, 10, 23, 18, 9, 29, tzinfo=UTC)
+    assert datetime.fromisoformat(facts["modified"]) == datetime(2026, 10, 23, 18, 15, tzinfo=UTC)
+    # Without a zone the date is read as IST, as the life story reads it
+    assert parse_pdf_date("D:20261023233929") == datetime(2026, 10, 23, 23, 39, 29, tzinfo=IST)
+    assert parse_pdf_date("D:2026") == datetime(2026, 1, 1, tzinfo=IST) and parse_pdf_date("x") is None

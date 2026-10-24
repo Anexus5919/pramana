@@ -10,7 +10,7 @@ file's structure. Every anomaly is an indicator for an official to look at, neve
 import io
 import logging
 import re
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pikepdf
@@ -22,15 +22,13 @@ from .. import serializers as ser
 from ..auth import OFFICIAL_ROLES, load_application, require_roles
 from ..crypto import DocumentPurged, load_document, sha256_hex
 from ..db import get_db
-from ..forensics.pdf_struct import editors_named, revision_offsets
+from ..forensics.pdf_struct import IST, editors_named, pdf_date, revision_offsets
 from ..history.revisions import describe
 from ..models import AuditEvent, Document, Finding, User, ValidationRun, VerificationAttempt
 from ..rules.engine import active_ruleset
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["insights"])
-
-IST = timezone(timedelta(hours=5, minutes=30))
 
 # source -> (trust level, what an official reads next to the time)
 TRUST = {
@@ -53,7 +51,6 @@ PRINTED_LONG_DATE = re.compile(rf"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Sa
                                r"(\d{1,2}),\s*(\d{4})", re.I)
 # The Gazette of India number carries the publication date: CG-DL-E-18062020-220000
 GAZETTE_CODE = re.compile(r"CG-[A-Z]{2}-[A-Z]-(\d{2})(\d{2})(\d{4})-\d+")
-PDF_DATE = re.compile(r"D?:?\s*(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?\s*(Z|[+-]\d{2}'?(?:\d{2}'?)?)?")
 # A save within this many seconds of a signature or the creation is the same moment, not a separate event
 SAME_MOMENT_S = 120
 # Created this long after the printed issue date: worth a neutral note, common for downloaded or re-issued copies
@@ -77,30 +74,6 @@ def _time(at: datetime | None, source: str, raw: str | None = None, *, zone: boo
     trust, label = TRUST[source]
     return {"at": at.astimezone(UTC).isoformat() if at else None, "raw": raw, "zone_recorded": zone,
             "precision": precision, "source": source, "trust": trust, "label": label}
-
-
-def pdf_date(s: Any) -> tuple[datetime | None, bool]:
-    """A PDF date string as an aware datetime, and whether the file recorded its zone (else read as IST)."""
-    if not s:
-        return None, False
-    m = PDF_DATE.match(str(s).strip())
-    if not m:
-        return None, False
-    parts = [int(p) if p else d for p, d in zip(m.groups()[:6], (0, 1, 1, 0, 0, 0), strict=True)]
-    tz = m.group(7)
-    zone = bool(tz)
-    if not tz:
-        tzinfo = IST
-    elif tz == "Z":
-        tzinfo = UTC
-    else:
-        digits = re.sub(r"\D", "", tz)
-        mins = int(digits[:2]) * 60 + (int(digits[2:4]) if len(digits) >= 4 else 0)
-        tzinfo = timezone(timedelta(minutes=mins if tz[0] == "+" else -mins))
-    try:
-        return datetime(*parts, tzinfo=tzinfo), zone
-    except ValueError:
-        return None, False
 
 
 def _iso(s: Any) -> datetime | None:
