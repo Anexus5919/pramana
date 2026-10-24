@@ -235,3 +235,34 @@ def test_real_egazette_chains_to_india_pki_without_an_application(app):
     assert r["coverage"] == "ENTIRE_FILE" and r["modification_level"] == "NONE"
     assert "signer_role" not in r and a["doc_type"]["type"] is None and a["registry"]["queried"] is False
     assert a["revision_count"] == 1 and a["text"]["hindi_lines"] > 0
+    # The masthead template overlay is reported as the pipeline reports it: information, present at signing
+    signals = a["document"]["forensic_signals"]
+    assert not [s["code"] for s in signals if s["severity"] in ("medium", "high")]
+    assert any(s["code"] == "FX-PDF-OVERLAID-TEXT" and s["severity"] == "info"
+               and "present when the document was signed" in s["title"] for s in signals)
+
+
+def test_overlays_a_whole_file_signature_covers_are_information_as_in_a_run():
+    from pramana.analyse.core import _whole_file_signer
+    from pramana.forensics.signed_content import at_signing
+    from pramana.verification import base as vb
+
+    def sig(**over):
+        resp = {"signer": "Government of India Press", "coverage": "ENTIRE_FILE", "intact": True, "valid": True,
+                "trusted": True, "revoked": False, "demo_anchor": False, **over}
+        return vb.VerificationResult("pdf_signature", vb.VERIFIED, "pyHanko", False, "detail", response=resp)
+
+    gazette = sig()
+    signer = _whole_file_signer([gazette], {})
+    assert signer == "Government of India Press"
+    # The result shown on the page is not reclassified
+    assert gazette.status == vb.VERIFIED and "signer_role" not in gazette.response
+    overlay = {"code": "FX-PDF-OVERLAID-TEXT", "severity": "high", "title": "Different characters drawn on top of each other",
+               "detail": "Glyphs overlap."}
+    out = at_signing(overlay["code"], signer, overlay, "detail")
+    assert out["severity"] == "info" and out["title"].endswith("present when the document was signed")
+    assert out["detail"].startswith("Glyphs overlap. The signature of Government of India Press covers the whole file")
+    # A DEMO anchor with a signer the type does not name, or content added after the signature: unchanged
+    assert _whole_file_signer([sig(demo_anchor=True)], {}) is None
+    assert _whole_file_signer([sig(coverage="ENTIRE_REVISION")], {}) is None
+    assert at_signing(overlay["code"], None, overlay, "detail") is overlay

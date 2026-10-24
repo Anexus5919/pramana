@@ -7,6 +7,7 @@ SIMULATED issuer registry and the revision time machine come from the verificati
 Rules, cross-application links and declared values need an application, so they are not run.
 """
 
+import copy
 import logging
 import time
 from collections.abc import Callable
@@ -16,6 +17,7 @@ from typing import Any
 from .. import sandbox
 from .. import serializers as ser
 from ..crypto import sha256_hex
+from ..forensics import signed_content
 from ..forensics.pdf_struct import revision_offsets
 from ..history.revisions import describe
 from ..insights.story import build_story, pramana_event
@@ -23,7 +25,7 @@ from ..models import Document, Institution
 from ..photos.findings import credential_status
 from ..pipeline.intake import IntakeResult
 from ..pipeline.process import process_document
-from ..pipeline.validate import _qr_compare, _signer_role
+from ..pipeline.validate import _classify_signatures, _qr_compare, _signer_role
 from ..rules.engine import active_ruleset
 from ..verification import base as vb
 from ..verification.issuer import adapters
@@ -72,6 +74,13 @@ def _signatures(data: bytes, vspec: dict[str, Any]) -> list[vb.VerificationResul
                 r.response["signer_role"] = role
                 r.response["expected_signers"] = expected
     return results
+
+
+def _whole_file_signer(sigs: list[vb.VerificationResult], vspec: dict[str, Any]) -> str | None:
+    """The signer whose signature covers every byte, judged as a validation run judges it. Without an application
+    nobody is the applicant, so a signer the document type does not name counts only under the India PKI roots."""
+    nobody = Institution(name="", society_name=None, attributes={})
+    return signed_content.signer_of_whole_file(_classify_signatures(copy.deepcopy(sigs), vspec, nobody))
 
 
 def _qr(doc: Document, vspec: dict[str, Any], today: date) -> list[dict[str, Any]]:
@@ -204,6 +213,10 @@ def analyse(data: bytes, filename: str, intake: IntakeResult, token: str) -> dic
                          role=r.response.get("signer_role", "unknown"))
 
     out = ser.document(doc, detail=True)
+    # Overlays and white boxes the whole-file signature covers are information, as in a validation run
+    signer = _whole_file_signer(sigs, vspec) if sigs else None
+    out["forensic_signals"] = [signed_content.at_signing(s["code"], signer, s, "detail")
+                               for s in out.get("forensic_signals", [])]
     an = doc.analysis or {}
     story = _story(doc, data, out, revisions, sigs, vspec, steps)
     facts = an.get("forensic_facts") or {}

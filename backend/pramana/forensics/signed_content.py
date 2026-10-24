@@ -29,14 +29,16 @@ def signer_of_whole_file(results: list[Any]) -> str | None:
     return None
 
 
-def at_signing(code: str, signer: str | None, finding: dict[str, Any]) -> dict[str, Any]:
-    """The finding as information when its pattern lies in content the whole-file signature covers."""
+def at_signing(code: str, signer: str | None, finding: dict[str, Any], text: str = "message") -> dict[str, Any]:
+    """The finding as information when its pattern lies in content the whole-file signature covers.
+
+    text: the key that holds the explanation, "message" for a finding and "detail" for a document's signal."""
     if code not in AT_SIGNING or not signer:
         return finding
     return {**finding, "severity": "info",
             "title": f"{finding['title']}, present when the document was signed",
-            "message": f"{finding['message']} The signature of {signer} covers the whole file and nothing was "
-                       "added after it, so this was present when the document was signed, not added later. "
-                       "Templates fill placeholders this way.",
+            text: f"{finding[text]} The signature of {signer} covers the whole file and nothing was "
+                  "added after it, so this was present when the document was signed, not added later. "
+                  "Templates fill placeholders this way.",
             "limitation": "This shows the content predates the signature, not that the signer was entitled to "
                           "issue the document; the signature check reports who signed."}

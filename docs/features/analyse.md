@@ -79,22 +79,22 @@ Only the official who uploaded a file can fetch its pages. A file the sandbox ca
 
 `scripts/fetch_real_samples.py` downloads nine DSC-signed e-Gazette notifications and one unsigned AICTE letter as a control, each pinned by SHA-256 with its URL, publisher and date (the manifest is in the script and is written to `fixtures/real/manifest.json`). They are publicly available; Pramana uses them for testing only and does not redistribute them: they stay in the gitignored `fixtures/real`. `scripts/eval_real_samples.py` analyses each one with the same code as the page and prints the table below.
 
-Measured on 23 Oct 2026 on a laptop CPU, deterministic mode, offline (no OCSP or CRL fetch), parser sandbox on:
+Measured on 24 Oct 2026 on a laptop CPU, deterministic mode, offline (no OCSP or CRL fetch), parser sandbox on:
 
 | # | Document (`fixtures/real/`) | Published | Pages | Signature | Trust anchor | Modified after signing | Revisions | Hindi lines read | Indicators | Time |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | `egazette_2025_260000.pdf`: Extraordinary II-3(ii), Ministry of Railways | 6 Jan 2025 | 2 | verified | CCA India 2022 | no | 1 | 28 | overlaid text, white box | 17.1 s |
-| 2 | `egazette_2020_220000.pdf`: Extraordinary II-3(ii), Ministry of Commerce and Industry | 18 Jun 2020 | 2 | verified | CCA India 2014 | no | 1 | 37 | overlaid text, white box | 16.3 s |
-| 3 | `egazette_2022_235000.pdf`: Weekly I-2, appointments and promotions, legacy-font Hindi layer | 9 Apr 2022 | 12 | verified | CCA India 2014 | no | 1 | 299 | overlaid text | 106.3 s |
-| 4 | `egazette_2022_240111.pdf`: Extraordinary III-4, All India Council for Technical Education | 7 Nov 2022 | 2 | verified | CCA India 2022 | no | 1 | 0 | overlaid text, white box | 5.5 s |
-| 5 | `egazette_2023_242000.pdf`: Extraordinary II-3(ii), Ministry of Railways (Mumbai) | 16 Jan 2023 | 2 | verified | CCA India 2022 | no | 1 | 21 | overlaid text, white box | 15.1 s |
-| 6 | `egazette_2023_245000.pdf`: Extraordinary II-3(ii), land schedule | 5 Apr 2023 | 7 | verified | CCA India 2022 | no | 1 | 156 | white box | 60.7 s |
-| 7 | `egazette_2024_255000.pdf`: Extraordinary II-3(ii), Ministry of Petroleum and Natural Gas | 27 Jun 2024 | 5 | verified | CCA India 2022 | no | 1 | 56 | overlaid text, white box | 41.5 s |
-| 8 | `egazette_2025_262500.pdf`: Extraordinary II-3(ii), Ministry of Finance | 17 Apr 2025 | 2 | verified | CCA India 2022 | no | 1 | 26 | overlaid text, white box | 11.7 s |
-| 9 | `egazette_2026_270000.pdf`: Extraordinary II-3(ii) | 6 Feb 2026 | 10 | verified | CCA India 2022 | no | 1 | 418 | overlaid text, white box | 83.0 s |
+| 1 | `egazette_2025_260000.pdf`: Extraordinary II-3(ii), Ministry of Railways | 6 Jan 2025 | 2 | verified | CCA India 2022 | no | 1 | 28 | masthead overlay, information | 12.0 s |
+| 2 | `egazette_2020_220000.pdf`: Extraordinary II-3(ii), Ministry of Commerce and Industry | 18 Jun 2020 | 2 | verified | CCA India 2014 | no | 1 | 37 | masthead overlay, information | 10.2 s |
+| 3 | `egazette_2022_235000.pdf`: Weekly I-2, appointments and promotions, legacy-font Hindi layer | 9 Apr 2022 | 12 | verified | CCA India 2014 | no | 1 | 299 | masthead overlay, information | 59.3 s |
+| 4 | `egazette_2022_240111.pdf`: Extraordinary III-4, All India Council for Technical Education | 7 Nov 2022 | 2 | verified | CCA India 2022 | no | 1 | 0 | masthead overlay, information | 4.4 s |
+| 5 | `egazette_2023_242000.pdf`: Extraordinary II-3(ii), Ministry of Railways (Mumbai) | 16 Jan 2023 | 2 | verified | CCA India 2022 | no | 1 | 21 | masthead overlay, information | 8.1 s |
+| 6 | `egazette_2023_245000.pdf`: Extraordinary II-3(ii), land schedule | 5 Apr 2023 | 7 | verified | CCA India 2022 | no | 1 | 156 | none | 34.1 s |
+| 7 | `egazette_2024_255000.pdf`: Extraordinary II-3(ii), Ministry of Petroleum and Natural Gas | 27 Jun 2024 | 5 | verified | CCA India 2022 | no | 1 | 56 | masthead overlay, information | 28.9 s |
+| 8 | `egazette_2025_262500.pdf`: Extraordinary II-3(ii), Ministry of Finance | 17 Apr 2025 | 2 | verified | CCA India 2022 | no | 1 | 26 | masthead overlay, information | 12.0 s |
+| 9 | `egazette_2026_270000.pdf`: Extraordinary II-3(ii) | 6 Feb 2026 | 10 | verified | CCA India 2022 | no | 1 | 418 | masthead overlay, information | 80.2 s |
 | 10 | `aicte_eoa_2025_26_control.pdf`: AICTE Extension of Approval 2025-26 (control) | 21 Mar 2025 | 3 | no embedded signature | none | n/a | 1 | 0 | none | 2.3 s |
 
-Indicator codes: overlaid text is `FX-PDF-OVERLAID-TEXT` (high), white box is `FX-PDF-WHITEOUT` (medium). No document had text aimed at automated readers, a font mismatch or an editor producer, and none matched one of the ruleset's document types, so no fields were read and no registry was queried.
+Indicators are medium or high signals. No document raised one: no overlay or white box outside the masthead, no text aimed at automated readers, no font mismatch and no editor producer. On eight gazettes the masthead overlay (`FX-PDF-OVERLAID-TEXT`) is reported as information, present when the document was signed, because the Government of India Press signature covers the whole file. None matched one of the ruleset's document types, so no fields were read and no registry was queried.
 
 What this shows, and what did not validate:
 
@@ -102,8 +102,8 @@ What this shows, and what did not validate:
 - **Signing time is self-asserted.** None of the nine carries an RFC 3161 timestamp token, so the time shown is the one the signer's software reported, and the page labels it "signer-reported (self-asserted)".
 - **Revocation was not checked.** Validation ran offline; with `PKI_FETCH_REVOCATION=true` Pramana asks the CA's OCSP and CRL services and says how many responses it got.
 - **The control has no signature.** The AICTE Extension of Approval letter (10) is computer generated and says that no signature is required. The page reports "No embedded digital signature" and that a seal image is not a signature. Every AICTE approval letter we found (2023 to 2026, from three institutions' websites) was unsigned; the AICTE notification we could validate is the one published in the e-Gazette.
-- **Structure indicators fire on the masthead.** Every gazette raises overlaid text (the barcode text in the header is drawn over the gazette number), a white box indicator, or both. These are false indicators of editing on unedited files. The page shows that the signature covers the whole file, so the features were already present when the press signed it, and the overview tile says "all present when the file was signed". Tuning these checks for the gazette layout is left to the forensics owners; we did not change them here.
-- **Long Hindi documents approach the sandbox limit.** Hindi pages whose text layer uses a legacy font are rendered and read by OCR. The 12-page weekly (3) took 106 s and the 10-page 2026 notification (9) 83 s, against a 120 s limit per parser operation. On a first run, with the test suite running at the same time, (9) hit the limit. The page then still shows intake, the signature and the revisions, and says that reading stopped and the file needs review. `SANDBOX_TIMEOUT_S` raises the limit.
+- **The masthead overlay is information, as in a validation run.** The gazette template prints a placeholder, paints an image strip over it and prints the registration number on top, so the overlay check still finds it. Because an intact, trusted signature covers every byte, the page applies the pipeline's rule (`forensics/signed_content.py`): the overlay is listed as information, present when the document was signed, never as a high or medium indicator. The white boxes behind masthead text no longer count (see docs/features/edits.md, section 6).
+- **Long Hindi documents approach the sandbox limit.** Hindi pages whose text layer uses a legacy font are rendered and read by OCR. The 12-page weekly (3) took 59 to 106 s and the 10-page 2026 notification (9) 80 to 83 s over two runs on a shared laptop, against a 120 s limit per parser operation. On a first run, with the test suite running at the same time, (9) hit the limit. The page then still shows intake, the signature and the revisions, and says that reading stopped and the file needs review. `SANDBOX_TIMEOUT_S` raises the limit.
 
 For the demo, use (1) for the signature chain to CCA India 2022, (4) for an AICTE notification, (2) for the older CCA India 2014 root, and (10) for a document without a signature.
 
@@ -116,7 +116,8 @@ For the demo, use (1) for the signature chain to CCA India 2022, (4) for an AICT
 - the in-memory store is bounded by entries and bytes;
 - officials only, content must match the extension, and the rate limit returns 429 with `Retry-After`;
 - the bilingual Hindi certificate is read by the Devanagari recogniser, and a photo gets EXIF, Content Credentials, room detection and an upright preview;
-- the real e-Gazette chains to India PKI (CCA) with no application context (skipped when the sample is not fetched).
+- the real e-Gazette chains to India PKI (CCA) with no application context, and its masthead overlay is information, not a medium or high indicator (skipped when the sample is not fetched);
+- an overlay or white box a whole-file signature covers is information on the page as in a validation run, while a DEMO anchor with a signer the type does not name, or a signature that does not cover the whole file, leaves it unchanged.
 
 ## Limitations
 
@@ -125,4 +126,4 @@ For the demo, use (1) for the signature chain to CCA India 2022, (4) for an AICT
 - Revocation is not checked unless `PKI_FETCH_REVOCATION` is on; signing times are as the signer reported them unless the signature carries a timestamp token.
 - The page waits for the whole analysis. Long scanned or Hindi documents take a few seconds per OCR'd page; there is no live progress.
 - Held bytes live in one server process. Behind several server processes, page images are served only by the process that analysed the file.
-- Fixtures the pipeline was not built for still go through it unchanged. On the real e-Gazettes the structure checks raise indicators on the masthead (see the table); the page notes that a valid signature covers the whole file, so those features were present when the Government of India Press signed it.
+- Fixtures the pipeline was not built for still go through it unchanged. An unsigned file with a template like the gazette masthead still raises the overlay as a high indicator, because nothing in the file shows who painted it.
