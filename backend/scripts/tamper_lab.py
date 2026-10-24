@@ -455,7 +455,8 @@ def word_roundtrip(data: bytes, old: str, new: str) -> tuple[bytes | None, str]:
     if os.name != "nt" or not shutil.which("powershell"):
         return None, "Microsoft Word is not available on this machine"
     before = _word_pids()
-    with tempfile.TemporaryDirectory(prefix="pramana-word-") as td:
+    # Word can hold the input for a moment after it is killed; a leftover temp file must not stop the matrix
+    with tempfile.TemporaryDirectory(prefix="pramana-word-", ignore_cleanup_errors=True) as td:
         src, dst, ps1 = Path(td) / "in.pdf", Path(td) / "out.pdf", Path(td) / "roundtrip.ps1"
         src.write_bytes(data)
         ps1.write_text(WORD_PS1, encoding="utf-8")
