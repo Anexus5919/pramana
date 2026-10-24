@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { api, qk } from "../../api";
 import { useAuth } from "../../auth/session";
 import { fmtBytes, fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
-import type { Tone } from "../../lib/labels";
+import { roundLabel, type Tone } from "../../lib/labels";
 import { workspacePath } from "../../shell/nav";
 import type { PlatformStatus, RetentionPlan } from "../../types";
 import {
@@ -57,7 +57,7 @@ type RecentRun = PlatformStatus["jobs"]["recent"][number];
 
 const RUN_COLUMNS: Column<RecentRun>[] = [
   { id: "app", header: "Application", cell: (r) => <span className="font-mono text-sm">{r.application_id}</span> },
-  { id: "round", header: "Round", hideBelow: "sm", cell: (r) => <span className="text-ink-2">{r.round}</span> },
+  { id: "round", header: "Round", hideBelow: "sm", cell: (r) => <span className="text-ink-2">{roundLabel(r.round)}</span> },
   {
     id: "status",
     header: "Status",

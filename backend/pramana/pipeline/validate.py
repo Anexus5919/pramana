@@ -28,6 +28,7 @@ from ..models import (
     ReferenceRecord,
     ValidationRun,
     VerificationAttempt,
+    round_label,
     utcnow,
 )
 from ..photos.findings import photo_stage
@@ -280,7 +281,7 @@ def _rectification_scope(db: Session, app: Application, docs: list[Document]) ->
             "code": "RECT-OUT-OF-SCOPE-DOCUMENT", "fingerprint": _fp("rect", "doc", t), "category": "consistency",
             "evidence_class": "record", "severity": "medium", "outcome": "indicator",
             "title": "Document changed outside the rectification request",
-            "message": f"In round {app.round} the {t.replace('_', ' ')} was "
+            "message": f"In {round_label(app.round)} the {t.replace('_', ' ')} was "
                        f"{'replaced' if t in before_docs and t in now_docs else 'added' if t in now_docs else 'removed'}, "
                        "but the rectification request did not ask for it. Re-scrutiny of only the requested items "
                        "would not examine this change.",
@@ -291,7 +292,7 @@ def _rectification_scope(db: Session, app: Application, docs: list[Document]) ->
             "evidence_class": "record", "severity": "medium", "outcome": "indicator",
             "title": "Declared value changed outside the rectification request",
             "message": f"'{k}' changed from {req.snapshot.get('declared', {}).get(k)!r} to "
-                       f"{(app.declared or {}).get(k)!r} in round {app.round}, outside the items requested.",
+                       f"{(app.declared or {}).get(k)!r} in {round_label(app.round)}, outside the items requested.",
             "evidence": [{"kind": "declared", "field": k, "value": (app.declared or {}).get(k)}], "document_id": None})
     return out
 

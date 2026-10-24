@@ -3,7 +3,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, errorMessage, qk } from "../../../api";
 import { fmtDate, fmtDateTime, fmtMs, fmtRelative, fmtValue, pluralize } from "../../../lib/format";
-import { humanize, reviewActionLabel, roleLabel, SEVERITIES, severityRank, stageLabel, type Tone } from "../../../lib/labels";
+import { humanize, reviewActionLabel, roleLabel, roundLabel as roundName, roundPhrase, SEVERITIES, severityRank, stageLabel, type Tone } from "../../../lib/labels";
 import { workspacePath } from "../../../shell/nav";
 import type { AuditEvent, ChainVerification, Finding, RunBrief, Stage } from "../../../types";
 import {
@@ -70,7 +70,7 @@ function RunStatus({ run }: { run: RunBrief }) {
 }
 
 function roundLabel(r: RunBrief): string {
-  return `Round ${r.round}${r.replay_of ? ", replay" : ""}`;
+  return `${roundName(r.round)}${r.replay_of ? ", replay" : ""}`;
 }
 
 function severityText(r: RunBrief): string {
@@ -94,7 +94,7 @@ function replayResult(run: RunBrief, all: RunBrief[]): string | null {
   const original = all.find((r) => r.id === run.replay_of);
   if (!original) return "Replay of an earlier run";
   const same = !!original.report_digest && original.report_digest === run.report_digest;
-  return `Replay of round ${original.round}: ${same ? "reproduced identically" : "report differs from the original"}`;
+  return `Replay of the ${roundPhrase(original.round)} run: ${same ? "reproduced identically" : "report differs from the original"}`;
 }
 
 function RunsView() {
@@ -328,8 +328,8 @@ function CompareRuns({ appId, a, b, onClear }: { appId: string; a: RunBrief; b: 
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-3">
-          <FindingList title={`Appeared in round ${b.round}`} items={diff.appeared} appId={appId} empty="Nothing new." />
-          <FindingList title={`Resolved since round ${a.round}`} items={diff.resolved} appId={appId} empty="Nothing resolved." />
+          <FindingList title={`Appeared in the ${roundPhrase(b.round)} run`} items={diff.appeared} appId={appId} empty="Nothing new." />
+          <FindingList title={`Resolved since the ${roundPhrase(a.round)} run`} items={diff.resolved} appId={appId} empty="Nothing resolved." />
           <FindingList title="Persisted" items={diff.persisted} appId={appId} empty="No findings in common." />
         </div>
       )}

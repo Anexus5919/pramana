@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, qk } from "../../api";
 import { fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
-import { humanize } from "../../lib/labels";
+import { humanize, roundPhrase } from "../../lib/labels";
 import type { DashboardAlert, DashboardRow } from "../../types";
 import type { AppNavState } from "../../ui/shared";
 import {
@@ -148,7 +148,7 @@ export default function DashboardPage() {
           <span className="block min-w-0">
             <span className="block truncate text-ink-2">{categoryLabel(r.category)}</span>
             <span className="block text-xs text-ink-3">
-              AY {r.academic_year}, round {r.round}
+              AY {r.academic_year}, {roundPhrase(r.round)}
             </span>
           </span>
         ),

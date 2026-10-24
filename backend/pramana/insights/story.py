@@ -24,7 +24,7 @@ from ..crypto import DocumentPurged, load_document, sha256_hex
 from ..db import get_db
 from ..forensics.pdf_struct import IST, editors_named, pdf_date, revision_offsets
 from ..history.revisions import describe
-from ..models import AuditEvent, Document, Finding, User, ValidationRun, VerificationAttempt
+from ..models import AuditEvent, Document, Finding, User, ValidationRun, VerificationAttempt, round_label
 from ..rules.engine import active_ruleset
 
 log = logging.getLogger(__name__)
@@ -546,7 +546,7 @@ def _own_events(db: Session, doc: Document, data: bytes) -> list[dict[str, Any]]
             continue
         count = len(db.scalars(select(Finding.id).where(Finding.run_id == r.id, Finding.document_id == doc.id)).all())
         out.append(pramana_event(
-            "checked", f"Checked, round {r.round}",
+            "checked", f"Checked, {round_label(r.round)}",
             f"Validation run {r.id} checked this file with ruleset {r.ruleset_id}: "
             + (f"{count} finding{'s point' if count != 1 else ' points'} at it." if count else "no finding points at it."),
             r.finished_at, link={"to": "findings"}, run_id=r.id, findings=count))

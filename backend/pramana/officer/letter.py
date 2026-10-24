@@ -140,7 +140,8 @@ def draft_items(db: Session, findings: list[Finding], rs: Ruleset, respond_by: d
 
 
 def default_subject(app: Application) -> str:
-    return f"Deficiencies found in application {app.id} ({app.academic_year}), round {app.round}"
+    # The letter opens the next correction round: the first letter, raised in round 1, asks for correction round 1
+    return f"Deficiencies found in application {app.id} ({app.academic_year}), correction round {app.round}"
 
 
 def letter_json(lt: DeficiencyLetter, *, for_institution: bool = False, page_count: int | None = None,
@@ -241,11 +242,11 @@ def render_pdf(lt: DeficiencyLetter, app: Application, officer: User | None, *, 
     ]
     meta = [
         ["Reference", lt.id, "Date", fmt_day(issued)],
-        ["Application", app.id, "Round", str(lt.round)],
+        ["Application", app.id, "Correction round", str(lt.round)],
         ["Category", category, "Academic year", app.academic_year],
     ]
     t = Table([[_p(a, st["label"]), _p(b, st["base"]), _p(c, st["label"]), _p(d, st["base"])] for a, b, c, d in meta],
-              colWidths=[24 * mm, 62 * mm, 26 * mm, 52 * mm], hAlign="LEFT")
+              colWidths=[24 * mm, 60 * mm, 30 * mm, 50 * mm], hAlign="LEFT")
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LINEBELOW", (0, -1), (-1, -1), 0.6, LINE),
                            ("BOTTOMPADDING", (0, 0), (-1, -1), 3), ("LEFTPADDING", (0, 0), (-1, -1), 0)]))
     story += [t, Spacer(1, 10), _p("To", st["label"]), _p(inst.name, st["base"]),

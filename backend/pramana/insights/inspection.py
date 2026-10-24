@@ -25,7 +25,7 @@ from .. import audit
 from ..auth import load_application, require_roles
 from ..db import get_db
 from ..history.models import ScrutinyOutcome
-from ..models import Application, Document, Finding, User, utcnow
+from ..models import Application, Document, Finding, User, round_label, utcnow
 from ..officer.common import doc_label, latest_run, run_findings
 from ..photos.campus import payload as campus_payload
 from ..rules.engine import active_ruleset
@@ -271,7 +271,7 @@ def brief_pdf(b: dict[str, Any]) -> bytes:
     out: list[Any] = [
         _p("Inspection brief", st["h1"]), Spacer(1, 3),
         _p(f"{b['institution']} ({b['aicte_id']}), {b['address']}", st["base"]),
-        _p(f"Application {b['application_id']}, {_category(b['category'])}, AY {b['academic_year']}, round {b['round']}. "
+        _p(f"Application {b['application_id']}, {_category(b['category'])}, AY {b['academic_year']}, {round_label(b['round'])}. "
            f"Prepared {prepared} from validation run {b['run_id']}.", st["small"]),
         Spacer(1, 6), _p("Summary", st["h2"]),
     ]

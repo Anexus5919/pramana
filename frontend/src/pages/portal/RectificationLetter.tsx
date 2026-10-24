@@ -1,5 +1,6 @@
 import { ArrowDown, Download } from "lucide-react";
 import { fmtDate, pluralize } from "../../lib/format";
+import { correctionRound } from "../../lib/labels";
 import type { Rectification, RectificationItem } from "../../types";
 import { Button, DescriptionList, Digest, Panel, PanelDivider, buttonStyles } from "../../ui2";
 import { officerApi, useLetters } from "../application/officer/officerApi";
@@ -54,7 +55,7 @@ export function DeficiencyLetterPanel({
     <Panel
       id="letter"
       title={letter ? "Deficiency letter" : "Corrections requested"}
-      description={letter ? `Round ${rect.round}` : `Round ${rect.round}, issued ${fmtDate(issued)}`}
+      description={letter ? correctionRound(rect.round) : `${correctionRound(rect.round)}, issued ${fmtDate(issued)}`}
       actions={
         letter ? (
           <a href={officerApi.letterPdfUrl(letter.id)} download className={buttonStyles("secondary", "md")}>

@@ -1,4 +1,5 @@
 import { ClipboardList, FileArchive, FileWarning, Gavel, History, MessageSquareText, Play, ScrollText } from "lucide-react";
+import { roundPhrase } from "../../lib/labels";
 import { WORKSPACE_SECTIONS, workspacePath, type WorkspaceSection } from "../../shell/nav";
 import type { ApplicationDetail } from "../../types";
 import { ActionMenu, ApplicationStatusBadge, Button, Code, MetaList, PageHeader, Skeleton, Tabs, type ActionMenuItem } from "../../ui2";
@@ -84,7 +85,7 @@ export function WorkspaceHeader({
             <span key="cat" title={app.category_label}>
               {app.category_label.replace(/\s*\(.*\)$/, "")}
             </span>,
-            `AY ${app.academic_year}, round ${app.round}`,
+            `AY ${app.academic_year}, ${roundPhrase(app.round)}`,
             [inst.district, inst.state].filter(Boolean).join(", "),
           ]}
         />

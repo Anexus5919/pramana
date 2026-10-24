@@ -1,5 +1,5 @@
 import { fmtDate } from "../../lib/format";
-import { humanize } from "../../lib/labels";
+import { humanize, roundPhrase } from "../../lib/labels";
 import type { ApplicationDetail, ChecklistSlot, DocumentSummary, Rectification } from "../../types";
 import type { Step } from "../../ui2";
 
@@ -96,7 +96,7 @@ function build(spec: Record<StepId, StepSpec>): Step[] {
 export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
   const rect = openRectification(app);
   const submittedOn = app.submitted_at ? fmtDate(app.submitted_at) : undefined;
-  const sent: StepSpec = ["complete", app.round > 1 ? `Resubmitted, round ${app.round}` : submittedOn];
+  const sent: StepSpec = ["complete", app.round > 1 ? `Resubmitted, ${roundPhrase(app.round)}` : submittedOn];
   switch (app.status) {
     case "draft":
       return missing > 0
@@ -128,7 +128,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
     case "rectification_requested":
       return build({
         details: ["complete"],
-        documents: ["attention", `Corrections requested, round ${rect?.round ?? Math.max(1, app.round - 1)}`],
+        documents: ["attention", `Corrections requested, ${roundPhrase(rect ? rect.round + 1 : app.round)}`],
         submitted: ["complete", submittedOn],
         review: ["upcoming"],
         decision: ["upcoming"],
@@ -137,7 +137,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
       return build({
         details: ["complete"],
         documents: ["complete"],
-        submitted: ["complete", `Resubmitted, round ${app.round}`],
+        submitted: ["complete", `Resubmitted, ${roundPhrase(app.round)}`],
         review: ["current"],
         decision: ["upcoming"],
       });

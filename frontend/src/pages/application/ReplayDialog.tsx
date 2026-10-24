@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { fmtDate } from "../../lib/format";
+import { roundPhrase } from "../../lib/labels";
 import type { ReplayResult } from "../../types";
 import { Button, Code, DescriptionList, Dialog, Digest, ErrorState, StatusBadge } from "../../ui2";
 
@@ -24,7 +25,7 @@ export function ReplayDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={result ? `Replay of round ${result.original.round}` : "Replay a run"}
+      title={result ? `Replay of the ${roundPhrase(result.original.round)} run` : "Replay a run"}
       description="The run is executed again under its pinned ruleset and as-of date. Identical digests mean the same inputs produced the same report."
       footer={
         <Button variant={result ? "primary" : "secondary"} onClick={onClose}>

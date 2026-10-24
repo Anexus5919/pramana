@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Download, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, qk } from "../../../api";
 import { fmtDateTime, pluralize } from "../../../lib/format";
+import { correctionRound } from "../../../lib/labels";
 import type { Rule } from "../../../types";
 import {
   Button,
@@ -166,12 +167,12 @@ function Preview({ letter, saving }: { letter: Letter | null; saving: boolean })
   );
 }
 
-function SentView({ letter, round }: { letter: Letter; round: number }) {
+function SentView({ letter }: { letter: Letter }) {
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
       <div className="min-w-0 space-y-5">
         <Callout tone="success" title="Deficiency letter sent" role="status">
-          {pluralize(letter.items.length, "item")} sent with the rectification request. The application is now in round {round}, and the institution can download
+          {pluralize(letter.items.length, "item")} sent with the rectification request. The application is now in {correctionRound(letter.round).toLowerCase()}, and the institution can download
           the letter from its application page.
         </Callout>
         <DescriptionList
@@ -180,7 +181,7 @@ function SentView({ letter, round }: { letter: Letter; round: number }) {
             { label: "SHA-256", value: <Digest value={letter.final_sha256} label="Letter SHA-256" head={16} tail={10} />, hint: "Recorded in the audit trail" },
             { label: "Finalised", value: fmtDateTime(letter.finalised_at) },
             { label: "Reason", value: letter.final_reason },
-            { label: "Round", value: String(round || letter.round) },
+            { label: "Round", value: correctionRound(letter.round) },
           ]}
         />
       </div>
@@ -218,7 +219,6 @@ export function LetterEditor({
   const [stage, setStage] = useState<"edit" | "confirm" | "sent">("edit");
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
-  const [sentRound, setSentRound] = useState(0);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -253,7 +253,6 @@ export function LetterEditor({
     mutationFn: () => officerApi.finaliseLetter(letter!.id, reason.trim(), message.trim() || null),
     onSuccess: (r) => {
       setLetter(r.letter);
-      setSentRound(r.round);
       setStage("sent");
       invalidateApp();
       invalidateLetters();
@@ -364,7 +363,7 @@ export function LetterEditor({
         {start.error ? (
           <ErrorState error={start.error} title="The draft could not be prepared" onRetry={() => start.mutate()} retrying={start.isPending} />
         ) : stage === "sent" && letter ? (
-          <SentView letter={letter} round={sentRound} />
+          <SentView letter={letter} />
         ) : (
           <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
             <div className="min-w-0 space-y-5">

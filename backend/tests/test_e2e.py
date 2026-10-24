@@ -118,6 +118,9 @@ def test_rectification_round_resolves_and_flags_out_of_scope_changes(world):
     codes = {f["code"] for f in officer.get(f"/api/applications/{aid}/findings").json()}
     assert "APH-617I-FIRE-VALID" not in codes
     assert "RECT-OUT-OF-SCOPE-FIELD" in codes
+    scope = next(f for f in officer.get(f"/api/applications/{aid}/findings").json()
+                 if f["code"] == "RECT-OUT-OF-SCOPE-FIELD")
+    assert "in correction round 1, outside the items requested" in scope["message"]
     full = officer.get(f"/api/runs/{run['id']}").json()
     assert any(x["code"] == "APH-617I-FIRE-VALID" for x in full["resolved_since_previous"])
 

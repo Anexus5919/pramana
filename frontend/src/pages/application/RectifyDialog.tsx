@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { errorMessage } from "../../api";
 import { pluralize } from "../../lib/format";
-import { severityRank } from "../../lib/labels";
+import { roundPhrase, severityRank } from "../../lib/labels";
 import type { Finding } from "../../types";
 import { Button, Callout, Checkbox, Code, Dialog, Field, PanelDivider, SeverityIndicator, Textarea, useToast } from "../../ui2";
 import { isOpenFinding, isRectifiable, useRectification } from "./data";
@@ -76,7 +76,7 @@ export function RectifyDialog({
         onSuccess: (r) => {
           toast.success(
             "Rectification requested",
-            `${r.items.length ? pluralize(r.items.length, "item") : "Your message"} sent to the institution. The application moves to round ${r.round}.`,
+            `${r.items.length ? pluralize(r.items.length, "item") : "Your message"} sent to the institution. The application moves to ${roundPhrase(r.round)}.`,
           );
           onClose();
         },

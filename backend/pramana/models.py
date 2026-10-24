@@ -32,6 +32,12 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:16]}"
 
 
+def round_label(n: int) -> str:
+    """An application round in words. Round 1 is the first submission; each rectification request opens the next
+    correction round, so round 2 is correction round 1, the round the first deficiency letter asks for."""
+    return f"correction round {n - 1}" if n > 1 else "first submission"
+
+
 class Institution(Base):
     """Institution master as held in AICTE records (synthetic in the prototype)."""
 

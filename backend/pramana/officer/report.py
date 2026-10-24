@@ -21,7 +21,7 @@ from reportlab.platypus import (
 
 from .. import sandbox
 from ..crypto import cache_get, cache_put, load_document
-from ..models import Document
+from ..models import Document, round_label
 from .letter import ACCENT, INK, INK_3, LINE, QUOTE_BG, _NumberedCanvas
 
 NOTICE = ("Decision support only. Findings are preliminary indicators for review by competent authorities. Pramana "
@@ -162,7 +162,8 @@ def render_report(ctx: dict[str, Any]) -> bytes:
     s = run.summary if run else {}
     story: list[Any] = [
         _p("EVIDENCE PACK", st["label"]), Spacer(1, 2), _p(app.institution.name, st["h1"]), Spacer(1, 4),
-        _p(f"Application {app.id}, academic year {app.academic_year}, round {app.round}", st["base"]), Spacer(1, 8),
+        _p(f"Application {app.id}, academic year {app.academic_year}, {round_label(app.round)}", st["base"]),
+        Spacer(1, 8),
     ]
     nt = Table([[_p(NOTICE, st["notice"])]], colWidths=[FULL_W], hAlign="LEFT")
     nt.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), QUOTE_BG), ("LINEBEFORE", (0, 0), (0, -1), 2.2, ACCENT),
@@ -286,7 +287,7 @@ def render_report(ctx: dict[str, Any]) -> bytes:
     for r in ctx["runs"]:
         rs = r.summary or {}
         story.append(KeepTogether([
-            _p(f"{r.id}  round {r.round}  {r.status}  as of {rs.get('as_of')}"
+            _p(f"{r.id}  {round_label(r.round)}  {r.status}  as of {rs.get('as_of')}"
                + (f"  replay of {rs.get('replay_of')}" if rs.get("replay_of") else ""), st["h3"]),
             _kv([("Started", r.started_at.strftime("%d %b %Y %H:%M:%S UTC") if r.started_at else ""),
                  ("Ruleset", r.ruleset_id), ("Ruleset SHA-256", r.ruleset_hash), ("Input digest", r.input_digest),

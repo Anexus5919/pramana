@@ -25,7 +25,7 @@ import {
   useToast,
   type Column,
 } from "../../../ui2";
-import type { Tone } from "../../../lib/labels";
+import { roundLabel, type Tone } from "../../../lib/labels";
 import { useWorkspace } from "../context";
 import { useVerifications } from "../data";
 import { useRecordOutcome, useRunWatch, useWatch, type ApplicationWatch, type WatchItem } from "./api";
@@ -261,7 +261,7 @@ export function WatchCard() {
               { label: "Reason", value: w.outcome.reason },
               { label: "Recorded by", value: w.outcome.recorded_by ?? "An official" },
               { label: "Date", value: fmtDateTime(w.outcome.created_at) },
-              { label: "Round", value: String(w.outcome.round) },
+              { label: "Round", value: roundLabel(w.outcome.round) },
               {
                 label: "Next check",
                 value: w.scheduler_enabled ? (

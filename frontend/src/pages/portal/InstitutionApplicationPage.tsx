@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ApiError, api, qk } from "../../api";
 import { fmtDate } from "../../lib/format";
+import { roundLabel } from "../../lib/labels";
 import type { ApplicationDetail, DocumentSummary, Finding } from "../../types";
 import {
   ApplicationStatusBadge,
@@ -360,7 +361,7 @@ export default function InstitutionApplicationPage() {
             items={[
               <Code key="id">{app.id}</Code>,
               `AY ${app.academic_year}`,
-              `Round ${app.round}`,
+              roundLabel(app.round),
               app.submitted_at ? `Submitted ${fmtDate(app.submitted_at)}` : null,
             ]}
           />

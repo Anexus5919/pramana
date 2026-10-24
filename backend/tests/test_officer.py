@@ -63,6 +63,8 @@ def test_letter_quotes_the_ruleset_and_finalises_into_the_rectification_flow(app
     assert r.status_code == 200, r.text
     letter = r.json()
     assert letter["status"] == "draft" and letter["items"]
+    # The first letter asks for correction round 1, the number the portal and the officer's header show
+    assert letter["round"] == 1 and letter["subject"].endswith("(2026-27), correction round 1")
     rules = {x["id"]: x for x in active_ruleset().rules}
     item = next(i for i in letter["items"] if "APH-A21-SSC-REQUIRED" in i["codes"])
     assert item["citation"]["quote"] == rules["APH-A21-SSC-REQUIRED"]["source"]["quote"]
@@ -71,6 +73,7 @@ def test_letter_quotes_the_ruleset_and_finalises_into_the_rectification_flow(app
     draft_pdf = officer.get(f"/api/letters/{letter['id']}/pdf").content
     text = _pdf_text(draft_pdf)
     assert "DRAFT" in text and "Prepared with the Pramana prototype. Synthetic demo data." in text
+    assert "Correction round" in text
 
     body = {"subject": "Items to correct", "intro": "Please correct the items below.", "items": [
         {"finding_ids": i["finding_ids"], "title": i["title"], "description": i["description"],

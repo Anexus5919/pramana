@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, qk } from "../../api";
 import { fmtDateTime } from "../../lib/format";
+import { roundLabel } from "../../lib/labels";
 import type { RunBrief } from "../../types";
 import { ErrorState, Panel, Skeleton, StatusBadge, cn } from "../../ui2";
 
@@ -57,7 +58,7 @@ export function RunHistoryPanel({ appId }: { appId: string }) {
             <tbody>
               {runs.map((r) => (
                 <tr key={r.id} className="border-b border-line last:border-b-0">
-                  <td className={cn(td, "text-ink")}>{r.round}</td>
+                  <td className={cn(td, "text-ink")}>{roundLabel(r.round)}</td>
                   <td className={td}>
                     <RunStatus status={r.status} />
                   </td>
