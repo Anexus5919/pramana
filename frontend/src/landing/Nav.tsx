@@ -10,7 +10,7 @@ const LINKS = [
   { id: "edits", label: "Edits" },
   { id: "network", label: "Cross-check" },
   { id: "ladder", label: "Trust ladder" },
-  { id: "numbers", label: "Numbers" },
+  { id: "numbers", label: "Results" },
 ];
 
 export default function Nav() {

@@ -81,11 +81,12 @@ const RUNGS: Rung[] = [
     n: 7,
     name: "Model",
     meaning: "A local language model's reading. Every value must be grounded in page text, and a model is never decisive alone.",
-    example: "The model proposed a value planted by a hidden instruction line. Grounding found no support on the page and rejected it.",
-    chip: "Rejected by grounding",
+    example:
+      "On an unfamiliar certificate layout the model read Valid until 13/03/2028. Grounding found it on the printed page, so it is kept as a model reading; a hidden line asking for 31/12/2099 was ignored and flagged.",
+    chip: "Model reading, grounded",
     tone: "unchecked",
     words: "proposed, needs review",
-    source: "Qwen3 4B, runs locally",
+    source: "Fine-tuned Qwen3 1.7B (v2), runs locally",
   },
 ];
 

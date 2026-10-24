@@ -8,19 +8,20 @@ const TOTAL = 328;
 
 type Miss = { field: string; outcome: "recovered" | "rejected"; detail: string };
 
+// What the fine-tuned extractor (version 2) read in the one unfamiliar issuer layout, each value grounded on the page
 const MISSES: Miss[] = [
-  { field: "Certificate number", outcome: "recovered", detail: "Model proposed SMC/FIRE/2025/11873. Found on the printed page, kept." },
-  { field: "Institution name", outcome: "recovered", detail: "Model proposed the institution name. Matched the page text and the issuer record." },
-  { field: "Issue date", outcome: "recovered", detail: "Model proposed 14-03-2025. Grounded to its page region, kept." },
-  { field: "Issuing office", outcome: "recovered", detail: "Model proposed the fire office name. Grounded on the page, kept." },
+  { field: "Certificate number", outcome: "recovered", detail: "The model read SMC/FIRE/2025/11873. Found on the printed page, kept, and the issuer record matches it." },
+  { field: "Institution name", outcome: "recovered", detail: "The model read the institution name. Matched the page text and the issuer record." },
+  { field: "Issue date", outcome: "recovered", detail: "The model read 14/03/2025. Grounded to its page region, kept." },
+  { field: "Issuing office", outcome: "recovered", detail: "The model read the fire office name. Grounded on the page, kept." },
   {
     field: "Valid until",
-    outcome: "rejected",
-    detail: "Model proposed 31-12-2099, copied from a hidden line telling automated readers what to report. Not on the printed page, so grounding rejected it and flagged the line.",
+    outcome: "recovered",
+    detail: "The model read 13/03/2028 from the printed sentence and ignored a hidden line telling automated readers to report 31/12/2099. The line is flagged for the reviewer.",
   },
 ];
 
-// 328 printed fields: 323 read by deterministic patterns, 5 misses in one unfamiliar layout that the local model then tried
+// 328 printed fields: 323 read by deterministic patterns, 5 in one unfamiliar layout read by the fine-tuned model
 export function FieldGrid() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
@@ -35,7 +36,7 @@ export function FieldGrid() {
         <div
           className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-[3px] sm:grid-cols-[repeat(41,minmax(0,1fr))]"
           role="img"
-          aria-label="328 printed fields: 323 read by deterministic patterns, 4 recovered by the local model, 1 model proposal rejected by grounding"
+          aria-label="328 printed fields: 323 read by deterministic patterns, 5 read by the fine-tuned model and grounded on the page"
         >
           {Array.from({ length: missStart }, (_, i) => {
             const col = i % COLS;
@@ -61,7 +62,7 @@ export function FieldGrid() {
                 onFocus={() => setSel(j)}
                 onClick={() => setSel(j)}
                 aria-pressed={active}
-                aria-label={`${m.field}: ${m.outcome === "recovered" ? "recovered by the local model" : "model proposal rejected by grounding"}`}
+                aria-label={`${m.field}: ${m.outcome === "recovered" ? "read by the fine-tuned model" : "model proposal rejected by grounding"}`}
                 className="relative aspect-square rounded-[2px] outline-offset-1"
               >
                 <span className="absolute inset-0 rounded-[2px] border border-dashed border-(--lp-ink-4)" />
@@ -87,16 +88,13 @@ export function FieldGrid() {
             <span className="size-2.5 rounded-[2px] bg-(--lp-voxel-top)" /> 323 read by deterministic patterns
           </li>
           <li className="flex items-center gap-2">
-            <span className="size-2.5 rounded-[2px] bg-(--lp-verified-dot)" /> 4 recovered by the local model, grounded
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="size-2.5 rounded-[2px] bg-(--lp-mismatch-dot)" /> 1 proposal rejected by grounding
+            <span className="size-2.5 rounded-[2px] bg-(--lp-verified-dot)" /> 5 read by the fine-tuned model, grounded on the page
           </li>
         </ul>
       </div>
 
       <div className="rounded-[20px] border border-(--lp-line) bg-white p-5 lp-shadow-md">
-        <p className="lp-eyebrow">The 5 misses, one unfamiliar issuer layout</p>
+        <p className="lp-eyebrow">The 5 fields rules could not read, one unfamiliar issuer layout</p>
         <ol className="mt-3 space-y-1">
           {MISSES.map((m, j) => (
             <li key={m.field}>
@@ -122,7 +120,7 @@ export function FieldGrid() {
                   )}
                 </span>
                 <span className="font-medium">{m.field}</span>
-                <span className="ml-auto text-[11.5px] text-(--lp-ink-3)">{m.outcome === "recovered" ? "recovered" : "rejected"}</span>
+                <span className="ml-auto text-[11.5px] text-(--lp-ink-3)">{m.outcome === "recovered" ? "read, grounded" : "rejected"}</span>
               </button>
             </li>
           ))}

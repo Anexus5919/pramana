@@ -4,7 +4,7 @@ const LINKS = [
   { href: "#how", label: "How it works" },
   { href: "#edits", label: "See through edits" },
   { href: "#ladder", label: "Trust ladder" },
-  { href: "#numbers", label: "Numbers" },
+  { href: "#numbers", label: "Results" },
 ];
 
 export default function LandingFooter() {
