@@ -80,7 +80,7 @@ const STATS: Stat[] = [
   { value: 18, of: "of 18", label: "everyday edits caught", sub: "Certificate edits made with Edge, a PDF reader, Word, LibreOffice, a PDF printer or a phone camera." },
   { value: 9, label: "real signed e-Gazettes verified", sub: "Government of India PDFs, each signature checked offline against the CCA India roots. 0 false indicators." },
   { value: 328, of: "of 328", label: "printed fields read", sub: "323 by rules alone. Our fine-tuned model reads the 5 in the one unfamiliar issuer layout, each grounded on the page." },
-  { value: 161, label: "automated tests", sub: "Run on every change to the checks." },
+  { value: 162, label: "automated tests", sub: "Run on every change to the checks." },
 ];
 
 export default function HonestNumbers() {
