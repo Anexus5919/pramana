@@ -447,6 +447,16 @@ def test_institutions_see_when_checks_ran_not_their_counts(app):
                         for r in runs)
 
 
+def test_officer_replays_stay_out_of_the_institution_history(app):
+    _ensure_complete_run(A7)
+    inst = _login(app, "inst7")
+    before = inst.get(f"/api/applications/{A7}/runs").json()
+    officer = _login(app, "officer")
+    run_id = next(r["id"] for r in officer.get(f"/api/applications/{A7}/runs").json() if r["status"] == "complete")
+    assert officer.post(f"/api/runs/{run_id}/replay").status_code == 200
+    assert inst.get(f"/api/applications/{A7}/runs").json() == before
+
+
 def test_withdraw_needs_a_reason_and_only_the_owner(app):
     inst = _login(app, "inst10")
     assert inst.post("/api/applications/APP-2026-000110/withdraw", json={"reason": ""}).status_code == 422
