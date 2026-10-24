@@ -199,6 +199,7 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
         fid = add("F", "finding", text, {f.outcome, f.review_status}, {"type": "finding", "finding_id": f.id},
                   f.title[:60], f"{f.title}: {msg}")
         items[fid]["related"] = [rid] if rid else []
+        items[fid]["code"], items[fid]["document_id"] = f.code, f.document_id
         for e in f.evidence or []:
             if e.get("kind") not in ("region", "revision_diff") or not e.get("page") or not e.get("bbox"):
                 continue
@@ -232,10 +233,14 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
         sig = v.channel in ("issuer_signature", "applicant_signature")
         sim = (" DEMO trust anchor." if sig else " SIMULATED source.") if v.simulated else ""
         first = _screen(v.detail, 300).split(". ")[0].rstrip(".")
-        add("V", "verification", f"Verification of {dl} via {channel_label(v.channel)} ({v.source_name}): status "
-                                 f"{_h(v.status)}.{sim} {_screen(v.detail, 300)}" + (f" Compared: {comps}." if comps else ""),
-            {v.status}, {"type": "verification", "attempt_id": v.id, "document_id": v.document_id},
-            f"{dl}: {channel_label(v.channel)}", f"{dl}, {channel_label(v.channel)}: {_h(v.status)}. {first}.")
+        vid = add("V", "verification", f"Verification of {dl} via {channel_label(v.channel)} ({v.source_name}): "
+                                       f"status {_h(v.status)}.{sim} {_screen(v.detail, 300)}"
+                                       + (f" Compared: {comps}." if comps else ""),
+                  {v.status}, {"type": "verification", "attempt_id": v.id, "document_id": v.document_id},
+                  f"{dl}: {channel_label(v.channel)}", f"{dl}, {channel_label(v.channel)}: {_h(v.status)}. {first}.")
+        # The finding a run raises for this result, so an answer does not say the same thing twice
+        items[vid]["code"] = f"VER-{v.channel.upper()}-{v.status.upper()}"
+        items[vid]["document_id"] = v.document_id
     return {"items": items, "run_id": run.id if run else None}
 
 
@@ -416,7 +421,9 @@ def template_answer(items: dict[str, dict[str, Any]], question: str) -> list[dic
     picked = [f for f in findings if about(f)] if types else findings
     for f in picked[:3]:
         out.append({"text": f["say"], "cites": [f["id"]]})
-    vs = [v for v in vers if about(v) and v["statuses"] and v["statuses"][0] != "not_checked"] if types else []
+    said = {(f.get("code"), f.get("document_id")) for f in picked[:3]}
+    vs = [v for v in vers if about(v) and v["statuses"] and v["statuses"][0] != "not_checked"
+          and (v.get("code"), v.get("document_id")) not in said] if types else []
     for v in vs[:2]:
         out.append({"text": v["say"], "cites": [v["id"]]})
     if not out:

@@ -203,6 +203,10 @@ def test_ask_why_template_answers_cite_evidence_and_are_audited(app, monkeypatch
     out = r.json()
     assert out["mode"] == "template" and out["sentences"] and out["dropped_count"] == 0
     assert all(c in out["evidence"] for s in out["sentences"] for c in s["cites"])
+    # A verification result its own finding already states is not said a second time
+    said = [s["text"] for s in out["sentences"]]
+    assert sum("modified after signing" in t for t in said) == 1, said
+    assert any("(signed QR)" in t for t in said) and not any("signed qr" in t for t in said)
     assert "decides nothing" in out["notice"]
     q2 = officer.post("/api/applications/APP-2026-000109/ask", json={"question": "What is still unverified?"}).json()
     assert any("source unavailable" in s["text"] for s in q2["sentences"])
