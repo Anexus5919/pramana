@@ -44,6 +44,10 @@ function useCrumbs(): Crumb[] {
     ];
   }
   if (portalApp) return [{ label: "Applications", to: "/portal" }, { label: name ?? appId ?? "Application" }];
+  if (matchPath("/integrity/:view?", pathname))
+    return matchPath("/integrity/faculty", pathname)
+      ? [{ label: "Tools" }, { label: "Integrity", to: "/integrity" }, { label: "Faculty overlaps" }]
+      : [{ label: "Tools" }, { label: "Integrity" }];
   const map: Record<string, Crumb[]> = {
     "/dashboard": [{ label: "Review queue" }],
     "/rules": [{ label: "Governance" }, { label: "Rules" }],
