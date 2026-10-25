@@ -2,7 +2,9 @@
 
 Evidence-linked application validation, document authentication and compliance assistance for AICTE approval processing. Built for Smart India Hackathon 2026, problem statement **26261** (AICTE, Regulation Bureau).
 
-> Decision support only. Findings are preliminary indicators for review by competent authorities. Pramana does not approve, reject or penalise any institution. All demo data is synthetic, and every simulated source is labelled SIMULATED.
+> Decision support only. Findings are preliminary indicators for review by competent authorities. Pramana does not approve, reject or penalise any institution. The demo runs on test records, as the problem statement specifies. Issuer registries connect through adapters, simulated until access is authorised.
+
+**Demo video (under 5 minutes):** [watch on Google Drive](https://drive.google.com/file/d/1EWt5FSUE9omqn0tEgNDzp0GsQ5wujE_l/view?usp=sharing)
 
 ## What it does
 
@@ -21,8 +23,13 @@ Evidence-linked application validation, document authentication and compliance a
   - overwritten fields, overlaid glyphs, white boxes;
   - a value drawn in a font that no other value on the document uses;
   - a seal image that also appears on another issuer's certificate;
-  - photo metadata, geotag distance, and photos modified after their Content Credentials were signed.
-- **Links applications** through shared faculty IDs, certificate numbers, file hashes, reused photos and seals, and identical certificate details. These contradictions are invisible when one document is reviewed at a time.
+  - photo metadata, geotag distance, and photos modified after their Content Credentials were signed;
+  - edits made with everyday tools: a text box or white box drawn over a value in Edge or a PDF reader, a Word round trip, a print to PDF, or a photo of a printout, including an issuer document that arrives without the issuer's signature or only as an image.
+- **Shows the evidence at a glance:**
+  - a proof-strength ladder per requirement, from the institution's own word up to the issuer's signature, with contradictions marked;
+  - a certificate coverage calendar that catches a certificate valid on the submission date but lapsing during the academic session;
+  - a document life story: when a file was created, signed, edited, uploaded and checked.
+- **Links applications** through shared faculty IDs, certificate numbers, file hashes, reused photos and seals, and identical certificate details. These contradictions are invisible when one document is reviewed at a time. The Integrity page draws them as a network of clusters, and a faculty-overlap timeline shows one faculty ID listed full-time by two institutions at once, and since when.
 - **Compares with last year:** land and built-up area, intake, the faculty roster and certificate numbers against the institution's previous application. Only changes that are hard to explain become indicators.
 - **Shows the campus:** a map with the campus on record, the declared map point and each photo's geotag, and a low-weight indicator when a lab photo shows far fewer workstations than declared.
 - **Supports reviewers:**
@@ -32,7 +39,10 @@ Evidence-linked application validation, document authentication and compliance a
   - Ask why: questions about an application answered only from Pramana's own findings, with every sentence citing its evidence;
   - an evidence pack: a signed ZIP with the report, the data and an audit extract, checkable offline;
   - a re-verification watch that re-queries issuer-confirmed certificates after the scrutiny outcome and raises an alert when one changes;
+  - an inspection brief for the visiting committee: where to go, what to count and what to ask, as a PDF;
   - a hash-chained audit trail and replayable validation runs.
+- **Analyses any document** an official drops in, PDF or photo, with the same checks as a validation run and without storing it. Tested on real DSC-signed Government e-Gazettes.
+- **Helps institutions before they submit:** a readiness check lists what the handbook rules will raise, each with its clause and where to fix it.
 - **Hardened for deployment:** sign-in throttling, a `__Host-` session cookie with HSTS behind HTTPS, untrusted files parsed in sandboxed worker processes, per-document envelope encryption with key rotation, a retention policy with an audited purge, and PostgreSQL support.
 
 Start with `docs/usp-and-demo.md`. Research, requirements mapping, design decisions, security and measured results are in `docs/`. Each feature added in the October sprint has its own document:
@@ -45,6 +55,14 @@ Start with `docs/usp-and-demo.md`. Research, requirements mapping, design decisi
 | [docs/features/history.md](docs/features/history.md) | Revision time machine, re-verification watch, year-over-year comparison |
 | [docs/features/photos.md](docs/features/photos.md) | Campus tab with map, Content Credentials (C2PA), room and seat indicator, photo attributions |
 | [docs/features/model-v2.md](docs/features/model-v2.md) | Version 2 of the fine-tuned extractor: training data changes, Kaggle run, comparison with version 1, A11 check |
+| [docs/features/edits.md](docs/features/edits.md) | Edits made with everyday tools (Word, Edge, PDF readers, print to PDF, printout photos) and the 18-method test |
+| [docs/features/random-eval.md](docs/features/random-eval.md) | Randomised blind evaluation: hundreds of generated applications, scored blind, rerunnable with any seed |
+| [docs/features/analyse.md](docs/features/analyse.md) | Analyse a document, including real signed Government e-Gazettes |
+| [docs/features/scan-link.md](docs/features/scan-link.md) | QR codes as links: verify a certificate from any phone camera |
+| [docs/features/insight-proof.md](docs/features/insight-proof.md) | Proof-strength ladder and certificate coverage calendar |
+| [docs/features/insight-network.md](docs/features/insight-network.md) | Integrity network and faculty overlaps |
+| [docs/features/insight-story.md](docs/features/insight-story.md) | Document life story and inspection brief |
+| [docs/features/insight-ready.md](docs/features/insight-ready.md) | Readiness check for institutions before they submit |
 
 ## Quick start (Windows, macOS or Linux)
 
@@ -94,27 +112,30 @@ Demo accounts (password `Pramana@2026`):
 
 ```bash
 cd backend
-.venv/Scripts/python -m pytest              # 73 tests: rules, forensics, signatures, QR, uploads, workflow, platform, officer tools, history, photos
+.venv/Scripts/python -m pytest              # 162 tests: rules, forensics, signatures, QR, uploads, workflow, platform, officer tools, history, photos, edits, insights
 .venv/Scripts/python scripts/evaluate.py    # planted conditions, fields, verification outcomes, controls
 .venv/Scripts/python scripts/eval_hindi.py  # Hindi OCR accuracy
 .venv/Scripts/python scripts/eval_ask.py    # Ask why: kept sentences, citations, latency
 .venv/Scripts/python scripts/bench_sandbox.py
 ```
 
-Current results, measured on 23 Oct 2026 on the merged code:
-- All 51 planted conditions across 11 synthetic applications are detected with no false positives, in deterministic mode.
-- Deterministic patterns read 323 of 328 printed fields. The 5 misses are A11's unfamiliar layout, which goes to manual review without a model.
-- A validation run takes about 1.1 s per application on a laptop CPU, once documents are read.
-- The fine-tuned 1.7B extractor beats a general 4B model on held-out layouts: 92% against 83% of fields fully correct, and 1 of 30 planted instructions followed against 9. It also runs at about half the latency. A 20B model on a cloud service scored 89% and followed 3 of 30.
-- 73 automated tests pass on SQLite. On the platform branch, the full suite at that point (35 tests) also passed on PostgreSQL 16.2.
+Current results, measured on 24 Oct 2026 on the merged code:
+- **Seeded evaluation:** 54 of 54 planted problems found across 11 test applications (83 documents), with 0 false alarms, in deterministic mode. With the fine-tuned model switched on: 50 of 50 (in model mode A11 expects only its instruction-line finding), with 0 false alarms.
+- **Fields:** deterministic patterns read 323 of 328 printed fields; the 5 misses are A11's unfamiliar layout, which goes to manual review without a model. With the model, 328 of 328.
+- **Randomised blind test:** 300 generated applications over three seeds gave 99.2% recall and 91.6% precision. After the fixes, two fresh seeds (200 applications) gave 100% recall and precision, with 0 false alarms on 55 clean applications. Anyone can rerun it with their own seed; see `docs/features/random-eval.md`.
+- **Everyday-editor test:** 18 of 18 edit methods caught (Word, Edge, Acrobat comment tools, print to PDF, photo of a printout); see `docs/features/edits.md`.
+- **Real documents:** 9 of 9 real DSC-signed Government e-Gazettes verified against the CCA India roots, with 0 false indicators.
+- **Our model (version 2):** the fine-tuned Qwen3 1.7B extractor gets 94.7% of fields fully correct on held-out layouts, against 82.5% for a general 4B model and 89.1% for a 20B model on a cloud service. It followed 0 of 30 planted instructions, against 9 and 3, at about 1.1 s per document.
+- **Speed:** a validation run takes about 1.1 to 1.8 s per application on a laptop CPU, once documents are read.
+- **Tests:** 162 automated tests pass on SQLite. On the platform branch, the full suite at that point (35 tests) also passed on PostgreSQL 16.2.
 
-These are upper bounds on synthetic data; see `docs/evaluation-results.md` for controls, feature measurements and limitations.
+Method, controls and limitations: `docs/evaluation-results.md`.
 
 ## Optional models
 
 - **Local extractor** (used in the demo setting):
   1. Install Ollama.
-  2. Build `pramana-extract` with `backend/training` (Kaggle notebook or script, `merge_adapter.py`, Q8_0 conversion).
+  2. Build `pramana-extract-v2` with `backend/training` (Kaggle notebook or script, `merge_adapter.py`, Q8_0 conversion).
   3. Set `PRAMANA_LLM_PROVIDERS=ollama` in `backend/.env`.
   A model value is kept only when it is found on the page.
 - **Ask why** uses `qwen3:4b-instruct-2507-q4_K_M` through Ollama by default. Without a reachable model it answers from templates built from the same evidence.
@@ -145,7 +166,7 @@ backend/
   scripts/            asset fetch, fixtures, seed, evaluation, benchmarks, key rotation, purge
   training/           extractor fine-tuning and evaluation
   tests/
-frontend/             React + Vite + TypeScript UI (Leaflet for the campus map)
+frontend/             React + Vite + TypeScript UI (Cytoscape.js for the integrity network, Leaflet for the campus map)
 docs/                 research, requirements matrix, decisions, USP and demo, security, evaluation
 docs/features/        one document per feature area
 ```
@@ -171,7 +192,7 @@ Environment variables, prefix `PRAMANA_`, in `backend/.env` (see `.env.example`)
 | `MODELS_DIR`, `FETCH_MODELS` | `backend/models`, `true` | Where model weights live, and whether the Devanagari model may be fetched on first use |
 | `MAP_TILE_URL` | OpenStreetMap | Campus map tiles; empty shows a plain plot only |
 | `WATCH_INTERVAL_HOURS` | `24` | Re-verification watch interval |
-| `LLM_PROVIDERS`, `OLLAMA_MODEL` | empty, `pramana-extract` | `ollama` turns on the fine-tuned extractor for fields the patterns miss |
+| `LLM_PROVIDERS`, `OLLAMA_MODEL` | empty, `pramana-extract-v2` | `ollama` turns on the fine-tuned extractor for fields the patterns miss |
 | `ASK_PROVIDERS` | `ollama` | Ask why providers; empty uses templates only |
 
 The full lists are in the settings section of each feature document.
@@ -180,7 +201,7 @@ The full lists are in the settings section of each feature document.
 
 Pramana is released under the MIT licence. Every dependency is free and open source, and model weights use permissive licences:
 - **Backend:** FastAPI, SQLAlchemy, pyHanko, pikepdf, pdfplumber, pypdfium2, RapidOCR with PP-OCR ONNX weights including the PP-OCRv5 Devanagari recogniser (Apache-2.0), onnxruntime, YOLOX-M ONNX weights (Apache-2.0), c2pa-python (MIT or Apache-2.0), OpenCV, Pillow, imagehash, networkx, rapidfuzz, reportlab, segno, cryptography, argon2-cffi; optional psycopg 3 (LGPL-3.0) for PostgreSQL.
-- **Frontend:** React, Vite and Leaflet (BSD-2-Clause). Map data and tiles are from OpenStreetMap contributors (ODbL), with the attribution always shown.
+- **Frontend:** React, Vite, Tailwind CSS, TanStack Query, Cytoscape.js and three.js (MIT), and Leaflet (BSD-2-Clause). Map data and tiles are from OpenStreetMap contributors (ODbL), with the attribution always shown.
 - **Fixtures only:** Noto Sans Devanagari (SIL Open Font License), uharfbuzz and fontTools, and three Wikimedia Commons photos under CC BY-SA 3.0, CC BY-SA 4.0 and CC0. The photos and fonts are downloaded, not committed; attributions are in `docs/features/photos.md`.
 
 We deliberately avoided AGPL PDF libraries and detection, OCR or forensics models with non-commercial or AGPL weight licences; `docs/architecture-decisions.md` explains why.
