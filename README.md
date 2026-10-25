@@ -120,7 +120,7 @@ cd backend
 ```
 
 Current results, measured on 24 Oct 2026 on the merged code:
-- **Seeded evaluation:** 54 of 54 planted problems found across 11 test applications (83 documents), with 0 false alarms, in deterministic mode. With the fine-tuned model switched on: 50 of 50 (in model mode A11 expects only its instruction-line finding), with 0 false alarms.
+- **Test applications:** 54 of 54 planted problems found across 11 test applications (83 documents), with 0 false alarms, in deterministic mode. With the fine-tuned model switched on: 50 of 50 (in model mode A11 expects only its instruction-line finding), with 0 false alarms.
 - **Fields:** deterministic patterns read 323 of 328 printed fields; the 5 misses are A11's unfamiliar layout, which goes to manual review without a model. With the model, 328 of 328.
 - **Randomised blind test:** 300 generated applications over three seeds gave 99.2% recall and 91.6% precision. After the fixes, two fresh seeds (200 applications) gave 100% recall and precision, with 0 false alarms on 55 clean applications. Anyone can rerun it with their own seed; see `docs/features/random-eval.md`.
 - **Everyday-editor test:** 18 of 18 edit methods caught (Word, Edge, Acrobat comment tools, print to PDF, photo of a printout); see `docs/features/edits.md`.
