@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api, qk, setCsrfToken } from "../api";
+import { forgetChats } from "../drishti/store";
 import type { Role, SessionInfo } from "../types";
 
 async function loadSession(): Promise<SessionInfo | null> {
@@ -50,6 +51,7 @@ export function useLogout() {
     mutationFn: () => api.logout(),
     onSettled: () => {
       setCsrfToken(null);
+      forgetChats();
       qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" && q.queryKey[0] !== "demo-accounts" });
       qc.setQueryData(qk.me, null);
     },
