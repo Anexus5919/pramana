@@ -37,7 +37,7 @@ TEMPLATES: dict[str, Template] = {
     "rect.letter_finalised": Template(INSTITUTION, "letter_finalised", "AICTE sent a deficiency letter",
                                       "{round_label} for {application_id}: {item_count} to correct. "
                                       "Respond by {respond_by}."),
-    "rect.requested": Template(INSTITUTION, "letter_finalised", "AICTE asked for corrections",
+    "rect.requested": Template(INSTITUTION, "rectification_requested", "AICTE asked for corrections",
                                "{round_label} for {application_id}: {item_count} to correct."),
     "rect.institution_reply": Template(CELL, "institution_message", "{institution} replied on {where}",
                                        "{round_label}, {application_id}: {item_title}"),

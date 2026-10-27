@@ -168,8 +168,8 @@ def test_the_institution_never_sees_officer_names_or_forensic_data(world, a4):
 
 def test_attachments_are_checked_by_their_bytes_and_stored_encrypted(world, a4):
     from pramana.config import get_settings
-    from pramana.db import SessionLocal
     from pramana.conversation.models import RectMessage
+    from pramana.db import SessionLocal
 
     inst, other = _login(world, "inst4"), _login(world, "inst5")
     general = _item(_threads(inst, A4), 0)["id"]
@@ -260,7 +260,7 @@ def test_another_rectification_stays_possible_while_a_review_request_waits(world
     assert r.status_code == 200, r.text
     t = _threads(inst, A9)
     assert t["round"]["letter_id"] is None and [x["item_no"] for x in t["threads"]] == [1, 0]
-    assert [n for n in _notes(inst)["items"] if n["event"] == "letter_finalised"]
+    assert [n for n in _notes(inst)["items"] if n["event"] == "rectification_requested"]
     item1 = _item(t, 1)["id"]
     assert _post(inst, item1, "We believe this item was already satisfied in our first submission.",
                  kind="review_request").status_code == 200
@@ -273,8 +273,8 @@ def test_another_rectification_stays_possible_while_a_review_request_waits(world
 
 
 def test_every_event_notifies_the_other_side_and_read_state_is_per_user(world, a4):
-    from pramana.db import SessionLocal
     from pramana.conversation.models import Notification
+    from pramana.db import SessionLocal
 
     officer, admin, inst = _login(world, "officer"), _login(world, "admin"), _login(world, "inst4")
     verifier = _login(world, "verifier")
@@ -305,8 +305,8 @@ def test_every_event_notifies_the_other_side_and_read_state_is_per_user(world, a
 
 def test_messages_and_status_changes_are_audited_by_id_and_digest(world, a4):
     from pramana import audit
-    from pramana.db import SessionLocal
     from pramana.conversation.models import RectMessage, RectStatusChange
+    from pramana.db import SessionLocal
     from pramana.models import AuditEvent
 
     db = SessionLocal()
