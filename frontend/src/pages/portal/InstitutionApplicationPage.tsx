@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { ApiError, api, qk } from "../../api";
+import { useOutcomeView } from "../../conversation/api";
 import { fmtDate } from "../../lib/format";
 import { roundLabel } from "../../lib/labels";
 import type { ApplicationDetail, DocumentSummary, Finding } from "../../types";
@@ -300,6 +301,7 @@ export default function InstitutionApplicationPage() {
   const askedEnabled = !!app && ASKED_STATUSES.has(app.status);
   const findings = useQuery({ queryKey: qk.findings(appId), queryFn: () => api.findings(appId), enabled: askedEnabled });
   const docs = useMemo(() => currentDocs(app?.documents ?? []), [app?.documents]);
+  const outcome = useOutcomeView(appId);
 
   const runDone = useCallback(
     (status: string) => {
@@ -407,6 +409,7 @@ export default function InstitutionApplicationPage() {
         }}
         editing={editing}
         readinessFix={editable && readiness?.application_id === app.id ? readiness.counts.fix : null}
+        outcomeRecorded={!!outcome.data?.outcome}
       />
 
       {editable && !rect && (
