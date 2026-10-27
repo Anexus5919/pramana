@@ -5,6 +5,10 @@
 @import "@fontsource-variable/ibm-plex-sans";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
+/* Hindi in the app (Drishti replies, Devanagari values): split by unicode-range, so Latin pages never fetch it */
+@import "@fontsource/ibm-plex-sans-devanagari/400.css";
+@import "@fontsource/ibm-plex-sans-devanagari/500.css";
+@import "@fontsource/ibm-plex-sans-devanagari/600.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -186,7 +190,9 @@
  * never reach the landing pages, the login page or /scan. See frontend/DESIGN-v2.md.
  */
 html[data-surface="app"] {
-  --ff-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ff-sans:
+    "IBM Plex Sans Variable", "IBM Plex Sans Devanagari", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Nirmala UI",
+    "Noto Sans Devanagari", sans-serif;
   --ff-display: var(--ff-sans);
   --ff-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
 
@@ -392,6 +398,19 @@ html[data-surface="app"] .glass {
 }
 html[data-surface="app"] .grain::after {
   display: none;
+}
+/* Drishti's button holds the bottom-right corner: toasts stack above it, and beside its open window when there is room.
+   Sticky panes that reach the bottom of the viewport subtract --drishti-clear to end above it. */
+html[data-drishti] {
+  --drishti-clear: 64px;
+}
+html[data-drishti] [data-toast-region] {
+  bottom: 88px;
+}
+@media (min-width: 840px) {
+  html[data-drishti="open"] [data-toast-region] {
+    right: 412px;
+  }
 }
 
 @theme inline {

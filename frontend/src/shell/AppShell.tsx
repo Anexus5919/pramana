@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } fro
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/session";
 import { EyeMark } from "../brand/EyeMark";
+import { Drishti } from "../drishti";
 import { Sheet } from "../ui/Dialog";
 import { ToastProvider } from "../ui/Toast";
 import { cn } from "../ui/cn";
@@ -137,13 +138,15 @@ export function AppShell() {
         <main id="main" tabIndex={-1} className="w-full min-w-0 flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
         </main>
-        <footer className="px-4 pb-6 sm:px-6 lg:px-8">
+        {/* Bottom padding clears Drishti's button, so the last line can scroll out from under it */}
+        <footer className="px-4 pb-24 sm:px-6 lg:px-8">
           <p className={cn("mx-auto border-t border-line pt-4 text-xs text-ink-3", portal ? "max-w-[960px]" : "max-w-[1600px]")}>
             {DISCLAIMER}
           </p>
         </footer>
       </div>
       {!portal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
+      <Drishti />
     </div>
   );
 }

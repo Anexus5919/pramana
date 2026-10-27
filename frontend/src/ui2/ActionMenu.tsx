@@ -33,6 +33,8 @@ export interface ActionMenuProps {
   align?: "start" | "end";
   /** Menu width in px */
   width?: number;
+  /** Opens the menu each time it changes to a new non-zero value, e.g. from a deep link */
+  openSignal?: number;
   className?: string;
 }
 
@@ -46,6 +48,7 @@ export function ActionMenu({
   icon,
   align = "end",
   width = 248,
+  openSignal = 0,
   className,
 }: ActionMenuProps) {
   const [open, setOpen] = useState(false);
@@ -55,6 +58,10 @@ export function ActionMenu({
   const id = useId();
   const navigate = useNavigate();
   const visible = items.filter((i) => !i.hidden);
+
+  useEffect(() => {
+    if (openSignal) setOpen(true);
+  }, [openSignal]);
 
   useEffect(() => {
     if (!open) return;
