@@ -3,6 +3,8 @@ import { ArrowRight, RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, qk } from "../../api";
+import { useAuth } from "../../auth/session";
+import { useAwaiting, type AwaitingItem } from "../../conversation/api";
 import { fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
 import { humanize, roundPhrase } from "../../lib/labels";
 import type { DashboardAlert, DashboardRow } from "../../types";
@@ -22,6 +24,7 @@ import {
   SeverityIndicator,
   SimulatedTag,
   Skeleton,
+  StatusBadge,
   Stat,
   StatGroup,
   Toolbar,
@@ -97,7 +100,73 @@ function AttentionList({ alerts }: { alerts: DashboardAlert[] }) {
   );
 }
 
+const ASKED: Record<string, string> = {
+  reply: "Replied",
+  question: "Asked a question",
+  review_request: "Requested a review",
+};
+
+/** Institutions' replies, questions and review requests the cell has not answered; review requests first. */
+function AwaitingReplyPanel() {
+  const q = useAwaiting();
+  const items = q.data?.items ?? [];
+  // Shown only while something waits; an empty panel would be one more box to read past
+  if (q.data && items.length === 0) return null;
+  const shown = items.slice(0, 6);
+  const where = (i: AwaitingItem) => (i.item_no ? `item ${i.item_no}` : "the general thread");
+  return (
+    <Panel
+      as="aside"
+      title="Awaiting your reply"
+      description={
+        q.data
+          ? `${pluralize(q.data.awaiting, "thread")} where the institution wrote last${q.data.pending_reviews ? `, ${pluralize(q.data.pending_reviews, "review request")} among them. A review request holds up the outcome until you reply` : ""}.`
+          : undefined
+      }
+      padding="none"
+      footer={items.length > shown.length ? <span className="mr-auto text-xs text-ink-3">Showing {shown.length} of {items.length}</span> : undefined}
+    >
+      {q.isPending ? (
+        <div role="status" className="px-5 pb-4">
+          <span className="sr-only">Loading</span>
+          <Skeleton className="h-16" />
+        </div>
+      ) : q.error ? (
+        <ErrorState compact error={q.error} title="Could not load the threads" onRetry={() => void q.refetch()} />
+      ) : (
+        <ul className="divide-y divide-line border-t border-line">
+          {shown.map((i) => (
+            <li key={i.thread_id}>
+              <Link
+                to={workspacePath(i.application_id, "rectification", { thread: i.thread_id })}
+                className="block px-5 py-3 transition-colors duration-150 hover:bg-surface-2"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 text-sm font-medium text-ink">{i.institution}</span>
+                  {i.pending_review && <StatusBadge tone="manual">Review request</StatusBadge>}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-ink-3">
+                  <MetaList
+                    items={[
+                      `${ASKED[i.kind] ?? "Wrote"} on ${where(i)}`,
+                      i.round_label,
+                      <span key="t" title={fmtDateTime(i.last_at)}>
+                        {fmtRelative(i.last_at)}
+                      </span>,
+                    ]}
+                  />
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
 export default function DashboardPage() {
+  const { is } = useAuth();
   const dash = useQuery({ queryKey: qk.dashboard, queryFn: api.dashboard });
   const categoryLabel = useCategoryLabel();
   const [query, setQuery] = useState("");
@@ -252,6 +321,8 @@ export default function DashboardPage() {
           }
         />
       </StatGroup>
+
+      {is("officer", "admin") && <AwaitingReplyPanel />}
 
       <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
         <Panel title="Applications" padding="none">

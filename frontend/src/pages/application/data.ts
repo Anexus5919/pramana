@@ -6,7 +6,7 @@ import type { WorkspaceSection } from "../../shell/nav";
 import type { BBox, DocumentDetail, Evidence, Finding, ReviewAction } from "../../types";
 
 /** Section ids that appear in the URL path; Summary is the bare /applications/:id. */
-const PATH_SECTIONS: readonly WorkspaceSection[] = ["findings", "documents", "comparisons", "activity"];
+const PATH_SECTIONS: readonly WorkspaceSection[] = ["findings", "documents", "comparisons", "rectification", "activity"];
 
 export function isPathSection(s: string | undefined): s is WorkspaceSection {
   return !!s && (PATH_SECTIONS as readonly string[]).includes(s);

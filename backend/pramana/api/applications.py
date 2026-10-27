@@ -13,6 +13,7 @@ from .. import audit, jobs, sandbox
 from .. import serializers as ser
 from ..auth import OFFICIAL_ROLES, current_user, load_application, require_roles
 from ..config import get_settings
+from ..conversation.threads import notify_round_opened
 from ..crypto import cache_get, cache_put, load_document, store_document
 from ..db import get_db
 from ..models import (
@@ -464,6 +465,7 @@ def request_rectification(app_id: str, body: RectifyBody, user: User = Depends(r
                                  "and cannot be sent to the institution (" + ", ".join(f.code for f in held) + "). "
                                  "Describe what to correct in the message, or draft a deficiency letter.")
     r = open_rectification(db, app, findings, message, user)
+    notify_round_opened(db, app, r, None)
     db.commit()
     return {"id": r.id, "round": app.round, "items": r.items}
 

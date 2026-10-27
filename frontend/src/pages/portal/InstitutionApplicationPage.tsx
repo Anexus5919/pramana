@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { ApiError, api, qk } from "../../api";
+import { useOutcomeView } from "../../conversation/api";
 import { fmtDate } from "../../lib/format";
 import { roundLabel } from "../../lib/labels";
 import type { ApplicationDetail, DocumentSummary, Finding } from "../../types";
@@ -27,7 +28,8 @@ import { useLetters } from "../application/officer/officerApi";
 import { DeclaredFigures, INTAKE_HELP, NumbersEditor, ProgrammesEditor, ProgrammesTable, declaredProgrammes } from "./DeclaredEditor";
 import { fieldErrors, fromDraft, programmeErrors, toDraft, type DeclaredDraft } from "./declared";
 import { NextStepPanel } from "./NextStep";
-import { EDITABLE, checklistSourceText, currentDocs, missingRequired, openRectification, portalStage, progressSteps } from "./progress";
+import { OutcomePanel } from "./OutcomePanel";
+import { EDITABLE, checklistSourceText, currentDocs, latestRectification, missingRequired, openRectification, portalStage, progressSteps } from "./progress";
 import { ReadinessPanel } from "./readiness/ReadinessPanel";
 import type { Readiness } from "./readiness/types";
 import { DeficiencyLetterPanel, itemDocType } from "./RectificationLetter";
@@ -254,6 +256,25 @@ function AskedAboutPanel({ findings, rectifying }: { findings: Finding[]; rectif
 
 const ASKED_STATUSES = new Set(["rectification_requested", "under_review"]);
 
+/** ?show=letter or ?show=outcome from a notification: scroll to that panel once it is on the page, then drop the flag. */
+function useShowParam(ready: boolean) {
+  const [sp, setSp] = useSearchParams();
+  const show = sp.get("show");
+  useEffect(() => {
+    if (!show || !ready) return;
+    // The panels load their own data; give them a moment to render before looking
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(show === "outcome" ? "outcome" : "letter");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+      const next = new URLSearchParams(sp);
+      next.delete("show");
+      setSp(next, { replace: true });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [show, ready, sp, setSp]);
+}
+
 export default function InstitutionApplicationPage() {
   const { appId = "" } = useParams();
   const qc = useQueryClient();
@@ -273,10 +294,14 @@ export default function InstitutionApplicationPage() {
 
   const app = q.data;
   const rect = app ? openRectification(app) : undefined;
+  // After a resubmission the round's conversation stays on the page, read-only for documents
+  const convRect = rect ?? (app ? latestRectification(app) : undefined);
+  useShowParam(!!app);
   const letters = useLetters(appId, !!rect);
   const askedEnabled = !!app && ASKED_STATUSES.has(app.status);
   const findings = useQuery({ queryKey: qk.findings(appId), queryFn: () => api.findings(appId), enabled: askedEnabled });
   const docs = useMemo(() => currentDocs(app?.documents ?? []), [app?.documents]);
+  const outcome = useOutcomeView(appId);
 
   const runDone = useCallback(
     (status: string) => {
@@ -384,12 +409,14 @@ export default function InstitutionApplicationPage() {
         }}
         editing={editing}
         readinessFix={editable && readiness?.application_id === app.id ? readiness.counts.fix : null}
+        outcomeRecorded={!!outcome.data?.outcome}
       />
 
       {editable && !rect && (
         <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} onResult={setReadiness} />
       )}
-      {rect && <DeficiencyLetterPanel appId={app.id} rect={rect} docLabel={docLabel} onShowDocument={showSlot} />}
+      <OutcomePanel appId={app.id} />
+      {convRect && <DeficiencyLetterPanel appId={app.id} rect={convRect} docLabel={docLabel} onShowDocument={showSlot} resubmitted={!rect} />}
       {editable && rect && (
         <ReadinessPanel app={app} onShowDocument={showSlot} onEditFigure={(key) => setFigure((f) => ({ key, n: (f?.n ?? 0) + 1 }))} onResult={setReadiness} />
       )}

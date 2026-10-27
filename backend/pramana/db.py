@@ -38,6 +38,7 @@ def get_db() -> Iterator[Session]:
 
 def init_db() -> None:
     from . import models  # noqa: F401  registers tables
+    from .conversation import models as _conversation  # noqa: F401
     from .history import models as _history  # noqa: F401
 
     Base.metadata.create_all(engine)
@@ -46,5 +47,6 @@ def init_db() -> None:
 def drop_all() -> None:
     """Remove every table; the seed script uses it on a database server, where there is no file to delete."""
     from . import models  # noqa: F401  registers tables
+    from .conversation import models as _conversation  # noqa: F401
 
     Base.metadata.drop_all(engine)

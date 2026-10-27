@@ -1244,8 +1244,9 @@ def main() -> None:
             {"application": "A1", "outcome": "no_deficiency",
              "reason": "All documents confirmed with the issuers and AICTE records; no deficiency found."},
             {"application": "A6", "outcome": "deficiencies_recorded",
-             "reason": "Three faculty are also listed by Panchganga Institute; roster deficiency communicated. "
-                       "Issuer-confirmed certificates accepted."},
+             # The institution reads this reason in its portal, so it names no other institution
+             "reason": "Three faculty on the roster could not be confirmed as working only at this institution; the "
+                       "roster deficiency was communicated. Issuer-confirmed certificates accepted."},
         ],
         "demo_accounts": [
             {"username": "officer", "display_name": "R. Sharma (Scrutiny Officer)", "role": "officer"},

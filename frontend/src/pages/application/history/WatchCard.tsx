@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../../api";
@@ -6,6 +6,7 @@ import { fmtDate, fmtDateTime, fmtRelative, pluralize } from "../../../lib/forma
 import { workspacePath } from "../../../shell/nav";
 import {
   Button,
+  ButtonLink,
   Callout,
   Code,
   DataTable,
@@ -25,6 +26,7 @@ import {
   useToast,
   type Column,
 } from "../../../ui2";
+import { detectionWords } from "../../../conversation/labels";
 import { roundLabel, type Tone } from "../../../lib/labels";
 import { useWorkspace } from "../context";
 import { useVerifications } from "../data";
@@ -65,7 +67,20 @@ function issuerName(s: string): string {
 
 const MIN_REASON = 10;
 
-export function OutcomeDialog({ open, onClose, watch }: { open: boolean; onClose: () => void; watch: ApplicationWatch | undefined }) {
+export function OutcomeDialog({
+  open,
+  onClose,
+  watch,
+  reviewPending = 0,
+  reviewLink,
+}: {
+  open: boolean;
+  onClose: () => void;
+  watch: ApplicationWatch | undefined;
+  /** Review requests without a cell reply: the server refuses the outcome until each is answered */
+  reviewPending?: number;
+  reviewLink?: string;
+}) {
   const { app } = useWorkspace();
   const toast = useToast();
   const m = useRecordOutcome(app.id);
@@ -89,9 +104,11 @@ export function OutcomeDialog({ open, onClose, watch }: { open: boolean; onClose
 
   const reasonError = tried && reason.trim().length < MIN_REASON ? `Write a reason of at least ${MIN_REASON} characters.` : undefined;
   const outcomeError = tried && !outcome ? "Choose the outcome the authority decided." : undefined;
+  const words = detectionWords(reason);
+  const blocked = reviewPending > 0;
   const submit = () => {
     setTried(true);
-    if (!outcome || reason.trim().length < MIN_REASON) return;
+    if (blocked || !outcome || reason.trim().length < MIN_REASON) return;
     m.mutate(
       { outcome, reason: reason.trim() },
       {
@@ -114,17 +131,35 @@ export function OutcomeDialog({ open, onClose, watch }: { open: boolean; onClose
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={submit} loading={m.isPending}>
+          <Button variant="primary" onClick={submit} loading={m.isPending} disabled={blocked}>
             Record outcome
           </Button>
         </>
       }
     >
       <div className="space-y-4">
-        {m.error && (
-          <Callout tone="danger" role="alert" title="The outcome was not recorded">
-            {errorMessage(m.error)}
+        {blocked ? (
+          <Callout
+            tone="warning"
+            role="status"
+            title="Reply to the institution's review request first"
+            action={
+              reviewLink ? (
+                <ButtonLink size="sm" to={reviewLink} onClick={onClose} trailingIcon={<ArrowRight aria-hidden />}>
+                  Open the request
+                </ButtonLink>
+              ) : undefined
+            }
+          >
+            The institution asked the AICTE Scrutiny Cell to look again at {reviewPending === 1 ? "an item" : `${reviewPending} items`}. Reply first; the outcome can be
+            recorded after that. Requesting another rectification stays possible.
           </Callout>
+        ) : (
+          m.error && (
+            <Callout tone="danger" role="alert" title="The outcome was not recorded">
+              {errorMessage(m.error)}
+            </Callout>
+          )
         )}
         <Field label="Outcome" required error={outcomeError}>
           <Select value={outcome} onChange={(e) => setOutcome(e.target.value)}>
@@ -136,9 +171,23 @@ export function OutcomeDialog({ open, onClose, watch }: { open: boolean; onClose
             ))}
           </Select>
         </Field>
-        <Field label="Reason" required error={reasonError} hint="A sentence the next reviewer can follow. It is kept in the audit trail.">
+        <Field
+          label="Reason"
+          required
+          error={reasonError}
+          hint="The institution reads this reason in its portal, and it is kept in the audit trail. Say what was decided and why; do not describe how an indicator was found."
+        >
           <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} />
         </Field>
+        {words.length > 0 && (
+          <p className="-mt-2 flex items-start gap-1.5 text-xs font-medium text-manual-fg">
+            <AlertTriangle aria-hidden className="mt-px size-3.5 shrink-0" />
+            <span>
+              This mentions {words.map((w) => `"${w}"`).join(", ")}, which describes how something was found. You can still record it; consider stating the
+              deficiency instead.
+            </span>
+          </p>
+        )}
         <p className="text-sm text-ink-3 text-pretty">
           {ver.isPending
             ? "Counting the certificates that issuer registries confirmed on the latest run."

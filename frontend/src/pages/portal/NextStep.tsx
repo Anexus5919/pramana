@@ -22,6 +22,8 @@ export interface NextStepProps {
   editing: boolean;
   /** Items the readiness check lists to fix, once it has run */
   readinessFix?: number | null;
+  /** AICTE recorded a scrutiny outcome; the outcome panel below carries the reasons */
+  outcomeRecorded?: boolean;
 }
 
 function Sentence({ children }: { children: ReactNode }) {
@@ -43,6 +45,7 @@ export function NextStepPanel({
   onSubmit,
   editing,
   readinessFix,
+  outcomeRecorded = false,
 }: NextStepProps) {
   const n = missing.length;
   let body: ReactNode;
@@ -88,7 +91,11 @@ export function NextStepPanel({
         );
         break;
       case "under-review":
-        body = <Sentence>AICTE is reviewing your application. You will see any request for corrections here.</Sentence>;
+        body = outcomeRecorded ? (
+          <Sentence>AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.</Sentence>
+        ) : (
+          <Sentence>AICTE is reviewing your application. You will see any request for corrections here.</Sentence>
+        );
         break;
       case "rectification":
         body = (
@@ -117,7 +124,9 @@ export function NextStepPanel({
         break;
       case "rectified": {
         const r = lastResponded(app);
-        body = (
+        body = outcomeRecorded ? (
+          <Sentence>AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.</Sentence>
+        ) : (
           <Sentence>
             Resubmitted{r?.responded_at ? ` on ${fmtDate(r.responded_at)}` : ""}. AICTE is reviewing the corrections.
           </Sentence>

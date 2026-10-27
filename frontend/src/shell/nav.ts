@@ -53,14 +53,18 @@ export function applicationPath(role: Role | undefined, appId: string): string {
 
 /* Application workspace sections ------------------------------------------------ */
 
-export type WorkspaceSection = "summary" | "findings" | "documents" | "comparisons" | "activity";
+export type WorkspaceSection = "summary" | "findings" | "documents" | "comparisons" | "rectification" | "activity";
 
-/** The five workspace sections, in order. Summary is the bare /applications/:id URL. */
+/**
+ * The workspace sections, in order. Summary is the bare /applications/:id URL. Rectification shows once the
+ * application has a correction round: the letter's items and the conversation with the institution.
+ */
 export const WORKSPACE_SECTIONS: { id: WorkspaceSection; label: string }[] = [
   { id: "summary", label: "Summary" },
   { id: "findings", label: "Findings" },
   { id: "documents", label: "Documents" },
   { id: "comparisons", label: "Comparisons" },
+  { id: "rectification", label: "Rectification" },
   { id: "activity", label: "Activity" },
 ];
 
@@ -109,6 +113,7 @@ export const WORKSPACE_CRUMB_LABEL: Record<string, string> = {
   findings: "Findings",
   documents: "Documents",
   comparisons: "Comparisons",
+  rectification: "Rectification",
   activity: "Activity",
   overview: "Summary",
   checklist: "Findings",

@@ -26,6 +26,11 @@ export function openRectification(app: ApplicationDetail): Rectification | undef
   return [...app.rectifications].filter((r) => r.status === "open").sort((a, b) => b.round - a.round)[0];
 }
 
+/** The latest correction round, open or answered: its conversation stays on the page after a resubmission. */
+export function latestRectification(app: ApplicationDetail): Rectification | undefined {
+  return [...app.rectifications].sort((a, b) => b.round - a.round || b.created_at.localeCompare(a.created_at))[0];
+}
+
 /** The rectification most recently answered, for "Resubmitted on" sentences. */
 export function lastResponded(app: ApplicationDetail): Rectification | undefined {
   return [...app.rectifications]
