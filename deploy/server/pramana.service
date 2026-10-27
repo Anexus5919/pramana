@@ -4,8 +4,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=pramana
-Group=pramana
+User=pramana-app
+Group=pramana-app
 WorkingDirectory=/opt/pramana/backend
 # Only Caddy on this host talks to the app; it passes the visitor's address for the sign-in limits
 ExecStart=/opt/pramana/backend/.venv/bin/uvicorn pramana.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips 127.0.0.1

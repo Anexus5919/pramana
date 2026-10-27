@@ -7,5 +7,5 @@ SNAPSHOT=/opt/pramana-snapshot/snapshot.tar.gz
 systemctl stop pramana.service || true
 rm -rf "$APP_DIR/var" "$APP_DIR/backend/trust/demo" "$APP_DIR/backend/trust/demo-c2pa" "$APP_DIR/fixtures/out"
 tar -xzf "$SNAPSHOT" -C "$APP_DIR"
-chown -R pramana:pramana "$APP_DIR/var" "$APP_DIR/backend/trust" "$APP_DIR/fixtures"
+chown -R pramana-app:pramana-app "$APP_DIR/var" "$APP_DIR/backend/trust" "$APP_DIR/fixtures"
 systemctl start pramana.service

@@ -39,19 +39,19 @@ if ! command -v uv >/dev/null; then
   curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 fi
 
-id pramana >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/pramana --shell /usr/sbin/nologin pramana
+id pramana-app >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/pramana-app --shell /usr/sbin/nologin pramana-app
 if [ ! -d "$APP_DIR/.git" ]; then
   git clone --depth 1 "$REPO_URL" "$APP_DIR"
 else
   git -C "$APP_DIR" pull --ff-only
 fi
-chown -R pramana:pramana "$APP_DIR"
+chown -R pramana-app:pramana-app "$APP_DIR"
 
-sudo -u pramana -H bash -c "cd $APP_DIR/frontend && corepack pnpm install --frozen-lockfile && corepack pnpm build"
-sudo -u pramana -H bash -c "cd $APP_DIR/backend && uv venv --python python3.12 .venv && uv pip install --python .venv/bin/python -e . \
+sudo -u pramana-app -H bash -c "cd $APP_DIR/frontend && corepack pnpm install --frozen-lockfile && corepack pnpm build"
+sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && uv venv --python python3.12 .venv && uv pip install --python .venv/bin/python -e . \
   && .venv/bin/python scripts/fetch_assets.py && .venv/bin/python scripts/fetch_photo_assets.py"
 # RapidOCR fetches its detection and recognition weights on first use; do it now, not in a judge's first upload
-sudo -u pramana -H bash -c "cd $APP_DIR/backend && .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'"
+sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'"
 
 # Lite mode: no language models on this box. Ask why answers from templates; fields the model read are in the snapshot.
 cat > "$APP_DIR/backend/.env" <<EOF
@@ -66,7 +66,7 @@ PRAMANA_SANDBOX_WORKERS=1
 # The demo password is public, so a stranger's wrong guesses must not lock judges out; the per-address limit stays
 PRAMANA_LOGIN_MAX_FAILURES_PER_USER=1000
 EOF
-chown pramana:pramana "$APP_DIR/backend/.env" && chmod 600 "$APP_DIR/backend/.env"
+chown pramana-app:pramana-app "$APP_DIR/backend/.env" && chmod 600 "$APP_DIR/backend/.env"
 
 install -d -o root -g root -m 755 "$SNAP_DIR"
 install -m 644 "$SNAPSHOT" "$SNAP_DIR/snapshot.tar.gz"
