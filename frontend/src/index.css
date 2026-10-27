@@ -5,6 +5,10 @@
 @import "@fontsource-variable/ibm-plex-sans";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
+/* Hindi in the app (Drishti replies, Devanagari values): split by unicode-range, so Latin pages never fetch it */
+@import "@fontsource/ibm-plex-sans-devanagari/400.css";
+@import "@fontsource/ibm-plex-sans-devanagari/500.css";
+@import "@fontsource/ibm-plex-sans-devanagari/600.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -186,7 +190,9 @@
  * never reach the landing pages, the login page or /scan. See frontend/DESIGN-v2.md.
  */
 html[data-surface="app"] {
-  --ff-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ff-sans:
+    "IBM Plex Sans Variable", "IBM Plex Sans Devanagari", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Nirmala UI",
+    "Noto Sans Devanagari", sans-serif;
   --ff-display: var(--ff-sans);
   --ff-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
 
