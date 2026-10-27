@@ -123,7 +123,7 @@ export function HelpPage() {
           Open <Link to="/login">Sign in</Link>. In the demonstration, one click on a demo account signs in with the shared demo
           password: officials (scrutiny officer, verification cell, administrator) or one of eleven institutions.
         </li>
-        <li>A session lasts 8 hours. After too many wrong passwords, sign-in pauses for a while for that address.</li>
+        <li>A session lasts 8 hours. After too many sign-in attempts, sign-in pauses for a while.</li>
         <li>On the public demonstration, data returns to its starting state every night at 03:00 IST.</li>
       </ul>
 
