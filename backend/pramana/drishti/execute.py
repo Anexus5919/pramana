@@ -362,7 +362,8 @@ def _summary_institution(db: Session, user: User, app: Application, lang: str) -
         data.update(asked=len(asked))
         items = [item("readiness", i.get("finding_id") or str(n), i["title"], i.get("message") or "", href, app.id,
                       "application") for n, i in enumerate(asked[:MAX_ITEMS])]
-        count = len(asked)
+        # Under review nothing is asked of the institution, so the window shows the status line, not a large 0
+        count = len(asked) or None
     items.append(item("page", f"{app.id}:portal", rp.t("open_application", lang), app.id, href, app.id, "application"))
     return Result("answer", "summary_institution", data, count, items, None)
 
