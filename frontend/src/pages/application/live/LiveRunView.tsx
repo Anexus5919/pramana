@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { fmtMs, pluralize } from "../../../lib/format";
 import { channelMeta, humanize, stageLabel } from "../../../lib/labels";
-import { cn, DescriptionList, SimulatedTag, Stepper, VerificationBadge, type Step } from "../../../ui2";
+import { cn, DescriptionList, SimulatedTag, Stepper, type Step } from "../../../ui2";
 import { useDocTypeLabel } from "../context";
+import { AttemptBadge } from "../parts";
 import { currentStage, DOC_STEPS, findingsSoFar, RUN_STAGES, type DocStep, type LiveCheck, type LiveDoc, type LiveState } from "./useLiveRun";
 
 const STEP_LABEL: Record<DocStep, string> = {
@@ -92,7 +93,7 @@ function CheckRow({ c, docLabel }: { c: LiveCheck; docLabel: string }) {
         <span className="block truncate text-xs text-ink-3">{docLabel}</span>
       </span>
       {c.simulated && <SimulatedTag />}
-      <VerificationBadge status={c.status} />
+      <AttemptBadge status={c.status} />
     </li>
   );
 }

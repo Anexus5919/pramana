@@ -25,6 +25,7 @@ from ..models import Application, Document, VerificationAttempt, round_label
 from ..pipeline.llm_extract import INJECTION, _post
 from ..rules.engine import active_ruleset
 from ..verification.base import channel_label
+from ..verification.effective import effective_document_status
 from .common import FORBIDDEN_WORDS, citation, latest_run, rules_by_id, rules_needing, run_findings
 from .settings import officer_settings
 
@@ -60,7 +61,13 @@ DOC_WORDS = {
 }
 VER_SUPPORT = {"verified"}
 NOT_VERIFIED = {"not_checked", "manual_review_required", "source_unavailable", "verification_pending",
-                "mismatch_detected", "expired"}
+                "mismatch_detected", "expired", "officer_reviewed"}
+# Document statuses in the words the workspace shows officials
+DOC_STATUS_WORDS = {"not_checked": "no outside source", "officer_reviewed": "reviewed by officer"}
+DOC_STATUS_NOTE = {
+    "not_checked": " No issuing body is connected for this kind of document, so it cannot be confirmed from outside.",
+    "officer_reviewed": " An official examined it and recorded a note; no issuing body confirmed it.",
+}
 CLAIMS: list[tuple[str, re.Pattern, set[str], str | None]] = [
     ("unverified", re.compile(r"\b(unverified|not (yet |been )?(verified|confirmed|authenticated)"
                               r"|could not be (confirmed|verified|authenticated)|unconfirmed|not checked)\b", re.I),
@@ -115,6 +122,10 @@ def _h(code: str | None) -> str:
     return (code or "").replace("_", " ")
 
 
+def _doc_status(code: str | None) -> str:
+    return DOC_STATUS_WORDS.get(code or "", _h(code))
+
+
 def _value(v: Any) -> str:
     s = str(v)
     if INJECTION.search(s) or len(s) > 80:
@@ -141,10 +152,12 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
                       "label": label, "say": say}
         return iid
 
+    # What officials read now: later manual confirmations and officer reviews applied to the run's statuses
+    doc_status = effective_document_status(db, run) if run else {}
     if run:
         s = run.summary or {}
-        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_h(s.get('document_status', {}).get(d.id))}"
-                           for d in docs.values() if s.get("document_status", {}).get(d.id))
+        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_doc_status(doc_status.get(d.id))}"
+                           for d in docs.values() if doc_status.get(d.id))
         items["RUN"] = {"id": "RUN", "kind": "run", "label": "Latest run",
                         "text": f"Latest validation run {run.id}, {round_label(run.round)}, status {run.status}, as of "
                                 f"{s.get('as_of')}, ruleset {run.ruleset_id}, {s.get('findings', 0)} findings. "
@@ -179,11 +192,12 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
                              f"{rid} ({c['section']}, page {c['page']}) says: \"{c['quote']}\"")
 
     for d in docs.values():
-        status = ((run.summary or {}).get("document_status", {}) if run else {}).get(d.id, "not_checked")
+        status = doc_status.get(d.id, "not_checked")
         add("D", "document", f"Document {labels.get(d.declared_type, d.declared_type)} ({d.original_filename}): "
-                             f"authenticity status {_h(status)}.", {status},
+                             f"authenticity status {_doc_status(status)}.{DOC_STATUS_NOTE.get(status, '')}", {status},
             {"type": "document", "document_id": d.id}, labels.get(d.declared_type, d.declared_type),
-            f"{labels.get(d.declared_type, d.declared_type)}: {_h(status)}.")
+            f"{labels.get(d.declared_type, d.declared_type)}: {_doc_status(status)}"
+            + (", not verified." if status == "officer_reviewed" else "."))
 
     for f in findings:
         doc = docs.get(f.document_id or "")
@@ -233,6 +247,14 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
         sig = v.channel in ("issuer_signature", "applicant_signature")
         sim = (" DEMO trust anchor." if sig else " SIMULATED source.") if v.simulated else ""
         first = _screen(v.detail, 300).split(". ")[0].rstrip(".")
+        if v.channel == "officer_review":
+            # An official's own examination, which confirms nothing from outside
+            vid = add("V", "verification", f"Officer review of {dl} ({v.source_name}): status reviewed by officer. "
+                                           f"No issuing body confirmed it. Note: {_screen(v.detail, 300)}",
+                      {v.status}, {"type": "verification", "attempt_id": v.id, "document_id": v.document_id},
+                      f"{dl}: officer review", f"{dl}: reviewed by officer ({v.source_name}), not verified.")
+            items[vid]["document_id"] = v.document_id
+            continue
         vid = add("V", "verification", f"Verification of {dl} via {channel_label(v.channel)} ({v.source_name}): "
                                        f"status {_h(v.status)}.{sim} {_screen(v.detail, 300)}"
                                        + (f" Compared: {comps}." if comps else ""),

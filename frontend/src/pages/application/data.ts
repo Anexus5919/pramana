@@ -132,11 +132,32 @@ export function useReview(appId: string) {
   });
 }
 
-export function useManualVerification(appId: string) {
+/**
+ * After a confirmation or review: the application, its runs (each run's document_status is the effective one,
+ * cached under ["run", id] for minutes), the document and the review queue all read the new status.
+ */
+function useInvalidateVerification(appId: string) {
+  const qc = useQueryClient();
   const invalidate = useInvalidateApp(appId);
+  return useCallback(() => {
+    invalidate();
+    void qc.invalidateQueries({ queryKey: ["run"] });
+  }, [qc, invalidate]);
+}
+
+export function useManualVerification(appId: string) {
+  const invalidate = useInvalidateVerification(appId);
   return useMutation({
     mutationFn: ({ attemptId, status, note }: { attemptId: string; status: string; note: string }) =>
       api.manualVerification(attemptId, status, note),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useOfficerReview(appId: string) {
+  const invalidate = useInvalidateVerification(appId);
+  return useMutation({
+    mutationFn: ({ docId, note }: { docId: string; note: string }) => api.officerReview(docId, note),
     onSuccess: () => invalidate(),
   });
 }

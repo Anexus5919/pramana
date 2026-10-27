@@ -5,10 +5,10 @@ import { useSearchParams } from "react-router-dom";
 import { fmtBytes, fmtDateTime, pluralize } from "../../../lib/format";
 import { workspacePath } from "../../../shell/nav";
 import type { BBox, DocumentDetail, Finding } from "../../../types";
-import { ButtonLink, Callout, cn, dur2, ease2, EmptyState, ErrorState, IconButton, Skeleton, StatusBadge, VerificationBadge } from "../../../ui2";
+import { ButtonLink, Callout, cn, dur2, ease2, EmptyState, ErrorState, IconButton, Skeleton, StatusBadge } from "../../../ui2";
 import { useWorkspace } from "../context";
 import { validBox } from "../data";
-import { SimTag } from "../parts";
+import { AttemptBadge, SimTag } from "../parts";
 import { historyApi, useRevisions, type Revision, type RevisionChange, type RevisionSignature, type Revisions } from "./api";
 
 const FOCUS_EVENT = "pramana:revision-focus";
@@ -479,7 +479,7 @@ function SignatureMarker({ s, count }: { s: RevisionSignature; count: number }) 
       </p>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
         <span title={s.detail ?? undefined}>
-          <VerificationBadge status={s.status ?? "not_checked"} />
+          {s.status ? <AttemptBadge status={s.status} /> : <StatusBadge tone="unchecked">Not checked</StatusBadge>}
         </span>
         {s.signing_time && <span>Signer-reported time {fmtDateTime(s.signing_time)}</span>}
       </div>

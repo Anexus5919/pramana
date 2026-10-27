@@ -44,7 +44,6 @@ from .process import process_document
 log = logging.getLogger(__name__)
 ENGINE_VERSION = "0.3.0"
 SEVERITY_WEIGHT = {"critical": 40, "high": 15, "medium": 5, "low": 1, "info": 0}
-STATUS_ORDER = [vb.MISMATCH, vb.EXPIRED, vb.SOURCE_UNAVAILABLE, vb.MANUAL_REVIEW, vb.PENDING, vb.VERIFIED, vb.NOT_CHECKED]
 
 
 def as_of_date(app: Application) -> date:
@@ -297,18 +296,6 @@ def _rectification_scope(db: Session, app: Application, docs: list[Document]) ->
     return out
 
 
-def document_status(results: list[vb.VerificationResult]) -> str:
-    """Authenticity status of a document; the applicant's own signature only counts when it is broken."""
-    statuses = [r.status for r in results if r.channel != "applicant_signature" or r.status == vb.MISMATCH]
-    real = [s for s in statuses if s != vb.NOT_CHECKED]
-    if not real:
-        return vb.NOT_CHECKED
-    for s in STATUS_ORDER:
-        if s in real:
-            return s
-    return vb.NOT_CHECKED
-
-
 def run_validation(db: Session, app: Application, actor: str, actor_role: str, *, ruleset: Ruleset | None = None,
                    as_of: date | None = None, replay_of: str | None = None, run: ValidationRun | None = None,
                    progress: Callable[..., None] | None = None) -> ValidationRun:
@@ -480,7 +467,7 @@ def run_validation(db: Session, app: Application, actor: str, actor_role: str, *
                                  {"kind": "verification", "channel": v.channel, "source": v.source_name,
                                   "simulated": v.simulated, "comparisons": [c.as_dict() for c in v.comparisons]}],
                     "document_id": d.id})
-            doc_status[d.id] = document_status(vres)
+            doc_status[d.id] = vb.document_status(vres)
             signed_all[d.id] = signed_content.signer_of_whole_file(vres)
             # Issuer documents without the issuer's signature, or as images (docs/features/edits.md)
             copy = issuer_copy.findings(d, spec, vres, _fp)

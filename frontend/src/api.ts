@@ -178,6 +178,7 @@ export const api = {
   findingHistory: (findingId: string) => get<ReviewEntry[]>(`/findings/${enc(findingId)}/history`),
   manualVerification: (attemptId: string, status: string, note: string) =>
     post<VerificationAttempt>(`/verifications/${enc(attemptId)}/manual`, { status, note }),
+  officerReview: (docId: string, note: string) => post<VerificationAttempt>(`/documents/${enc(docId)}/officer-review`, { note }),
 
   // Rules
   activeRuleset: () => get<ActiveRuleset>("/rulesets/active"),

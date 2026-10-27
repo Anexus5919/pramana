@@ -488,8 +488,8 @@ Show superseded documents under a `<details>` "Earlier versions (N)".
 
 `Panel padding="none"` with a `DataTable`:
 - rows are documents;
-- columns are Issuer signature, Applicant signature, Signed QR, Issuer registry, Content credentials and Manual confirmation;
-- each cell is a `VerificationBadge` (or "Not applicable" text) and is a button setting `?attempt=`;
+- columns are Issuer signature, Applicant signature, Signed QR, Issuer registry, Content credentials, Manual confirmation and Officer review;
+- each cell is an `AttemptBadge` (or "Not applicable" text) and is a button setting `?attempt=`; a check with no signature to validate reads "No signature";
 - a header `Tooltip` gives each channel's meaning.
 
 Above the table, one line of counts: "8 verified, 1 mismatch, 2 awaiting manual confirmation".

@@ -15,15 +15,15 @@ import {
   MetaList,
   SeverityIndicator,
   StatusBadge,
-  VerificationBadge,
   type Column,
 } from "../../../../ui2";
 import { useWorkspace } from "../../context";
 import { isLlmMethod, methodLabel, validBox, type LlmReport } from "../../data";
-import { ComparisonTable, RevisionDiffView, SimTag } from "../../parts";
+import { AttemptBadge, ComparisonTable, RevisionDiffView, SimTag } from "../../parts";
 import { FieldSourceLine, ScriptNote } from "../../tabs/ScriptNote";
 import type { Focus } from "../../viewer/DocViewer";
 import type { InstructionLine } from "../../viewer/overlays";
+import { OfficerReview } from "./OfficerReview";
 import { currentAttempts } from "./shared";
 
 function SubHeading({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
@@ -130,43 +130,55 @@ export function FieldsPanel({
 /* ---------- Verification (this document) ---------- */
 
 export function DocVerificationPanel({ doc }: { doc: DocumentDetail }) {
-  const { app } = useWorkspace();
+  const { app, run } = useWorkspace();
   const shown = currentAttempts(doc.verifications ?? [], app.latest_run?.id);
-  if (!shown.length) return <EmptyState size="sm" title="No verification attempts" description="No verification channel applied to this document on the latest run." />;
+  // The document's status on the latest run, with later confirmations and reviews applied by the server
+  const status = (run?.document_status ?? app.latest_run?.document_status ?? {})[doc.id];
+  const review = status ? <OfficerReview doc={doc} status={status} /> : null;
+  if (!shown.length)
+    return (
+      <>
+        {review}
+        <EmptyState size="sm" title="No verification attempts" description="No verification channel applied to this document on the latest run." />
+      </>
+    );
   return (
-    <ul className="divide-y divide-line">
-      {shown.map((a) => {
-        const r = a.response as { signer?: string; signer_role?: string };
-        return (
-          <li key={a.id} className="space-y-1.5 px-5 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-sm font-medium text-ink">
-                {channelMeta[a.channel]?.label ?? humanize(a.channel)}
-                <SimTag channel={a.channel} simulated={a.simulated} />
-              </span>
-              <VerificationBadge status={a.status} />
-            </div>
-            {(r.signer || r.signer_role) && (
-              <p className="text-xs text-ink-3">
-                Signed by <span className="text-ink-2">{r.signer ?? "unknown signer"}</span>
-                {r.signer_role && <> as {humanize(r.signer_role)}</>}
-              </p>
-            )}
-            {a.detail && <p className="text-sm text-ink-2 text-pretty">{a.detail}</p>}
-            {a.comparison.length > 0 && <ComparisonTable comparisons={a.comparison} />}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-3">
-              <MetaList items={[a.source_name, a.completed_at ? fmtDateTime(a.completed_at) : null]} />
-              <Link
-                to={workspacePath(app.id, "documents", { view: "verification", attempt: a.id })}
-                className="inline-flex items-center gap-1 rounded font-medium text-ink-2 hover:text-ink hover:underline"
-              >
-                Open attempt <ArrowUpRight aria-hidden className="size-3" />
-              </Link>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+    <div>
+      {review}
+      <ul className="divide-y divide-line">
+        {shown.map((a) => {
+          const r = a.response as { signer?: string; signer_role?: string };
+          return (
+            <li key={a.id} className="space-y-1.5 px-5 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-sm font-medium text-ink">
+                  {channelMeta[a.channel]?.label ?? humanize(a.channel)}
+                  <SimTag channel={a.channel} simulated={a.simulated} />
+                </span>
+                <AttemptBadge status={a.status} />
+              </div>
+              {(r.signer || r.signer_role) && (
+                <p className="text-xs text-ink-3">
+                  Signed by <span className="text-ink-2">{r.signer ?? "unknown signer"}</span>
+                  {r.signer_role && <> as {humanize(r.signer_role)}</>}
+                </p>
+              )}
+              {a.detail && <p className="text-sm text-ink-2 text-pretty">{a.detail}</p>}
+              {a.comparison.length > 0 && <ComparisonTable comparisons={a.comparison} />}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-3">
+                <MetaList items={[a.source_name, a.completed_at ? fmtDateTime(a.completed_at) : null]} />
+                <Link
+                  to={workspacePath(app.id, "documents", { view: "verification", attempt: a.id })}
+                  className="inline-flex items-center gap-1 rounded font-medium text-ink-2 hover:text-ink hover:underline"
+                >
+                  Open attempt <ArrowUpRight aria-hidden className="size-3" />
+                </Link>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

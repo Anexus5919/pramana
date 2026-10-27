@@ -2,10 +2,10 @@ import { ArrowUpRight, Database, FileClock, FileText, GitCompareArrows, Link2, M
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { fmtValue } from "../../lib/format";
-import { channelMeta, factSourceMeta, humanize, isSignatureChannel, pathLabel } from "../../lib/labels";
+import { channelMeta, factSourceMeta, humanize, isSignatureChannel, noSignatureMeta, pathLabel, verificationMeta } from "../../lib/labels";
 import { workspacePath } from "../../shell/nav";
 import type { Citation, Comparison, Evidence, FactInput, GeoEvidence, Provenance, RevisionDiff } from "../../types";
-import { Button, buttonStyles, Callout, cn, Code, SimulatedTag, StatusBadge } from "../../ui2";
+import { Button, buttonStyles, Callout, cn, Code, SimulatedTag, StatusBadge, VerificationBadge } from "../../ui2";
 import { useDocTypeLabel, useWorkspace } from "./context";
 import { bboxParam, evidenceDocId, methodLabel, validBox } from "./data";
 import { SealCompare } from "./SealCompare";
@@ -33,6 +33,24 @@ export function SimTag({ channel, simulated, demo }: { channel?: string; simulat
     );
   }
   return <SimulatedTag />;
+}
+
+/**
+ * The status of one check. On a single check, not_checked means the file carried no signature for that channel;
+ * "No outside source" describes a whole document, so a check reads "No signature" instead.
+ */
+export function AttemptBadge({ status, className }: { status: string; className?: string }) {
+  if (status !== "not_checked") return <VerificationBadge status={status} className={className} />;
+  return (
+    <StatusBadge tone={noSignatureMeta.tone} title={noSignatureMeta.meaning} className={className}>
+      {noSignatureMeta.label}
+    </StatusBadge>
+  );
+}
+
+/** The label and meaning AttemptBadge shows for a check's status. */
+export function attemptMeta(status: string): { label: string; meaning: string } | undefined {
+  return status === "not_checked" ? noSignatureMeta : verificationMeta[status];
 }
 
 /** Rule citation as a quiet quote: source line, then the verbatim clause text. */

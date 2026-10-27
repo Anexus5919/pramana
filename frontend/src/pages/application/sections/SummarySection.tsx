@@ -20,6 +20,7 @@ import {
 } from "../../../ui2";
 import { useDocTypeLabel, useWorkspace } from "../context";
 import { isOpenFinding, useVerifications } from "../data";
+import { followedIds } from "./documents/shared";
 import { useSinceLastYear } from "../history/api";
 import { WatchCard } from "../history/WatchCard";
 import { CoverageCalendar } from "../insights/CoverageCalendar";
@@ -34,7 +35,10 @@ const RULE_ORDER: [string, string][] = [
 ];
 
 /** Plain-text breakdown such as "8 verified, 1 mismatch, 2 awaiting manual confirmation". */
-export function verificationBreakdown(attempts: VerificationAttempt[]): string {
+export function verificationBreakdown(all: VerificationAttempt[]): string {
+  // An attempt a manual confirmation has followed is counted by the confirmation instead
+  const followed = followedIds(all);
+  const attempts = all.filter((a) => !followed.has(a.id));
   const n = (pred: (a: VerificationAttempt) => boolean) => attempts.filter(pred).length;
   const parts: [number, string][] = [
     [n((a) => a.status === "verified"), "verified"],
@@ -42,6 +46,7 @@ export function verificationBreakdown(attempts: VerificationAttempt[]): string {
     [n((a) => a.status === "expired"), "expired"],
     [n((a) => a.status === "verification_pending"), "pending with the issuer"],
     [n((a) => a.status === "source_unavailable" || a.status === "manual_review_required"), "awaiting manual confirmation"],
+    [n((a) => a.status === "officer_reviewed"), "reviewed by officer"],
   ];
   const shown = parts.filter(([c]) => c > 0).map(([c, l]) => `${c} ${l}`);
   return shown.length ? shown.join(", ") : "No checks applied";

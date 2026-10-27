@@ -14,6 +14,7 @@
 | Re-verification watch | Real scheduler, findings and alerts; the registries it re-queries are **simulated**, and the Issuer simulator plays the issuing authority | A watch result says what the simulated registry answered, nothing about a real issuer. It never changes a recorded outcome or the application status. |
 | AICTE reference records: approval history, faculty registry, TER ledger, accreditation list, deficiencies, previous year's application | **Synthetic** stand-ins for authorised AICTE systems | Comparisons show the record source and record ID. |
 | Manual confirmation by the verification cell | Real workflow | Records who confirmed what, with a note, in the audit chain. |
+| Officer review of a document with no outside source | Real workflow | Records that an officer or verifier examined the document, with a note saying what they checked, in the audit chain. It is not a confirmation: the document reads "Reviewed by officer", never verified. |
 
 ### Real issuer integrations are future scope
 
@@ -29,9 +30,21 @@ Real issuer integrations, and pulling documents through **DigiLocker or API Setu
 | verification_pending | The issuer confirms asynchronously (for example by letter) |
 | source_unavailable | The issuer did not respond. The case is routed to manual confirmation. |
 | manual_review_required | Signer not trusted or not the expected issuer; reference number unreadable; unknown QR key; Content Credentials unreadable, or signed by a key outside the demo list |
-| not_checked | No signature, QR or registry applies to this document |
+| not_checked | No signature, QR or registry applies to this document. Officials see it as **No outside source**: no issuing body is connected for this kind of document (the TER receipt, the satellite map and the faculty roster, for example), so Pramana cannot confirm it from outside and the official reviews it. |
+| officer_reviewed | Shown as **Reviewed by officer**. Set only by an officer or verifier, on a document whose status was not_checked, with a note saying what they examined. It never counts as verified. |
 
 A document's authenticity status counts issuer channels only. The applicant's own DSC proves who uploaded the file, and counts only when it is broken.
+
+On a single check (one channel of one document), not_checked means the file carried no embedded signature for that channel, so the verification table and the check drawer show it as **No signature**. "No outside source" describes a whole document.
+
+### Later confirmations and reviews
+
+A validation run stores each document's status in its summary. That record of what validation found is never rewritten, and the report digest is computed from it. Officials can act afterwards:
+
+- **Manual confirmation** (`POST /api/verifications/{id}/manual`, officer or verifier) records the outcome of an offline check, such as a letter, an email or a portal lookup, on an attempt that is pending, source unavailable or manual review required. It is a new attempt on the `manual_confirmation` channel that follows the original, which stays unchanged.
+- **Officer review** (`POST /api/documents/{id}/officer-review`, officer or verifier) is for a document whose status is not_checked. It needs a note of at least 10 characters in neutral words (no judgement of the document) and is a new attempt on the `officer_review` channel with the source "Officer review by" the official's name. It is refused for any other status, for an earlier version and before a run, and an institution cannot record one.
+
+Both are written to the audit chain. What officials read is the document's effective status: the stored status with the manual confirmations and officer reviews recorded on that run after it finished applied (`verification/effective.py`). A confirmation stands in for the attempt it follows and the document's checks are aggregated again, so confirming one channel never hides a mismatch on another; a review applies only while the result is still not_checked. The effective status is what the Documents table, the document page, run payloads, the review queue and Ask why show, and the review queue's "Awaiting manual confirmation" count and alerts leave out attempts a confirmation has followed. A new validation run starts again from its own result. An officer review never counts as verified: not in Ask why, the proof matrix, the queue counts or the evidence pack, which lists it as "reviewed by officer". Institutions never see verification statuses or attempts.
 
 The re-verification watch reports changes after the scrutiny outcome as findings of the issuer evidence class: `WATCH-ISSUER-REVOKED`, `WATCH-ISSUER-SUSPENDED`, `WATCH-CERT-EXPIRED`, `WATCH-ISSUER-NOT-FOUND` and `WATCH-ISSUER-RECORD-CHANGED` (high), and `WATCH-SOURCE-UNAVAILABLE` (medium).
 

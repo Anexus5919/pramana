@@ -30,10 +30,23 @@ export function docFindings(findings: Finding[] | undefined, docId: string): Fin
   return (findings ?? []).filter((f) => f.document_id === docId || f.evidence.some((e) => "document_id" in e && e.document_id === docId));
 }
 
-/** Attempts from the latest run, plus manual confirmations, which stand across runs. */
+/** What officials record after a run, as opposed to the channels a run checks. */
+export const FOLLOW_UP_CHANNELS = new Set(["manual_confirmation", "officer_review"]);
+
+/** Attempts from the latest run, plus manual confirmations and officer reviews, which stand across runs. */
 export function currentAttempts(all: VerificationAttempt[], latestRun: string | undefined): VerificationAttempt[] {
-  return all.filter((a) => !latestRun || a.run_id === latestRun || a.channel === "manual_confirmation");
+  return all.filter((a) => !latestRun || a.run_id === latestRun || FOLLOW_UP_CHANNELS.has(a.channel));
 }
+
+/** Ids of the attempts a manual confirmation has followed, which no longer wait for one. */
+export function followedIds(all: VerificationAttempt[]): Set<string> {
+  const out = new Set<string>();
+  for (const a of all) if (a.channel === "manual_confirmation" && typeof a.request?.follows === "string") out.add(a.request.follows);
+  return out;
+}
+
+/** A note says what was examined; the same minimum the server asks for. */
+export const MIN_NOTE = 10;
 
 /** Instruction lines from the document, or from the instruction finding when the API does not return them. */
 export function instructionLinesFor(doc: DocumentDetail, findings: Finding[] | undefined): InstructionLine[] {

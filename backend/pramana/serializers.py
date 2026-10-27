@@ -1,5 +1,7 @@
 from typing import Any
 
+from sqlalchemy.orm import object_session
+
 from .models import (
     Application,
     AuditEvent,
@@ -11,6 +13,7 @@ from .models import (
     ValidationRun,
     VerificationAttempt,
 )
+from .verification.effective import effective_document_status
 
 
 def _dt(v):
@@ -30,6 +33,13 @@ def institution(i) -> dict[str, Any]:
             "established_year": i.established_year}
 
 
+def document_status(r: ValidationRun) -> dict[str, str]:
+    """The run's per-document status as officials read it now: later confirmations and officer reviews applied,
+    the stored summary left as validation wrote it."""
+    db = object_session(r)
+    return effective_document_status(db, r) if db is not None else dict((r.summary or {}).get("document_status") or {})
+
+
 def run_brief(r: ValidationRun | None) -> dict[str, Any] | None:
     if r is None:
         return None
@@ -39,7 +49,7 @@ def run_brief(r: ValidationRun | None) -> dict[str, Any] | None:
             "report_digest": r.report_digest, "started_at": _dt(r.started_at), "finished_at": _dt(r.finished_at),
             "findings": s.get("findings"), "by_severity": s.get("by_severity", {}),
             "by_category": s.get("by_category", {}), "by_evidence_class": s.get("by_evidence_class", {}),
-            "review_priority": s.get("review_priority"), "document_status": s.get("document_status", {}),
+            "review_priority": s.get("review_priority"), "document_status": document_status(r),
             "as_of": s.get("as_of"), "replay_of": s.get("replay_of"), "triggered_by": r.triggered_by,
             "error": r.error}
 

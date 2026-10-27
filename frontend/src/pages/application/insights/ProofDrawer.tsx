@@ -4,9 +4,9 @@ import { fmtValue } from "../../../lib/format";
 import { channelMeta, humanize, pathLabel } from "../../../lib/labels";
 import { workspacePath } from "../../../shell/nav";
 import type { Tone } from "../../../lib/labels";
-import { Button, buttonStyles, Code, Drawer, RuleOutcomeBadge, SeverityIndicator, SimulatedTag, StatusBadge, VerificationBadge } from "../../../ui2";
+import { Button, buttonStyles, Code, Drawer, RuleOutcomeBadge, SeverityIndicator, SimulatedTag, StatusBadge } from "../../../ui2";
 import { useWorkspace } from "../context";
-import { CitationCard, ComparisonTable, EvidenceList, SimTag } from "../parts";
+import { AttemptBadge, CitationCard, ComparisonTable, EvidenceList, SimTag } from "../parts";
 import { STATE_LABEL, type ItemEffect, type ProofItem, type ProofLevel, type ProofRow, type Rung } from "./api";
 
 const STATE_TONE: Record<Rung["state"], Tone> = {
@@ -98,7 +98,7 @@ function Item({ item }: { item: ProofItem }) {
           effect={item.effect}
           title={
             <span className="flex flex-wrap items-center gap-2">
-              <VerificationBadge status={item.status} />
+              <AttemptBadge status={item.status} />
               {channelMeta[item.channel]?.label ?? humanize(item.channel)}
               <span className="font-normal text-ink-3">{item.source}</span>
               <SimTag channel={item.channel} simulated={item.simulated} />
