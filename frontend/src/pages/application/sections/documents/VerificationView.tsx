@@ -29,7 +29,7 @@ import {
 } from "../../../../ui2";
 import { useDocTypeLabel, useWorkspace } from "../../context";
 import { useManualVerification, useParam } from "../../data";
-import { ComparisonTable, SimTag } from "../../parts";
+import { AttemptBadge, attemptMeta, ComparisonTable, SimTag } from "../../parts";
 import { currentAttempts, NEEDS_MANUAL, when } from "./shared";
 
 const MANUAL_STATUSES = ["verified", "mismatch_detected", "expired", "manual_review_required"] as const;
@@ -123,14 +123,14 @@ function AttemptDetail({ a, all, canManual, formId, onRecorded, onPending }: { a
   const earlier = follows ? all.find((x) => x.id === follows) : undefined;
   const followedBy = all.filter((x) => x.request?.follows === a.id).sort((x, y) => when(y).localeCompare(when(x)));
   const doc = a.document_id ? docs[a.document_id] : undefined;
-  const meta = verificationMeta[a.status];
+  const meta = attemptMeta(a.status);
   const hasSigner = !!(r.signer || r.signer_role || r.trust_anchor || r.coverage || typeof r.revocation_checked === "boolean");
 
   return (
     <div className="space-y-5 p-5">
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <VerificationBadge status={a.status} />
+          <AttemptBadge status={a.status} />
           <SimTag channel={a.channel} simulated={a.simulated} />
         </div>
         {meta && <p className="text-sm text-ink-2">{meta.meaning}</p>}
@@ -191,7 +191,7 @@ function AttemptDetail({ a, all, canManual, formId, onRecorded, onPending }: { a
           <h3 className="text-sm font-medium text-ink">History</h3>
           {follows && (
             <p className="text-sm text-ink-2">
-              Follows an earlier {earlier ? `${channelMeta[earlier.channel]?.label.toLowerCase() ?? "attempt"} (${verificationMeta[earlier.status]?.label.toLowerCase() ?? earlier.status})` : "attempt"}, which stays
+              Follows an earlier {earlier ? `${channelMeta[earlier.channel]?.label.toLowerCase() ?? "attempt"} (${attemptMeta(earlier.status)?.label.toLowerCase() ?? earlier.status})` : "attempt"}, which stays
               on record unchanged.
             </p>
           )}
@@ -324,7 +324,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
           const cell = r.cells[c];
           if (!cell) return <span className="text-xs whitespace-nowrap text-ink-3">Not applicable</span>;
           const a = cell.latest;
-          const statusLabel = verificationMeta[a.status]?.label ?? humanize(a.status);
+          const statusLabel = attemptMeta(a.status)?.label ?? humanize(a.status);
           return (
             <button
               type="button"
@@ -333,7 +333,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
               aria-haspopup="dialog"
               className="-mx-1 inline-flex items-center gap-1.5 rounded-control px-1 py-1 transition-colors duration-150 hover:bg-surface-3"
             >
-              <VerificationBadge status={a.status} />
+              <AttemptBadge status={a.status} />
               {cell.count > 1 && <span className="text-xs text-ink-3 tabular-nums">{cell.count}</span>}
             </button>
           );

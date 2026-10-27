@@ -2,7 +2,7 @@ import { BadgeCheck, FileText, KeyRound, ShieldOff } from "lucide-react";
 import type { ReactNode } from "react";
 import { fmtDateTime } from "../../lib/format";
 import type { PdfSignatureCheck } from "../../types";
-import { Code, DescriptionList, SimulatedTag, VerificationBadge, cn } from "../../ui2";
+import { Code, DescriptionList, SimulatedTag, StatusBadge, VerificationBadge, cn } from "../../ui2";
 import { parseAnchor, readable, splitSigner } from "./pdf";
 
 function yesNo(v: boolean | null | undefined, yes: string, no: string): ReactNode {
@@ -129,7 +129,9 @@ export function NoSignature({ detail }: { detail?: string }) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-ink">This PDF carries no digital signature</span>
-          <VerificationBadge status="not_checked" />
+          <StatusBadge tone="unchecked" title="There is no signature to validate.">
+            Not checked
+          </StatusBadge>
         </div>
         <p className="mt-0.5 text-sm text-ink-3 text-pretty">
           {detail ?? "There is nothing to validate cryptographically."} Without a signature nothing here can say who produced the file or whether it changed

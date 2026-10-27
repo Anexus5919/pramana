@@ -15,12 +15,11 @@ import {
   MetaList,
   SeverityIndicator,
   StatusBadge,
-  VerificationBadge,
   type Column,
 } from "../../../../ui2";
 import { useWorkspace } from "../../context";
 import { isLlmMethod, methodLabel, validBox, type LlmReport } from "../../data";
-import { ComparisonTable, RevisionDiffView, SimTag } from "../../parts";
+import { AttemptBadge, ComparisonTable, RevisionDiffView, SimTag } from "../../parts";
 import { FieldSourceLine, ScriptNote } from "../../tabs/ScriptNote";
 import type { Focus } from "../../viewer/DocViewer";
 import type { InstructionLine } from "../../viewer/overlays";
@@ -144,7 +143,7 @@ export function DocVerificationPanel({ doc }: { doc: DocumentDetail }) {
                 {channelMeta[a.channel]?.label ?? humanize(a.channel)}
                 <SimTag channel={a.channel} simulated={a.simulated} />
               </span>
-              <VerificationBadge status={a.status} />
+              <AttemptBadge status={a.status} />
             </div>
             {(r.signer || r.signer_role) && (
               <p className="text-xs text-ink-3">

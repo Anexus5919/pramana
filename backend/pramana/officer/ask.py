@@ -62,6 +62,11 @@ DOC_WORDS = {
 VER_SUPPORT = {"verified"}
 NOT_VERIFIED = {"not_checked", "manual_review_required", "source_unavailable", "verification_pending",
                 "mismatch_detected", "expired"}
+# Document statuses in the words the workspace shows officials
+DOC_STATUS_WORDS = {"not_checked": "no outside source"}
+DOC_STATUS_NOTE = {
+    "not_checked": " No issuing body is connected for this kind of document, so it cannot be confirmed from outside.",
+}
 CLAIMS: list[tuple[str, re.Pattern, set[str], str | None]] = [
     ("unverified", re.compile(r"\b(unverified|not (yet |been )?(verified|confirmed|authenticated)"
                               r"|could not be (confirmed|verified|authenticated)|unconfirmed|not checked)\b", re.I),
@@ -116,6 +121,10 @@ def _h(code: str | None) -> str:
     return (code or "").replace("_", " ")
 
 
+def _doc_status(code: str | None) -> str:
+    return DOC_STATUS_WORDS.get(code or "", _h(code))
+
+
 def _value(v: Any) -> str:
     s = str(v)
     if INJECTION.search(s) or len(s) > 80:
@@ -146,7 +155,7 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
     doc_status = effective_document_status(db, run) if run else {}
     if run:
         s = run.summary or {}
-        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_h(doc_status.get(d.id))}"
+        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_doc_status(doc_status.get(d.id))}"
                            for d in docs.values() if doc_status.get(d.id))
         items["RUN"] = {"id": "RUN", "kind": "run", "label": "Latest run",
                         "text": f"Latest validation run {run.id}, {round_label(run.round)}, status {run.status}, as of "
@@ -184,9 +193,9 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
     for d in docs.values():
         status = doc_status.get(d.id, "not_checked")
         add("D", "document", f"Document {labels.get(d.declared_type, d.declared_type)} ({d.original_filename}): "
-                             f"authenticity status {_h(status)}.", {status},
+                             f"authenticity status {_doc_status(status)}.{DOC_STATUS_NOTE.get(status, '')}", {status},
             {"type": "document", "document_id": d.id}, labels.get(d.declared_type, d.declared_type),
-            f"{labels.get(d.declared_type, d.declared_type)}: {_h(status)}.")
+            f"{labels.get(d.declared_type, d.declared_type)}: {_doc_status(status)}.")
 
     for f in findings:
         doc = docs.get(f.document_id or "")

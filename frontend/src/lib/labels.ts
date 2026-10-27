@@ -63,7 +63,18 @@ export const verificationMeta: Record<string, { label: string; tone: Tone; meani
     tone: "manual",
     meaning: "Automated checks could not reach a conclusion.",
   },
-  not_checked: { label: "Not checked", tone: "unchecked", meaning: "No verification channel applied." },
+  not_checked: {
+    label: "No outside source",
+    tone: "unchecked",
+    meaning: "No issuing body is connected for this kind of document, so Pramana cannot confirm it from outside. Review it yourself.",
+  },
+};
+
+/** A single check with nothing to validate: the file carries no embedded signature for that channel. */
+export const noSignatureMeta: { label: string; tone: Tone; meaning: string } = {
+  label: "No signature",
+  tone: "unchecked",
+  meaning: "The file carries no embedded digital signature for this channel, so there was nothing to validate.",
 };
 
 export const outcomeMeta: Record<string, { label: string; tone: Tone }> = {
