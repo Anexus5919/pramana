@@ -63,6 +63,7 @@ Start with `docs/usp-and-demo.md`. Research, requirements mapping, design decisi
 | [docs/features/insight-network.md](docs/features/insight-network.md) | Integrity network and faculty overlaps |
 | [docs/features/insight-story.md](docs/features/insight-story.md) | Document life story and inspection brief |
 | [docs/features/insight-ready.md](docs/features/insight-ready.md) | Readiness check for institutions before they submit |
+| [docs/features/rectification-conversation.md](docs/features/rectification-conversation.md) | Threads per deficiency-letter item between the institution and the AICTE Scrutiny Cell, review requests that hold up the outcome, and in-app notifications |
 
 ## Quick start (Windows, macOS or Linux)
 

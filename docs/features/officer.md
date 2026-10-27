@@ -33,6 +33,8 @@ Code: `backend/pramana/officer/` (routes, letter, report, pack, verify_pack, ask
 3. Edit an item, Save draft (the preview re-renders), then Finalise, give a reason, Finalise and send.
 4. Sign in as `inst3`, open the application: the notice card with its SHA-256 and Download PDF.
 
+The command-line seed already opens A3's round with a final letter and a short conversation (`docs/features/rectification-conversation.md`); to draft a letter from the start, use A2 (Godavari College, `APP-2026-000102`) or seed with `--no-threads`.
+
 ### How it works
 
 - Endpoints: `POST /api/applications/{id}/letters` (draft), `GET /api/applications/{id}/letters`, `GET|PUT /api/letters/{id}`, `GET /api/letters/{id}/pdf`, `GET /api/letters/{id}/pages/{n}.png` (preview), `POST /api/letters/{id}/finalise`.
