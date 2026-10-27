@@ -399,6 +399,15 @@ html[data-surface="app"] .glass {
 html[data-surface="app"] .grain::after {
   display: none;
 }
+/* Drishti's button holds the bottom-right corner: toasts stack above it, and beside its open window when there is room */
+html[data-drishti] [data-toast-region] {
+  bottom: 88px;
+}
+@media (min-width: 840px) {
+  html[data-drishti="open"] [data-toast-region] {
+    right: 412px;
+  }
+}
 
 @theme inline {
   --color-canvas: var(--canvas);

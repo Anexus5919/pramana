@@ -134,6 +134,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {createPortal(
         <ol
+          data-toast-region
           aria-label="Notifications"
           className="pointer-events-none fixed right-4 bottom-4 z-[95] flex flex-col items-end gap-2"
         >
