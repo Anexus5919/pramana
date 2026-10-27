@@ -1,0 +1,6 @@
+[Unit]
+Description=Restore the Pramana demo data from its snapshot
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pramana-reset

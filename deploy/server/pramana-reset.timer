@@ -1,0 +1,8 @@
+[Unit]
+Description=Nightly Pramana demo reset at 03:00 IST
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 Asia/Kolkata
+
+[Install]
+WantedBy=timers.target
