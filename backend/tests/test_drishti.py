@@ -175,6 +175,14 @@ def test_certificates_expiring_this_session(world):
     assert "2026-27 session" in r["text"]
 
 
+@pytest.mark.parametrize("message", ["which colleges have their fire paperwork running out soon",
+                                     "fire certificates that ran out", "any NOC out of date?"])
+def test_running_out_means_expiring(world, message):
+    # Asked on the live demo: "colleges" alone made it a list of applications
+    r = _ask(_login(world, "officer"), message)
+    assert r["intent"]["intent"] == "expiring_certificates"
+
+
 @pytest.mark.parametrize("user", ["officer", "verifier", "inst3"])
 def test_what_is_rectification_any_role(world, user):
     c = _login(world, user)

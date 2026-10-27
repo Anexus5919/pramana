@@ -145,7 +145,8 @@ READINESS = rx(r"missing", r"kami\w*", r"baaki", r"baki", r"bacha", r"readiness"
                r"what\s+(?:should|do|must)\s+i\s+do", r"aage\s+kya", r"fix", r"ready", r"status", r"sthiti",
                r"my\s+application", r"mer[ai]\s+(?:application|aavedan|avedan)", r"what\s+is\s+pending",
                deva=dx("कमी", "स्थिति", "बाकी") + (r"अगला\s*कदम", r"मेर[ाे]\s*आवेदन"))
-EXPIRING = rx(r"expir\w*", r"laps\w*", r"validity", r"valid\s+(?:till|until|upto)", r"khatam", r"khatm", r"samaapt",
+EXPIRING = rx(r"expir\w*", r"laps\w*", r"validity", r"valid\s+(?:till|until|upto)", r"run(?:s|ning)?\s+out",
+              r"ran\s+out", r"out\s+of\s+date", r"khatam", r"khatm", r"samaapt",
               deva=dx("समाप्त", "ख़त्म", "खत्म", "वैधता"))
 AWAIT = rx(r"awaiting\s+(?:manual\s+)?confirmation", r"manual\s+confirmations?", r"waiting\s+for\s+(?:manual\s+)?confirmation",
            r"needs?\s+(?:manual\s+)?confirmation", r"to\s+(?:be\s+)?confirmed", r"pending\s+verifications?",
