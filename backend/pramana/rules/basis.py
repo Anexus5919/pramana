@@ -136,26 +136,31 @@ class BasisMap(_Strict):
 
     def provision(self, pid: str) -> dict[str, Any]:
         p = self.provisions[pid]
-        return {"id": pid, "instrument": self.source(p.source).short, "number": p.number, "cite": p.cite,
-                "quote": p.quote, "page": p.page, "url": str(self.source(p.source).url), "verified": p.verified}
+        return {"id": pid, "source": p.source, "number": p.number, "cite": p.cite, "quote": p.quote,
+                "page": p.page, "verified": p.verified}
 
     def resolve(self, code: str, doc_type: str | None = None) -> dict[str, Any] | None:
+        """Provisions and steps for one finding. Each instrument's name and URL appear once, under sources, so a
+        page of findings does not repeat them for every provision."""
         e = self.entry_for(code)
         if e is None:
             return None
         ids = [*(self.documents.get(doc_type or "", []) if e.document_clause else []), *e.provisions]
+        provisions = [self.provision(pid) for pid in dict.fromkeys(ids)]
         steps = []
         for sid in e.establish:
             st = self.steps[sid]
             if st.basis == EVIDENCE:
-                basis = {"kind": EVIDENCE, "label": "Evidence"}
+                steps.append({"text": st.text, "basis": {"kind": EVIDENCE, "label": "Evidence"}})
             else:
                 p = self.provisions[st.basis]
-                basis = {"kind": "provision", "label": p.cite, "id": st.basis, "page": p.page,
-                         "url": str(self.source(p.source).url)}
-            steps.append({"text": st.text, "basis": basis})
+                steps.append({"text": st.text, "basis": {"kind": "provision", "label": p.cite, "id": st.basis,
+                                                         "source": p.source, "page": p.page}})
+        used = dict.fromkeys([p["source"] for p in provisions]
+                             + [s["basis"]["source"] for s in steps if s["basis"]["kind"] != EVIDENCE])
+        sources = {sid: {"name": self.source(sid).short, "url": str(self.source(sid).url)} for sid in used}
         return {"entry": e.id, "scope_note": self.basis.scope_note, "version": self.basis.version,
-                "provisions": [self.provision(pid) for pid in dict.fromkeys(ids)], "establish": steps}
+                "sources": sources, "provisions": provisions, "establish": steps}
 
 
 def load_basis(path: Path) -> BasisMap:

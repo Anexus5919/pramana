@@ -37,7 +37,9 @@ def norm(s: str) -> str:
 
 
 def by_hash(folder: Path) -> dict[str, Path]:
-    return {hashlib.sha256(p.read_bytes()).hexdigest(): p for p in folder.rglob("*.pdf")}
+    # Deeper copies first, so a file at the top of the folder wins over an identical one in a subfolder
+    files = sorted(folder.rglob("*.pdf"), key=lambda p: -len(p.parts))
+    return {hashlib.sha256(p.read_bytes()).hexdigest(): p for p in files}
 
 
 def pages(path: Path) -> list[str]:

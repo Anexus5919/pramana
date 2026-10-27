@@ -86,7 +86,7 @@ def test_every_provision_is_verified_with_a_url_a_page_and_a_short_quote():
     for pid in bm.provisions:
         p = bm.provision(pid)
         assert p["verified"] is True, pid
-        assert p["url"].startswith("https://") and p["page"] >= 1, pid
+        assert str(bm.source(p["source"]).url).startswith("https://") and p["page"] >= 1, pid
         assert 3 <= len(p["quote"]) <= 400 and p["quote"].count(". ") <= 1, pid
         assert pid in used, f"{pid} is cited by no entry"
     for s in bm.sources:
@@ -107,7 +107,8 @@ def test_every_establish_step_has_a_basis_tag():
         assert rb["establish"], code
         for st in rb["establish"]:
             assert st["text"] and st["basis"]["label"]
-            assert st["basis"]["kind"] == "evidence" or (st["basis"]["url"] and st["basis"]["page"])
+            assert st["basis"]["kind"] == "evidence" or (rb["sources"][st["basis"]["source"]]["url"]
+                                                         and st["basis"]["page"])
 
 
 def test_every_code_pramana_can_raise_resolves():
@@ -136,7 +137,8 @@ def test_every_seeded_finding_carries_a_basis_for_officials(app):
             for f in c.get(f"/api/applications/{a['id']}/findings").json():
                 rb = f.get("regulatory_basis")
                 assert rb and rb["provisions"] and rb["establish"], (user, a["key"], f["code"])
-                assert all(p["verified"] and p["url"] and p["page"] and p["quote"] for p in rb["provisions"])
+                assert all(p["verified"] and rb["sources"][p["source"]]["url"] and p["page"] and p["quote"]
+                           for p in rb["provisions"])
 
 
 def test_institutions_never_receive_the_regulatory_basis(app):
