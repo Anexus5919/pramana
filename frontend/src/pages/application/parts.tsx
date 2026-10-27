@@ -65,7 +65,12 @@ export function CitationCard({ citation, ruleId, className }: { citation: Citati
 export function ComparisonTable({ comparisons, className }: { comparisons: Comparison[]; className?: string }) {
   if (!comparisons?.length) return null;
   return (
-    <div className={cn("min-w-0 overflow-x-auto rounded-control border border-line", className)}>
+    <div
+      role="region"
+      aria-label="Submitted and authoritative values"
+      tabIndex={0}
+      className={cn("min-w-0 overflow-x-auto rounded-control border border-line", className)}
+    >
       <table className="w-full text-sm">
         <caption className="sr-only">Submitted and authoritative values</caption>
         <thead>

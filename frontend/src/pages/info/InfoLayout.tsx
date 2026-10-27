@@ -114,7 +114,7 @@ export function Prose({ className, children }: { className?: string; children: R
 /** A plain data table for the information pages. */
 export function InfoTable({ caption, head, rows }: { caption: string; head: string[]; rows: ReactNode[][] }) {
   return (
-    <div className="mt-4 overflow-x-auto rounded-card border border-line bg-surface">
+    <div role="region" aria-label={caption} tabIndex={0} className="mt-4 overflow-x-auto rounded-card border border-line bg-surface">
       <table className="w-full min-w-[520px] text-left text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-line bg-surface-2 text-xs text-ink-3">
