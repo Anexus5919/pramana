@@ -67,13 +67,28 @@ const PAGES = [
     path: "/dashboard",
     ready: "main h1",
     act: async (page) => {
-      await page.click('button[aria-label^="Drishti"]');
+      await page.click('button[aria-label*="Drishti"]');
       await page.waitForSelector("[role=dialog], [aria-label*='Drishti'][role=region], textarea", { timeout: 5000 }).catch(() => {});
     },
   },
   { name: "portal-applications", user: "inst3", path: "/portal", ready: "main h1" },
   { name: "portal-application-letter", user: "inst3", path: `/portal/applications/${A3}`, ready: "main h1" },
   { name: "portal-outcome", user: "inst6", path: `/portal/applications/${A6}`, ready: "main h1" },
+  // The same portal screens in Hindi, and the display options menu open
+  { name: "portal-applications-hi", user: "inst3", lang: "hi", path: "/portal", ready: "main h1" },
+  { name: "portal-application-letter-hi", user: "inst3", lang: "hi", path: `/portal/applications/${A3}`, ready: "main h1" },
+  { name: "portal-outcome-hi", user: "inst6", lang: "hi", path: `/portal/applications/${A6}`, ready: "main h1" },
+  { name: "login-hi", lang: "hi", path: "/login", ready: "form" },
+  {
+    name: "display-options-open",
+    user: "inst3",
+    path: "/portal",
+    ready: "main h1",
+    act: async (page) => {
+      await page.click('header button[title="Accessibility options"]');
+      await page.waitForSelector('[role=group][aria-label="Accessibility options"]', { timeout: 5000 });
+    },
+  },
 ];
 
 function chromePath() {
@@ -120,8 +135,8 @@ async function scan(page, spec, mode, width) {
   await page.evaluate((m) => {
     localStorage.setItem("pramana-theme", m.theme);
     localStorage.setItem("pramana-contrast", m.contrast);
-    localStorage.setItem("pramana-lang", "en");
-  }, m);
+    localStorage.setItem("pramana-lang", m.lang);
+  }, { ...m, lang: spec.lang ?? "en" });
   const path = typeof spec.path === "function" ? await spec.path(page) : spec.path;
   await page.goto(`${BASE}${path}`, { waitUntil: "networkidle2", timeout: 30000 });
   await page.waitForSelector(spec.ready, { timeout: 15000 }).catch(() => {});
@@ -141,8 +156,9 @@ async function scan(page, spec, mode, width) {
     impact: v.impact,
     help: v.help,
     nodes: v.nodes.length,
-    targets: v.nodes.slice(0, 5).map((n) => n.target.join(" ")),
+    targets: v.nodes.slice(0, 40).map((n) => n.target.join(" ")),
     summary: v.nodes[0]?.failureSummary?.split("\n").slice(0, 3).join(" "),
+    details: v.nodes.slice(0, 40).map((n) => (n.any?.[0] ?? n.all?.[0] ?? n.none?.[0])?.message ?? ""),
   }));
 }
 
@@ -174,7 +190,8 @@ try {
           } catch (e) {
             violations = [{ id: "scan-error", impact: "critical", help: String(e?.message ?? e), nodes: 0, targets: [] }];
           }
-          const count = (i) => violations.filter((v) => v.impact === i).reduce((a, v) => a + v.nodes, 0);
+          // a scan that could not run counts as one critical problem, so it is never read as clean
+          const count = (i) => violations.filter((v) => v.impact === i).reduce((a, v) => a + Math.max(v.nodes, v.id === "scan-error" ? 1 : 0), 0);
           const row = { page: spec.name, user, mode, width, critical: count("critical"), serious: count("serious"), moderate: count("moderate"), minor: count("minor"), violations };
           results.push(row);
           const ids = violations.map((v) => `${v.id}(${v.impact[0]}${v.nodes})`).join(" ");
