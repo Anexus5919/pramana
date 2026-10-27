@@ -9,6 +9,7 @@ import { Kbd } from "../ui/Badge";
 import { cn } from "../ui/cn";
 import { IconButton } from "../ui2/Button";
 import { PORTAL_NAV, WORKSPACE_CRUMB_LABEL, workspacePath } from "./nav";
+import { NotificationBell } from "./NotificationBell";
 import { BrandLink } from "./Sidebar";
 import { ThemeToggle } from "./theme";
 
@@ -238,6 +239,7 @@ export function Topbar({
             </button>
           </>
         )}
+        <NotificationBell />
         <ThemeToggle />
         <UserMenu />
       </div>
