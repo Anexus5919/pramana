@@ -6,7 +6,7 @@
 ruleset:
   id: aicte-aph-2024-27
   title: AICTE approval checks (APH 2024-27 with Addenda 2025-26 and 2026-27 V2)
-  version: 2026-27.2
+  version: 2026-27.3
   maintainer: Regulation Bureau rules desk (prototype)
   note: >-
     Rules are effective from the 2026-27 public notice and stay in force until a later handbook supersedes
@@ -408,7 +408,7 @@ rules:
     effective_from: 2025-11-26
     applies_to: {categories: [EOA, INCREASE_INTAKE]}
     source: {doc: APH, section: Cl. 7.4(g), page: 87,
-             quote: "Excess admission over the 'Approved Intake' shall not be allowed under any circumstances."}
+             quote: "Excess admission over the “Approved Intake” shall not be allowed under any circumstances."}
     check: {type: expression, expr: "len(derived.intake_mismatches) == 0", show: {list: "join(derived.intake_mismatches)"}}
     messages: {fail: "Declared approved intake differs from the last approval record: {list}."}
 
@@ -433,7 +433,7 @@ rules:
     effective_from: 2025-11-26
     applies_to: {categories: [EOA, INCREASE_INTAKE], requires_docs: [occupancy_certificate]}
     source: {doc: APH, section: Annexure 16.8 (Scrutiny Committee role), page: 194,
-             quote: "Verify the authenticity of the documents submitted by the Applicant as specified in Annexure 1/2."}
+             quote: "Verify the authenticity of the documents submitted by the Applicant as specified in Annexure 1/2 (as applicable) of the Approval Process Handbook."}
     check: {type: expression, expr: "similar(doc.occupancy_certificate.institution_name, inst.name) >= 85", show: {score: "similar(doc.occupancy_certificate.institution_name, inst.name)"}}
     messages: {fail: "Occupancy certificate names '{doc_occupancy_certificate_institution_name}', which does not match '{inst_name}' (similarity {score})."}
     limitation: Name similarity threshold 85 is configuration, not a handbook requirement.
@@ -458,7 +458,7 @@ rules:
     effective_from: 2025-11-26
     applies_to: {categories: [EOA, INCREASE_INTAKE], requires_docs: [fire_noc]}
     source: {doc: APH, section: Annexure 16.8 (Scrutiny Committee role), page: 194,
-             quote: "Verify the authenticity of the documents submitted by the Applicant as specified in Annexure 1/2."}
+             quote: "Verify the authenticity of the documents submitted by the Applicant as specified in Annexure 1/2 (as applicable) of the Approval Process Handbook."}
     check: {type: expression, expr: "similar(doc.fire_noc.institution_name, inst.name) >= 85", show: {score: "similar(doc.fire_noc.institution_name, inst.name)"}}
     messages: {fail: "Fire certificate is issued to '{doc_fire_noc_institution_name}', not '{inst_name}' (similarity {score})."}
     limitation: Name similarity threshold 85 is configuration, not a handbook requirement.
@@ -498,8 +498,8 @@ rules:
     severity: high
     effective_from: 2025-11-26
     applies_to: {categories: [EOA, INCREASE_INTAKE], requires_docs: [faculty_list]}
-    source: {doc: APH, section: Annexure 5, page: 111,
-             quote: "S - Sum of the number of students as per 'Approved Intake' for all years. Faculty:Student ratio UG Engineering and Technology 1:20, PG 1:15, MCA 1:20, MBA/PGDM 1:20, Diploma 1:25."}
+    source: {doc: APH, section: Annexure 5.2 (UG table; 5.1 and 5.3 on pages 111-112 give the other levels), page: 111,
+             quote: "Engineering and Technology 1:20 ... S - Sum of the number of students as per “Approved Intake” for all years"}
     check: {type: expression, expr: "doc.faculty_list.row_count >= derived.required_faculty"}
     messages:
       pass: "{doc_faculty_list_row_count} faculty listed; {derived_required_faculty} required."
@@ -538,7 +538,7 @@ rules:
     effective_from: 2025-11-26
     applies_to: {categories: [EOA, INCREASE_INTAKE], when: "app.total_approved_intake_claimed <= 300"}
     source: {doc: APH, section: Annexure 3.3 and 3.4, page: 106,
-             quote: "An institution should possess a total administrative area of minimum 750 sq. m. for an approved intake up to 300. An institution should possess a total amenities area of minimum 500 sq. m. for an approved intake up to 300."}
+             quote: "An institution should possess a total administrative area of minimum 750 sq. m. for an approved intake up to 300. ... An institution should possess a total amenities area of minimum 500 sq. m. for an approved intake up to 300."}
     check: {type: expression, expr: "app.administrative_area_sqm >= 750 and app.amenities_area_sqm >= 500"}
     messages: {fail: "Declared administrative area {app_administrative_area_sqm} sq m (min 750) and amenities area {app_amenities_area_sqm} sq m (min 500)."}
 
