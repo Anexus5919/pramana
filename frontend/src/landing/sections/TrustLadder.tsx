@@ -293,7 +293,7 @@ export default function TrustLadder() {
           />
           <p className="lp-eyebrow text-white/55!">Design principle</p>
           <blockquote className="lp-display relative mt-4 max-w-4xl text-[28px] leading-[1.12] font-semibold sm:text-[40px]">
-            “A valid applicant DSC on a forged NOC is still a forged NOC.”
+            “The applicant's signature proves who uploaded the NOC, not who issued it.”
           </blockquote>
           <figcaption className="relative mt-5 max-w-2xl text-[15.5px] leading-relaxed text-white/70">
             A signature proves who signed and that the bytes did not change. It says nothing about whether the content is

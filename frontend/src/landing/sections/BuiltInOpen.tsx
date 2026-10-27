@@ -31,7 +31,7 @@ const LAYERS: Layer[] = [
     color: "#d0559a",
     tools: [
       { name: "React", role: "The reviewer workspace you are about to open." },
-      { name: "three.js", role: "Draws the voxel eye at the top of this page." },
+      { name: "three.js", role: "Draws the moving block floor and the hands at the top of this page." },
     ],
   },
   {
