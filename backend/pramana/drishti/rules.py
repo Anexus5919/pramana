@@ -22,6 +22,8 @@ def rx(*roman: str, deva: tuple[str, ...] = ()) -> re.Pattern[str]:
     if roman:
         alts.append(r"\b(?:" + "|".join(roman) + r")\b")
     if deva:
+        # \w does not match Devanagari vowel signs, so a word's suffix is spelled as a Devanagari run
+        deva = tuple(d.replace(r"\w*", f"[{DEV}]*") for d in deva)
         alts.append(rf"(?<![{DEV}])(?:" + "|".join(deva) + rf")(?![{DEV}])")
     return re.compile("|".join(alts), re.I)
 
@@ -449,9 +451,10 @@ def parse(text: str, ents: Entities, cat: Catalog, ctx: Context) -> Parsed | Non
     if ITS.search(t) and not has_entity and (SUMMARY.search(t) or FINDINGS.search(t) or WHY.search(t)):
         apps = list(dict.fromkeys(i["application_id"] for i in ctx.last_items if i.get("application_id")))
         prev_app = ctx.previous.filters.application if ctx.previous else None
-        app = apps[0] if len(apps) == 1 else prev_app
+        # The conversation first, then the application open on the page; with neither, ask which one
+        app = (apps[0] if len(apps) == 1 else prev_app) or ctx.page_application
         flt = {"application": app} if app else {}
-        if FINDINGS.search(t) and not WHY.search(t) and not SUMMARY.search(t):
+        if app and FINDINGS.search(t) and not WHY.search(t) and not SUMMARY.search(t):
             return Parsed(_intent("list_findings", ctx, flt, follow_up=True))
         return Parsed(_intent("application_summary", ctx, flt, follow_up=True), why=bool(WHY.search(t)))
 
@@ -475,9 +478,9 @@ def parse(text: str, ents: Entities, cat: Catalog, ctx: Context) -> Parsed | Non
         return Parsed(_intent("application_summary", ctx, {"application": app} if app else {}), readiness=True)
 
     if WHY.search(t) and (FINDINGS.search(t) or has_entity):
+        # With no application named or open, the reply asks which one
         app = _application(ents, cat, ctx)
-        if app:
-            return Parsed(_intent("application_summary", ctx, {"application": app}), why=True)
+        return Parsed(_intent("application_summary", ctx, {"application": app} if app else {}), why=True)
 
     data = _data_intent(t, ents, ctx)
     if data:
@@ -493,10 +496,13 @@ def parse(text: str, ents: Entities, cat: Catalog, ctx: Context) -> Parsed | Non
             return Parsed(_intent("application_summary", ctx, {"application": app}))
 
     counting = bool(COUNT.search(t))
-    listing = bool(LIST.search(t)) or bool(APPS_NOUN.search(t))
+    f = _filters(t, ents, ctx)
+    f.pop("application", None)
+    app_filters = any(f.get(k) for k in ("category", "status", "place", "institution", "round", "period", "date_from",
+                                        "date_to"))
+    # A bare noun ("that college") is not a request for a list; a verb or a filter on applications is
+    listing = bool(LIST.search(t)) or bool(APPS_NOUN.search(t) and app_filters)
     if counting or listing:
-        f = _filters(t, ents, ctx)
-        f.pop("application", None)
         about_apps = APPS_NOUN.search(t) or any(f.get(k) for k in ("category", "status", "place", "institution", "round"))
         prev_apps = ctx.previous is not None and ctx.previous.intent in {"count_applications", "list_applications"}
         # "How many?", "list them" or "and how many from Pune?" after a question about applications

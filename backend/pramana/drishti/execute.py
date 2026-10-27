@@ -329,7 +329,7 @@ def _summary_official(db: Session, user: User, app: Application, why: bool, lang
                       app.id, "application"))
     if user.role == "officer":
         items.append(item("page", f"{app.id}:ask", rp.t("ask_why", lang), app.id,
-                          app_href(user.role, app.id, action="ask"), app.id, "application"))
+                          app_href(user.role, app.id, ask="1"), app.id, "application"))
     data = {"app_id": app.id, "institution": app.institution.name, "status": app.status, "round": app.round,
             "has_run": run is not None and run.status == "complete", "open": len(fs), "by_severity": dict(sev),
             "why": why, "category": app.category}
