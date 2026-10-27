@@ -1,3 +1,4 @@
+import { en, type T } from "../../i18n";
 import { fmtDate } from "../../lib/format";
 import { correctionRound, humanize, roundPhrase } from "../../lib/labels";
 import type { ApplicationDetail, ChecklistSlot, DocumentSummary, Rectification } from "../../types";
@@ -88,26 +89,31 @@ const LABELS = {
 type StepId = keyof typeof LABELS;
 type StepSpec = [Step["status"], string?];
 
-function build(spec: Record<StepId, StepSpec>): Step[] {
+function buildSteps(spec: Record<StepId, StepSpec>, t: T): Step[] {
   return (Object.keys(LABELS) as StepId[]).map((id) => ({
     id,
-    label: LABELS[id],
+    label: t(LABELS[id]),
     status: spec[id][0],
     description: spec[id][1],
   }));
 }
 
-/** The five-step application stepper for every status, including repeated rounds, closed and withdrawn. */
-export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
+/**
+ * The five-step application stepper for every status, including repeated rounds, closed and withdrawn.
+ * The portal passes its translator and date format; the defaults are English.
+ */
+export function progressSteps(app: ApplicationDetail, missing: number, t: T = en, date: (v: string) => string = fmtDate): Step[] {
   const rect = openRectification(app);
-  const submittedOn = app.submitted_at ? fmtDate(app.submitted_at) : undefined;
-  const sent: StepSpec = ["complete", app.round > 1 ? `Resubmitted, ${roundPhrase(app.round)}` : submittedOn];
+  const submittedOn = app.submitted_at ? date(app.submitted_at) : undefined;
+  const resubmitted = t("Resubmitted, {round}", { round: roundPhrase(app.round, t) });
+  const sent: StepSpec = ["complete", app.round > 1 ? resubmitted : submittedOn];
+  const build = (spec: Record<StepId, StepSpec>) => buildSteps(spec, t);
   switch (app.status) {
     case "draft":
       return missing > 0
         ? build({
             details: ["complete"],
-            documents: ["current", `${missing} missing`],
+            documents: ["current", t("{n} missing", { n: missing })],
             submitted: ["upcoming"],
             review: ["upcoming"],
             decision: ["upcoming"],
@@ -115,7 +121,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
         : build({
             details: ["complete"],
             documents: ["complete"],
-            submitted: ["current", "Ready to submit"],
+            submitted: ["current", t("Ready to submit")],
             review: ["upcoming"],
             decision: ["upcoming"],
           });
@@ -124,7 +130,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
       return build({
         details: ["complete"],
         documents: ["complete"],
-        submitted: ["current", "Being checked"],
+        submitted: ["current", t("Being checked")],
         review: ["upcoming"],
         decision: ["upcoming"],
       });
@@ -133,7 +139,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
     case "rectification_requested":
       return build({
         details: ["complete"],
-        documents: ["attention", `${correctionRound(rect ? rect.round : app.round)} requested`],
+        documents: ["attention", t("{round} requested", { round: correctionRound(rect ? rect.round : app.round, t) })],
         submitted: ["complete", submittedOn],
         review: ["upcoming"],
         decision: ["upcoming"],
@@ -142,7 +148,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
       return build({
         details: ["complete"],
         documents: ["complete"],
-        submitted: ["complete", `Resubmitted, ${roundPhrase(app.round)}`],
+        submitted: ["complete", resubmitted],
         review: ["current"],
         decision: ["upcoming"],
       });
@@ -152,7 +158,7 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
         documents: ["complete"],
         submitted: ["complete", submittedOn],
         review: ["complete"],
-        decision: ["complete", "Closed"],
+        decision: ["complete", t("Closed")],
       });
     case "withdrawn":
       return build({
@@ -160,11 +166,11 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
         documents: ["complete"],
         submitted: ["upcoming"],
         review: ["upcoming"],
-        decision: ["complete", "Withdrawn"],
+        decision: ["complete", t("Withdrawn")],
       });
     default:
       return build({
-        details: ["upcoming", `Status: ${humanize(app.status).toLowerCase()}`],
+        details: ["upcoming", t("Status: {status}", { status: humanize(app.status).toLowerCase() })],
         documents: ["upcoming"],
         submitted: ["upcoming"],
         review: ["upcoming"],
@@ -174,25 +180,25 @@ export function progressSteps(app: ApplicationDetail, missing: number): Step[] {
 }
 
 /** One plain sentence per status for the applications list, which has no checklist detail. */
-export function listNextStep(status: string): string {
+export function listNextStep(status: string, t: T = en): string {
   switch (status) {
     case "draft":
-      return "Upload the required documents, then submit.";
+      return t("Upload the required documents, then submit.");
     case "submitted":
     case "validating":
-      return "Being checked. Nothing to do now.";
+      return t("Being checked. Nothing to do now.");
     case "under_review":
-      return "AICTE is reviewing it. Nothing to do now.";
+      return t("AICTE is reviewing it. Nothing to do now.");
     case "rectification_requested":
-      return "Correct the items AICTE asked about, then resubmit.";
+      return t("Correct the items AICTE asked about, then resubmit.");
     case "rectified":
-      return "Resubmitted. AICTE is reviewing the corrections.";
+      return t("Resubmitted. AICTE is reviewing the corrections.");
     case "closed":
-      return "Closed. No further action.";
+      return t("Closed. No further action.");
     case "withdrawn":
-      return "Withdrawn. No further action.";
+      return t("Withdrawn. No further action.");
     default:
-      return "Open it to see where it stands.";
+      return t("Open it to see where it stands.");
   }
 }
 
@@ -202,10 +208,11 @@ const SOURCE_NAME: Record<string, string> = {
 };
 
 /** "Checklist from the Approval Process Handbook, Annexure 2.1, page 97", or null without a source. */
-export function checklistSourceText(src: unknown): string | null {
+export function checklistSourceText(src: unknown, t: T = en): string | null {
   if (!src || typeof src !== "object") return null;
   const s = src as { doc?: unknown; section?: unknown; page?: unknown };
-  const doc = s.doc ? (SOURCE_NAME[String(s.doc)] ?? String(s.doc)) : null;
-  const parts = [doc, s.section ? String(s.section) : null, s.page ? `page ${String(s.page)}` : null].filter(Boolean);
-  return parts.length ? `Checklist from ${parts.join(", ")}` : null;
+  const known = s.doc ? SOURCE_NAME[String(s.doc)] : undefined;
+  const doc = s.doc ? (known ? t(known) : String(s.doc)) : null;
+  const parts = [doc, s.section ? String(s.section) : null, s.page ? t("page {n}", { n: String(s.page) }) : null].filter(Boolean);
+  return parts.length ? t("Checklist from {source}", { source: parts.join(", ") }) : null;
 }
