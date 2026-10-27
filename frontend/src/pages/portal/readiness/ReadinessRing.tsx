@@ -1,3 +1,4 @@
+import { useT } from "../../../i18n";
 import { cn } from "../../../ui2";
 import type { ReadinessGroup, ReadinessStatus } from "./types";
 
@@ -87,6 +88,7 @@ export function ReadinessRing({ groups, active, activeGroup, onActive, checking,
   const ready = all.length > 0 && all.every((i) => i.status === "met");
   const segs = layout(groups, ready);
   const dim = (s: Segment) => (active ? s.id !== active : activeGroup ? s.group !== activeGroup : false);
+  const t = useT();
 
   return (
     <div className={cn("relative aspect-square", className)}>
@@ -132,7 +134,7 @@ export function ReadinessRing({ groups, active, activeGroup, onActive, checking,
                   transition: `stroke-dasharray 420ms ${EASE}, stroke-dashoffset 420ms ${EASE}, stroke 200ms ${EASE}, stroke-width 150ms ${EASE}, opacity 150ms ${EASE}`,
                 }}
               >
-                <title>{`${s.title}: ${STATUS_WORD[s.status]}`}</title>
+                <title>{`${s.title}: ${t(STATUS_WORD[s.status])}`}</title>
               </circle>
             );
           })}
@@ -185,13 +187,13 @@ export function ReadinessRing({ groups, active, activeGroup, onActive, checking,
       </svg>
       <div aria-hidden className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
         {ready ? (
-          <span className="mt-12 text-sm font-medium text-verified-fg">All met</span>
+          <span className="mt-12 text-sm font-medium text-verified-fg">{t("All met")}</span>
         ) : all.length === 0 ? (
-          <span className="text-sm text-ink-3">Checking</span>
+          <span className="text-sm text-ink-3">{t("Checking")}</span>
         ) : (
           <>
             <span className="text-2xl leading-none font-semibold text-ink">{fix}</span>
-            <span className="mt-1 text-sm text-ink-3">to fix</span>
+            <span className="mt-1 text-sm text-ink-3">{t("to fix")}</span>
           </>
         )}
       </div>
