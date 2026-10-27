@@ -2,7 +2,7 @@
 through the real pipeline (nothing in the results is pre-computed).
 
     python scripts/make_fixtures.py   # once, or after changing the generator
-    python scripts/seed.py            # wipes var/ and reloads
+    python scripts/seed.py            # wipes var/ and reloads; --no-threads leaves out A3's demo conversation
 """
 
 import hashlib
@@ -24,8 +24,9 @@ for _n in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "RapidOCR"):
 FIX = ROOT / "fixtures" / "out"
 
 
-def main(validate: bool = True, fix: Path = FIX) -> None:
-    """fix: the world to load; random_eval.py passes a randomised world here."""
+def main(validate: bool = True, fix: Path = FIX, threads: bool = False) -> None:
+    """fix: the world to load; random_eval.py passes a randomised world here. threads adds A3's correction-round
+    conversation (the command line does; tests load the world without it, since several start their own round on A3)."""
     from pramana.config import get_settings
 
     s = get_settings()
@@ -153,6 +154,12 @@ def main(validate: bool = True, fix: Path = FIX) -> None:
         from pramana.history.watch import seed_outcomes
 
         seed_outcomes(db, m, users["officer"])
+        if threads:
+            # Last, after every run: the round adds messages and notifications, never a finding
+            from pramana.conversation.demo import seed_round
+
+            seed_round(db)
+            print("seeded A3's correction round conversation")
         audit.checkpoint(db)
         db.commit()
         print(f"validated {len(timings)} applications, mean {sum(timings) / len(timings):.1f}s")
@@ -160,4 +167,4 @@ def main(validate: bool = True, fix: Path = FIX) -> None:
 
 
 if __name__ == "__main__":
-    main(validate="--no-validate" not in sys.argv)
+    main(validate="--no-validate" not in sys.argv, threads="--no-threads" not in sys.argv)
