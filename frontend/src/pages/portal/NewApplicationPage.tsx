@@ -81,7 +81,7 @@ function CategoryOption({
       />
       <span className="min-w-0">
         <span className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-sm font-medium text-ink">{spec.label ?? code}</span>
+          <span className="text-sm font-medium text-ink">{spec.label ? t(spec.label) : code}</span>
           <Code>{code}</Code>
         </span>
         {CATEGORY_HELP[code] && <span className="mt-0.5 block text-sm text-ink-2 text-pretty">{t(CATEGORY_HELP[code])}</span>}
@@ -166,7 +166,8 @@ export default function NewApplicationPage() {
   }));
   const current = STEPS[step];
   const last = step === STEPS.length - 1;
-  const categoryName = (category && rs.data?.checklists[category]?.label) ?? category;
+  const categoryLabel = category && rs.data?.checklists[category]?.label;
+  const categoryName = categoryLabel ? t(categoryLabel) : category;
 
   return (
     <Page width="narrow">

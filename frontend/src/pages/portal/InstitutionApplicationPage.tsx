@@ -375,7 +375,10 @@ export default function InstitutionApplicationPage() {
     const d = docs.get(type);
     flags.set(type, d?.uploaded_at && d.uploaded_at > rect.created_at ? "replaced" : "requested");
   }
-  const docLabel = (type: string) => app.document_checklist.find((s) => s.doc_type === type)?.label;
+  const docLabel = (type: string) => {
+    const label = app.document_checklist.find((s) => s.doc_type === type)?.label;
+    return label && t(label);
+  };
 
   /** Scrolls a checklist row into view and puts the keyboard on its upload button. */
   function showSlot(docType: string) {
@@ -389,7 +392,7 @@ export default function InstitutionApplicationPage() {
     <Page width="narrow">
       <PageHeader
         back={{ to: "/portal", label: t("Applications") }}
-        title={app.category_label}
+        title={t(app.category_label)}
         status={<ApplicationStatusBadge status={app.status} />}
         context={
           <MetaList

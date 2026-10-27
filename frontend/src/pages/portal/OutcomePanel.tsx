@@ -20,7 +20,7 @@ export function OutcomePanel({ appId }: { appId: string }) {
       description={t("Recorded by AICTE on {date}, {round}", { date: date(o.recorded_at), round: o.round ? roundPhrase(o.round, t) : o.round_label })}
       className="scroll-mt-20"
     >
-      <p className="text-base font-medium text-ink text-pretty">{o.label}</p>
+      <p className="text-base font-medium text-ink text-pretty">{t(o.label)}</p>
       <h3 className="mt-4 mb-1 text-xs font-medium text-ink-3">{t("Reasons")}</h3>
       <p className="text-sm break-words whitespace-pre-line text-ink-2 text-pretty">{o.reasons}</p>
       <PanelDivider label={t("What you can do next")} />

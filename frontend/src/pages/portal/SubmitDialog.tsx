@@ -59,7 +59,7 @@ export function SubmitDialog({
             </p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-2">
               {missing.map((m) => (
-                <li key={m.doc_type}>{m.label}</li>
+                <li key={m.doc_type}>{t(m.label)}</li>
               ))}
             </ul>
           </div>

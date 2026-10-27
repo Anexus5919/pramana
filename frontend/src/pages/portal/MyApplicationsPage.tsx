@@ -31,7 +31,8 @@ function updatedAt(a: Application): string {
 
 function useCategoryLabel() {
   const { data } = useQuery({ queryKey: qk.ruleset, queryFn: api.activeRuleset, staleTime: 5 * 60_000 });
-  return useCallback((code: string) => (data?.checklists[code]?.label ?? humanize(code)).replace(/\s*\(.*\)$/, ""), [data]);
+  const t = useT();
+  return useCallback((code: string) => t((data?.checklists[code]?.label ?? humanize(code)).replace(/\s*\(.*\)$/, "")), [data, t]);
 }
 
 function ListSkeleton() {
