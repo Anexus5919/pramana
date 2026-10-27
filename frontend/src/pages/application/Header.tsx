@@ -13,6 +13,8 @@ export interface HeaderProps {
   openHigh: boolean;
   validating: boolean;
   askOpen: boolean;
+  /** Bumped to open the Decide menu, e.g. from a Drishti link */
+  decideSignal?: number;
   onValidate?: () => void;
   onReplay?: () => void;
   onPack?: () => void;
@@ -31,6 +33,7 @@ export function WorkspaceHeader({
   openHigh,
   validating,
   askOpen,
+  decideSignal,
   onValidate,
   onReplay,
   onPack,
@@ -98,7 +101,7 @@ export function WorkspaceHeader({
         )
       }
       menu={menu}
-      primary={onRectify && onOutcome ? <ActionMenu trigger="button" variant="primary" label="Decide" width={300} items={decide} /> : undefined}
+      primary={onRectify && onOutcome ? <ActionMenu trigger="button" variant="primary" label="Decide" width={300} items={decide} openSignal={decideSignal} /> : undefined}
     >
       <Tabs
         label="Application sections"

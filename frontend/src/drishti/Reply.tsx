@@ -22,7 +22,7 @@ export function appHref(href: string | null | undefined): string | null {
   return href;
 }
 
-function ItemRow({ item, onNavigate }: { item: DrishtiItem; onNavigate: () => void }) {
+function ItemRow({ item, onNavigate }: { item: DrishtiItem; onNavigate: (to: string) => void }) {
   const to = appHref(item.href);
   const body = (
     <span className="min-w-0 flex-1">
@@ -41,7 +41,7 @@ function ItemRow({ item, onNavigate }: { item: DrishtiItem; onNavigate: () => vo
     <li>
       <Link
         to={to}
-        onClick={onNavigate}
+        onClick={() => onNavigate(to)}
         className="group flex items-center gap-3 px-3 py-2 transition-colors duration-150 hover:bg-surface-2 focus-visible:outline-offset-[-2px]"
       >
         {body}
@@ -51,7 +51,7 @@ function ItemRow({ item, onNavigate }: { item: DrishtiItem; onNavigate: () => vo
   );
 }
 
-function ItemList({ items, onNavigate, className }: { items: DrishtiItem[]; onNavigate: () => void; className?: string }) {
+function ItemList({ items, onNavigate, className }: { items: DrishtiItem[]; onNavigate: (to: string) => void; className?: string }) {
   return (
     <ul className={cn("divide-y divide-line", className)}>
       {items.map((it, i) => (
@@ -116,7 +116,8 @@ export function Reply({
   latest: boolean;
   pending: boolean;
   onPick: (text: string) => void;
-  onNavigate: () => void;
+  /** Called with the route as a link is followed */
+  onNavigate: (to: string) => void;
 }) {
   const items = reply.items ?? [];
   const more = appHref(reply.more_href);
@@ -134,7 +135,7 @@ export function Reply({
         {more && (
           <Link
             to={more}
-            onClick={onNavigate}
+            onClick={() => onNavigate(more)}
             className="group flex items-center gap-1.5 border-t border-line px-3 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:bg-surface-2 focus-visible:outline-offset-[-2px]"
           >
             See all
@@ -152,7 +153,7 @@ export function Reply({
         {to && (
           <Link
             to={to}
-            onClick={onNavigate}
+            onClick={() => onNavigate(to)}
             aria-label={`Go to ${target?.title ?? "the page"}`}
             className="group flex items-center gap-3 rounded-card border border-line bg-surface px-3 py-2.5 transition-colors duration-150 hover:bg-surface-2"
           >
@@ -177,7 +178,7 @@ export function Reply({
         <Text reply={reply} className={reply.kind === "refuse" ? "text-ink-2" : undefined} />
         {items.length > 0 && <ItemList items={items} onNavigate={onNavigate} className="overflow-hidden rounded-card border border-line bg-surface" />}
         {more && (
-          <Link to={more} onClick={onNavigate} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:underline">
+          <Link to={more} onClick={() => onNavigate(more)} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:underline">
             See all
             <ArrowRight aria-hidden className="size-4" />
           </Link>

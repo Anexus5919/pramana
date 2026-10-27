@@ -32,7 +32,7 @@ export interface DrishtiPanelProps {
   onRetry: () => void;
   onNewChat: () => void;
   onClose: () => void;
-  onNavigate: () => void;
+  onNavigate: (to: string) => void;
   inputRef: RefObject<HTMLTextAreaElement | null>;
 }
 

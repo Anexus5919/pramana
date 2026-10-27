@@ -74,10 +74,10 @@ export function Drishti() {
   const loading = suggestions.isPending && suggestions.fetchStatus === "fetching";
   const starters = served.chips?.length ? served.chips : loading ? [] : starterChips(role);
 
-  const close = useCallback(() => {
+  const close = useCallback((refocus = true) => {
     setOpen(false);
-    // Back to the button that opened the window
-    requestAnimationFrame(() => button.current?.focus({ preventScroll: true }));
+    // Back to the button that opened the window, unless the page is about to take focus
+    if (refocus) requestAnimationFrame(() => button.current?.focus({ preventScroll: true }));
   }, []);
 
   const toggle = useCallback(() => {
@@ -134,9 +134,11 @@ export function Drishti() {
               input.current?.focus();
             }}
             onClose={close}
-            // On a phone the sheet covers the page, so it steps aside once a link is followed
-            onNavigate={() => {
-              if (phone) close();
+            // On a phone the sheet covers the page, so it steps aside once a link is followed. A Decide link opens
+            // the header's menu, which the window would cover, so it steps aside there too and leaves focus to the menu
+            onNavigate={(to) => {
+              if (/[?&]action=decide(&|$)/.test(to)) close(false);
+              else if (phone) close();
             }}
             inputRef={input}
           />
