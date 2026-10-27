@@ -48,7 +48,8 @@ def rows_for(split: str) -> list[dict]:
         m = x.get("meta", x)
         out.append({"id": x.get("id") or m.get("family"), "message": m["message"], "role": m["role"],
                     "previous": m.get("previous"), "gold": m["gold"], "kind": m.get("kind") or x.get("source"),
-                    "lang": m["gold"]["language"]})
+                    "lang": m["gold"]["language"], "family": m.get("family"),
+                    "tag": m.get("tag") if m["gold"]["intent"] == "out_of_scope" else None})
     return out
 
 
@@ -132,6 +133,10 @@ def score(rows: list[dict], preds: list[dict | None]) -> dict:
             "oos_precision": round(tp / max(sum(oos_p), 1), 3), "oos_recall": round(tp / max(sum(oos_g), 1), 3),
             "oos_counts": {"gold": sum(oos_g), "predicted": sum(oos_p), "both": tp},
             "intent_accuracy_by_language": acc_by("lang"), "intent_accuracy_by_kind": acc_by("kind"),
+            "intent_accuracy_by_gold_intent": {k: f"{sum(ok for r, ok in zip(rows, ok_intent, strict=True) if r['gold']['intent'] == k)}/"
+                                               f"{sum(r['gold']['intent'] == k for r in rows)}"
+                                               for k in sorted({r["gold"]["intent"] for r in rows})},
+            "out_of_scope_recall_by_tag": {k: v for k, v in acc_by("tag").items() if k != "None"},
             "confusions": {f"{g} -> {p}": c for (g, p), c in wrong.most_common(15)}}
 
 
@@ -154,8 +159,9 @@ def main() -> None:
     out_dir.mkdir(exist_ok=True)
     seen = {json.loads(x)["meta"]["message"].lower()
             for x in (HERE / "data" / "train.jsonl").read_text(encoding="utf-8").splitlines()}
-    # Warm-up: load the model with these options before anything is timed
-    ask(a.url, a.model, {"message": "hello", "role": "officer", "previous": None}, options)
+    # Warm-up: load the model with these options before anything is timed; its time includes loading
+    _, first = ask(a.url, a.model, {"message": "hello", "role": "officer", "previous": None}, options)
+    print("first call, including load:", round(first, 2), "s", flush=True)
     report = {"model": a.model, "options": options, "splits": {}}
     for split in a.split or ["test", "handwritten"]:
         rows = rows_for(split)
@@ -171,7 +177,8 @@ def main() -> None:
             lat.append(dt)
         res = score(rows, preds)
         res["latency_s"] = {"median": round(statistics.median(lat), 3), "p90": round(sorted(lat)[int(0.9 * len(lat)) - 1], 3),
-                            "mean": round(statistics.mean(lat), 3), "max": round(max(lat), 3)}
+                            "mean": round(statistics.mean(lat), 3), "max": round(max(lat), 3),
+                            "first_call_including_load": round(first, 2)}
         if split == "handwritten":
             # Short or acceptance-table messages the templates also produce
             fresh = [i for i, r in enumerate(rows) if r["message"].lower() not in seen]
