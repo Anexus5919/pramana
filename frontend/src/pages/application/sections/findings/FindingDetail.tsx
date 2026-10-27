@@ -30,6 +30,7 @@ import { useWorkspace } from "../../context";
 import { isRectifiable, useReview } from "../../data";
 import { TimeMachineLink } from "../../history/TimeMachine";
 import { CitationCard, EvidenceList, PaneLabel, TraceInputs } from "../../parts";
+import { Establish, RelatesTo } from "./RegulatoryBasis";
 
 const MIN_REASON = 10;
 
@@ -276,6 +277,12 @@ export function FindingDetail({ finding: f, showTitle = true }: { finding: Findi
         </Block>
       )}
 
+      {f.regulatory_basis && f.regulatory_basis.provisions.length > 0 && (
+        <Block title="Relates to">
+          <RelatesTo basis={f.regulatory_basis} />
+        </Block>
+      )}
+
       <Block title="Evidence">
         <EvidenceList evidence={f.evidence} fallbackDocId={f.document_id} />
         <TimeMachineLink finding={f} />
@@ -296,6 +303,13 @@ export function FindingDetail({ finding: f, showTitle = true }: { finding: Findi
             <TraceInputs inputs={inputs} missing={missing} />
           </div>
         </details>
+      )}
+
+      {f.regulatory_basis && f.regulatory_basis.establish.length > 0 && (
+        <Block title="What must be established">
+          <p className="mb-3 text-xs text-ink-3">Before acting on this finding.</p>
+          <Establish basis={f.regulatory_basis} />
+        </Block>
       )}
 
       <Block title="History">

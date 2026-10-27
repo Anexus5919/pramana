@@ -240,6 +240,34 @@ export interface Finding {
   document_id: string | null;
   review_status: ReviewStatus;
   review_note: string | null;
+  /** Officials only: the provisions the finding concerns and what to establish before acting on it */
+  regulatory_basis?: RegulatoryBasis | null;
+}
+
+/** One verbatim provision from the AICTE Act, the Approval Regulations or the Approval Process Handbook. */
+export interface Provision {
+  id: string;
+  /** Key into RegulatoryBasis.sources */
+  source: string;
+  number: string;
+  cite: string;
+  quote: string;
+  page: number;
+  verified: boolean;
+}
+
+export interface EstablishStep {
+  text: string;
+  basis: { kind: "evidence"; label: string } | { kind: "provision"; label: string; id: string; source: string; page: number };
+}
+
+export interface RegulatoryBasis {
+  entry: string;
+  scope_note: string;
+  version: string;
+  sources: Record<string, { name: string; url: string }>;
+  provisions: Provision[];
+  establish: EstablishStep[];
 }
 
 export interface ReviewEntry {
