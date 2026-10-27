@@ -1,0 +1,828 @@
+# Pramana regulatory basis: the provisions each finding concerns, and what an official should establish before
+# acting on it. Shown to officers, verifiers and admins next to a finding; never to institutions.
+#
+# Every provision below was read in the official text and is quoted verbatim (a sentence or less). Page numbers
+# are PDF page numbers of the file whose SHA-256 is recorded under sources. scripts/verify_regulatory_basis.py
+# re-checks every quote against those files. A provision that could not be verified is left out, never
+# paraphrased. Pramana does not decide whether a provision is breached; the competent authority does.
+
+basis:
+  id: pramana-regulatory-basis
+  version: 2026-27.1
+  ruleset: aicte-aph-2024-27
+  verified_on: 2026-10-27
+  scope_note: Provisions this finding concerns. Whether one is breached is for the competent authority.
+
+sources:
+  - id: ACT
+    instrument: All India Council for Technical Education Act, 1987 (52 of 1987)
+    short: AICTE Act, 1987
+    url: https://www.indiacode.nic.in/bitstream/123456789/1880/1/198752.pdf
+    sha256: 58bd2762073231a7a8451f405d1ab0e00728f74192906b5c47093d139f1961df
+    retrieved: 2026-10-27
+    retrieved_via: >-
+      India Code returned HTTP 504 on 2026-10-27, so the file was taken from the Internet Archive capture of this
+      URL dated 2025-02-20; its SHA-1 matches the digest the archive records for every capture since 2020-12-04.
+  - id: REG2020
+    instrument: All India Council for Technical Education (Grant of Approvals for Technical Institutions) Regulations, 2020
+    short: Approval Regulations, 2020
+    url: https://egazette.gov.in/WriteReadData/2020/215928.pdf
+    sha256: 8edfc74ce13c112289bad0d1db020e4395d8c2113baadc23761f6eb03be09f89
+    retrieved: 2026-10-27
+    gazette: Gazette of India Extraordinary, Part III Section 4, CG-DL-E-05022020-215928 (notification of 4 Feb 2020)
+  - id: REG2021
+    instrument: All India Council for Technical Education (Grant of Approvals for Technical Institutions) (1st Amendment) Regulations, 2021
+    short: Approval Regulations, 1st Amendment 2021
+    url: https://egazette.gov.in/WriteReadData/2021/225468.pdf
+    sha256: 92a92bce91ac863644091f5e8abbdb1906f2953b5b8b53e114a84fb74f9eeda8
+    retrieved: 2026-10-27
+    gazette: Gazette of India Extraordinary, Part III Section 4, CG-DL-E-25022021-225468 (notification of 24 Feb 2021)
+  - id: APH
+    instrument: AICTE Approval Process Handbook 2024-25 to 2026-27
+    short: Approval Process Handbook 2024-27
+    url: https://cdnbbsr.s3waas.gov.in/s35938b4d054136e5d59ada6ec9c295d7a/uploads/2025/03/2025031399.pdf
+    official_url: https://www.aicte.gov.in/sites/default/files/APH%20Final.pdf
+    sha256: 153d54816f2cf11489218e239113544e8d49b73680009688baa7dc4880636051
+    retrieved: 2026-10-27
+    retrieved_via: >-
+      aicte.gov.in served a maintenance page and HTTP 404 for the handbook on 2026-10-27, so the file was taken
+      from the Gujarat ACPC government portal. It is byte-identical to a second copy a college published as
+      downloaded from AICTE on 23.12.2025; its PDF creation date is 08-12-2023 and its page numbers match the
+      ruleset's citations.
+
+# Verbatim provisions. `cite` is the short form shown on a basis tag.
+provisions:
+  # ---------------- AICTE Act, 1987 ----------------
+  ACT-10-I:
+    source: ACT
+    number: Section 10(i)
+    cite: AICTE Act s. 10(i)
+    page: 7
+    quote: "lay down norms and standards for courses, curricula, physical and instructional facilities, staff pattern, staff qualifications, quality instructions, assessment and examinations"
+    verified: true
+  ACT-10-K:
+    source: ACT
+    number: Section 10(k)
+    cite: AICTE Act s. 10(k)
+    page: 7
+    quote: "grant approval for starting new technical institutions and for introduction of new courses or programmes in consultation with the agencies concerned"
+    verified: true
+  ACT-10-P:
+    source: ACT
+    number: Section 10(p)
+    cite: AICTE Act s. 10(p)
+    page: 7
+    quote: "inspect or cause to inspect any technical institution"
+    verified: true
+  ACT-10-U:
+    source: ACT
+    number: Section 10(u)
+    cite: AICTE Act s. 10(u)
+    page: 8
+    quote: "set up a National Board of Accreditation to periodically conduct evaluation of technical institutions or programmes on the basis of guidelines, norms and standards specified by it"
+    verified: true
+
+  # ---------------- Approval Regulations, 2020, and the 2021 amendment ----------------
+  REG-2.9:
+    source: REG2020
+    number: Clause 2.9
+    cite: Regulation 2.9
+    page: 27
+    quote: "\"Approved Intake\" means the maximum number of students that can be admitted in a Course (excluding the Supernumerary Seats) as approved by the Council."
+    verified: true
+  REG-5.6A-DSC:
+    source: REG2021
+    number: Clause 5.6(a), as substituted in 2021
+    cite: Regulation 5.6(a)
+    page: 10
+    quote: "The Applicants/ existing Institutions shall be required to submit online application with Digital Signature Certificate (DSC)"
+    verified: true
+  REG-5.6A-TER:
+    source: REG2021
+    number: Clause 5.6(a), as substituted in 2021
+    cite: Regulation 5.6(a)
+    page: 10
+    quote: "by remitting the prescribed Technical Education Regulatory (TER) Charges as specified in the Approval Process Handbook through AICTE's payment gateway on the Web-Portal, failing which the application shall not be considered."
+    verified: true
+  REG-5.6B:
+    source: REG2020
+    number: Clause 5.6(b)
+    cite: Regulation 5.6(b)
+    page: 34
+    quote: "Only those applications submitted within the cut-off date, including payment shall be considered for processing."
+    verified: true
+  REG-5.6D:
+    source: REG2020
+    number: Clause 5.6(d)
+    cite: Regulation 5.6(d)
+    page: 34
+    quote: "After pressing the \"submit\" tab, the data shall not be allowed for any further editing till the processing of the application is completed."
+    verified: true
+  REG-5.6G:
+    source: REG2020
+    number: Clause 5.6(g)
+    cite: Regulation 5.6(g)
+    page: 35
+    quote: "Applicants have to upload documents in the Web-Portal/ submit to the Scrutiny/ Re-Scrutiny Committee/ Expert Visit Committee, as applicable, as specified in the Approval Process Handbook."
+    verified: true
+  REG-5.6H:
+    source: REG2020
+    number: Clause 5.6(h)
+    cite: Regulation 5.6(h)
+    page: 35
+    quote: "An Affidavit shall be submitted/ uploaded by the Applicants in the Format as specified in the Approval Process Handbook, on a Non-Judicial Stamp Paper of ₹100/- duly sworn before a First Class Magistrate or Notary or an Oath Commissioner"
+    verified: true
+  REG-6.3A-NORMS:
+    source: REG2020
+    number: Clause 6.3(a)
+    cite: Regulation 6.3(a)
+    page: 37
+    quote: "For applications submitted under Clause 1.2, the Council shall grant the desired approval, only after confirming that the Applicant had fulfiled all the norms and standards through the procedure as specified in the Approval Process Handbook."
+    verified: true
+  REG-6.3F:
+    source: REG2021
+    number: Clause 6.3(f), as substituted in 2021
+    cite: Regulation 6.3(f)
+    page: 12
+    quote: "Institutions shall be eligible for new Course(s)/ expansion of existing Course(s), equal to the number of valid NBA accredited Course(s), limited to a maximum of FOUR within the definition of Division/ Programme/ Level."
+    verified: true
+  REG-6.3N:
+    source: REG2020
+    number: Clause 6.3(n)
+    cite: Regulation 6.3(n)
+    page: 38
+    quote: "The Institution shall be given an opportunity to comply the deficiencies, if any, before the Scrutiny/ Re-Scrutiny Committee, to fulfil the criteria of \"Zero Deficiency\" based on Self-Disclosure, for processing the application, as applicable."
+    verified: true
+  REG-6.11:
+    source: REG2020
+    number: Clause 6.11
+    cite: Regulation 6.11
+    page: 40
+    quote: "Institutions at random would be subjected to surprise inspection for the fulfilment of the norms of Approval Process Handbook"
+    verified: true
+  REG-7.4:
+    source: REG2020
+    number: Clause 7.4
+    cite: Regulation 7.4
+    page: 41
+    quote: "The decision of the Council about the grant of approval or otherwise shall be communicated to the Applicant through Web-Portal on or before 30th April of Calendar Year, with the reasons for rejection of the application."
+    verified: true
+  REG-9.1:
+    source: REG2020
+    number: Clause 9.1
+    cite: Regulation 9.1
+    page: 41
+    quote: "All Technical Institutions shall upload the information in respect of their Director/ Principal, Faculty members and students admitted in each Course in the format available on the Web-Portal of the Council and update the information from time to time."
+    verified: true
+  REG-9.3:
+    source: REG2020
+    number: Clause 9.3
+    cite: Regulation 9.3
+    page: 41
+    quote: "If the information given and/or the documents provided to the Council are found to be false, incomplete and/or the Applicants have failed to disclose factual information and/or suppressed/ misrepresented the information, the Council shall initiate action including Withdrawal of Approval/ any other action as deemed necessary against the Applicants."
+    verified: true
+  REG-11.2:
+    source: REG2020
+    number: Clause 11.2
+    cite: Regulation 11.2
+    page: 41
+    quote: "If any Technical Institution contravenes any of the provisions of relevant Regulations, the Council after making appropriate inquiry through Standing Hearing Committee (SHC) and after providing an opportunity of being heard through the Standing Appellate Committee (SAC) shall withdraw the approval granted."
+    verified: true
+  REG-11.4A:
+    source: REG2020
+    number: Clause 11.4(a)
+    cite: Regulation 11.4(a)
+    page: 42
+    quote: "Non-Submission/ Submission of incomplete application for Extension of Approval"
+    verified: true
+  REG-11.4C:
+    source: REG2020
+    number: Clause 11.4(c)
+    cite: Regulation 11.4(c)
+    page: 42
+    quote: "Non-Fulfilment of Faculty: Student ratio, not adhering to the pay scales and/or qualifications prescribed for Faculty"
+    verified: true
+  REG-11.4D:
+    source: REG2020
+    number: Clause 11.4(d)
+    cite: Regulation 11.4(d)
+    page: 42
+    quote: "Non-Fulfilment in Computer, Software, Internet, Printers, Laboratory Equipment, Books, Journals and Library facilities requirements, etc."
+    verified: true
+  REG-11.4F:
+    source: REG2020
+    number: Clause 11.4(f)
+    cite: Regulation 11.4(f)
+    page: 42
+    quote: "Non-Fulfilment of Location/ Built-up Area/ Land as specified in the Approval Process Handbook at the time of year of establishment or the current Academic Year"
+    verified: true
+  REG-11.4G:
+    source: REG2020
+    number: Clause 11.4(g)
+    cite: Regulation 11.4(g)
+    page: 42
+    quote: "Excess admission"
+    verified: true
+  REG-11.4I:
+    source: REG2020
+    number: Clause 11.4(i)
+    cite: Regulation 11.4(i)
+    page: 42
+    quote: "Institutions not allowing Expert Visit Committee for physical verification of Infrastructural facilities/ Institutions not having Occupancy Certificate/ Completion Certificate/ Building License/ Form D/ Barrier free environment"
+    verified: true
+  REG-11.7:
+    source: REG2020
+    number: Clause 11.7
+    cite: Regulation 11.7
+    page: 42
+    quote: "If any of the information mentioned in the Affidavit is proved as false, legal action including penal action shall be initiated on the deponent."
+    verified: true
+
+  # ---------------- Approval Process Handbook 2024-27 ----------------
+  APH-1.4.3:
+    source: APH
+    number: Clause 1.4.3
+    cite: APH cl. 1.4.3
+    page: 20
+    quote: "All Applicants shall ensure that the data entered/edited in their online application on AICTE web portal @ www.aicte-india.org are correct."
+    verified: true
+  APH-1.4.3-DATE:
+    source: APH
+    number: Clause 1.4.3
+    cite: APH cl. 1.4.3
+    page: 20
+    quote: "All the documents to be submitted along with on online applications should be DIGITALLY SIGNED (using Digital Signature Certificate-DSC) and submitted on AICTE Web-Portal on or before the last date as notified in the Public Notice / AICTE web-portal."
+    verified: true
+  APH-1.4.6:
+    source: APH
+    number: Clause 1.4.6
+    cite: APH cl. 1.4.6
+    page: 20
+    quote: "Any document uploaded on AICTE web portal without Digital Signature shall not be considered as valid document."
+    verified: true
+  APH-2.3.4A:
+    source: APH
+    number: Clause 2.3.4(a)
+    cite: APH cl. 2.3.4(a)
+    page: 31
+    quote: "All Institutions shall upload the documents (Digitally Signed using DSC) as per Annexure-2 of the Approval Process Handbook on AICTE Web-Portal."
+    verified: true
+  APH-2.3.5A:
+    source: APH
+    number: Clause 2.3.5(a)
+    cite: APH cl. 2.3.5(a)
+    page: 31
+    quote: "Institutions at random shall be subject to EVC (Inspection) for the fulfillment of the norms of the Approval Process Handbook."
+    verified: true
+  APH-2.4:
+    source: APH
+    number: Clause 2.4
+    cite: APH cl. 2.4
+    page: 31
+    quote: "The Institution shall be given an opportunity to submit the compliance of deficiencies (if any), before the Scrutiny/ Re-Scrutiny Committee, Hearing Committee to fulfil the criteria of \"Nil Deficiency\" based on Self- Disclosure, for processing the application, as applicable."
+    verified: true
+  APH-2.5A:
+    source: APH
+    number: Clause 2.5(a)
+    cite: APH cl. 2.5(a)
+    page: 31
+    quote: "The Council shall grant Extension of Approval based on Self-Disclosure of the availability of the required facilities and Infrastructure as submitted online on AICTE Web-Portal"
+    verified: true
+  APH-2.6:
+    source: APH
+    number: Clause 2.6
+    cite: APH cl. 2.6
+    page: 32
+    quote: "Before grant of approval to the increase in intake sought by the institution, the council shall ascertain the infrastructure and faculty availability through an EVC."
+    verified: true
+  APH-2.6C:
+    source: APH
+    number: Clause 2.6(c)
+    cite: APH cl. 2.6(c)
+    page: 32
+    quote: "Increase in intake / Additional Course in Diploma / Under Graduate /Post Graduate level in Engineering and Technology shall be permissible, if the Institution is already offering minimum three (3) courses in Core Branches"
+    verified: true
+  APH-6.14:
+    source: APH
+    number: Clause 6.14
+    cite: APH cl. 6.14
+    page: 71
+    quote: "The Technical Institutions shall follow Norms for Faculty requirements and Cadre ratio in Diploma/ Under Graduate/ Post Graduate Level as provided in the Annexure-5 of the Approval Process Handbook."
+    verified: true
+  APH-6.14A:
+    source: APH
+    number: Clause 6.14(a)
+    cite: APH cl. 6.14(a)
+    page: 71
+    quote: "Expert Visit Committee shall ensure the Faculty availability by their annual salary paid statements in addition to their physical presence."
+    verified: true
+  APH-6.14C:
+    source: APH
+    number: Clause 6.14(c)
+    cite: APH cl. 6.14(c)
+    page: 71
+    quote: "The Institutions shall ensure that necessary addition/deletion of faculty ID (Details in case of new faculty who have not worked in any other AICTE approved institutions so far) on AICTE web portal within the same month from the date of Joining/Leaving."
+    verified: true
+  APH-6.17G:
+    source: APH
+    number: Clause 6.17(g)
+    cite: APH cl. 6.17(g)
+    page: 73
+    quote: "Occupancy Certificate/ Completion Certificate/ Building License/ Form D (as applicable) shall be obtained from the Competent Authority (as per standard format prescribed by the issuing Authority)."
+    verified: true
+  APH-6.17H:
+    source: APH
+    number: Clause 6.17(h)
+    cite: APH cl. 6.17(h)
+    page: 73
+    quote: "Structural Stability Certificate is valid for a period of FIVE years from the date of issue."
+    verified: true
+  APH-6.17I:
+    source: APH
+    number: Clause 6.17(i)
+    cite: APH cl. 6.17(i)
+    page: 73
+    quote: "A valid Fire Safety Certificate shall be obtained from the Competent Authority."
+    verified: true
+  APH-6.18:
+    source: APH
+    number: Clause 6.18
+    cite: APH cl. 6.18
+    page: 73
+    quote: "Total Built-Up area under each sub-category such as Instructional area, Administrative area, Amenities area and Circulation area for each Program shall be fulfilled."
+    verified: true
+  APH-6.19:
+    source: APH
+    number: Clause 6.19
+    cite: APH cl. 6.19
+    page: 73
+    quote: "The Technical Institutions shall follow Norms for Books, Library facilities, Computer, Software, Internet, Printers and Laboratory Equipment as provided in the Annexure-4 of the Approval Process Handbook."
+    verified: true
+  APH-6.39:
+    source: APH
+    number: Clause 6.39
+    cite: APH cl. 6.39
+    page: 75
+    quote: "All the AICTE Approved Institutions /Universities shall mandatorily upload Affidavit 2 as specified in the Approval Process Handbook on the AICTE Web-Portal in an e-stamp paper with digital signature of the authorized signatories."
+    verified: true
+  APH-7.4A:
+    source: APH
+    number: Clause 7.4(a)
+    cite: APH cl. 7.4(a)
+    page: 87
+    quote: "Non-Submission/ Submission of Incomplete/ False/Incorrect Information"
+    verified: true
+  APH-7.4C:
+    source: APH
+    number: Clause 7.4(c)
+    cite: APH cl. 7.4(c)
+    page: 87
+    quote: "Non-Fulfilment of Faculty:Student ratio, not adhering to the Pay Scales and/or qualifications prescribed for Faculty"
+    verified: true
+  APH-7.4F:
+    source: APH
+    number: Clause 7.4(f)
+    cite: APH cl. 7.4(f)
+    page: 87
+    quote: "Institutions working in a temporary location or at location not approved by the Council and Institutions not fulfilling prescribed Built-up area requirements shall be liable for penal action(s)."
+    verified: true
+  APH-7.4G:
+    source: APH
+    number: Clause 7.4(g)
+    cite: APH cl. 7.4(g)
+    page: 87
+    quote: "Excess admission over the \"Approved Intake\" shall not be allowed under any circumstances."
+    verified: true
+  APH-7.4J:
+    source: APH
+    number: Clause 7.4(j)
+    cite: APH cl. 7.4(j)
+    page: 88
+    quote: "Institutions not allowing Expert Visit Committee for physical verification of Infrastructural facilities/ Institutions not having Occupancy Certificate/ Completion Certificate/ Building License/ Form D/ Barrier free environment, shall be liable for penal action (s)."
+    verified: true
+  APH-ANX2.1-II:
+    source: APH
+    number: Annexure 2.1(ii)
+    cite: APH Annexure 2.1(ii)
+    page: 97
+    quote: "Copy of pay receipt print made on AICTE Web-Portal if any, in respect of Extension of Approval for the respective Academic Year."
+    verified: true
+  APH-ANX2.1-LEAD:
+    source: APH
+    number: Annexure 2.1
+    cite: APH Annexure 2.1
+    page: 97
+    quote: "Supporting documents including the Affidavits shall be duly authenticated by the Chairman/ Secretary of the Trust/ Society/ Company in case of Self-Financing Institutions or by the Authorized person in case of the Government/ Government aided Institution."
+    verified: true
+  APH-ANX2.1-VI:
+    source: APH
+    number: Annexure 2.1(vi)
+    cite: APH Annexure 2.1(vi)
+    page: 97
+    quote: "Satellite map, using suitable Web site, showing geographical location of the Land with latitude and longitude at the entrance of the main Building mentioned on it."
+    verified: true
+  APH-ANX2.1-VII:
+    source: APH
+    number: Annexure 2.1(vii)
+    cite: APH Annexure 2.1(vii)
+    page: 97
+    quote: "Audited statement of accounts of the Trust/ Society/ Company of the previous year."
+    verified: true
+  APH-ANX3.1D:
+    source: APH
+    number: Annexure 3.1(d)
+    cite: APH Annexure 3.1(d)
+    page: 102
+    quote: "Fire and life Safety Certificate from Fire Department of the concerned State Government authority is to be taken before submitting the application at AICTE."
+    verified: true
+  APH-ANX4.1-5:
+    source: APH
+    number: Annexure 4.1, note 5
+    cite: APH Annexure 4.1
+    page: 108
+    quote: "The Institution shall possess an Internet bandwidth based on the approved intake."
+    verified: true
+  APH-ANX16.8-SC:
+    source: APH
+    number: Annexure 16.8, Scrutiny Committee
+    cite: APH Annexure 16.8
+    page: 194
+    quote: "Verify the authenticity of the documents submitted by the Applicant as specified in Annexure 1/2 (as applicable) of the Approval Process Handbook."
+    verified: true
+  APH-ANX16.8-EVC:
+    source: APH
+    number: Annexure 16.8, Expert Visit Committee
+    cite: APH Annexure 16.8
+    page: 194
+    quote: "Online/ Offline Visit of the premises of Institution to verify the availability of Infrastructural facilities and Faculty with respect to the norms specified in the Approval Process Handbook."
+    verified: true
+  APH-AFF1-NOTE:
+    source: APH
+    number: Affidavit formats, note
+    cite: APH affidavit note
+    page: 201
+    quote: "Institute shall download portal generated common affidavit as per application."
+    verified: true
+  APH-AFF2-4:
+    source: APH
+    number: Affidavit 2, item 4
+    cite: APH Affidavit 2 item 4
+    page: 202
+    quote: "That the Institution is functioning in the location as approved by the Council;"
+    verified: true
+  APH-AFF2-5:
+    source: APH
+    number: Affidavit 2, item 5
+    cite: APH Affidavit 2 item 5
+    page: 202
+    quote: "That I/we have uploaded the Occupancy/Completion Certificate/Building License/Form D issued by the Competent Authority and the Structural Stability Certificate by the Competent Authority;"
+    verified: true
+  APH-AFF2-7:
+    source: APH
+    number: Affidavit 2, item 7
+    cite: APH Affidavit 2 item 7
+    page: 202
+    quote: "That I/we have uploaded valid Fire Safety Certificate issued by the Competent Authority;"
+    verified: true
+  APH-AFF2-9:
+    source: APH
+    number: Affidavit 2, item 9
+    cite: APH Affidavit 2 item 9
+    page: 202
+    quote: "That the Faculty norms as well as Faculty : Student ratio is maintained as per Approval Process Handbook and the Faculty data uploaded is true and complete;"
+    verified: true
+  APH-AFF2-15:
+    source: APH
+    number: Affidavit 2, item 15
+    cite: APH Affidavit 2 item 15
+    page: 202
+    quote: "That the Land/Built-up area details given below in the Table are true and complete;"
+    verified: true
+
+# What an official should establish before acting. basis: the provision that requires the step, or `evidence`
+# when it is evidentiary good practice rather than a requirement of the text.
+steps:
+  issuer-original:
+    text: Obtain the issuer's original certificate, or the issuer's written confirmation of what it issued.
+    basis: evidence
+  printed-differs:
+    text: Confirm that the value printed on the submitted copy differs from what the issuer signed or holds on record.
+    basis: evidence
+  benign-cause:
+    text: Rule out an ordinary cause, such as a comment, a template fill or a re-save that left the values unchanged.
+    basis: evidence
+  issuer-validity:
+    text: Confirm the validity period with the issuer, through its registry, the signed QR code or a letter.
+    basis: evidence
+  renewal-on-date:
+    text: Check whether a renewed certificate was in force on the date the application was submitted.
+    basis: evidence
+  issuer-holder:
+    text: Confirm with the issuer which institution the certificate number was issued to.
+    basis: evidence
+  compare-peer:
+    text: Compare the two applications' copies side by side and note which was submitted first.
+    basis: evidence
+  registry-roster:
+    text: Check the faculty registry and both rosters, including the joining and relieving dates.
+    basis: evidence
+  faculty-presence:
+    text: Ask for the salary statements of the faculty concerned, and confirm their presence at the institution.
+    basis: APH-6.14A
+  site-check:
+    text: Verify the facility on site, or through an online visit by an Expert Visit Committee.
+    basis: APH-ANX16.8-EVC
+  original-photo:
+    text: Ask for the original photographs, with their capture time and location.
+    basis: evidence
+  absent-check:
+    text: Confirm on the portal that the document was not uploaded, and was not filed under another document type.
+    basis: evidence
+  open-file:
+    text: Open the file and read the value from the page itself.
+    basis: evidence
+  record-check:
+    text: Compare the declared value with AICTE's approval record for the previous year.
+    basis: evidence
+  recompute:
+    text: Recompute the requirement from the approved intake and the handbook norm.
+    basis: evidence
+  ledger-check:
+    text: Confirm the payment status and transaction in the AICTE payment ledger.
+    basis: evidence
+  dsc-check:
+    text: Check who signed the file, whether it is intact since signing, and the certificate chain of the signature.
+    basis: evidence
+  source-retry:
+    text: Complete the check through another channel; an unavailable or pending source says nothing about the document.
+    basis: evidence
+  read-line:
+    text: Read the flagged line in the document and note which values it tries to supply.
+    basis: evidence
+  changed-item:
+    text: Examine the changed item as a fresh submission; the earlier scrutiny did not cover it.
+    basis: evidence
+  previous-year:
+    text: Compare with last year's application and ask the institution what changed.
+    basis: evidence
+  dates-check:
+    text: Note the date the certificate lapses and whether it falls inside the session being approved.
+    basis: evidence
+  opportunity-comply:
+    text: Give the institution an opportunity to comply with the deficiency.
+    basis: APH-2.4
+  opportunity-heard:
+    text: Give the institution an opportunity to explain and to be heard.
+    basis: REG-11.2
+  record-reasons:
+    text: Record the decision with reasons.
+    basis: REG-7.4
+
+# The handbook clause that requires each document type. Entries marked document_clause cite it first for a
+# finding about one document, so a finding on the fire certificate relates to the fire certificate clause.
+documents:
+  affidavit_2: [APH-6.39]
+  ter_receipt: [APH-ANX2.1-II]
+  occupancy_certificate: [APH-6.17G, APH-AFF2-5]
+  structural_stability: [APH-6.17H, APH-AFF2-5]
+  fire_noc: [APH-6.17I, APH-AFF2-7]
+  satellite_map: [APH-ANX2.1-VI, APH-AFF2-4]
+  audited_accounts: [APH-ANX2.1-VII]
+  faculty_list: [APH-AFF2-9]
+  nba_certificate: [REG-6.3F]
+  infrastructure_photo: [APH-2.5A]
+
+# Entries by finding code. `codes` match exactly; `patterns` match code families with * wildcards. An exact code
+# wins over a pattern, and a longer pattern over a shorter one. For rule findings the rule's own clause is
+# already cited in the finding, so the provisions here are the related ones. Provisions run handbook,
+# Regulations, Act, then what the texts provide when information or documents are found false.
+entries:
+  # ---------------- Rules: documents required by Annexure 2.1 ----------------
+  - id: required-document-missing
+    title: A required document is not uploaded
+    codes: [APH-A21-AFFIDAVIT, APH-A21-TER-RECEIPT, APH-A21-FIRE, APH-A21-SATMAP, APH-A21-ACCOUNTS]
+    provisions: [APH-2.3.4A, REG-5.6G, REG-11.4A, ACT-10-K]
+    establish: [absent-check, opportunity-comply, record-reasons]
+
+  - id: occupancy-certificate-missing
+    title: Occupancy or Completion Certificate not uploaded
+    codes: [APH-A21-OC]
+    provisions: [APH-6.17G, APH-7.4J, REG-5.6G, REG-11.4I, ACT-10-I]
+    establish: [absent-check, opportunity-comply, record-reasons]
+
+  - id: structural-stability
+    title: Structural Stability Certificate required or out of date
+    codes: [APH-A21-SSC-REQUIRED, APH-617H-SSC-VALID]
+    provisions: [APH-6.17H, APH-AFF2-5, REG-6.3A-NORMS, ACT-10-I]
+    establish: [absent-check, issuer-validity, opportunity-comply, record-reasons]
+
+  # ---------------- Rules: fire certificate ----------------
+  - id: fire-certificate-validity
+    title: Fire Safety Certificate not valid on the relevant date
+    codes: [APH-617I-FIRE-VALID, APH-A31D-FIRE-BEFORE]
+    provisions: [APH-ANX3.1D, APH-AFF2-7, REG-6.3A-NORMS, ACT-10-I]
+    establish: [issuer-validity, renewal-on-date, opportunity-comply, record-reasons]
+
+  - id: certificate-holder
+    title: Fire or occupancy certificate names another institution
+    codes: [XD-FIRE-INSTITUTION, XD-OC-INSTITUTION]
+    document_clause: true
+    provisions: [ACT-10-K, REG-9.3]
+    establish: [issuer-holder, opportunity-heard, record-reasons]
+
+  # ---------------- Rules: Affidavit 2 ----------------
+  - id: affidavit-form
+    title: Affidavit 2 form, signature or application
+    codes: [APH-AFF2-FORM, APH-639-AFF2-DSC, XD-AFF2-APPLICATION]
+    provisions: [APH-AFF1-NOTE, APH-1.4.6, REG-5.6H, ACT-10-K]
+    establish: [open-file, dsc-check, opportunity-comply, record-reasons]
+
+  # ---------------- Rules: TER and the application window ----------------
+  - id: ter-payment
+    title: TER payment and receipt
+    codes: [APH-232D-TER-STATUS, XR-TER-RECEIPT-MATCH]
+    provisions: [APH-ANX2.1-II, REG-5.6A-TER, REG-5.6B, ACT-10-K]
+    establish: [ledger-check, opportunity-comply, record-reasons]
+
+  - id: submission-window
+    title: Application submitted after the notified last date
+    codes: [PN2627-DEADLINE]
+    provisions: [APH-1.4.3-DATE, REG-5.6B, ACT-10-K]
+    establish: [record-check, record-reasons]
+
+  # ---------------- Rules and history: intake ----------------
+  - id: approved-intake
+    title: Declared or proposed intake differs from the approved intake
+    codes: [XR-INTAKE-RECORD, XR-EOA-NO-INCREASE, YOY-INTAKE-JUMP]
+    provisions: [APH-2.6, APH-7.4G, REG-2.9, REG-11.4G, ACT-10-K]
+    establish: [record-check, opportunity-comply, record-reasons]
+
+  - id: core-branches
+    title: Increase in intake without the required core branches
+    codes: [ADD26-26C-CORE-BRANCHES]
+    provisions: [APH-2.6C, APH-2.6, ACT-10-K]
+    establish: [record-check, opportunity-comply, record-reasons]
+
+  - id: nba-claims
+    title: NBA accreditation claimed without a register entry
+    codes: [XR-NBA-CLAIMS]
+    provisions: [REG-6.3F, ACT-10-U, REG-9.3]
+    establish: [record-check, opportunity-heard, record-reasons]
+
+  # ---------------- Rules and history: land, building and location ----------------
+  - id: built-up-area
+    title: Built-up area, occupancy certificate and land
+    codes: [XD-OC-AREA, YOY-BUILT-UP-AREA-DECREASED, YOY-LAND-AREA-DECREASED]
+    provisions: [APH-6.17G, APH-AFF2-15, APH-7.4F, REG-11.4F, ACT-10-I, REG-11.7]
+    establish: [previous-year, site-check, opportunity-heard, record-reasons]
+
+  - id: admin-amenities-area
+    title: Administrative and amenities area below the norm
+    codes: [APH-ANX33-ADMIN-AREA]
+    provisions: [APH-6.18, REG-11.4F, ACT-10-I]
+    establish: [recompute, site-check, opportunity-comply, record-reasons]
+
+  - id: campus-location
+    title: Campus location on the satellite map
+    codes: [XD-SATMAP-LOCATION]
+    provisions: [APH-ANX2.1-VI, APH-AFF2-4, APH-7.4F, REG-11.4F, ACT-10-P]
+    establish: [site-check, opportunity-heard, record-reasons]
+
+  - id: audited-accounts
+    title: Audited accounts of another entity or year
+    codes: [XD-ACCOUNTS-ENTITY]
+    provisions: [APH-ANX2.1-VII, APH-1.4.3, ACT-10-K]
+    establish: [open-file, opportunity-comply, record-reasons]
+
+  # ---------------- Rules: faculty and facilities ----------------
+  - id: faculty-norms
+    title: Faculty-student ratio
+    codes: [APH-ANX5-FSR]
+    provisions: [APH-6.14, APH-AFF2-9, APH-7.4C, REG-11.4C, ACT-10-I]
+    establish: [recompute, registry-roster, opportunity-comply, record-reasons]
+
+  - id: faculty-count
+    title: Declared faculty count differs from the roster
+    codes: [XD-FACULTY-COUNT]
+    provisions: [APH-AFF2-9, APH-1.4.3, REG-9.1, ACT-10-I, REG-11.7]
+    establish: [registry-roster, opportunity-comply, record-reasons]
+
+  - id: facilities-norms
+    title: Internet bandwidth, computers and laboratory equipment
+    codes: [APH-ANX41-BANDWIDTH, PH-ROOM-FEW-WORKSTATIONS, PH-ROOM-TYPE-DIFFERS]
+    provisions: [APH-6.19, APH-ANX4.1-5, REG-11.4D, ACT-10-I]
+    establish: [site-check, opportunity-comply, record-reasons]
+
+  # ---------------- Cross-application and history: faculty ----------------
+  - id: faculty-elsewhere
+    title: Faculty listed or registered at more than one institution
+    codes: [XA-FACULTY-MULTIPLE-INSTITUTIONS, XA-FACULTY-REGISTERED-ELSEWHERE, XA-FACULTY-NOT-IN-REGISTRY,
+            YOY-FACULTY-TURNOVER]
+    provisions: [APH-AFF2-9, APH-6.14C, REG-9.1, ACT-10-I, REG-9.3]
+    establish: [registry-roster, faculty-presence, opportunity-heard, record-reasons]
+
+  # ---------------- Cross-application: shared certificates, files and seals ----------------
+  - id: shared-certificate
+    title: Certificate number, details, file or seal shared with another institution
+    codes: [XA-SHARED-CERTIFICATE-NUMBER, XA-NEAR-DUPLICATE-DETAILS, XA-IDENTICAL-FILE, FX-SEAL-REUSED,
+            FX-SEAL-REUSED-LATER]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-K, REG-9.3]
+    establish: [issuer-holder, compare-peer, opportunity-heard, record-reasons]
+
+  - id: certificate-number-reused
+    title: Certificate number reused from last year with a new validity
+    codes: [YOY-CERT-REUSED-NEW-VALIDITY]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-K, REG-9.3]
+    establish: [issuer-validity, previous-year, opportunity-heard, record-reasons]
+
+  # ---------------- Photographs and the campus ----------------
+  - id: photo-reused
+    title: The same photograph in another institution's application
+    codes: [XA-PHOTO-REUSED, XA-PHOTO-REUSED-LATER]
+    document_clause: true
+    provisions: [APH-AFF2-4, APH-2.3.5A, REG-6.11, ACT-10-P, REG-9.3]
+    establish: [original-photo, site-check, opportunity-heard, record-reasons]
+
+  - id: photo-capture
+    title: Photograph capture details or edits
+    patterns: ["FX-IMG-*", "PH-C2PA-*"]
+    document_clause: true
+    provisions: [APH-AFF2-4, APH-2.3.5A, REG-6.11, ACT-10-P]
+    establish: [original-photo, site-check, record-reasons]
+
+  # ---------------- Issued documents: content changed after issue or signing ----------------
+  - id: content-changed
+    title: Content of an issued document changed after issue or signing
+    codes: [FX-FIELD-OVERWRITTEN, VER-ISSUER_SIGNATURE-MISMATCH_DETECTED, VER-SIGNED_QR-MISMATCH_DETECTED]
+    patterns: ["FX-PDF-*", "FX-ANNOT-*", "FX-FONT-*"]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-K, REG-9.3, APH-7.4A]
+    establish: [issuer-original, printed-differs, benign-cause, opportunity-heard, record-reasons]
+
+  - id: instruction-text
+    title: Document text addressed to automated readers
+    codes: [SEC-INSTRUCTION-TEXT]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, APH-1.4.3, ACT-10-K, REG-9.3]
+    establish: [read-line, issuer-original, opportunity-heard, record-reasons]
+
+  - id: issuer-signature-absent
+    title: Issuer document without the issuer's signature, or only as an image
+    codes: [VER-ISSUER-SIGNATURE-ABSENT, FX-IMAGE-ONLY-ISSUER-DOC]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-K]
+    establish: [issuer-original, printed-differs, opportunity-comply, record-reasons]
+
+  # ---------------- Verification results ----------------
+  - id: issuer-check-mismatch
+    title: Issuer source disagrees with the document
+    patterns: ["VER-*-MISMATCH_DETECTED"]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-K, REG-9.3]
+    establish: [issuer-original, printed-differs, opportunity-heard, record-reasons]
+
+  - id: certificate-expired
+    title: Issuer source shows the certificate expired
+    patterns: ["VER-*-EXPIRED"]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-I]
+    establish: [issuer-validity, renewal-on-date, opportunity-comply, record-reasons]
+
+  - id: verification-incomplete
+    title: Verification could not be completed
+    patterns: ["VER-*-SOURCE_UNAVAILABLE", "VER-*-VERIFICATION_PENDING", "VER-*-MANUAL_REVIEW_REQUIRED"]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, ACT-10-K]
+    establish: [source-retry, issuer-original, record-reasons]
+
+  - id: applicant-signature
+    title: The applicant's digital signature on an upload
+    patterns: ["VER-APPLICANT_SIGNATURE-*"]
+    document_clause: true
+    provisions: [APH-ANX2.1-LEAD, APH-1.4.6, REG-5.6A-DSC, ACT-10-K]
+    establish: [dsc-check, opportunity-comply, record-reasons]
+
+  - id: session-expiry
+    title: Certificate lapses during the session being approved
+    codes: [XD-CERT-EXPIRES-IN-SESSION]
+    document_clause: true
+    provisions: [REG-6.3A-NORMS, ACT-10-I]
+    establish: [dates-check, issuer-validity, record-reasons]
+
+  # ---------------- Reading the documents ----------------
+  - id: document-reading
+    title: A document or value could not be read with confidence
+    codes: [DOC-PROCESSING-FAILED, DOC-UNREADABLE, DOC-SCRIPT-NOT-READ, FIELD-UNCERTAIN, DOC-TYPE-MISMATCH,
+            FX-ANNOT-UNREAD]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, APH-2.3.4A]
+    establish: [open-file, opportunity-comply, record-reasons]
+
+  # ---------------- Rectification rounds ----------------
+  - id: rectification-scope
+    title: Change made outside the rectification request
+    patterns: ["RECT-*"]
+    provisions: [APH-2.4, APH-1.4.3, REG-6.3N, REG-5.6D]
+    establish: [changed-item, opportunity-comply, record-reasons]
