@@ -31,6 +31,7 @@ from ..officer.common import FORBIDDEN_WORDS, RECTIFIABLE_CATEGORIES
 from ..officer.letter import item_wording
 from ..pipeline.intake import UploadRejected, validate_upload
 from ..pipeline.validate import ruleset_by_hash, run_validation
+from ..rules.basis import basis_for
 from ..rules.engine import active_ruleset
 
 router = APIRouter(prefix="/api", tags=["applications"])
@@ -259,9 +260,20 @@ def list_findings(app_id: str, run_id: str | None = None, user: User = Depends(c
         return []
     fs = db.scalars(select(Finding).where(Finding.run_id == run.id)).all()
     if user.role == "institution":
-        # Institutions see deficiencies, not forensic or cross-institution indicators under review
+        # Institutions see deficiencies, not forensic or cross-institution indicators under review; the clause
+        # they must meet reaches them in the deficiency letter, not the regulatory basis below
         fs = [f for f in fs if f.category in ("completeness", "compliance", "validity") and f.review_status != "dismissed"]
-    return [ser.finding(f) for f in fs]
+        return [ser.finding(f) for f in fs]
+    return with_basis(db, fs)
+
+
+def with_basis(db: Session, fs: list[Finding]) -> list[dict]:
+    """Findings for officials, each with the provisions it concerns and what to establish before acting.
+
+    Resolved by code and document type from a cached map, so a list costs one query for document types."""
+    ids = {f.document_id for f in fs if f.document_id}
+    types = dict(db.execute(select(Document.id, Document.declared_type).where(Document.id.in_(ids))).all()) if ids else {}
+    return [{**ser.finding(f), "regulatory_basis": basis_for(f.code, types.get(f.document_id))} for f in fs]
 
 
 @router.get("/applications/{app_id}/verifications")
@@ -363,7 +375,7 @@ def review_finding(finding_id: str, body: ReviewBody, user: User = Depends(requi
                  object_id=f.id, application_id=app.id, details={"code": f.code, "note": body.note,
                                                                   "status": f.review_status})
     db.commit()
-    return ser.finding(f)
+    return with_basis(db, [f])[0]
 
 
 @router.get("/findings/{finding_id}/history")

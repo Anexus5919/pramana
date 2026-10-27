@@ -20,6 +20,7 @@ from .insights import proof as insights_proof
 from .insights import readiness as readiness_api
 from .insights import story as insight_story
 from .officer import routes as officer
+from .rules.basis import active_basis
 from .sandbox_worker import windows_full_speed
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -31,6 +32,8 @@ for noisy in ("pyhanko", "pyhanko_certvalidator", "pdfminer", "fontTools"):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    # A regulatory basis map that does not validate stops the server here rather than on a finding page
+    active_basis()
     if os.name == "nt":
         # A server started in the background would otherwise be slowed by Windows power throttling
         windows_full_speed()
