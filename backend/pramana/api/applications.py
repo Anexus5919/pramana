@@ -34,6 +34,8 @@ from ..pipeline.intake import UploadRejected, validate_upload
 from ..pipeline.validate import ruleset_by_hash, run_validation
 from ..rules.basis import basis_for
 from ..rules.engine import active_ruleset
+from ..verification import base as vb
+from ..verification.effective import FOLLOW_UP_CHANNELS, OFFICER_REVIEW, effective_document_status
 
 router = APIRouter(prefix="/api", tags=["applications"])
 
@@ -485,6 +487,9 @@ def manual_verification(attempt_id: str, body: ManualVerification,
     app = load_application(db, user, v.application_id)
     if body.status not in ("verified", "mismatch_detected", "expired", "manual_review_required"):
         raise HTTPException(400, "invalid status")
+    if v.channel in FOLLOW_UP_CHANNELS:
+        # A confirmation follows a check; an officer's own review is never turned into a confirmation
+        raise HTTPException(409, "This is a recorded confirmation or officer review; confirm the check it concerns")
     m = VerificationAttempt(application_id=app.id, document_id=v.document_id, run_id=v.run_id,
                             channel="manual_confirmation", source_name=f"Manual confirmation by {user.display_name}",
                             simulated=False, status=body.status, request={"follows": v.id},
@@ -495,6 +500,55 @@ def manual_verification(attempt_id: str, body: ManualVerification,
     audit.record(db, actor=user.username, actor_role=user.role, action="verification.manual_recorded",
                  object_type="verification", object_id=m.id, application_id=app.id,
                  details={"follows": v.id, "status": body.status, "note": body.note})
+    db.commit()
+    return ser.attempt(m)
+
+
+class OfficerReview(BaseModel):
+    note: str
+
+
+OFFICER_NOTE_MIN = 10
+# Document statuses in the words the workspace shows officials
+STATUS_WORDS = {vb.NOT_CHECKED: "no outside source", vb.OFFICER_REVIEWED: "reviewed by officer"}
+
+
+@router.post("/documents/{doc_id}/officer-review")
+def officer_review(doc_id: str, body: OfficerReview, user: User = Depends(require_roles("verifier", "officer")),
+                   db: Session = Depends(get_db)):
+    """Record that an official examined a document no outside source can confirm (status not_checked).
+
+    It is a review, not a confirmation: the document reads "Reviewed by officer", never verified, and the run's
+    stored result stays as validation wrote it."""
+    doc = db.get(Document, doc_id)
+    if not doc:
+        raise HTTPException(404, "document not found")
+    app = load_application(db, user, doc.application_id)
+    note = body.note.strip()
+    if len(note) < OFFICER_NOTE_MIN:
+        raise HTTPException(400, f"Note: say what you examined, in at least {OFFICER_NOTE_MIN} characters")
+    if FORBIDDEN_WORDS.search(note):
+        raise HTTPException(400, "Note: describe what you examined instead of judging the document")
+    if doc.superseded:
+        raise HTTPException(409, "This is an earlier version; review the current upload")
+    run = latest_run(db, app.id)
+    if run is None or run.status != "complete":
+        raise HTTPException(409, "Run validation before recording a review")
+    current = effective_document_status(db, run).get(doc.id)
+    if current is None:
+        raise HTTPException(409, "The latest run did not check this document")
+    if current != vb.NOT_CHECKED:
+        raise HTTPException(409, "Officer review is for documents with no outside source; this document's status "
+                                 f"is {STATUS_WORDS.get(current, current.replace('_', ' '))}")
+    m = VerificationAttempt(application_id=app.id, document_id=doc.id, run_id=run.id, channel=OFFICER_REVIEW,
+                            source_name=f"Officer review by {user.display_name}", simulated=False,
+                            status=vb.OFFICER_REVIEWED, request={"document_status": current},
+                            response={"note": note}, detail=note, actor=user.username, completed_at=utcnow())
+    db.add(m)
+    db.flush()
+    audit.record(db, actor=user.username, actor_role=user.role, action="verification.officer_reviewed",
+                 object_type="verification", object_id=m.id, application_id=app.id,
+                 details={"document_id": doc.id, "run_id": run.id, "note": note})
     db.commit()
     return ser.attempt(m)
 

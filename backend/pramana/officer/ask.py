@@ -61,11 +61,12 @@ DOC_WORDS = {
 }
 VER_SUPPORT = {"verified"}
 NOT_VERIFIED = {"not_checked", "manual_review_required", "source_unavailable", "verification_pending",
-                "mismatch_detected", "expired"}
+                "mismatch_detected", "expired", "officer_reviewed"}
 # Document statuses in the words the workspace shows officials
-DOC_STATUS_WORDS = {"not_checked": "no outside source"}
+DOC_STATUS_WORDS = {"not_checked": "no outside source", "officer_reviewed": "reviewed by officer"}
 DOC_STATUS_NOTE = {
     "not_checked": " No issuing body is connected for this kind of document, so it cannot be confirmed from outside.",
+    "officer_reviewed": " An official examined it and recorded a note; no issuing body confirmed it.",
 }
 CLAIMS: list[tuple[str, re.Pattern, set[str], str | None]] = [
     ("unverified", re.compile(r"\b(unverified|not (yet |been )?(verified|confirmed|authenticated)"
@@ -195,7 +196,8 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
         add("D", "document", f"Document {labels.get(d.declared_type, d.declared_type)} ({d.original_filename}): "
                              f"authenticity status {_doc_status(status)}.{DOC_STATUS_NOTE.get(status, '')}", {status},
             {"type": "document", "document_id": d.id}, labels.get(d.declared_type, d.declared_type),
-            f"{labels.get(d.declared_type, d.declared_type)}: {_doc_status(status)}.")
+            f"{labels.get(d.declared_type, d.declared_type)}: {_doc_status(status)}"
+            + (", not verified." if status == "officer_reviewed" else "."))
 
     for f in findings:
         doc = docs.get(f.document_id or "")
@@ -245,6 +247,14 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
         sig = v.channel in ("issuer_signature", "applicant_signature")
         sim = (" DEMO trust anchor." if sig else " SIMULATED source.") if v.simulated else ""
         first = _screen(v.detail, 300).split(". ")[0].rstrip(".")
+        if v.channel == "officer_review":
+            # An official's own examination, which confirms nothing from outside
+            vid = add("V", "verification", f"Officer review of {dl} ({v.source_name}): status reviewed by officer. "
+                                           f"No issuing body confirmed it. Note: {_screen(v.detail, 300)}",
+                      {v.status}, {"type": "verification", "attempt_id": v.id, "document_id": v.document_id},
+                      f"{dl}: officer review", f"{dl}: reviewed by officer ({v.source_name}), not verified.")
+            items[vid]["document_id"] = v.document_id
+            continue
         vid = add("V", "verification", f"Verification of {dl} via {channel_label(v.channel)} ({v.source_name}): "
                                        f"status {_h(v.status)}.{sim} {_screen(v.detail, 300)}"
                                        + (f" Compared: {comps}." if comps else ""),

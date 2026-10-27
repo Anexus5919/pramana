@@ -30,6 +30,8 @@ NOTICE = ("Decision support only. Findings are preliminary indicators for review
           "does not approve, reject or penalise any institution. Synthetic demo data.")
 EV_LABEL = {"cryptographic": "E1 Cryptographic", "issuer": "E2 Issuer", "record": "E3 Record", "rule": "E4 Rule",
             "structural": "E5 Structural", "heuristic": "E6 Heuristic", "model": "E7 Model"}
+# An officer's own review reads as what it is, never as a confirmation
+STATUS_WORDS = {"officer_reviewed": "reviewed by officer"}
 SEV_COLOR = {"critical": "#8c1236", "high": "#d43a4f", "medium": "#e8822f", "low": "#9a8f9f", "info": "#c4bcc8"}
 BOX = (139, 61, 255)
 FULL_W = 164 * mm
@@ -269,7 +271,7 @@ def render_report(ctx: dict[str, Any]) -> bytes:
         vrows.append([_p(labels.get(d.declared_type, d.declared_type) if d else "", st["base"]),
                       _p(v.channel.replace("_", " "), st["base"]),
                       _p(f"{v.source_name} {tag}".strip(), st["base"]),
-                      _p(v.status.replace("_", " "), st["base"])])
+                      _p(STATUS_WORDS.get(v.status, v.status.replace("_", " ")), st["base"])])
         if v.detail:
             vrows.append([_p("", st["small"]), _p(v.detail, st["small"]), "", ""])
     vt = Table(vrows, colWidths=[38 * mm, 32 * mm, 62 * mm, 32 * mm], hAlign="LEFT", repeatRows=1)
