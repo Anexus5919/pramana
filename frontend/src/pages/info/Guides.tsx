@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ExternalLink, InfoPage, InfoTable } from "./InfoLayout";
+import { CONTACT_EMAIL } from "../../site/links";
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 const MOD = isMac ? "Cmd" : "Ctrl";
@@ -177,7 +178,7 @@ export function HelpPage() {
   );
 }
 
-const CONTACT = (import.meta.env.VITE_CONTACT_EMAIL as string | undefined)?.trim() || "";
+const CONTACT = CONTACT_EMAIL;
 
 export function ContactPage() {
   const subject = encodeURIComponent("Pramana feedback");

@@ -20,4 +20,7 @@ export const SITE_PAGES: SitePage[] = [
   { to: "/sitemap", label: "Sitemap", summary: "Every page of Pramana, by who can open it." },
 ];
 
+/** The team's public contact address; VITE_CONTACT_EMAIL overrides it for another deployment. */
+export const CONTACT_EMAIL = (import.meta.env.VITE_CONTACT_EMAIL as string | undefined)?.trim() || "anexus5919@gmail.com";
+
 export const SITE_PATHS = new Set(SITE_PAGES.map((p) => p.to));
