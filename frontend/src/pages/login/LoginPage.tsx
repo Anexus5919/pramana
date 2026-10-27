@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Building2, KeyRound, LoaderCircle, QrCode, ShieldCheck, User } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { type FormEvent, lazy, Suspense, useState } from "react";
+import { type FormEvent, lazy, Suspense, useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AccessibilityMenu } from "../../a11y/AccessibilityMenu";
 import { api, qk } from "../../api";
@@ -174,6 +174,12 @@ export default function LoginPage() {
   const [closing, setClosing] = useState(false);
   const from = (location.state as { from?: string } | null)?.from;
   const t = useT();
+  useEffect(() => {
+    document.title = `${t("Sign in")} | Pramana`;
+    return () => {
+      document.title = "Pramana";
+    };
+  }, [t]);
 
   if (session.data && !closing) return <Navigate to={homePath(session.data.user.role)} replace />;
 

@@ -186,6 +186,19 @@ function UserMenu() {
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
+/** The tab title names the page: the breadcrumb trail, deepest first, then Pramana. */
+function useDocumentTitle() {
+  const crumbs = useCrumbs();
+  const t = useT();
+  const title = [...crumbs].reverse().map((c) => t(c.label)).join(" | ");
+  useEffect(() => {
+    document.title = title && title !== "Pramana" ? `${title} | Pramana` : "Pramana";
+    return () => {
+      document.title = "Pramana";
+    };
+  }, [title]);
+}
+
 export function Topbar({
   onOpenNav,
   onOpenPalette,
@@ -197,6 +210,7 @@ export function Topbar({
   portal?: boolean;
 }) {
   const t = useT();
+  useDocumentTitle();
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface">
       <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:px-8">
