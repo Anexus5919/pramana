@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, api } from "../../api";
 import { useAuth } from "../../auth/session";
@@ -70,6 +70,16 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
   const [briefOpen, setBriefOpen] = useState(false);
   const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [ask, setAsk] = useState<{ open: boolean; prefill?: { question: string; key: number } }>({ open: false });
+
+  // Drishti links here with ?ask=1 to open Ask why; the flag is dropped once read so Back does not reopen it
+  const [sp, setSp] = useSearchParams();
+  useEffect(() => {
+    if (sp.get("ask") !== "1") return;
+    if (officer) setAsk({ open: true });
+    const next = new URLSearchParams(sp);
+    next.delete("ask");
+    setSp(next, { replace: true, state: location.state });
+  }, [sp, setSp, officer, location.state]);
 
   const docs = useMemo(() => {
     const m: Record<string, DocumentSummary> = {};
