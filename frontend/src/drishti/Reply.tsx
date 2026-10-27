@@ -2,7 +2,6 @@ import { ArrowRight, ChevronRight, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ApiError } from "../api";
-import { EyeMark } from "../brand/EyeMark";
 import { Button, buttonStyles, cn } from "../ui2";
 import type { DrishtiItem, DrishtiLanguage, DrishtiReply } from "./types";
 
@@ -219,10 +218,9 @@ export function UserBubble({ text }: { text: string }) {
 
 export function Thinking() {
   return (
-    <div className="flex items-center gap-2 text-sm text-ink-3">
-      <EyeMark size={22} active />
-      Thinking
-    </div>
+    <p className="text-sm text-ink-3">
+      Drishti is thinking
+    </p>
   );
 }
 

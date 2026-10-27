@@ -6,6 +6,7 @@ import { useAuth } from "../auth/session";
 import { drishtiSuggestions } from "./client";
 import { displayName, greetingFor, starterChips } from "./copy";
 import { DrishtiButton } from "./DrishtiButton";
+import type { MascotCue, MascotMood } from "./DrishtiMascot";
 import { DrishtiPanel } from "./DrishtiPanel";
 import type { DrishtiSuggestionsPayload } from "./types";
 import { useDrishtiChat } from "./useDrishtiChat";
@@ -41,7 +42,8 @@ export function Drishti() {
   const phone = useMediaQuery(PHONE);
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(false);
-  const [replies, setReplies] = useState(0);
+  // The mascot's face: a reaction per reply, a mood from the request
+  const [cue, setCue] = useState<MascotCue | null>(null);
   const [draft, setDraft] = useState("");
   const button = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -51,11 +53,12 @@ export function Drishti() {
   const chat = useDrishtiChat({
     user: user?.username ?? "",
     role,
-    onReply: () => {
-      setReplies((n) => n + 1);
+    onReply: (reply) => {
+      setCue({ type: reply.kind === "refuse" ? "refuse" : "happy", at: Date.now() });
       if (!openRef.current) setUnread(true);
     },
   });
+  const mood: MascotMood = chat.pending ? "thinking" : chat.failed && chat.error ? "error" : "idle";
 
   const suggestions = useQuery({
     queryKey: qk.drishtiSuggestions,
@@ -104,7 +107,7 @@ export function Drishti() {
   return (
     <>
       {!(open && phone) && (
-        <DrishtiButton ref={button} open={open} pending={chat.pending} unread={unread} replies={replies} controls={id} onClick={toggle} />
+        <DrishtiButton ref={button} open={open} mood={mood} cue={cue} unread={unread} controls={id} onClick={toggle} />
       )}
       <AnimatePresence>
         {open && (
@@ -114,6 +117,8 @@ export function Drishti() {
             phone={phone}
             greeting={greeting}
             starters={starters}
+            mood={mood}
+            cue={cue}
             messages={chat.messages}
             pending={chat.pending}
             failed={chat.failed}

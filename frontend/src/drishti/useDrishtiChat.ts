@@ -35,7 +35,7 @@ function normalize(res: DrishtiAskResponse | null | undefined): DrishtiAskRespon
  * The conversation: kept per user in sessionStorage, sent with the current page as context.
  * New chat starts a fresh epoch, so a reply still in flight for the old conversation is dropped.
  */
-export function useDrishtiChat({ user, role, onReply }: { user: string; role: Role | undefined; onReply: () => void }) {
+export function useDrishtiChat({ user, role, onReply }: { user: string; role: Role | undefined; onReply: (reply: DrishtiReply) => void }) {
   const location = useLocation();
   const [chat, setChat] = useState<StoredChat>(() => loadChat(user));
   const [pending, setPending] = useState(false);
@@ -63,7 +63,7 @@ export function useDrishtiChat({ user, role, onReply }: { user: string; role: Ro
         conversationId: res.conversation_id || c.conversationId,
         messages: [...c.messages, { id: messageId(), from: "drishti", reply: res.reply, at: Date.now() }],
       }));
-      latest.current.onReply();
+      latest.current.onReply(res.reply);
     } catch (err) {
       if (e === epoch.current) setError(err);
     } finally {

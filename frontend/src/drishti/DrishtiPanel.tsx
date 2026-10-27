@@ -1,8 +1,8 @@
 import { ArrowUp, SquarePen, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type RefObject } from "react";
-import { EyeMark } from "../brand/EyeMark";
 import { Button, IconButton, cn, dur2, ease2 } from "../ui2";
+import { DrishtiMascot, type MascotCue, type MascotMood } from "./DrishtiMascot";
 import { Chips, Reply, RetryLine, Thinking, UserBubble, langOf } from "./Reply";
 import { MAX_MESSAGE_CHARS, type ChatMessage } from "./types";
 
@@ -18,6 +18,8 @@ export interface DrishtiPanelProps {
   phone: boolean;
   greeting: string;
   starters: string[];
+  mood: MascotMood;
+  cue: MascotCue | null;
   messages: ChatMessage[];
   pending: boolean;
   /** Set when the last message went unanswered */
@@ -40,6 +42,8 @@ export function DrishtiPanel({
   phone,
   greeting,
   starters,
+  mood,
+  cue,
   messages,
   pending,
   failed,
@@ -145,7 +149,7 @@ export function DrishtiPanel({
       )}
     >
       <header className="flex shrink-0 items-center gap-3 border-b border-line py-2.5 pr-2 pl-4">
-        <EyeMark size={26} />
+        <DrishtiMascot size={28} mood={mood} cue={cue} />
         <div className="min-w-0 flex-1">
           <h2 id={`${id}-title`} className="flex items-baseline gap-2 text-base font-semibold text-ink">
             Drishti
