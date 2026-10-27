@@ -70,7 +70,8 @@ def load_ruleset(path: Path) -> Ruleset:
 @lru_cache
 def active_ruleset() -> Ruleset:
     d = get_settings().rulesets_dir
-    files = sorted(d.glob("*.yaml"))
+    # regulatory_basis.yaml sits beside the rulesets but is not one (pramana.rules.basis)
+    files = sorted(p for p in d.glob("*.yaml") if p.name != "regulatory_basis.yaml")
     if not files:
         raise RuntimeError(f"no rulesets in {d}")
     return load_ruleset(files[-1])

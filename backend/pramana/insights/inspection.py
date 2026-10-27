@@ -28,6 +28,7 @@ from ..history.models import ScrutinyOutcome
 from ..models import Application, Document, Finding, User, round_label, utcnow
 from ..officer.common import doc_label, latest_run, run_findings
 from ..photos.campus import payload as campus_payload
+from ..rules.basis import basis_for
 from ..rules.engine import active_ruleset
 
 router = APIRouter(prefix="/api", tags=["insights"])
@@ -143,7 +144,10 @@ def build_brief(db: Session, app: Application) -> dict[str, Any]:
         if q in seen_q:
             continue
         seen_q.add(q)
-        questions.append({"question": q, "finding": _brief_finding(f)})
+        d = docs.get(f.document_id or "")
+        rel = basis_for(f.code, d.declared_type if d else None)
+        questions.append({"question": q, "finding": _brief_finding(f),
+                          "relates_to": [x["cite"] for x in rel["provisions"]] if rel else []})
         if len(questions) >= MAX_QUESTIONS:
             break
 
@@ -329,7 +333,9 @@ def brief_pdf(b: dict[str, Any]) -> bytes:
     else:
         out.append(_p("No photo needs retaking on the evidence so far.", st["small"]))
     out.append(_p("Questions to ask", st["h2"]))
-    rows = [[_p(f"{i}.", st["base"]), _p(q["question"], st["base"])] for i, q in enumerate(b["questions"], start=1)]
+    rows = [[_p(f"{i}.", st["base"]), [_p(q["question"], st["base"])] + (
+        [_p("Relates to: " + "; ".join(q["relates_to"]), st["small"])] if q.get("relates_to") else [])]
+        for i, q in enumerate(b["questions"], start=1)]
     if rows:
         out.append(_table(rows, [8 * mm, w - 8 * mm]))
     else:

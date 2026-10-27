@@ -78,7 +78,8 @@ function DetailHost({
   }
   return (
     <Drawer open={!!title} onClose={onClose} title={title ?? ""} width={560} footer={footer ? <div className="flex w-full flex-wrap items-center justify-end gap-2">{footer}</div> : undefined}>
-      {body}
+      {/* The drawer body is unpadded; match its header so the detail does not touch the screen edge */}
+      <div className="px-5 py-4">{body}</div>
     </Drawer>
   );
 }
