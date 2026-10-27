@@ -60,14 +60,15 @@ export function DrishtiPanel({
 
   // Newest message in view, at once on open. When a reply lands, its question moves to the top instead,
   // so a long answer reads from its start rather than from its last row
-  const opened = useRef(false);
+  const seen = useRef<number | null>(null);
   useLayoutEffect(() => {
     const el = list.current;
     if (!el) return;
-    const first = !opened.current;
-    opened.current = true;
+    const first = seen.current === null;
+    const grew = !first && messages.length > (seen.current ?? 0);
+    seen.current = messages.length;
     let top = el.scrollHeight;
-    if (!first && messages[messages.length - 1]?.from === "drishti") {
+    if (grew && messages[messages.length - 1]?.from === "drishti") {
       const asks = el.querySelectorAll<HTMLElement>("[data-from='user']");
       const ask = asks[asks.length - 1];
       if (ask) top = Math.min(top, ask.offsetTop - 16);

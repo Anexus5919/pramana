@@ -66,7 +66,9 @@ export function Drishti() {
   });
   const served = readSuggestions(suggestions.data);
   const greeting = served.greeting ?? greetingFor(role, displayName(user?.display_name));
-  const starters = served.chips?.length ? served.chips : starterChips(role);
+  // The server's chips when they come; the built-in ones only if it has none or cannot answer, so chips never swap
+  const loading = suggestions.isPending && suggestions.fetchStatus === "fetching";
+  const starters = served.chips?.length ? served.chips : loading ? [] : starterChips(role);
 
   const close = useCallback(() => {
     setOpen(false);

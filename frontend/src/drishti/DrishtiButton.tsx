@@ -47,6 +47,9 @@ export const DrishtiButton = forwardRef<HTMLButtonElement, DrishtiButtonProps>(f
           ref={ref}
           type="button"
           onClick={onClick}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && open) onClick();
+          }}
           aria-label={open ? "Close Drishti" : unread ? "Ask Drishti, new reply" : "Ask Drishti"}
           aria-expanded={open}
           aria-controls={open ? controls : undefined}
