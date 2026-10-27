@@ -20,7 +20,7 @@ function show(f: ScanField): string {
 }
 
 function Signed({ f }: { f: ScanField }) {
-  return f.kind === "date" && f.value ? <span className="mt-0.5 block text-[11.5px] text-ink-3">signed as {String(f.value)}</span> : null;
+  return f.kind === "date" && f.value ? <span className="mt-0.5 block text-[0.7188rem] text-ink-3">signed as {String(f.value)}</span> : null;
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -59,7 +59,7 @@ function ValidityTrack({ v }: { v: ScanValidity }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: dur.story * 0.8, duration: dur.ui, ease: ease.out }}
         >
-          <span className="rounded-full bg-ink px-1.5 text-[10px] leading-4 font-semibold text-canvas">Today</span>
+          <span className="rounded-full bg-ink px-1.5 text-[0.625rem] leading-4 font-semibold text-canvas">Today</span>
           <span className="h-4 w-0.5 bg-ink" />
         </motion.div>
       </div>
@@ -88,7 +88,7 @@ function Compare({ fields }: { fields: ScanField[] }) {
           return (
             <motion.li key={f.key} variants={fadeUp} className={cn("px-3.5 py-3 transition-colors duration-300", a === "diff" && "bg-mismatch-bg/60", a === "same" && "bg-verified-bg/50")}>
               <div className="text-xs font-medium text-ink-3">{f.label}</div>
-              <div className="mt-0.5 font-mono text-[15px] leading-snug font-medium break-words text-ink">{show(f)}</div>
+              <div className="mt-0.5 font-mono text-[0.9375rem] leading-snug font-medium break-words text-ink">{show(f)}</div>
               <Signed f={f} />
               <div className="mt-2 inline-flex rounded-control border border-line bg-surface p-0.5" role="group" aria-label={`Does the paper show the same ${f.label.toLowerCase()}?`}>
                 {(["same", "diff"] as const).map((v) => (
@@ -98,7 +98,7 @@ function Compare({ fields }: { fields: ScanField[] }) {
                     aria-pressed={a === v}
                     onClick={() => setAnswers((x) => ({ ...x, [f.key]: v }))}
                     className={cn(
-                      "inline-flex h-8 items-center gap-1.5 rounded-[6px] px-3 text-[13px] font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-400",
+                      "inline-flex h-8 items-center gap-1.5 rounded-[6px] px-3 text-[0.8125rem] font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-400",
                       a === v ? (v === "same" ? "bg-verified-bg text-verified-fg" : "bg-mismatch-bg text-mismatch-fg") : "text-ink-2 hover:bg-surface-2",
                     )}
                   >
@@ -182,7 +182,7 @@ function Registry({ token }: { token: string }) {
                 <li key={c.label} className="flex items-start justify-between gap-3 px-3 py-2">
                   <span className="min-w-0">
                     <span className="block text-xs text-ink-3">{c.label}</span>
-                    <span className="block font-mono text-[13px] break-words text-ink">{c.registry}</span>
+                    <span className="block font-mono text-[0.8125rem] break-words text-ink">{c.registry}</span>
                   </span>
                   <span className={cn("inline-flex shrink-0 items-center gap-1 text-xs font-medium", c.match ? "text-verified-fg" : "text-mismatch-fg")}>
                     {c.match ? <Check className="size-3.5" aria-hidden /> : <X className="size-3.5" aria-hidden />}
@@ -221,13 +221,13 @@ function LinkNote({ data, r }: { data: ScanResponse; r?: ScanTokenResult }) {
           </p>
         ) : (
           <p className="mt-0.5">
-            It points to <span className="font-mono text-[13px] break-all text-ink">{r?.link_host}</span>. Pramana read the signed data from the code and did not
+            It points to <span className="font-mono text-[0.8125rem] break-all text-ink">{r?.link_host}</span>. Pramana read the signed data from the code and did not
             open the link; only the signature counts, wherever a link points.
           </p>
         )}
         {fromLink && (
           <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-            This page is on <span className="rounded-[6px] bg-surface px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{window.location.host}</span>
+            This page is on <span className="rounded-[6px] bg-surface px-1.5 py-0.5 font-mono text-[0.75rem] break-all text-ink">{window.location.host}</span>
             <Tag variant="demo">Prototype server</Tag>
           </p>
         )}
@@ -288,14 +288,14 @@ export function ScanResult({ data }: { data: ScanResponse }) {
         <div className="flex items-start gap-3">
           <StatusCube tone={view.tone} size={26} className="mt-0.5" />
           <div className="min-w-0">
-            <h2 id="scan-result-title" ref={heading} tabIndex={-1} className={cn("font-display text-[22px] leading-tight font-semibold tracking-title outline-none", tone.fg)}>
+            <h2 id="scan-result-title" ref={heading} tabIndex={-1} className={cn("font-display text-[1.375rem] leading-tight font-semibold tracking-title outline-none", tone.fg)}>
               {view.title}
             </h2>
             <p className="mt-1 text-sm text-ink-2 text-pretty">{view.lede}</p>
           </div>
         </div>
         {r?.issuer?.name && (
-          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-ink-2">
+          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] text-ink-2">
             <span>
               {r.signed ? "Signed by" : "Claims to be from"} <b className="font-semibold text-ink">{r.issuer.name}</b>
             </span>

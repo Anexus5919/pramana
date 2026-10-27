@@ -60,7 +60,7 @@ export function KeyValue({ items, columns = 1, labelWidth = 160, className }: Ke
           style={{ ["--kv-label" as string]: `${labelWidth}px` }}
         >
           <dt className="text-sm text-ink-3">{it.label}</dt>
-          <dd className={cn("min-w-0 text-sm break-words text-ink", it.mono && "font-mono text-[13px]")}>
+          <dd className={cn("min-w-0 text-sm break-words text-ink", it.mono && "font-mono text-[0.8125rem]")}>
             {it.value}
             {it.hint && <div className="mt-0.5 text-xs text-ink-3">{it.hint}</div>}
           </dd>

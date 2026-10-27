@@ -84,7 +84,7 @@ export function ErrorState({ error, title = "Something went wrong", onRetry, ret
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold text-mismatch-fg">{title}</div>
         <p className="mt-0.5 text-sm break-words text-ink-2">{errorMessage(error)}</p>
-        {status !== null && status > 0 && <p className="mt-1 font-mono text-[11px] text-ink-3">HTTP {status}</p>}
+        {status !== null && status > 0 && <p className="mt-1 font-mono text-[0.6875rem] text-ink-3">HTTP {status}</p>}
       </div>
       {onRetry && (
         <Button size="sm" variant="ghost" leadingIcon={<RotateCcw />} onClick={onRetry} loading={retrying}>

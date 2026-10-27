@@ -130,7 +130,7 @@ export function Tabs<T extends string>({
               {t.count !== undefined && t.count !== null && (
                 <span
                   className={cn(
-                    "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular",
+                    "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[0.6875rem] font-semibold tabular",
                     t.attention
                       ? "bg-mismatch-bg text-mismatch-fg"
                       : selected
