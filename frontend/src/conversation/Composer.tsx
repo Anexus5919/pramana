@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, CircleDot, MessageSquarePlus, Paperclip, Send, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 import { errorMessage } from "../api";
+import { useT, type T } from "../i18n";
 import { fmtBytes } from "../lib/format";
 import { Button, Callout, IconButton, SegmentedControl, Textarea, cn, useToast } from "../ui2";
 import { usePostMessage, useSetStatus, type MessageKind, type Thread } from "./api";
@@ -17,10 +18,10 @@ const KIND_OPTIONS: Record<InstitutionKind, string> = {
 const OK_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 
 /** A quick check in the browser; the server checks the file's bytes as well. */
-function fileProblem(f: File): string | null {
-  if (f.size > ATTACH_MAX_MB * 1024 * 1024) return `The file is larger than ${ATTACH_MAX_MB} MB.`;
+function fileProblem(f: File, t: T): string | null {
+  if (f.size > ATTACH_MAX_MB * 1024 * 1024) return t("The file is larger than {mb} MB.", { mb: ATTACH_MAX_MB });
   const ext = f.name.toLowerCase().split(".").pop() ?? "";
-  if (!OK_TYPES.has(f.type) && !["pdf", "jpg", "jpeg", "png"].includes(ext)) return "Attach a PDF, JPG or PNG file.";
+  if (!OK_TYPES.has(f.type) && !["pdf", "jpg", "jpeg", "png"].includes(ext)) return t("Attach a PDF, JPG or PNG file.");
   return null;
 }
 
@@ -35,6 +36,7 @@ function Counter({ n, id }: { n: number; id: string }) {
 function AttachButton({ file, onFile, error }: { file: File | null; onFile: (f: File | null) => void; error: string | null }) {
   const ref = useRef<HTMLInputElement>(null);
   const hint = useId();
+  const t = useT();
   return (
     <div className="min-w-0">
       <input
@@ -54,15 +56,15 @@ function AttachButton({ file, onFile, error }: { file: File | null; onFile: (f: 
           <Paperclip aria-hidden className="size-3.5 shrink-0 text-ink-3" />
           <span className="truncate">{file.name}</span>
           <span className="shrink-0 text-xs text-ink-3">{fmtBytes(file.size)}</span>
-          <IconButton size="sm" variant="ghost" label={`Remove ${file.name}`} icon={<X />} onClick={() => onFile(null)} />
+          <IconButton size="sm" variant="ghost" label={t("Remove {file}", { file: file.name })} icon={<X />} onClick={() => onFile(null)} />
         </span>
       ) : (
         <Button size="sm" variant="ghost" leadingIcon={<Paperclip />} aria-describedby={hint} onClick={() => ref.current?.click()}>
-          Attach a file
+          {t("Attach a file")}
         </Button>
       )}
       <p id={hint} className={cn("mt-1 text-xs", error ? "font-medium text-mismatch-fg" : "text-ink-3")} role={error ? "alert" : undefined}>
-        {error ?? `Optional. One PDF, JPG or PNG up to ${ATTACH_MAX_MB} MB.`}
+        {error ?? t("Optional. One PDF, JPG or PNG up to {mb} MB.", { mb: ATTACH_MAX_MB })}
       </p>
     </div>
   );
@@ -84,6 +86,8 @@ export function InstitutionComposer({
   autoOpen?: boolean;
 }) {
   const toast = useToast();
+  const t = useT();
+  const cell = t(CELL_NAME);
   const post = usePostMessage(appId, rectificationId);
   const [open, setOpen] = useState(autoOpen);
   const [kind, setKind] = useState<InstitutionKind>(thread.general ? "question" : "reply");
@@ -106,12 +110,12 @@ export function InstitutionComposer({
   );
   const text = body.trim();
   const tooShort = kind === "review_request" && text.length > 0 && text.length < MIN_REASON;
-  const error = tried && !text ? "Write a message first." : tried && tooShort ? "Give your reason in a sentence or two." : null;
+  const error = tried && !text ? t("Write a message first.") : tried && tooShort ? t("Give your reason in a sentence or two.") : null;
 
   if (!open)
     return (
       <Button size="sm" variant="secondary" leadingIcon={<MessageSquarePlus />} onClick={() => setOpen(true)}>
-        Write to the {CELL_NAME}
+        {t("Write to the {cell}", { cell })}
       </Button>
     );
 
@@ -123,10 +127,8 @@ export function InstitutionComposer({
       {
         onSuccess: () => {
           toast.success(
-            kind === "review_request" ? "Review requested" : "Sent",
-            kind === "review_request"
-              ? `The ${CELL_NAME} replies before any outcome is recorded.`
-              : `The ${CELL_NAME} sees it in its queue.`,
+            kind === "review_request" ? t("Review requested") : t("Sent"),
+            kind === "review_request" ? t("The {cell} replies before any outcome is recorded.", { cell }) : t("The {cell} sees it in its queue.", { cell }),
           );
           setBody("");
           setFile(null);
@@ -140,25 +142,25 @@ export function InstitutionComposer({
   return (
     <form
       className="space-y-3 rounded-control border border-line bg-surface p-3"
-      aria-label={`Write to the ${CELL_NAME} about ${thread.general ? "the round" : `item ${thread.item_no}`}`}
+      aria-label={thread.general ? t("Write to the {cell} about the round", { cell }) : t("Write to the {cell} about item {n}", { cell, n: thread.item_no })}
       onSubmit={(e) => {
         e.preventDefault();
         send();
       }}
     >
       <SegmentedControl
-        label="What do you want to do"
+        label={t("What do you want to do")}
         size="sm"
         value={kind}
         onChange={(v) => setKind(v as InstitutionKind)}
-        options={kinds.map((k) => ({ value: k, label: KIND_OPTIONS[k] }))}
+        options={kinds.map((k) => ({ value: k, label: t(KIND_OPTIONS[k]) }))}
       />
       <p id={`${ids}-help`} className="text-sm text-ink-3 text-pretty">
-        {KIND_HELP[kind]}
+        {t(KIND_HELP[kind])}
       </p>
       <div>
         <label htmlFor={`${ids}-body`} className="sr-only">
-          {kind === "review_request" ? "Your reason" : "Your message"}
+          {kind === "review_request" ? t("Your reason") : t("Your message")}
         </label>
         <Textarea
           ref={area}
@@ -166,7 +168,7 @@ export function InstitutionComposer({
           rows={3}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder={kind === "review_request" ? "Why this item is not right, in a sentence or two" : "Your message"}
+          placeholder={kind === "review_request" ? t("Why this item is not right, in a sentence or two") : t("Your message")}
           aria-describedby={`${ids}-help ${ids}-count${error ? ` ${ids}-err` : ""}`}
           aria-invalid={error ? true : undefined}
         />
@@ -183,20 +185,20 @@ export function InstitutionComposer({
           error={fileError}
           onFile={(f) => {
             setFile(f);
-            setFileError(f ? fileProblem(f) : null);
+            setFileError(f ? fileProblem(f, t) : null);
           }}
         />
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="ghost" onClick={() => setOpen(false)} disabled={post.isPending}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="submit" variant="secondary" leadingIcon={<Send />} loading={post.isPending}>
-            {kind === "review_request" ? "Request review" : kind === "question" ? "Send question" : "Send reply"}
+            {kind === "review_request" ? t("Request review") : kind === "question" ? t("Send question") : t("Send reply")}
           </Button>
         </div>
       </div>
       {post.error && (
-        <Callout tone="danger" role="alert" title="Not sent">
+        <Callout tone="danger" role="alert" title={t("Not sent")}>
           {errorMessage(post.error)}
         </Callout>
       )}

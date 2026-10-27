@@ -1,3 +1,4 @@
+import { en, type T } from "../i18n";
 import type { Tone } from "../lib/labels";
 import type { ItemStatus, MessageKind } from "./api";
 
@@ -42,10 +43,10 @@ export function detectionWords(text: string): string[] {
 }
 
 /** "15 days left", "Due today", "2 days past the date". */
-export function daysLeftText(days: number | null): string | null {
+export function daysLeftText(days: number | null, t: T = en): string | null {
   if (days === null) return null;
-  if (days === 0) return "Due today";
-  if (days === 1) return "1 day left";
-  if (days > 1) return `${days} days left`;
-  return days === -1 ? "1 day past the date" : `${-days} days past the date`;
+  if (days === 0) return t("Due today");
+  if (days === 1) return t("1 day left");
+  if (days > 1) return t("{n} days left", { n: days });
+  return days === -1 ? t("1 day past the date") : t("{n} days past the date", { n: -days });
 }
