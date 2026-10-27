@@ -399,7 +399,11 @@ html[data-surface="app"] .glass {
 html[data-surface="app"] .grain::after {
   display: none;
 }
-/* Drishti's button holds the bottom-right corner: toasts stack above it, and beside its open window when there is room */
+/* Drishti's button holds the bottom-right corner: toasts stack above it, and beside its open window when there is room.
+   Sticky panes that reach the bottom of the viewport subtract --drishti-clear to end above it. */
+html[data-drishti] {
+  --drishti-clear: 64px;
+}
 html[data-drishti] [data-toast-region] {
   bottom: 88px;
 }

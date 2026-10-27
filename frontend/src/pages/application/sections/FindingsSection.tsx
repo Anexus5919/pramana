@@ -67,7 +67,8 @@ function DetailHost({
         key={title ?? "none"}
         as="aside"
         aria-label="Detail"
-        className="sticky top-20 flex max-h-[calc(100dvh-104px)] flex-col"
+        // Ends above Drishti's button, so the detail actions in its footer stay clear of it
+        className="sticky top-20 flex max-h-[calc(100dvh-104px-var(--drishti-clear,0px))] flex-col"
         bodyClassName="min-h-0 flex-1 overflow-y-auto"
         footer={title && footer ? footer : undefined}
       >
