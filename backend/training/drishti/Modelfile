@@ -1,0 +1,23 @@
+# Ollama model for pramana-drishti, Drishti's question model: one message in, one intent JSON out.
+# Put pramana-drishti-q8_0.gguf next to this file, then: ollama create pramana-drishti -f Modelfile
+# The template matches the text kaggle_train_drishti.py trains on; the engine also sends
+# pramana.drishti.model_prompt.GENERATION_OPTIONS and the intent schema as `format` with every request.
+FROM ./pramana-drishti-q8_0.gguf
+
+TEMPLATE """{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{- range .Messages }}<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+<think>
+
+</think>
+
+"""
+
+PARAMETER temperature 0
+PARAMETER top_k 1
+PARAMETER num_ctx 2048
+PARAMETER num_predict 200
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"

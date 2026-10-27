@@ -34,3 +34,5 @@ backend/training/data/
 backend/training/results/
 backend/models/
 *.gguf
+backend/training/drishti/data/
+backend/training/drishti/results/
