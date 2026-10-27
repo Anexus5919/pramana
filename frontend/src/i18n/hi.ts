@@ -136,4 +136,140 @@ export const HI: Record<string, string> = {
   "No applications yet": "अभी कोई आवेदन नहीं है",
   "Start an application, upload the documents on the checklist, then submit it for AICTE review.":
     "आवेदन शुरू करें, चेकलिस्ट के दस्तावेज़ अपलोड करें, फिर इसे AICTE समीक्षा के लिए जमा करें।",
+
+  // Application page: next step, outcome, documents panel and declared figures
+  "Loading the application": "आवेदन लोड हो रहा है",
+  "Upload {n} required document to continue.": "आगे बढ़ने के लिए {n} आवश्यक दस्तावेज़ अपलोड करें।",
+  "Upload {n} required documents to continue.": "आगे बढ़ने के लिए {n} आवश्यक दस्तावेज़ अपलोड करें।",
+  "Go to documents": "दस्तावेज़ों पर जाएँ",
+  "Every required document is uploaded. Check your declared figures, then submit.":
+    "सभी आवश्यक दस्तावेज़ अपलोड हो गए हैं। अपने घोषित आँकड़े जाँचें, फिर जमा करें।",
+  "Every required document is uploaded and the readiness check found nothing to fix. Submit when you are ready.":
+    "सभी आवश्यक दस्तावेज़ अपलोड हो गए हैं और तैयारी जाँच में सुधार के लिए कुछ नहीं मिला। तैयार होने पर जमा करें।",
+  "Every required document is uploaded. The readiness check below lists {n} item AICTE is likely to raise; fix it first, or submit.":
+    "सभी आवश्यक दस्तावेज़ अपलोड हो गए हैं। नीचे दी गई तैयारी जाँच में {n} ऐसा बिंदु है जिसे AICTE उठा सकता है; पहले इसे सुधारें, या जमा करें।",
+  "Every required document is uploaded. The readiness check below lists {n} items AICTE is likely to raise; fix them first, or submit.":
+    "सभी आवश्यक दस्तावेज़ अपलोड हो गए हैं। नीचे दी गई तैयारी जाँच में {n} ऐसे बिंदु हैं जिन्हें AICTE उठा सकता है; पहले इन्हें सुधारें, या जमा करें।",
+  "Submit for review": "समीक्षा के लिए जमा करें",
+  "Submitted. The automatic check starts in a moment and its progress shows here.":
+    "जमा किया गया। स्वचालित जाँच कुछ ही क्षणों में शुरू होगी और उसकी प्रगति यहाँ दिखेगी।",
+  "The check stopped": "जाँच रुक गई",
+  "Your application is submitted. Nothing is lost; AICTE staff can restart the check.":
+    "आपका आवेदन जमा हो चुका है। कुछ भी नष्ट नहीं हुआ है; AICTE के कर्मचारी जाँच दोबारा शुरू कर सकते हैं।",
+  "AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.":
+    "AICTE ने स्क्रूटिनी परिणाम दर्ज कर दिया है। इसके कारण और आप आगे क्या कर सकते हैं, यह नीचे दिया गया है।",
+  "AICTE is reviewing your application. You will see any request for corrections here.":
+    "AICTE आपके आवेदन की समीक्षा कर रहा है। सुधार का कोई भी अनुरोध आपको यहीं दिखेगा।",
+  "AICTE asked you to correct {n} item. Upload corrected documents or fix your figures, then resubmit.":
+    "AICTE ने आपसे {n} बिंदु में सुधार करने को कहा है। सुधरे हुए दस्तावेज़ अपलोड करें या अपने आँकड़े ठीक करें, फिर दोबारा जमा करें।",
+  "AICTE asked you to correct {n} items. Upload corrected documents or fix your figures, then resubmit.":
+    "AICTE ने आपसे {n} बिंदुओं में सुधार करने को कहा है। सुधरे हुए दस्तावेज़ अपलोड करें या अपने आँकड़े ठीक करें, फिर दोबारा जमा करें।",
+  "Resubmit": "दोबारा जमा करें",
+  "Resubmit opens once every required document is uploaded. Still missing: {list}.":
+    "सभी आवश्यक दस्तावेज़ अपलोड होने के बाद ही दोबारा जमा किया जा सकेगा। अभी बाकी: {list}।",
+  "Resubmitted on {date}. AICTE is reviewing the corrections.": "{date} को दोबारा जमा किया गया। AICTE सुधारों की समीक्षा कर रहा है।",
+  "AICTE has finished processing this application. The decision reaches you from AICTE directly.":
+    "AICTE ने इस आवेदन पर कार्यवाही पूरी कर ली है। निर्णय आपको सीधे AICTE से प्राप्त होगा।",
+  "This application was withdrawn. Nothing more is needed.": "यह आवेदन वापस ले लिया गया था। आगे कुछ भी आवश्यक नहीं है।",
+  "This application is {status}. Contact AICTE if you are unsure what to do next.":
+    "इस आवेदन की स्थिति: {status}। यदि आप आगे के चरण को लेकर निश्चित नहीं हैं, तो AICTE से संपर्क करें।",
+  "Save or cancel your changes to the declared figures first.": "पहले घोषित आँकड़ों में किए गए बदलाव सहेजें या रद्द करें।",
+  "Scrutiny outcome": "स्क्रूटिनी परिणाम",
+  "Recorded by AICTE on {date}, {round}": "AICTE द्वारा {date} को दर्ज, {round}",
+  "Reasons": "कारण",
+  "What you can do next": "आप आगे क्या कर सकते हैं",
+  "PDF, JPG or PNG. A new upload replaces the earlier file.": "PDF, JPG या PNG। नया अपलोड पिछली फ़ाइल का स्थान ले लेता है।",
+  "This application is closed, so its documents can no longer change.": "यह आवेदन बंद है, इसलिए इसके दस्तावेज़ अब बदले नहीं जा सकते।",
+  "This application is withdrawn, so its documents can no longer change.":
+    "यह आवेदन वापस ले लिया गया है, इसलिए इसके दस्तावेज़ अब बदले नहीं जा सकते।",
+  "Documents are locked while AICTE reviews the application.": "AICTE द्वारा आवेदन की समीक्षा के दौरान दस्तावेज़ लॉक रहते हैं।",
+  "Declared figures saved": "घोषित आँकड़े सहेजे गए",
+  "The readiness check runs again with the new figures.": "तैयारी जाँच नए आँकड़ों के साथ फिर से चलती है।",
+  "Declared figures": "घोषित आँकड़े",
+  "Correct what is wrong, then save. Pramana compares these figures with your documents.":
+    "जो गलत है उसे सुधारें, फिर सहेजें। Pramana इन आँकड़ों का मिलान आपके दस्तावेज़ों से करता है।",
+  "Edit": "संपादित करें",
+  "Cancel": "रद्द करें",
+  "Save changes": "बदलाव सहेजें",
+  "Programmes": "कार्यक्रम",
+  "Figures": "आँकड़े",
+  "Not saved": "सहेजा नहीं गया",
+  "Some figures need a fix before you can save. They are marked above.":
+    "सहेजने से पहले कुछ आँकड़ों में सुधार आवश्यक है। उन्हें ऊपर चिह्नित किया गया है।",
+  "Items AICTE asked about": "AICTE द्वारा पूछे गए बिंदु",
+  "The reviewing officer also asked about these. Cover them in your corrections.":
+    "समीक्षा करने वाले अधिकारी ने इनके बारे में भी पूछा है। अपने सुधारों में इन्हें भी शामिल करें।",
+  "The reviewing officer asked about these. If AICTE needs corrections, the request appears on this page.":
+    "समीक्षा करने वाले अधिकारी ने इनके बारे में पूछा है। यदि AICTE को सुधार चाहिए, तो अनुरोध इसी पृष्ठ पर दिखेगा।",
+  "Automatic check complete": "स्वचालित जाँच पूरी हुई",
+  "An AICTE officer reviews your application next.": "इसके बाद AICTE अधिकारी आपके आवेदन की समीक्षा करेंगे।",
+  "Resubmitted to AICTE": "AICTE को दोबारा जमा किया गया",
+  "Submitted to AICTE": "AICTE को जमा किया गया",
+  "The automatic check is running. Its progress shows under Next step.": "स्वचालित जाँच चल रही है। इसकी प्रगति अगला चरण खंड में दिखती है।",
+  "The automatic check has finished. An AICTE officer reviews it next.":
+    "स्वचालित जाँच पूरी हो गई है। इसके बाद AICTE अधिकारी इसकी समीक्षा करेंगे।",
+  "Application not found": "आवेदन नहीं मिला",
+  "It may belong to another institution, or the link may be old. Your applications are listed on the Applications page.":
+    "यह किसी अन्य संस्थान का हो सकता है, या लिंक पुराना हो सकता है। आपके आवेदन, आवेदन पृष्ठ पर सूचीबद्ध हैं।",
+  "Back to applications": "आवेदनों पर वापस जाएँ",
+  "Could not load the application": "आवेदन लोड नहीं हो सका",
+  "AY {year}": "शैक्षणिक वर्ष {year}",
+  "Submitted {date}": "{date} को जमा किया गया",
+  "Application progress": "आवेदन की प्रगति",
+
+  // Submit dialog and the automatic check
+  "After you submit, documents and figures are locked unless AICTE asks for corrections.":
+    "जमा करने के बाद दस्तावेज़ और आँकड़े लॉक हो जाते हैं, जब तक कि AICTE सुधार न माँगे।",
+  "Submit": "जमा करें",
+  "{n} required document is still missing. Upload it first:": "{n} आवश्यक दस्तावेज़ अभी बाकी है। पहले इसे अपलोड करें:",
+  "{n} required documents are still missing. Upload them first:": "{n} आवश्यक दस्तावेज़ अभी बाकी हैं। पहले इन्हें अपलोड करें:",
+  "All {n} required document is uploaded. Pramana then reads them and checks them against the handbook; an AICTE officer reviews the result.":
+    "{n} आवश्यक दस्तावेज़ अपलोड हो गया है। इसके बाद Pramana इसे पढ़कर हैंडबुक के अनुसार जाँचता है; AICTE अधिकारी परिणाम की समीक्षा करते हैं।",
+  "All {n} required documents are uploaded. Pramana then reads them and checks them against the handbook; an AICTE officer reviews the result.":
+    "सभी {n} आवश्यक दस्तावेज़ अपलोड हो गए हैं। इसके बाद Pramana इन्हें पढ़कर हैंडबुक के अनुसार जाँचता है; AICTE अधिकारी परिणाम की समीक्षा करते हैं।",
+  "The readiness check lists {n} item to fix": "तैयारी जाँच में सुधार के लिए {n} बिंदु है",
+  "The readiness check lists {n} items to fix": "तैयारी जाँच में सुधार के लिए {n} बिंदु हैं",
+  "AICTE is likely to raise it. You can submit now, or cancel and fix it first.":
+    "AICTE इसे उठा सकता है। आप अभी जमा कर सकते हैं, या रद्द करके पहले इसे सुधार सकते हैं।",
+  "AICTE is likely to raise them. You can submit now, or cancel and fix them first.":
+    "AICTE इन्हें उठा सकता है। आप अभी जमा कर सकते हैं, या रद्द करके पहले इन्हें सुधार सकते हैं।",
+  "AICTE is likely to raise it. You can resubmit now, or cancel and fix it first.":
+    "AICTE इसे उठा सकता है। आप अभी दोबारा जमा कर सकते हैं, या रद्द करके पहले इसे सुधार सकते हैं।",
+  "AICTE is likely to raise them. You can resubmit now, or cancel and fix them first.":
+    "AICTE इन्हें उठा सकता है। आप अभी दोबारा जमा कर सकते हैं, या रद्द करके पहले इन्हें सुधार सकते हैं।",
+  "The readiness check found nothing to fix. AICTE officials still review the application.":
+    "तैयारी जाँच में सुधार के लिए कुछ नहीं मिला। AICTE अधिकारी फिर भी आवेदन की समीक्षा करते हैं।",
+  "Not resubmitted": "दोबारा जमा नहीं हुआ",
+  "Not submitted": "जमा नहीं हुआ",
+  "Received": "प्राप्त",
+  "Documents locked for review": "समीक्षा के लिए दस्तावेज़ लॉक किए गए",
+  "Waiting for a free worker": "जाँच की बारी की प्रतीक्षा",
+  "Reading documents": "दस्तावेज़ पढ़े जा रहे हैं",
+  "{read} of {n} document read": "{n} में से {read} दस्तावेज़ पढ़ा गया",
+  "{read} of {n} documents read": "{n} में से {read} दस्तावेज़ पढ़े गए",
+  "Checking against the handbook": "हैंडबुक के अनुसार जाँच",
+  "{done} of {n} check groups done": "{n} में से {done} जाँच समूह पूरे",
+  "Ready for AICTE review": "AICTE समीक्षा के लिए तैयार",
+  "Checked in {s} s. An AICTE officer reviews the results next; any request for corrections appears on this page.":
+    "{s} सेकंड में जाँच पूरी हुई। इसके बाद AICTE अधिकारी परिणामों की समीक्षा करेंगे; सुधार का कोई भी अनुरोध इसी पृष्ठ पर दिखेगा।",
+  "{step}.": "{step}।",
+  "{s} s so far.": "अब तक {s} सेकंड।",
+  "You can leave this page; the check carries on.": "आप यह पृष्ठ छोड़ सकते हैं; जाँच जारी रहेगी।",
+  "Automatic check progress": "स्वचालित जाँच की प्रगति",
+  "Nothing is lost; AICTE staff can restart it.": "कुछ भी नष्ट नहीं हुआ है; AICTE के कर्मचारी इसे दोबारा शुरू कर सकते हैं।",
+  "Complete": "पूर्ण",
+  "Failed": "विफल",
+  "Running": "जारी",
+  "{s} s": "{s} सेकंड",
+  "{m} min {s} s": "{m} मिनट {s} सेकंड",
+  "Automatic check": "स्वचालित जाँच",
+  "Pramana reads your documents and checks them against the handbook after each submission.":
+    "हर बार जमा करने के बाद Pramana आपके दस्तावेज़ पढ़ता है और उन्हें हैंडबुक के अनुसार जाँचता है।",
+  "Loading the check history": "जाँच का इतिहास लोड हो रहा है",
+  "Could not load the check history": "जाँच का इतिहास लोड नहीं हो सका",
+  "Automatic check history": "स्वचालित जाँच का इतिहास",
+  "Round": "राउंड",
+  "Finished": "पूर्ण होने का समय",
+  "Duration": "अवधि",
+  "Not finished": "पूरा नहीं हुआ",
 };
