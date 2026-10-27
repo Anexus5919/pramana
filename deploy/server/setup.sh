@@ -42,14 +42,19 @@ fi
 id pramana-app >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/pramana-app --shell /usr/sbin/nologin pramana-app
 if [ ! -d "$APP_DIR/.git" ]; then
   git clone --depth 1 "$REPO_URL" "$APP_DIR"
+  chown -R pramana-app:pramana-app "$APP_DIR"
 else
-  git -C "$APP_DIR" pull --ff-only
+  # The checkout belongs to the app account; git refuses to work on it as root
+  sudo -u pramana-app git -C "$APP_DIR" pull --ff-only
 fi
-chown -R pramana-app:pramana-app "$APP_DIR"
 
 sudo -u pramana-app -H bash -c "cd $APP_DIR/frontend && corepack pnpm install --frozen-lockfile && corepack pnpm build"
-sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && uv venv --python python3.12 .venv && uv pip install --python .venv/bin/python -e . \
-  && .venv/bin/python scripts/fetch_assets.py && .venv/bin/python scripts/fetch_photo_assets.py"
+sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && uv venv --allow-existing --python python3.12 .venv \
+  && uv pip install --python .venv/bin/python -e . && .venv/bin/python scripts/fetch_assets.py"
+# The lab photos it also fetches are fixture inputs only, already processed in the snapshot, so a rate-limited
+# photo must not stop setup; the detector it fetches is required
+sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && .venv/bin/python scripts/fetch_photo_assets.py" || true
+test -f "$APP_DIR/backend/models/yolox_m.onnx"
 # RapidOCR fetches its detection and recognition weights on first use; do it now, not in a judge's first upload
 sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'"
 
