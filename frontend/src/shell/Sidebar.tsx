@@ -1,6 +1,7 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { homePath, useAuth } from "../auth/session";
+import { useT } from "../i18n";
 import { EyeMark, useActivity } from "../brand/EyeMark";
 import { cn } from "../ui/cn";
 import { Tooltip } from "../ui/Tooltip";
@@ -82,8 +83,9 @@ export function SidebarNav({ collapsed = false, onNavigate }: SidebarNavProps) {
 export function BrandLink({ compact = false }: { compact?: boolean }) {
   const { role } = useAuth();
   const { active, blink } = useActivity();
+  const t = useT();
   return (
-    <Link to={homePath(role)} aria-label="Pramana home" className="inline-flex items-center gap-2 rounded text-ink">
+    <Link to={homePath(role)} aria-label={t("Pramana home")} className="inline-flex items-center gap-2 rounded text-ink">
       <EyeMark size={24} active={active} blink={blink} />
       {!compact && <span className="text-base font-semibold">Pramana</span>}
     </Link>
