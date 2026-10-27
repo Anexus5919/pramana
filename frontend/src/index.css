@@ -101,8 +101,8 @@
   --sh-lg: 0 24px 60px -20px rgb(60 20 110 / 0.28), 0 6px 16px -6px rgb(28 22 34 / 0.08);
   --sh-glow: 0 0 0 1px rgb(139 61 255 / 0.12), 0 12px 40px -10px rgb(139 61 255 / 0.45);
 
-  --ff-display: "Inter Tight Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --ff-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ff-display: "Inter Tight Variable", "Inter Variable", "IBM Plex Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --ff-sans: "Inter Variable", "IBM Plex Sans Devanagari", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ff-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Code", Consolas, monospace;
 
   color-scheme: light;
@@ -275,22 +275,22 @@ html[data-surface="app"] {
   --radius-hero: 8px;
 
   /* type scale: 12, 13, 14, 16, 20, 24, 30 */
-  --text-xs: 12px;
-  --text-xs--line-height: 16px;
-  --text-sm: 13px;
-  --text-sm--line-height: 20px;
-  --text-base: 14px;
-  --text-base--line-height: 20px;
-  --text-md: 16px;
-  --text-md--line-height: 24px;
-  --text-lg: 20px;
-  --text-lg--line-height: 28px;
-  --text-xl: 24px;
-  --text-xl--line-height: 32px;
-  --text-2xl: 30px;
-  --text-2xl--line-height: 36px;
-  --text-3xl: 30px;
-  --text-3xl--line-height: 36px;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.25rem;
+  --text-md: 1rem;
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 2rem;
+  --text-2xl: 1.875rem;
+  --text-2xl--line-height: 2.25rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
 
   --focus: var(--brand-500);
 }
@@ -368,8 +368,8 @@ html.dark[data-surface="app"] {
 }
 
 html[data-surface="app"] body {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   font-feature-settings: normal;
   font-variant-numeric: tabular-nums;
 }
@@ -382,8 +382,8 @@ html[data-surface="app"] :focus-visible {
 }
 /* legacy decoration neutralised on the app surface until each page is rebuilt */
 html[data-surface="app"] .eyebrow {
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 0.75rem;
+  line-height: 1rem;
   text-transform: none;
   letter-spacing: 0;
   font-weight: 500;
@@ -411,6 +411,124 @@ html[data-drishti] [data-toast-region] {
   html[data-drishti="open"] [data-toast-region] {
     right: 412px;
   }
+}
+
+/*
+ * Viewer display preferences (src/a11y/prefs.tsx). Text size scales the root font size; type and spacing are in rem,
+ * so A- and A+ scale the whole layout like browser zoom. High contrast swaps the colour tokens for darker text,
+ * stronger borders and solid focus rings, in the light and the dark theme alike.
+ */
+html[data-text-size="sm"] {
+  font-size: 87.5%;
+}
+html[data-text-size="lg"] {
+  font-size: 118.75%;
+}
+
+html[data-contrast="high"] {
+  --ink: #000000;
+  --ink-2: #1c1622;
+  --ink-3: #2f2836;
+  --ink-4: #4a4252;
+  --line: #6f6679;
+  --line-2: #4a4252;
+  --brand-ink: #3e1590;
+  --brand-700: #3e1590;
+  --brand-solid: #4f1bb8;
+  --brand-solid-hover: #3e1590;
+  --verified-fg: #0b4f27;
+  --mismatch-fg: #8a1218;
+  --expired-fg: #6b2a04;
+  --pending-fg: #1a3a99;
+  --manual-fg: #5a3c00;
+  --unavail-fg: #2a2830;
+  --unchecked-fg: #2a2830;
+}
+html.dark[data-contrast="high"] {
+  --canvas: #000000;
+  --surface: #0b0810;
+  --ink: #ffffff;
+  --ink-2: #f6f2fa;
+  --ink-3: #e4dcec;
+  --ink-4: #c8bed2;
+  --line: #9a8fa6;
+  --line-2: #c8bed2;
+  --brand-ink: #e0d0ff;
+  --brand-700: #e0d0ff;
+  --verified-fg: #9cf0bf;
+  --mismatch-fg: #ffc2c4;
+  --expired-fg: #ffc79e;
+  --pending-fg: #c9d6ff;
+  --manual-fg: #ffe08a;
+  --unavail-fg: #ebe8f2;
+  --unchecked-fg: #ebe8f2;
+}
+html[data-contrast="high"][data-surface="app"] {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0f0f3;
+  --surface-3: #e2e2e8;
+  --ink: #000000;
+  --ink-2: #111116;
+  --ink-3: #26262e;
+  --ink-4: #3d3d47;
+  --line: #6a6a76;
+  --line-2: #3d3d47;
+  --brand-500: #3b1888;
+  --brand-600: #3b1888;
+  --brand-700: #2f1370;
+  --brand-solid: #4a1fa8;
+  --brand-solid-hover: #3b1888;
+  --brand-ink: #3b1888;
+  --brand-soft: #ece5fd;
+  --verified-fg: #0b4f29;
+  --mismatch-fg: #8a1a12;
+  --expired-fg: #6e3005;
+  --pending-fg: #1d3a8a;
+  --manual-fg: #5c4000;
+  --unavail-fg: #2f2f37;
+  --unchecked-fg: #2f2f37;
+  --sev-low: #4b4b55;
+  --sev-info: #6a6a76;
+  --focus: #000000;
+}
+html.dark[data-contrast="high"][data-surface="app"] {
+  --canvas: #000000;
+  --surface: #0a0a0c;
+  --surface-2: #16161a;
+  --surface-3: #222228;
+  --ink: #ffffff;
+  --ink-2: #f2f2f4;
+  --ink-3: #e0e0e6;
+  --ink-4: #c4c4cc;
+  --line: #8a8a96;
+  --line-2: #b4b4bd;
+  --brand-500: #d9ccff;
+  --brand-600: #d9ccff;
+  --brand-700: #e6dcff;
+  --brand-solid: #5a28c0;
+  --brand-solid-hover: #6a35dc;
+  --brand-ink: #d9ccff;
+  --brand-soft: #2a2050;
+  --verified-fg: #8ae6b0;
+  --mismatch-fg: #ffb3ae;
+  --expired-fg: #ffc08a;
+  --pending-fg: #c2d1ff;
+  --manual-fg: #ffdf85;
+  --unavail-fg: #e6e6ee;
+  --unchecked-fg: #e0e0e6;
+  --sev-low: #c4c4cc;
+  --sev-info: #8a8a96;
+  --focus: #ffffff;
+}
+html[data-contrast="high"] :focus-visible {
+  outline: 3px solid var(--focus, var(--ink));
+  outline-offset: 2px;
+}
+/* links inside running text are underlined, so they never depend on colour alone */
+html[data-contrast="high"] :is(p, li, dd, td) a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 @theme inline {
@@ -502,27 +620,27 @@ html[data-drishti] [data-toast-region] {
 }
 
 @theme {
-  --text-xs: 12px;
+  --text-xs: 0.75rem;
   --text-xs--line-height: 1.45;
-  --text-sm: 13px;
+  --text-sm: 0.8125rem;
   --text-sm--line-height: 1.5;
-  --text-base: 15px;
+  --text-base: 0.9375rem;
   --text-base--line-height: 1.55;
-  --text-md: 17px;
+  --text-md: 1.0625rem;
   --text-md--line-height: 1.5;
-  --text-lg: 20px;
+  --text-lg: 1.25rem;
   --text-lg--line-height: 1.35;
-  --text-xl: 24px;
+  --text-xl: 1.5rem;
   --text-xl--line-height: 1.25;
-  --text-2xl: 30px;
+  --text-2xl: 1.875rem;
   --text-2xl--line-height: 1.15;
-  --text-3xl: 38px;
+  --text-3xl: 2.375rem;
   --text-3xl--line-height: 1.1;
-  --text-4xl: 48px;
+  --text-4xl: 3rem;
   --text-4xl--line-height: 1.04;
-  --text-5xl: 64px;
+  --text-5xl: 4rem;
   --text-5xl--line-height: 1;
-  --text-6xl: 80px;
+  --text-6xl: 5rem;
   --text-6xl--line-height: 0.98;
 
   --radius-control: 8px;
@@ -573,7 +691,7 @@ html[data-drishti] [data-toast-region] {
     background: var(--canvas);
     color: var(--ink);
     font-family: var(--ff-sans);
-    font-size: 15px;
+    font-size: 0.9375rem;
     line-height: 1.55;
     font-feature-settings: "cv11", "ss01";
     min-height: 100dvh;
@@ -648,7 +766,7 @@ html[data-drishti] [data-toast-region] {
 }
 
 @utility eyebrow {
-  font-size: 11px;
+  font-size: 0.6875rem;
   line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 0.12em;

@@ -1,6 +1,6 @@
 import { ArrowDown, Send } from "lucide-react";
 import type { ReactNode } from "react";
-import { fmtDate, pluralize } from "../../lib/format";
+import { useDateFormat, useLang } from "../../i18n";
 import { humanize } from "../../lib/labels";
 import type { ApplicationDetail, ChecklistSlot } from "../../types";
 import { Button, Callout, Panel } from "../../ui2";
@@ -47,6 +47,8 @@ export function NextStepPanel({
   readinessFix,
   outcomeRecorded = false,
 }: NextStepProps) {
+  const { t, tn } = useLang();
+  const date = useDateFormat();
   const n = missing.length;
   let body: ReactNode;
   let action: ReactNode = null;
@@ -57,10 +59,10 @@ export function NextStepPanel({
   } else
     switch (stage) {
       case "draft-missing":
-        body = <Sentence>Upload {pluralize(n, "required document")} to continue.</Sentence>;
+        body = <Sentence>{tn(n, "Upload {n} required document to continue.", "Upload {n} required documents to continue.")}</Sentence>;
         action = (
           <Button variant="primary" size="lg" trailingIcon={<ArrowDown aria-hidden />} onClick={onGoToDocuments}>
-            Go to documents
+            {t("Go to documents")}
           </Button>
         );
         break;
@@ -68,39 +70,47 @@ export function NextStepPanel({
         body = (
           <Sentence>
             {readinessFix == null
-              ? "Every required document is uploaded. Check your declared figures, then submit."
+              ? t("Every required document is uploaded. Check your declared figures, then submit.")
               : readinessFix === 0
-                ? "Every required document is uploaded and the readiness check found nothing to fix. Submit when you are ready."
-                : `Every required document is uploaded. The readiness check below lists ${pluralize(readinessFix, "item")} AICTE is likely to raise; fix ${readinessFix === 1 ? "it" : "them"} first, or submit.`}
+                ? t("Every required document is uploaded and the readiness check found nothing to fix. Submit when you are ready.")
+                : tn(
+                    readinessFix,
+                    "Every required document is uploaded. The readiness check below lists {n} item AICTE is likely to raise; fix it first, or submit.",
+                    "Every required document is uploaded. The readiness check below lists {n} items AICTE is likely to raise; fix them first, or submit.",
+                  )}
           </Sentence>
         );
         action = (
           <Button variant="primary" size="lg" leadingIcon={<Send aria-hidden />} onClick={onSubmit}>
-            Submit for review
+            {t("Submit for review")}
           </Button>
         );
         break;
       case "checking":
-        body = <Sentence>Submitted. The automatic check starts in a moment and its progress shows here.</Sentence>;
+        body = <Sentence>{t("Submitted. The automatic check starts in a moment and its progress shows here.")}</Sentence>;
         break;
       case "check-failed":
         body = (
-          <Callout tone="danger" title="The check stopped" className="flex-1">
-            Your application is submitted. Nothing is lost; AICTE staff can restart the check.
+          <Callout tone="danger" title={t("The check stopped")} className="flex-1">
+            {t("Your application is submitted. Nothing is lost; AICTE staff can restart the check.")}
           </Callout>
         );
         break;
       case "under-review":
         body = outcomeRecorded ? (
-          <Sentence>AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.</Sentence>
+          <Sentence>{t("AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.")}</Sentence>
         ) : (
-          <Sentence>AICTE is reviewing your application. You will see any request for corrections here.</Sentence>
+          <Sentence>{t("AICTE is reviewing your application. You will see any request for corrections here.")}</Sentence>
         );
         break;
       case "rectification":
         body = (
           <Sentence>
-            AICTE asked you to correct {pluralize(itemCount, "item")}. Upload corrected documents or fix your figures, then resubmit.
+            {tn(
+              itemCount,
+              "AICTE asked you to correct {n} item. Upload corrected documents or fix your figures, then resubmit.",
+              "AICTE asked you to correct {n} items. Upload corrected documents or fix your figures, then resubmit.",
+            )}
           </Sentence>
         );
         action = (
@@ -112,49 +122,51 @@ export function NextStepPanel({
             disabled={n > 0}
             aria-describedby={n > 0 ? "resubmit-hint" : undefined}
           >
-            Resubmit
+            {t("Resubmit")}
           </Button>
         );
         if (n > 0)
           hint = (
             <p id="resubmit-hint" className="mt-3 text-sm text-ink-3">
-              Resubmit opens once every required document is uploaded. Still missing: {missing.map((m) => m.label).join(", ")}.
+              {t("Resubmit opens once every required document is uploaded. Still missing: {list}.", { list: missing.map((m) => m.label).join(", ") })}
             </p>
           );
         break;
       case "rectified": {
         const r = lastResponded(app);
         body = outcomeRecorded ? (
-          <Sentence>AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.</Sentence>
+          <Sentence>{t("AICTE recorded the scrutiny outcome. Its reasons and what you can do next are below.")}</Sentence>
         ) : (
           <Sentence>
-            Resubmitted{r?.responded_at ? ` on ${fmtDate(r.responded_at)}` : ""}. AICTE is reviewing the corrections.
+            {r?.responded_at
+              ? t("Resubmitted on {date}. AICTE is reviewing the corrections.", { date: date(r.responded_at) })
+              : t("Resubmitted. AICTE is reviewing the corrections.")}
           </Sentence>
         );
         break;
       }
       case "closed":
-        body = <Sentence>AICTE has finished processing this application. The decision reaches you from AICTE directly.</Sentence>;
+        body = <Sentence>{t("AICTE has finished processing this application. The decision reaches you from AICTE directly.")}</Sentence>;
         break;
       case "withdrawn":
-        body = <Sentence>This application was withdrawn. Nothing more is needed.</Sentence>;
+        body = <Sentence>{t("This application was withdrawn. Nothing more is needed.")}</Sentence>;
         break;
       default:
         body = (
           <Sentence>
-            This application is {humanize(app.status).toLowerCase()}. Contact AICTE if you are unsure what to do next.
+            {t("This application is {status}. Contact AICTE if you are unsure what to do next.", { status: humanize(app.status).toLowerCase() })}
           </Sentence>
         );
     }
 
   return (
-    <Panel id="next-step" title="Next step">
+    <Panel id="next-step" title={t("Next step")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         {body}
         {action && !editing && <div className="shrink-0">{action}</div>}
       </div>
       {!editing && hint}
-      {editing && action && <p className="mt-3 text-sm text-ink-3">Save or cancel your changes to the declared figures first.</p>}
+      {editing && action && <p className="mt-3 text-sm text-ink-3">{t("Save or cancel your changes to the declared figures first.")}</p>}
     </Panel>
   );
 }

@@ -270,7 +270,7 @@ export function BlockProgress({ stages, showLabels = false, size = "md", classNa
                 >
                   {s.label}
                 </div>
-                {s.ms !== undefined && <div className="font-mono text-[11px] text-ink-3">{fmtMs(s.ms)}</div>}
+                {s.ms !== undefined && <div className="font-mono text-[0.6875rem] text-ink-3">{fmtMs(s.ms)}</div>}
               </div>
             )}
           </div>
@@ -332,7 +332,7 @@ export function EvidenceClassChip({ cls, showName = true, size = "sm", className
       >
         <span
           className={cn(
-            "relative inline-flex h-full items-center justify-center overflow-hidden rounded-[5px] font-mono text-[10.5px] font-semibold",
+            "relative inline-flex h-full items-center justify-center overflow-hidden rounded-[5px] font-mono text-[0.6562rem] font-semibold",
             size === "sm" ? "min-w-7 px-1" : "min-w-8 px-1.5",
             EV_BG[level - 1],
             EV_FG[level - 1],

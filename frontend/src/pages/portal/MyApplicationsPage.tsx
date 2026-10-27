@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { api, qk } from "../../api";
 import { useAuth } from "../../auth/session";
-import { fmtDateTime, fmtRelative } from "../../lib/format";
+import { useDateTimeFormat, useRelativeTime, useT } from "../../i18n";
 import { humanize } from "../../lib/labels";
 import type { Application } from "../../types";
 import {
@@ -35,9 +35,10 @@ function useCategoryLabel() {
 }
 
 function ListSkeleton() {
+  const t = useT();
   return (
     <Page width="narrow" role="status">
-      <span className="sr-only">Loading your applications</span>
+      <span className="sr-only">{t("Loading your applications")}</span>
       <div className="flex items-start justify-between gap-6">
         <div className="space-y-2">
           <Skeleton className="h-8 w-64" />
@@ -52,6 +53,9 @@ function ListSkeleton() {
 
 export default function MyApplicationsPage() {
   const { user } = useAuth();
+  const t = useT();
+  const dateTime = useDateTimeFormat();
+  const relative = useRelativeTime();
   const apps = useQuery({ queryKey: qk.applications, queryFn: api.applications });
   const categoryLabel = useCategoryLabel();
   const list = useMemo(
@@ -74,7 +78,7 @@ export default function MyApplicationsPage() {
     () => [
       {
         id: "application",
-        header: "Application",
+        header: t("Application"),
         sortValue: (a) => categoryLabel(a.category),
         cell: (a) => (
           <span className="block min-w-0">
@@ -83,22 +87,22 @@ export default function MyApplicationsPage() {
           </span>
         ),
       },
-      { id: "year", header: "Academic year", hideBelow: "sm", sortValue: (a) => a.academic_year, cell: (a) => <span className="text-ink-2">{a.academic_year}</span> },
-      { id: "status", header: "Status", sortValue: (a) => ORDER[a.status] ?? 9, cell: (a) => <ApplicationStatusBadge status={a.status} /> },
-      { id: "next", header: "Next step", hideBelow: "md", cell: (a) => <span className="text-ink-2">{listNextStep(a.status)}</span> },
+      { id: "year", header: t("Academic year"), hideBelow: "sm", sortValue: (a) => a.academic_year, cell: (a) => <span className="text-ink-2">{a.academic_year}</span> },
+      { id: "status", header: t("Status"), sortValue: (a) => ORDER[a.status] ?? 9, cell: (a) => <ApplicationStatusBadge status={a.status} /> },
+      { id: "next", header: t("Next step"), hideBelow: "md", cell: (a) => <span className="text-ink-2">{listNextStep(a.status, t)}</span> },
       {
         id: "updated",
-        header: "Updated",
+        header: t("Updated"),
         hideBelow: "lg",
         sortValue: (a) => updatedAt(a),
         cell: (a) => (
-          <span className="whitespace-nowrap text-ink-3" title={fmtDateTime(updatedAt(a))}>
-            {fmtRelative(updatedAt(a))}
+          <span className="whitespace-nowrap text-ink-3" title={dateTime(updatedAt(a))}>
+            {relative(updatedAt(a))}
           </span>
         ),
       },
     ],
-    [categoryLabel],
+    [categoryLabel, t, dateTime, relative],
   );
 
   if (apps.isPending) return <ListSkeleton />;
@@ -106,32 +110,32 @@ export default function MyApplicationsPage() {
   // On phones the header keeps the full width for the title, so the action sits under it
   const start = (wide = false) => (
     <ButtonLink variant="primary" size="lg" to="/portal/new" leadingIcon={<Plus aria-hidden />} className={wide ? "w-full" : undefined}>
-      Start a new application
+      {t("Start a new application")}
     </ButtonLink>
   );
 
   return (
     <Page width="narrow">
       <PageHeader
-        title="Your applications"
+        title={t("Your applications")}
         context={inst ? <MetaList items={[inst.name, <Code key="aicte">{inst.aicte_id}</Code>, inst.district]} /> : user?.display_name}
         primary={list.length > 0 ? <span className="hidden sm:block">{start()}</span> : undefined}
       />
       {list.length > 0 && <div className="-mt-4 sm:hidden">{start(true)}</div>}
       {apps.error ? (
-        <ErrorState error={apps.error} title="Could not load your applications" onRetry={() => void apps.refetch()} retrying={apps.isFetching} />
+        <ErrorState error={apps.error} title={t("Could not load your applications")} onRetry={() => void apps.refetch()} retrying={apps.isFetching} />
       ) : list.length === 0 ? (
         <Panel>
           <EmptyState
-            title="No applications yet"
-            description="Start an application, upload the documents on the checklist, then submit it for AICTE review."
+            title={t("No applications yet")}
+            description={t("Start an application, upload the documents on the checklist, then submit it for AICTE review.")}
             action={start()}
           />
         </Panel>
       ) : (
         <Panel padding="none">
           <DataTable
-            label="Your applications"
+            label={t("Your applications")}
             rows={list}
             columns={columns}
             rowKey={(a) => a.id}

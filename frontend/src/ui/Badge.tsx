@@ -41,12 +41,12 @@ export function Tag({ variant = "neutral", className, children, ...rest }: TagPr
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-[5px] px-1.5 text-[10.5px] font-semibold",
+        "inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-[5px] px-1.5 text-[0.6562rem] font-semibold",
         variant === "neutral" && "bg-surface-2 text-ink-2 uppercase tracking-[0.08em]",
         variant === "brand" && "bg-brand-soft text-brand-ink uppercase tracking-[0.08em]",
         variant === "demo" &&
           "border border-dashed border-manual-dot/60 bg-manual-bg text-manual-fg uppercase tracking-[0.1em]",
-        variant === "mono" && "bg-surface-2 font-mono text-[11px] font-medium text-ink-2",
+        variant === "mono" && "bg-surface-2 font-mono text-[0.6875rem] font-medium text-ink-2",
         className,
       )}
       {...rest}
@@ -60,7 +60,7 @@ export function Kbd({ className, children, ...rest }: HTMLAttributes<HTMLElement
   return (
     <kbd
       className={cn(
-        "inline-flex h-5 min-w-5 items-center justify-center rounded-[5px] border border-line-2 bg-surface px-1 font-sans text-[11px] font-medium text-ink-3 shadow-[0_1px_0_var(--line-2)]",
+        "inline-flex h-5 min-w-5 items-center justify-center rounded-[5px] border border-line-2 bg-surface px-1 font-sans text-[0.6875rem] font-medium text-ink-3 shadow-[0_1px_0_var(--line-2)]",
         className,
       )}
       {...rest}

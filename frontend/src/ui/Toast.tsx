@@ -2,6 +2,7 @@ import { CircleAlert, CircleCheck, Info, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 import { dur, ease, spring } from "./motion";
 
@@ -39,6 +40,7 @@ const ICON = { success: CircleCheck, error: CircleAlert, info: Info };
 const ICON_CLASS = { success: "text-verified-dot", error: "text-mismatch-dot", info: "text-brand-500" };
 
 function ToastCard({ item, onClose }: { item: ToastItem; onClose: () => void }) {
+  const t = useT();
   const tone = item.tone ?? "info";
   const Icon = ICON[tone];
   const duration = item.duration ?? (tone === "error" ? 8000 : 5000);
@@ -89,7 +91,7 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: () => void }) 
       <button
         type="button"
         onClick={onClose}
-        aria-label="Dismiss notification"
+        aria-label={t("Dismiss notification")}
         className="absolute top-2.5 right-2.5 inline-flex size-6 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink"
       >
         <X className="size-3.5" />
@@ -110,6 +112,7 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: () => void }) 
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   const [items, setItems] = useState<ToastItem[]>([]);
   const next = useRef(1);
 
@@ -135,7 +138,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {createPortal(
         <ol
           data-toast-region
-          aria-label="Notifications"
+          aria-label={t("Notifications")}
           className="pointer-events-none fixed right-4 bottom-4 z-[95] flex flex-col items-end gap-2"
         >
           <style>{"@keyframes toast-timer{from{transform:scaleX(1)}to{transform:scaleX(0)}}"}</style>

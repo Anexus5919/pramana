@@ -1,3 +1,4 @@
+import { en, type T } from "../../i18n";
 import type { Declared, Programme } from "../../types";
 
 export const LEVELS = [
@@ -194,11 +195,12 @@ export function levelLabel(v: string): string {
 }
 
 /** Seat change as plain text: "+60 seats", "-30 seats" or "No change". Empty when either figure is missing. */
-export function intakeChange(approved: unknown, proposed: unknown): string {
+export function intakeChange(approved: unknown, proposed: unknown, t: T = en): string {
   const a = Number(approved);
   const p = Number(proposed);
   if (approved === "" || proposed === "" || !Number.isFinite(a) || !Number.isFinite(p)) return "";
   const d = p - a;
-  if (d === 0) return "No change";
-  return `${d > 0 ? "+" : "-"}${Math.abs(d)} ${Math.abs(d) === 1 ? "seat" : "seats"}`;
+  if (d === 0) return t("No change");
+  const vars = { sign: d > 0 ? "+" : "-", n: Math.abs(d) };
+  return Math.abs(d) === 1 ? t("{sign}{n} seat", vars) : t("{sign}{n} seats", vars);
 }

@@ -1,6 +1,7 @@
 import { Check, Copy } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 import { dur } from "./motion";
 import { Tooltip } from "./Tooltip";
@@ -23,6 +24,7 @@ export interface DigestProps {
 /** Mono hash or ID, middle-truncated, with copy-to-clipboard and a check morph. */
 export function Digest({ value, head = 8, tail = 6, label, copy = true, className }: DigestProps) {
   const [copied, setCopied] = useState(false);
+  const t = useT();
   useEffect(() => {
     if (!copied) return;
     const t = window.setTimeout(() => setCopied(false), 1600);
@@ -37,7 +39,7 @@ export function Digest({ value, head = 8, tail = 6, label, copy = true, classNam
         <span
           tabIndex={0}
           className="truncate rounded-[5px] bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-ink-2"
-          aria-label={`${label ?? "Value"} ${value}`}
+          aria-label={`${label ?? t("Value")} ${value}`}
         >
           {middleTruncate(value, head, tail)}
         </span>
@@ -45,7 +47,7 @@ export function Digest({ value, head = 8, tail = 6, label, copy = true, classNam
       {copy && (
         <button
           type="button"
-          aria-label={copied ? "Copied" : `Copy ${label ?? "value"}`}
+          aria-label={copied ? t("Copied") : t("Copy {label}", { label: label ?? t("value") })}
           onClick={() => {
             void navigator.clipboard?.writeText(value).then(
               () => setCopied(true),

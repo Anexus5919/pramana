@@ -1,5 +1,6 @@
 import { Moon, Sun } from "lucide-react";
 import { createContext, useContext, type ReactNode } from "react";
+import { useT } from "../i18n";
 import { useTheme } from "../lib/theme";
 import { IconButton } from "../ui2/Button";
 
@@ -20,10 +21,11 @@ export function useAppTheme(): ThemeCtx {
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggle } = useAppTheme();
+  const t = useT();
   const dark = theme === "dark";
   return (
     <IconButton
-      label={dark ? "Switch to light theme" : "Switch to dark theme"}
+      label={t(dark ? "Switch to light theme" : "Switch to dark theme")}
       onClick={toggle}
       className={className}
       icon={dark ? <Moon aria-hidden /> : <Sun aria-hidden />}

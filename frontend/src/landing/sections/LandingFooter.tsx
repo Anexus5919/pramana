@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { contentDateLabel } from "../../site/build";
+import { SITE_PAGES } from "../../site/links";
+import { OWNERSHIP } from "../../site/SiteFooter";
 
 const LINKS = [
   { href: "#how", label: "How it works" },
@@ -8,8 +11,9 @@ const LINKS = [
 ];
 
 export default function LandingFooter() {
+  const date = contentDateLabel();
   return (
-    <footer className="bg-(--lp-pupil) px-4 pb-10 text-white/60 sm:px-6">
+    <footer className="bg-(--lp-pupil) px-4 pb-10 text-white/70 sm:px-6">
       <div className="mx-auto max-w-6xl border-t border-white/10 pt-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div>
@@ -34,9 +38,24 @@ export default function LandingFooter() {
             </Link>
           </nav>
         </div>
-        <p className="mt-10 max-w-3xl text-[13px] leading-relaxed text-white/50">
+        <nav aria-label="Site information" className="mt-8 border-t border-white/10 pt-6">
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
+            {SITE_PAGES.map((p) => (
+              <li key={p.to}>
+                <Link to={p.to} className="rounded underline-offset-2 transition-colors hover:text-white hover:underline">
+                  {p.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <p className="mt-6 max-w-3xl text-[13px] leading-relaxed text-white/65">
           Decision support only. Findings are preliminary indicators for review by competent authorities. Pramana does not approve,
           reject or penalise any institution. Synthetic demo data.
+        </p>
+        <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-white/65">
+          {OWNERSHIP}
+          {date && <span className="whitespace-nowrap"> Last updated: {date}</span>}
         </p>
       </div>
     </footer>

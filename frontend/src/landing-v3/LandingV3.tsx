@@ -16,8 +16,14 @@ import Nav from "./Nav";
 export default function LandingV3() {
   return (
     <div className="lp min-h-screen" style={landingVars}>
+      <a
+        href="#main"
+        className="sr-only z-[100] rounded-full bg-(--lp-brand-500) px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+      >
+        Skip to content
+      </a>
       <Nav />
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <HeroStory />
         <SlipsThrough />
         <HowItReads />

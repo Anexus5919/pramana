@@ -64,6 +64,7 @@ Start with `docs/usp-and-demo.md`. Research, requirements mapping, design decisi
 | [docs/features/insight-story.md](docs/features/insight-story.md) | Document life story and inspection brief |
 | [docs/features/insight-ready.md](docs/features/insight-ready.md) | Readiness check for institutions before they submit |
 | [docs/features/rectification-conversation.md](docs/features/rectification-conversation.md) | Threads per deficiency-letter item between the institution and the AICTE Scrutiny Cell, review requests that hold up the outcome, and in-app notifications |
+| [docs/features/gigw.md](docs/features/gigw.md) | Built to GIGW 3.0 (formal compliance needs STQC Website Quality Certification): policy, help, contact and sitemap pages, footer with last updated date, text size and high contrast, Hindi for the institution portal, and an axe-core WCAG 2.1 AA scan with before and after results |
 
 ## Quick start (Windows, macOS or Linux)
 

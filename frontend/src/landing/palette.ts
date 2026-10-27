@@ -8,7 +8,7 @@ export const palette = {
   surface3: "#efe8e6",
   ink: "#1c1622",
   ink2: "#4a4252",
-  ink3: "#7d7486",
+  ink3: "#6f6679",
   ink4: "#aaa1b0",
   line: "#ece4e5",
   line2: "#dfd4d8",

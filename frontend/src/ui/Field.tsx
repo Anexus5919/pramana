@@ -16,7 +16,7 @@ import { cn } from "./cn";
 import { spring } from "./motion";
 
 const control =
-  "w-full min-w-0 rounded-control border bg-surface text-[14px] text-ink placeholder:text-ink-4 shadow-xs transition-[border-color,box-shadow] duration-200 outline-none hover:border-ink-4/60 focus-visible:border-brand-400 focus-visible:ring-4 focus-visible:ring-brand-400/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-3";
+  "w-full min-w-0 rounded-control border bg-surface text-[0.875rem] text-ink placeholder:text-ink-4 shadow-xs transition-[border-color,box-shadow] duration-200 outline-none hover:border-ink-4/60 focus-visible:border-brand-400 focus-visible:ring-4 focus-visible:ring-brand-400/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-3";
 
 function invalidCls(invalid?: boolean) {
   return invalid

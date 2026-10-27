@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { IconButton } from "./Button";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 import { dur, ease, spring } from "./motion";
 
@@ -72,6 +73,7 @@ const widths = { sm: "max-w-[420px]", md: "max-w-[560px]", lg: "max-w-[760px]", 
 export function Dialog({ open, onClose, title, description, children, footer, size = "md", initialFocus, className }: DialogProps) {
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
+  const t = useT();
   useModal(open, panel, onClose, initialFocus);
 
   return createPortal(
@@ -114,7 +116,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
                   </p>
                 )}
               </div>
-              <IconButton label="Close" icon={<X />} size="sm" onClick={onClose} className="-mt-0.5 -mr-2" />
+              <IconButton label={t("Close")} icon={<X />} size="sm" onClick={onClose} className="-mt-0.5 -mr-2" />
             </header>
             {children !== undefined && <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">{children}</div>}
             {footer && (
@@ -149,6 +151,7 @@ export interface SheetProps {
 export function Sheet({ open, onClose, title, description, side = "right", width = 480, children, footer, bare, className }: SheetProps) {
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
+  const t = useT();
   useModal(open, panel, onClose);
   const off = side === "right" ? "100%" : "-100%";
 
@@ -188,7 +191,7 @@ export function Sheet({ open, onClose, title, description, side = "right", width
                 </h2>
                 {description && <p className="mt-0.5 text-sm text-ink-3">{description}</p>}
               </div>
-              <IconButton label="Close" icon={<X />} size="sm" onClick={onClose} className="-mr-1.5" />
+              <IconButton label={t("Close")} icon={<X />} size="sm" onClick={onClose} className="-mr-1.5" />
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
             {footer && <footer className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">{footer}</footer>}

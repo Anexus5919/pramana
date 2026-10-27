@@ -1,4 +1,4 @@
-import { motion, useInView } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Section, SimTag, ease, spring } from "../kit";
 import { STAGE_H, STAGE_W, StoryStage } from "./a/StoryStage";
@@ -106,6 +106,7 @@ function StepText({
   register: (i: number, el: HTMLElement | null) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
   const centered = useInView(ref, { margin: "-48% 0px -48% 0px" });
   useEffect(() => {
     if (centered) onActive(i);
@@ -119,7 +120,7 @@ function StepText({
       data-story-step={i}
       className="flex min-h-[78vh] items-center"
     >
-      <motion.div animate={{ opacity: active ? 1 : 0.32 }} transition={{ duration: 0.35, ease: ease.out }} className="max-w-md">
+      <motion.div animate={{ opacity: active || reduced ? 1 : 0.75 }} transition={{ duration: 0.35, ease: ease.out }} className="max-w-md">
         <p className="lp-mono text-[12px] font-semibold text-(--lp-brand-600)">0{i + 1}</p>
         <h3 className="lp-display mt-2 text-[34px] leading-[1.05] font-semibold tracking-[-0.03em] text-(--lp-ink)">{STEPS[i].title}</h3>
         <div className="mt-4 text-[17px] leading-relaxed text-(--lp-ink-2)">{STEPS[i].body}</div>

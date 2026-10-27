@@ -169,7 +169,7 @@ export default function ScanPage() {
         <Link to="/" aria-label="Pramana home" className="rounded-full">
           <Wordmark size={26} />
         </Link>
-        <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-medium text-ink-3 hover:bg-surface-2 hover:text-ink">
+        <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.8125rem] font-medium text-ink-3 hover:bg-surface-2 hover:text-ink">
           <LogIn className="size-3.5" aria-hidden /> Officials sign in
         </Link>
       </header>
@@ -181,14 +181,14 @@ export default function ScanPage() {
         )}
       >
         <section aria-labelledby="scan-title" className="min-w-0 lg:sticky lg:top-8">
-          <p className="flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-[0.12em] text-ink-3 uppercase">
+          <p className="flex flex-wrap items-center gap-2 text-[0.6875rem] font-semibold tracking-[0.12em] text-ink-3 uppercase">
             Public check <span aria-hidden>·</span> no sign-in
             <Tag variant="demo">Simulated issuers</Tag>
           </p>
-          <h1 id="scan-title" className="mt-2 font-display text-[32px] leading-[1.05] font-semibold tracking-[-0.03em] text-ink sm:text-[38px]">
+          <h1 id="scan-title" className="mt-2 font-display text-[2rem] leading-[1.05] font-semibold tracking-[-0.03em] text-ink sm:text-[2.375rem]">
             {link ? "Certificate QR check" : "Scan a certificate's QR"}
           </h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-ink-2 text-pretty">
+          <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-2 text-pretty">
             {link
               ? "You opened the link in a certificate's QR. Its signed data is checked against the issuer's published key, for you to compare with the paper."
               : "Photograph the issuer-signed QR on a certificate. Pramana checks the signature and shows what the issuer signed, so you can compare it with the paper."}
@@ -217,12 +217,12 @@ export default function ScanPage() {
                 link ? (
                   <span className="flex flex-col items-center gap-2 text-brand-ink">
                     <Link2 aria-hidden className="size-11 text-brand-400" strokeWidth={1.5} />
-                    <span className="text-[10.5px] font-semibold tracking-[0.08em] uppercase">From the QR link</span>
+                    <span className="text-[0.6562rem] font-semibold tracking-[0.08em] uppercase">From the QR link</span>
                   </span>
                 ) : undefined
               }
             />
-            <p className="mt-1 text-center text-[13px] text-ink-3" aria-live="polite">
+            <p className="mt-1 text-center text-[0.8125rem] text-ink-3" aria-live="polite">
               {mut.isPending ? (
                 link ? "Checking the signature in the link" : "Reading the QR and checking the signature"
               ) : drag ? (

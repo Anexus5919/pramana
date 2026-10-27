@@ -3,7 +3,8 @@ import { AlertTriangle, CheckCircle2, Circle, RefreshCw, Upload } from "lucide-r
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { qk } from "../../api";
 import { useAuth } from "../../auth/session";
-import { fmtBytes, fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
+import { useDateTimeFormat, useLang, useRelativeTime, type T } from "../../i18n";
+import { fmtBytes } from "../../lib/format";
 import type { ChecklistSlot, DocumentSummary } from "../../types";
 import { Button, Callout, Digest, MetaList, cn } from "../../ui2";
 
@@ -29,17 +30,18 @@ function describe(xhr: XMLHttpRequest): string {
 
 class Cancelled extends Error {}
 
-/** The server's rejection reason in words a college office can act on. */
-function plainReason(detail: string): string {
+/** The server's rejection reason in words a college office can act on. Other server text is shown as sent. */
+function plainReason(detail: string, t: T): string {
   const d = detail.trim();
   const ext = /extension \.?(\w+)/i.exec(d)?.[1]?.toUpperCase();
-  if (/does not match extension/i.test(d)) return `the file is not really a ${ext ?? "PDF"}. Save or scan it again as a PDF, JPG or PNG`;
-  if (/not allowed/i.test(d)) return "only PDF, JPG and PNG files are accepted";
-  if (/^empty file$/i.test(d)) return "the file is empty";
+  if (/does not match extension/i.test(d)) return t("the file is not really a {ext}. Save or scan it again as a PDF, JPG or PNG", { ext: ext ?? "PDF" });
+  if (/not allowed/i.test(d)) return t("only PDF, JPG and PNG files are accepted");
+  if (/^empty file$/i.test(d)) return t("the file is empty");
   const mb = /exceeds (\d+) ?MB/i.exec(d)?.[1];
-  if (mb) return `the file is larger than ${mb} MB. Scan it at a lower resolution and try again`;
-  if (/malformed PDF|unreadable|could not be read/i.test(d)) return "the file could not be opened. It may be damaged; export or scan it again";
-  return d.replace(/\.$/, "");
+  if (mb) return t("the file is larger than {mb} MB. Scan it at a lower resolution and try again", { mb });
+  if (/malformed PDF|unreadable|could not be read/i.test(d)) return t("the file could not be opened. It may be damaged; export or scan it again");
+  // The two messages this file writes itself are in the dictionary; anything else from the server stays as sent
+  return t(d.replace(/\.$/, ""));
 }
 
 /** Real upload progress from XMLHttpRequest, so the bar reflects bytes sent rather than a guess. */
@@ -118,6 +120,9 @@ export function UploadSlot({
 }) {
   const qc = useQueryClient();
   const { session } = useAuth();
+  const { t, tn } = useLang();
+  const dateTime = useDateTimeFormat();
+  const relative = useRelativeTime();
   const input = useRef<HTMLInputElement>(null);
   const abortRef = useRef<(() => void) | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -148,13 +153,13 @@ export function UploadSlot({
       abortRef.current = null;
       await qc.invalidateQueries({ queryKey: qk.application(appId) });
       setPhase({ kind: "idle" });
-      setAnnounce(`Uploaded ${saved.original_filename} as ${slot.label}`);
+      setAnnounce(t("Uploaded {file} as {label}", { file: saved.original_filename, label: slot.label }));
     },
     onError: (e: unknown, file) => {
       abortRef.current = null;
       if (e instanceof Cancelled) {
         setPhase({ kind: "idle" });
-        setAnnounce(`Upload of ${file.name} cancelled`);
+        setAnnounce(t("Upload of {file} cancelled", { file: file.name }));
         return;
       }
       setPhase({ kind: "rejected", name: file.name, detail: e instanceof Error ? e.message : String(e) });
@@ -194,7 +199,7 @@ export function UploadSlot({
     >
       {over && (
         <div aria-hidden className="pointer-events-none absolute inset-1 flex items-center justify-center rounded-control border border-dashed border-brand-ink bg-brand-soft text-sm font-medium text-brand-ink">
-          Drop to upload as {slot.label}
+          {t("Drop to upload as {label}", { label: slot.label })}
         </div>
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
@@ -205,10 +210,10 @@ export function UploadSlot({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-2">
               <h3 className="text-sm font-medium text-ink">{slot.label}</h3>
-              <span className="text-xs text-ink-3">{slot.required ? "Required" : "Optional"}</span>
-              {flag === "requested" && <span className="text-xs font-medium text-manual-fg">Correction requested</span>}
-              {flag === "replaced" && <span className="text-xs font-medium text-verified-fg">New copy uploaded</span>}
-              <span className="sr-only">, {STATE_TEXT[state]}</span>
+              <span className="text-xs text-ink-3">{slot.required ? t("Required") : t("Optional")}</span>
+              {flag === "requested" && <span className="text-xs font-medium text-manual-fg">{t("Correction requested")}</span>}
+              {flag === "replaced" && <span className="text-xs font-medium text-verified-fg">{t("New copy uploaded")}</span>}
+              <span className="sr-only">, {t(STATE_TEXT[state])}</span>
             </div>
             {/* Once the documents are locked the row is a record, so the guidance is left out */}
             {editable && slot.description && <p className="mt-0.5 text-sm text-ink-3 text-pretty">{slot.description}</p>}
@@ -217,11 +222,11 @@ export function UploadSlot({
               <div className="mt-3 max-w-md">
                 <div className="flex items-center justify-between gap-3 text-xs">
                   <span className="min-w-0 truncate font-mono text-ink-2">{phase.name}</span>
-                  <span className="shrink-0 text-ink-3">Uploading, {phase.pct} percent</span>
+                  <span className="shrink-0 text-ink-3">{t("Uploading, {pct} percent", { pct: phase.pct })}</span>
                 </div>
                 <div
                   role="progressbar"
-                  aria-label={`Uploading ${phase.name}`}
+                  aria-label={t("Uploading {file}", { file: phase.name })}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={phase.pct}
@@ -233,17 +238,17 @@ export function UploadSlot({
             )}
             {phase.kind === "processing" && (
               <p className="mt-3 text-sm text-ink-2">
-                <span className="font-mono text-xs">{phase.name}</span>: checking file type
+                <span className="font-mono text-xs">{phase.name}</span>: {t("checking file type")}
               </p>
             )}
             {phase.kind === "rejected" && (
               <Callout
                 tone="danger"
                 className="mt-3"
-                title={`Not accepted: ${plainReason(phase.detail)}.`}
+                title={t("Not accepted: {reason}.", { reason: plainReason(phase.detail, t) })}
                 action={
                   <Button size="sm" onClick={choose}>
-                    Try another file
+                    {t("Try another file")}
                   </Button>
                 }
               >
@@ -258,8 +263,8 @@ export function UploadSlot({
                       {doc.original_filename}
                     </span>,
                     fmtBytes(doc.size_bytes),
-                    doc.mime === "application/pdf" ? pluralize(doc.page_count, "page") : null,
-                    doc.uploaded_at ? <span title={fmtDateTime(doc.uploaded_at)}>uploaded {fmtRelative(doc.uploaded_at)}</span> : null,
+                    doc.mime === "application/pdf" ? tn(doc.page_count, "{n} page", "{n} pages") : null,
+                    doc.uploaded_at ? <span title={dateTime(doc.uploaded_at)}>{t("uploaded {when}", { when: relative(doc.uploaded_at) })}</span> : null,
                     <Digest key="d" value={doc.sha256} label="SHA-256" head={8} tail={6} />,
                   ]}
                 />
@@ -267,7 +272,9 @@ export function UploadSlot({
             )}
             {!busy && phase.kind !== "rejected" && unreadable && (
               <Callout tone="warning" className="mt-3">
-                This file could not be read{doc?.processing_error ? `: ${doc.processing_error.replace(/\.$/, "")}` : ""}. Upload a clearer copy.
+                {doc?.processing_error
+                  ? t("This file could not be read: {reason}. Upload a clearer copy.", { reason: doc.processing_error.replace(/\.$/, "") })
+                  : t("This file could not be read. Upload a clearer copy.")}
               </Callout>
             )}
           </div>
@@ -280,7 +287,7 @@ export function UploadSlot({
               accept={ACCEPT}
               className="sr-only"
               tabIndex={-1}
-              aria-label={`Choose a file for ${slot.label}`}
+              aria-label={t("Choose a file for {label}", { label: slot.label })}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 e.target.value = "";
@@ -289,7 +296,7 @@ export function UploadSlot({
             />
             {busy ? (
               <Button size="md" variant="secondary" onClick={() => abortRef.current?.()} disabled={phase.kind !== "uploading"}>
-                Cancel
+                {t("Cancel")}
               </Button>
             ) : phase.kind === "rejected" ? null : (
               <Button
@@ -297,14 +304,14 @@ export function UploadSlot({
                 variant={!has && emphasis ? "primary" : "secondary"}
                 leadingIcon={has ? <RefreshCw /> : <Upload />}
                 onClick={choose}
-                aria-label={`${has ? "Replace" : "Upload"} ${slot.label}`}
+                aria-label={has ? t("Replace {label}", { label: slot.label }) : t("Upload {label}", { label: slot.label })}
               >
-                {has ? "Replace" : "Upload"}
+                {has ? t("Replace") : t("Upload")}
               </Button>
             )}
           </div>
         )}
-        {!editable && !has && <span className="shrink-0 pl-7 text-xs text-ink-3 sm:pt-0.5 sm:pl-0">Not uploaded</span>}
+        {!editable && !has && <span className="shrink-0 pl-7 text-xs text-ink-3 sm:pt-0.5 sm:pl-0">{t("Not uploaded")}</span>}
       </div>
       <p className="sr-only" aria-live="polite">
         {announce}

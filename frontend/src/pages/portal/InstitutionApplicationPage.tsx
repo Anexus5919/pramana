@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { ApiError, api, qk } from "../../api";
 import { useOutcomeView } from "../../conversation/api";
-import { fmtDate } from "../../lib/format";
+import { useDateFormat, useT } from "../../i18n";
 import { roundLabel } from "../../lib/labels";
 import type { ApplicationDetail, DocumentSummary, Finding } from "../../types";
 import {
@@ -38,9 +38,10 @@ import { SubmitDialog } from "./SubmitDialog";
 import { UploadSlot } from "./UploadSlot";
 
 function PageSkeleton() {
+  const t = useT();
   return (
     <Page width="narrow" role="status">
-      <span className="sr-only">Loading the application</span>
+      <span className="sr-only">{t("Loading the application")}</span>
       <div className="space-y-3">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-8 w-96 max-w-full" />
@@ -66,20 +67,23 @@ function DocumentsPanel({
   firstMissing?: string;
   flags: Map<string, "requested" | "replaced">;
 }) {
+  const t = useT();
   const slots = [...app.document_checklist].sort((a, b) => Number(b.required) - Number(a.required));
-  const source = checklistSourceText(app.checklist_source);
+  const source = checklistSourceText(app.checklist_source, t);
   return (
     <Panel
       id="documents"
-      title="Documents"
+      title={t("Documents")}
       padding="none"
       description={
         <>
           {editable
-            ? "PDF, JPG or PNG. A new upload replaces the earlier file."
-            : app.status === "closed" || app.status === "withdrawn"
-              ? `This application is ${app.status}, so its documents can no longer change.`
-              : "Documents are locked while AICTE reviews the application."}
+            ? t("PDF, JPG or PNG. A new upload replaces the earlier file.")
+            : app.status === "closed"
+              ? t("This application is closed, so its documents can no longer change.")
+              : app.status === "withdrawn"
+                ? t("This application is withdrawn, so its documents can no longer change.")
+                : t("Documents are locked while AICTE reviews the application.")}
           {source && <span className="mt-1 block text-xs">{source}</span>}
         </>
       }
@@ -120,6 +124,7 @@ function DeclaredPanel({
 }) {
   const qc = useQueryClient();
   const toast = useToast();
+  const t = useT();
   const [draft, setDraftState] = useState<DeclaredDraft | null>(null);
   const [tried, setTried] = useState(false);
   const setDraft = useCallback(
@@ -135,7 +140,7 @@ function DeclaredPanel({
       await qc.invalidateQueries({ queryKey: qk.application(app.id) });
       setDraft(null);
       setTried(false);
-      toast.success("Declared figures saved", "The readiness check runs again with the new figures.");
+      toast.success(t("Declared figures saved"), t("The readiness check runs again with the new figures."));
     },
   });
   // Editors take a state setter; this one only acts while a draft is open
@@ -170,12 +175,12 @@ function DeclaredPanel({
   return (
     <Panel
       id="declared"
-      title="Declared figures"
-      description={draft ? "Correct what is wrong, then save. Pramana compares these figures with your documents." : undefined}
+      title={t("Declared figures")}
+      description={draft ? t("Correct what is wrong, then save. Pramana compares these figures with your documents.") : undefined}
       actions={
         editable && !draft ? (
           <Button leadingIcon={<Pencil />} onClick={() => setDraft(toDraft(app.declared))}>
-            Edit
+            {t("Edit")}
           </Button>
         ) : undefined
       }
@@ -183,7 +188,7 @@ function DeclaredPanel({
         draft ? (
           <>
             <Button variant="ghost" onClick={() => setDraft(null)} disabled={save.isPending}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               variant="primary"
@@ -193,7 +198,7 @@ function DeclaredPanel({
                 if (!hasErr) save.mutate(draft);
               }}
             >
-              Save changes
+              {t("Save changes")}
             </Button>
           </>
         ) : undefined
@@ -201,27 +206,27 @@ function DeclaredPanel({
     >
       {draft ? (
         <>
-          <h3 className="text-xs font-medium text-ink-3">Programmes</h3>
-          <p className="mt-1 mb-4 text-sm text-ink-3 text-pretty">{INTAKE_HELP}</p>
+          <h3 className="text-xs font-medium text-ink-3">{t("Programmes")}</h3>
+          <p className="mt-1 mb-4 text-sm text-ink-3 text-pretty">{t(INTAKE_HELP)}</p>
           <ProgrammesEditor draft={draft} setDraft={edit} errors={tried ? errs : {}} />
-          <PanelDivider label="Figures" />
+          <PanelDivider label={t("Figures")} />
           <NumbersEditor draft={draft} setDraft={edit} errors={tried ? errs : {}} />
           {save.error && (
-            <Callout tone="danger" role="alert" title="Not saved" className="mt-5">
+            <Callout tone="danger" role="alert" title={t("Not saved")} className="mt-5">
               {save.error instanceof Error ? save.error.message : String(save.error)}
             </Callout>
           )}
           {tried && hasErr && (
             <p role="alert" className="mt-5 text-sm font-medium text-mismatch-fg">
-              Some figures need a fix before you can save. They are marked above.
+              {t("Some figures need a fix before you can save. They are marked above.")}
             </p>
           )}
         </>
       ) : (
         <>
-          <h3 className="mb-1 text-xs font-medium text-ink-3">Programmes</h3>
+          <h3 className="mb-1 text-xs font-medium text-ink-3">{t("Programmes")}</h3>
           <ProgrammesTable programmes={programmes} />
-          <PanelDivider label="Figures" />
+          <PanelDivider label={t("Figures")} />
           <DeclaredFigures declared={app.declared} />
         </>
       )}
@@ -231,14 +236,15 @@ function DeclaredPanel({
 
 /** Findings an AICTE officer asked about that the open request does not already list. Title and message only. */
 function AskedAboutPanel({ findings, rectifying }: { findings: Finding[]; rectifying: boolean }) {
+  const t = useT();
   if (findings.length === 0) return null;
   return (
     <Panel
-      title="Items AICTE asked about"
+      title={t("Items AICTE asked about")}
       description={
         rectifying
-          ? "The reviewing officer also asked about these. Cover them in your corrections."
-          : "The reviewing officer asked about these. If AICTE needs corrections, the request appears on this page."
+          ? t("The reviewing officer also asked about these. Cover them in your corrections.")
+          : t("The reviewing officer asked about these. If AICTE needs corrections, the request appears on this page.")
       }
       padding="none"
     >
@@ -279,6 +285,8 @@ export default function InstitutionApplicationPage() {
   const { appId = "" } = useParams();
   const qc = useQueryClient();
   const toast = useToast();
+  const t = useT();
+  const date = useDateFormat();
   const [confirm, setConfirm] = useState(false);
   const [liveRun, setLiveRun] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -307,9 +315,9 @@ export default function InstitutionApplicationPage() {
     (status: string) => {
       void qc.invalidateQueries({ queryKey: qk.application(appId) });
       void qc.invalidateQueries({ queryKey: qk.applications });
-      if (status === "complete") toast.success("Automatic check complete", "An AICTE officer reviews your application next.");
+      if (status === "complete") toast.success(t("Automatic check complete"), t("An AICTE officer reviews your application next."));
     },
-    [qc, appId, toast],
+    [qc, appId, toast, t],
   );
 
   const submit = useMutation({
@@ -320,8 +328,10 @@ export default function InstitutionApplicationPage() {
       if (res.run?.background) setLiveRun(res.run.id);
       await Promise.all([qc.invalidateQueries({ queryKey: qk.application(appId) }), qc.invalidateQueries({ queryKey: qk.applications })]);
       toast.success(
-        resubmitted ? "Resubmitted to AICTE" : "Submitted to AICTE",
-        res.run?.background ? "The automatic check is running. Its progress shows under Next step." : "The automatic check has finished. An AICTE officer reviews it next.",
+        resubmitted ? t("Resubmitted to AICTE") : t("Submitted to AICTE"),
+        res.run?.background
+          ? t("The automatic check is running. Its progress shows under Next step.")
+          : t("The automatic check has finished. An AICTE officer reviews it next."),
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -334,16 +344,16 @@ export default function InstitutionApplicationPage() {
       <Page width="narrow">
         {notFound ? (
           <EmptyState
-            title="Application not found"
-            description="It may belong to another institution, or the link may be old. Your applications are listed on the Applications page."
+            title={t("Application not found")}
+            description={t("It may belong to another institution, or the link may be old. Your applications are listed on the Applications page.")}
             action={
               <ButtonLink variant="primary" size="lg" to="/portal">
-                Back to applications
+                {t("Back to applications")}
               </ButtonLink>
             }
           />
         ) : (
-          <ErrorState error={q.error} title="Could not load the application" onRetry={() => void q.refetch()} retrying={q.isFetching} />
+          <ErrorState error={q.error} title={t("Could not load the application")} onRetry={() => void q.refetch()} retrying={q.isFetching} />
         )}
       </Page>
     );
@@ -360,12 +370,12 @@ export default function InstitutionApplicationPage() {
 
   // A requested document counts as corrected once a copy newer than the request is uploaded
   const flags = new Map<string, "requested" | "replaced">();
-  for (const t of (rect?.items ?? []).map(itemDocType)) {
-    if (!t || !rect) continue;
-    const d = docs.get(t);
-    flags.set(t, d?.uploaded_at && d.uploaded_at > rect.created_at ? "replaced" : "requested");
+  for (const type of (rect?.items ?? []).map(itemDocType)) {
+    if (!type || !rect) continue;
+    const d = docs.get(type);
+    flags.set(type, d?.uploaded_at && d.uploaded_at > rect.created_at ? "replaced" : "requested");
   }
-  const docLabel = (t: string) => app.document_checklist.find((s) => s.doc_type === t)?.label;
+  const docLabel = (type: string) => app.document_checklist.find((s) => s.doc_type === type)?.label;
 
   /** Scrolls a checklist row into view and puts the keyboard on its upload button. */
   function showSlot(docType: string) {
@@ -378,21 +388,21 @@ export default function InstitutionApplicationPage() {
   return (
     <Page width="narrow">
       <PageHeader
-        back={{ to: "/portal", label: "Applications" }}
+        back={{ to: "/portal", label: t("Applications") }}
         title={app.category_label}
         status={<ApplicationStatusBadge status={app.status} />}
         context={
           <MetaList
             items={[
               <Code key="id">{app.id}</Code>,
-              `AY ${app.academic_year}`,
-              roundLabel(app.round),
-              app.submitted_at ? `Submitted ${fmtDate(app.submitted_at)}` : null,
+              t("AY {year}", { year: app.academic_year }),
+              roundLabel(app.round, t),
+              app.submitted_at ? t("Submitted {date}", { date: date(app.submitted_at) }) : null,
             ]}
           />
         }
       >
-        <Stepper label="Application progress" steps={progressSteps(app, missing.length)} />
+        <Stepper label={t("Application progress")} steps={progressSteps(app, missing.length, t, date)} />
       </PageHeader>
 
       <NextStepPanel

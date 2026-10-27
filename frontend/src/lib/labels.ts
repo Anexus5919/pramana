@@ -1,3 +1,5 @@
+import { en, type T } from "../i18n";
+
 export type Tone = "verified" | "mismatch" | "expired" | "pending" | "unavail" | "manual" | "unchecked" | "primary";
 
 /** Label for a fact path such as doc.fire_noc.valid_until: its last segment, humanized. */
@@ -16,18 +18,18 @@ export function humanize(s: string | null | undefined): string {
  * The application's round in words. Round 1 is the first submission; each rectification request opens the next
  * correction round, so round 2 is correction round 1, the round the first deficiency letter asks for.
  */
-export function roundLabel(round: number): string {
-  return round > 1 ? `Correction round ${round - 1}` : "First submission";
+export function roundLabel(round: number, t: T = en): string {
+  return round > 1 ? t("Correction round {n}", { n: round - 1 }) : t("First submission");
 }
 
 /** roundLabel inside a sentence: "first submission", "correction round 1". */
-export function roundPhrase(round: number): string {
-  return round > 1 ? `correction round ${round - 1}` : "first submission";
+export function roundPhrase(round: number, t: T = en): string {
+  return round > 1 ? t("correction round {n}", { n: round - 1 }) : t("first submission");
 }
 
 /** A rectification request or deficiency letter raised in round n opens correction round n. */
-export function correctionRound(requestRound: number): string {
-  return `Correction round ${requestRound}`;
+export function correctionRound(requestRound: number, t: T = en): string {
+  return t("Correction round {n}", { n: requestRound });
 }
 
 export const VERIFICATION_STATUSES = [

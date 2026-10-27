@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, errorMessage, qk } from "../../api";
+import { useT } from "../../i18n";
 import type { ChecklistSpec } from "../../types";
 import {
   Button,
@@ -58,9 +59,10 @@ function CategoryOption({
   onSelect: () => void;
   describedBy?: string;
 }) {
+  const t = useT();
   const req = spec.required?.length ?? 0;
   const opt = spec.optional?.length ?? 0;
-  const source = checklistSourceText(spec.source);
+  const source = checklistSourceText(spec.source, t);
   return (
     <label
       className={cn(
@@ -82,9 +84,11 @@ function CategoryOption({
           <span className="text-sm font-medium text-ink">{spec.label ?? code}</span>
           <Code>{code}</Code>
         </span>
-        {CATEGORY_HELP[code] && <span className="mt-0.5 block text-sm text-ink-2 text-pretty">{CATEGORY_HELP[code]}</span>}
+        {CATEGORY_HELP[code] && <span className="mt-0.5 block text-sm text-ink-2 text-pretty">{t(CATEGORY_HELP[code])}</span>}
         <span className="mt-1 block text-xs text-ink-3">
-          {req} required, {opt} optional documents{source ? `. ${source}` : ""}
+          {source
+            ? t("{req} required, {opt} optional documents. {source}", { req, opt, source })
+            : t("{req} required, {opt} optional documents", { req, opt })}
         </span>
       </span>
     </label>
@@ -92,12 +96,13 @@ function CategoryOption({
 }
 
 function ReviewGroup({ title, onChange, children }: { title: string; onChange: () => void; children: ReactNode }) {
+  const t = useT();
   return (
     <section className="border-t border-line pt-4 first:border-t-0 first:pt-0">
       <div className="mb-2 flex items-center justify-between gap-3">
         <h3 className="text-xs font-medium text-ink-3">{title}</h3>
-        <Button size="sm" variant="ghost" onClick={onChange} aria-label={`Change ${title.toLowerCase()}`}>
-          Change
+        <Button size="sm" variant="ghost" onClick={onChange} aria-label={t("Change {section}", { section: title.toLowerCase() })}>
+          {t("Change@@verb")}
         </Button>
       </div>
       {children}
@@ -109,6 +114,7 @@ export default function NewApplicationPage() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const toast = useToast();
+  const t = useT();
   const rs = useQuery({ queryKey: qk.ruleset, queryFn: api.activeRuleset, staleTime: 5 * 60_000 });
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState<string | null>(null);
@@ -129,7 +135,7 @@ export default function NewApplicationPage() {
     mutationFn: () => api.createApplication({ category: category as string, academic_year: year, declared: fromDraft(draft) }),
     onSuccess: async (app) => {
       await qc.invalidateQueries({ queryKey: qk.applications });
-      toast.success("Draft created", `${app.id}. Upload the documents on the checklist next, then submit.`);
+      toast.success(t("Draft created"), t("{id}. Upload the documents on the checklist next, then submit.", { id: app.id }));
       nav(`/portal/applications/${encodeURIComponent(app.id)}`);
     },
   });
@@ -143,7 +149,7 @@ export default function NewApplicationPage() {
 
   function go(to: number) {
     if (to > step && blocked) {
-      setTried((t) => ({ ...t, [step]: true }));
+      setTried((was) => ({ ...was, [step]: true }));
       // Take the keyboard to the first field that needs a fix
       requestAnimationFrame(() => body.current?.querySelector<HTMLElement>("[aria-invalid='true'], input[name='category']")?.focus());
       return;
@@ -155,7 +161,7 @@ export default function NewApplicationPage() {
   const checklists = rs.data ? Object.entries(rs.data.checklists) : [];
   const steps: Step[] = STEPS.map((s, i) => ({
     id: s.id,
-    label: s.label,
+    label: t(s.label),
     status: i < step ? "complete" : i === step ? "current" : "upcoming",
   }));
   const current = STEPS[step];
@@ -165,17 +171,17 @@ export default function NewApplicationPage() {
   return (
     <Page width="narrow">
       <PageHeader
-        back={{ to: "/portal", label: "Applications" }}
-        title="New application"
-        context="Four short steps. You can upload documents after the draft is created."
+        back={{ to: "/portal", label: t("Applications") }}
+        title={t("New application")}
+        context={t("Four short steps. You can upload documents after the draft is created.")}
       />
       <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-8">
         <div className="min-w-0">
           <div className="hidden lg:sticky lg:top-20 lg:block">
-            <Stepper orientation="vertical" label="New application steps" steps={steps} />
+            <Stepper orientation="vertical" label={t("New application steps")} steps={steps} />
           </div>
           <div className="lg:hidden">
-            <Stepper label="New application steps" steps={steps} />
+            <Stepper label={t("New application steps")} steps={steps} />
           </div>
         </div>
         <div ref={body} className="min-w-0">
@@ -183,24 +189,24 @@ export default function NewApplicationPage() {
             aria-labelledby="wizard-step-title"
             title={
               <span ref={heading} id="wizard-step-title" tabIndex={-1} className="outline-none">
-                {current.label}
+                {t(current.label)}
               </span>
             }
-            description={current.description}
+            description={t(current.description)}
             footer={
               <>
                 {step > 0 && (
                   <Button variant="ghost" size="lg" leadingIcon={<ArrowLeft aria-hidden />} onClick={() => go(step - 1)} className="mr-auto">
-                    Back
+                    {t("Back")}
                   </Button>
                 )}
                 {last ? (
                   <Button variant="primary" size="lg" leadingIcon={<Check aria-hidden />} loading={create.isPending} onClick={() => create.mutate()}>
-                    Create draft
+                    {t("Create draft")}
                   </Button>
                 ) : (
                   <Button variant="primary" size="lg" trailingIcon={<ArrowRight aria-hidden />} onClick={() => go(step + 1)}>
-                    Continue
+                    {t("Continue")}
                   </Button>
                 )}
               </>
@@ -210,24 +216,24 @@ export default function NewApplicationPage() {
               <div className="space-y-6">
                 {rs.isPending ? (
                   <div role="status" className="space-y-3">
-                    <span className="sr-only">Loading the categories</span>
+                    <span className="sr-only">{t("Loading the categories")}</span>
                     <Skeleton className="h-24" rounded="lg" />
                     <Skeleton className="h-24" rounded="lg" />
                   </div>
                 ) : rs.error ? (
-                  <ErrorState error={rs.error} title="Could not load the categories" onRetry={() => void rs.refetch()} retrying={rs.isFetching} />
+                  <ErrorState error={rs.error} title={t("Could not load the categories")} onRetry={() => void rs.refetch()} retrying={rs.isFetching} />
                 ) : (
                   <fieldset aria-describedby={shown.category ? "category-error" : undefined}>
-                    <legend className="mb-2 text-sm font-medium text-ink-2">What are you applying for?</legend>
+                    <legend className="mb-2 text-sm font-medium text-ink-2">{t("What are you applying for?")}</legend>
                     <div className="space-y-3">
                       {checklists.map(([code, spec]) => (
                         <CategoryOption key={code} code={code} spec={spec} selected={category === code} onSelect={() => setCategory(code)} />
                       ))}
                     </div>
-                    <FieldError id="category-error">{shown.category}</FieldError>
+                    <FieldError id="category-error">{shown.category && t(shown.category)}</FieldError>
                   </fieldset>
                 )}
-                <Field label="Academic year" hint="The year the approval is for. AY in AICTE letters means academic year." className="max-w-xs">
+                <Field label={t("Academic year")} hint={t("The year the approval is for. AY in AICTE letters means academic year.")} className="max-w-xs">
                   <Select value={year} onChange={(e) => setYear(e.target.value)}>
                     {YEARS.map((y) => (
                       <option key={y} value={y}>
@@ -242,24 +248,24 @@ export default function NewApplicationPage() {
             {step === 2 && <NumbersEditor draft={draft} setDraft={setDraft} errors={shown} />}
             {step === 3 && (
               <div className="space-y-5">
-                <ReviewGroup title="Category and year" onChange={() => go(0)}>
+                <ReviewGroup title={t("Category and year")} onChange={() => go(0)}>
                   <DescriptionList
                     layout="stacked"
                     columns={2}
                     items={[
-                      { label: "Category", value: categoryName },
-                      { label: "Academic year", value: year },
+                      { label: t("Category"), value: categoryName },
+                      { label: t("Academic year"), value: year },
                     ]}
                   />
                 </ReviewGroup>
-                <ReviewGroup title="Programmes" onChange={() => go(1)}>
+                <ReviewGroup title={t("Programmes")} onChange={() => go(1)}>
                   <ProgrammesTable programmes={fromDraft(draft).programmes ?? []} />
                 </ReviewGroup>
-                <ReviewGroup title="Declared figures" onChange={() => go(2)}>
+                <ReviewGroup title={t("Declared figures")} onChange={() => go(2)}>
                   <DeclaredFigures declared={fromDraft(draft)} columns={2} />
                 </ReviewGroup>
                 {create.error && (
-                  <Callout tone="danger" role="alert" title="The draft could not be created">
+                  <Callout tone="danger" role="alert" title={t("The draft could not be created")}>
                     {errorMessage(create.error)}
                   </Callout>
                 )}
@@ -267,7 +273,7 @@ export default function NewApplicationPage() {
             )}
             {tried[step] && blocked && step > 0 && (
               <p role="alert" className="mt-5 text-sm font-medium text-mismatch-fg">
-                Some entries need a fix before you continue. They are marked above.
+                {t("Some entries need a fix before you continue. They are marked above.")}
               </p>
             )}
           </Panel>

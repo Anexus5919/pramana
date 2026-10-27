@@ -1,6 +1,6 @@
 import { ArrowDown, ChevronRight, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-import { fmtDate, fmtDateTime, pluralize } from "../../../lib/format";
+import { useDateFormat, useDateTimeFormat, useLang, useT, type T } from "../../../i18n";
 import type { ApplicationDetail } from "../../../types";
 import { Button, Callout, Panel, Skeleton, cn } from "../../../ui2";
 import { ReadinessRing, StatusArc } from "./ReadinessRing";
@@ -10,33 +10,37 @@ import { useReadiness, type ReadinessChange, type Trigger } from "./useReadiness
 const STATUS_LABEL: Record<ReadinessStatus, string> = { met: "Met", fix: "To fix", waiting: "After upload" };
 const GROUP_LABEL: Record<string, string> = { documents: "Documents", validity: "Validity", norms: "Norms" };
 
-function clauseSource(c: ReadinessClause): string {
-  return [c.source, c.section, c.page ? `page ${c.page}` : null].filter(Boolean).join(", ");
+type TN = (n: number, one: string, other: string, vars?: Record<string, string | number>) => string;
+
+function clauseSource(c: ReadinessClause, t: T): string {
+  return [c.source, c.section, c.page ? t("page {n}", { n: c.page }) : null].filter(Boolean).join(", ");
 }
 
 function Clause({ clause }: { clause: ReadinessClause }) {
+  const t = useT();
   return (
     <figure className="mt-2.5 border-l-2 border-line pl-3">
       {clause.quote && <blockquote className="text-sm text-ink-3 text-pretty">&ldquo;{clause.quote}&rdquo;</blockquote>}
-      <figcaption className={cn("text-xs text-ink-3", clause.quote && "mt-1")}>{clauseSource(clause)}</figcaption>
+      <figcaption className={cn("text-xs text-ink-3", clause.quote && "mt-1")}>{clauseSource(clause, t)}</figcaption>
     </figure>
   );
 }
 
 function GoTo({ targets, onGoTo, label }: { targets: ReadinessTarget[]; onGoTo: (t: ReadinessTarget) => void; label: string }) {
+  const t = useT();
   if (targets.length === 0) return null;
   return (
     <div className="mt-3 flex flex-wrap gap-2">
-      {targets.map((t) => (
+      {targets.map((target) => (
         <Button
-          key={`${t.kind}-${t.key}`}
+          key={`${target.kind}-${target.key}`}
           size="sm"
           variant="secondary"
           trailingIcon={<ArrowDown aria-hidden />}
-          onClick={() => onGoTo(t)}
-          aria-label={`Go to ${t.label} for: ${label}`}
+          onClick={() => onGoTo(target)}
+          aria-label={t("Go to {target} for: {item}", { target: t(target.label), item: label })}
         >
-          Go to {t.label}
+          {t("Go to {label}", { label: t(target.label) })}
         </Button>
       ))}
     </div>
@@ -53,6 +57,7 @@ interface RowProps {
 
 /** A requirement to fix: what is wrong, what to do, the clause it comes from, and where to do it. */
 function FixRow({ item, active, onActive, onGoTo, resubmission }: RowProps) {
+  const t = useT();
   return (
     <li
       className={cn("-mx-3 rounded-control px-3 py-3 transition-colors duration-150", active && "bg-surface-2")}
@@ -66,20 +71,20 @@ function FixRow({ item, active, onActive, onGoTo, resubmission }: RowProps) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h4 className="text-sm font-medium text-ink">{item.title}</h4>
-            <span className="text-xs text-ink-3">{GROUP_LABEL[item.group]}</span>
-            {resubmission && item.requested && <span className="text-xs font-medium text-manual-fg">Asked by AICTE</span>}
+            <span className="text-xs text-ink-3">{t(GROUP_LABEL[item.group])}</span>
+            {resubmission && item.requested && <span className="text-xs font-medium text-manual-fg">{t("Asked by AICTE")}</span>}
           </div>
           {item.conditional && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{item.conditional}</p>}
           {item.detail && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{item.detail}</p>}
           {item.action && (
             <p className="mt-1.5 text-sm text-ink text-pretty">
-              <span className="font-medium">What to do: </span>
+              <span className="font-medium">{t("What to do: ")}</span>
               {item.action}
             </p>
           )}
           {resubmission && !item.requested && (
             <p className="mt-1.5 text-xs text-ink-3 text-pretty">
-              AICTE did not ask about this in this round. You can still correct it; AICTE sees every change you make.
+              {t("AICTE did not ask about this in this round. You can still correct it; AICTE sees every change you make.")}
             </p>
           )}
           {item.clause && <Clause clause={item.clause} />}
@@ -92,6 +97,7 @@ function FixRow({ item, active, onActive, onGoTo, resubmission }: RowProps) {
 
 /** Met, with something worth a look: a certificate that lapses during the session, pages that were not read. */
 function AdviceRow({ item, active, onActive, onGoTo }: RowProps) {
+  const t = useT();
   if (!item.advice) return null;
   return (
     <li
@@ -109,7 +115,7 @@ function AdviceRow({ item, active, onActive, onGoTo }: RowProps) {
           <h4 className="text-sm font-medium text-ink">{item.title}</h4>
           <p className="mt-0.5 text-sm text-ink-2 text-pretty">{item.advice.text}</p>
           <p className="mt-1.5 text-sm text-ink text-pretty">
-            <span className="font-medium">Suggested: </span>
+            <span className="font-medium">{t("Suggested: ")}</span>
             {item.advice.action}
           </p>
           <GoTo targets={item.targets.slice(0, 1)} onGoTo={onGoTo} label={item.title} />
@@ -122,6 +128,7 @@ function AdviceRow({ item, active, onActive, onGoTo }: RowProps) {
 /** Every requirement, grouped, with its status in words and the clause it comes from. */
 function AllRequirements({ data, active, onActive }: { data: Readiness; active: string | null; onActive: (id: string | null) => void }) {
   const [open, setOpen] = useState(false);
+  const { t, tn } = useLang();
   return (
     <div className="mt-4">
       <button
@@ -132,7 +139,9 @@ function AllRequirements({ data, active, onActive }: { data: Readiness; active: 
         className="-ml-1 inline-flex items-center gap-1 rounded-control px-1 py-0.5 text-sm font-medium text-ink-2 hover:text-ink"
       >
         <ChevronRight aria-hidden className={cn("size-4 transition-transform duration-150", open && "rotate-90")} />
-        {open ? "Hide" : "Show"} all {pluralize(data.counts.total, "requirement")}
+        {open
+          ? tn(data.counts.total, "Hide all {n} requirement", "Hide all {n} requirements")
+          : tn(data.counts.total, "Show all {n} requirement", "Show all {n} requirements")}
       </button>
       {open && (
         <div id="readiness-all" className="mt-2 space-y-4">
@@ -140,7 +149,7 @@ function AllRequirements({ data, active, onActive }: { data: Readiness; active: 
             .filter((g) => g.items.length > 0)
             .map((g) => (
               <div key={g.id}>
-                <h4 className="text-xs font-medium text-ink-3">{g.label}</h4>
+                <h4 className="text-xs font-medium text-ink-3">{t(g.label)}</h4>
                 <ul className="mt-1 divide-y divide-line">
                   {g.items.map((i) => (
                     <li
@@ -153,10 +162,10 @@ function AllRequirements({ data, active, onActive }: { data: Readiness; active: 
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-ink">{i.title}</p>
                         {i.status === "waiting" && i.detail && <p className="text-xs text-ink-3">{i.detail}</p>}
-                        {i.clause && <p className="text-xs text-ink-3">{clauseSource(i.clause)}</p>}
+                        {i.clause && <p className="text-xs text-ink-3">{clauseSource(i.clause, t)}</p>}
                       </div>
                       <span className={cn("shrink-0 text-xs", i.status === "fix" ? "font-medium text-expired-fg" : "text-ink-3")}>
-                        {STATUS_LABEL[i.status]}
+                        {t(STATUS_LABEL[i.status])}
                       </span>
                     </li>
                   ))}
@@ -169,26 +178,34 @@ function AllRequirements({ data, active, onActive }: { data: Readiness; active: 
   );
 }
 
-function headline(data: Readiness): string {
-  const verb = data.resubmission ? "resubmitting" : "submitting";
-  if (data.counts.fix > 0) return `${pluralize(data.counts.fix, "item")} to fix before ${verb}`;
-  return data.resubmission ? "Ready to resubmit" : "Ready to submit";
+function headline(data: Readiness, t: T, tn: TN): string {
+  const n = data.counts.fix;
+  if (n > 0)
+    return data.resubmission
+      ? tn(n, "{n} item to fix before resubmitting", "{n} items to fix before resubmitting")
+      : tn(n, "{n} item to fix before submitting", "{n} items to fix before submitting");
+  return data.resubmission ? t("Ready to resubmit") : t("Ready to submit");
 }
 
-function summary(data: Readiness): string {
+function summary(data: Readiness, t: T, tn: TN): string {
   const { met, total, waiting, fix } = data.counts;
   const checked = total - waiting;
   if (fix === 0)
     return data.resubmission
-      ? "Every rule this check covers is met, including what AICTE asked about. Resubmit when you are ready."
-      : "Every rule this check covers is met. Submit when you are ready.";
-  const parts = [`${met} of ${checked} checked requirements are met.`];
-  if (waiting > 0) parts.push(`${pluralize(waiting, "more is", "more are")} checked once the missing documents are uploaded.`);
+      ? t("Every rule this check covers is met, including what AICTE asked about. Resubmit when you are ready.")
+      : t("Every rule this check covers is met. Submit when you are ready.");
+  const parts = [t("{met} of {checked} checked requirements are met.", { met, checked })];
+  if (waiting > 0)
+    parts.push(tn(waiting, "{n} more is checked once the missing documents are uploaded.", "{n} more are checked once the missing documents are uploaded."));
   if (data.resubmission && data.counts.requested > 0)
     parts.push(
       data.counts.requested_fix === 0
-        ? "Everything AICTE asked about is corrected."
-        : `${data.counts.requested_fix} of the items AICTE asked about still ${data.counts.requested_fix === 1 ? "needs" : "need"} a correction.`,
+        ? t("Everything AICTE asked about is corrected.")
+        : tn(
+            data.counts.requested_fix,
+            "{n} of the items AICTE asked about still needs a correction.",
+            "{n} of the items AICTE asked about still need a correction.",
+          ),
     );
   return parts.join(" ");
 }
@@ -200,22 +217,22 @@ const TRIGGER_TEXT: Record<Trigger, string> = {
   manual: "Checking again",
 };
 
-function changeText(c: ReadinessChange): string | null {
+function changeText(c: ReadinessChange, t: T, tn: TN): string | null {
   const parts = [];
-  if (c.fixed.length) parts.push(`${pluralize(c.fixed.length, "item")} fixed`);
-  if (c.raised.length) parts.push(`${pluralize(c.raised.length, "new item")} to fix`);
-  if (parts.length === 0) return c.trigger === "manual" ? "Checked again. Nothing changed." : null;
-  const after = c.trigger === "upload" ? "After your upload" : c.trigger === "figures" ? "After your change" : "Since the last check";
-  return `${after}: ${parts.join(", ")}.`;
+  if (c.fixed.length) parts.push(tn(c.fixed.length, "{n} item fixed", "{n} items fixed"));
+  if (c.raised.length) parts.push(tn(c.raised.length, "{n} new item to fix", "{n} new items to fix"));
+  if (parts.length === 0) return c.trigger === "manual" ? t("Checked again. Nothing changed.") : null;
+  const after = c.trigger === "upload" ? t("After your upload") : c.trigger === "figures" ? t("After your change") : t("Since the last check");
+  return t("{after}: {changes}.", { after, changes: parts.join(", ") });
 }
 
-function ringLabel(data: Readiness): string {
+function ringLabel(data: Readiness, t: T, tn: TN): string {
   const { met, total, fix, waiting, advice } = data.counts;
-  const parts = [`Readiness: ${met} of ${total} requirements met`];
-  if (fix) parts.push(`${fix} to fix`);
-  if (waiting) parts.push(`${waiting} checked after upload`);
-  if (advice) parts.push(`${pluralize(advice, "note")}`);
-  return parts.join(", ") + ".";
+  const parts = [t("Readiness: {met} of {total} requirements met", { met, total })];
+  if (fix) parts.push(t("{n} to fix", { n: fix }));
+  if (waiting) parts.push(t("{n} checked after upload", { n: waiting }));
+  if (advice) parts.push(tn(advice, "{n} note", "{n} notes"));
+  return t("{step}.", { step: parts.join(", ") });
 }
 
 export interface ReadinessPanelProps {
@@ -232,6 +249,9 @@ export interface ReadinessPanelProps {
  */
 export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: ReadinessPanelProps) {
   const { data, error, checking, trigger, change, recheck } = useReadiness(app, true);
+  const { t, tn } = useLang();
+  const date = useDateFormat();
+  const dateTime = useDateTimeFormat();
   useEffect(() => {
     if (data) onResult?.(data);
   }, [data, onResult]);
@@ -243,30 +263,30 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
   const fixItems = items.filter((i) => i.status === "fix").sort((a, b) => Number(b.requested) - Number(a.requested));
   const adviceItems = items.filter((i) => i.status === "met" && i.advice);
   const ready = !!data && data.counts.fix === 0;
-  const changed = change ? changeText(change) : null;
+  const changed = change ? changeText(change, t, tn) : null;
 
   return (
     <Panel
       id="readiness"
-      title="Readiness check"
+      title={t("Readiness check")}
       description={
         app.status === "rectification_requested"
-          ? "The handbook rules AICTE applies, run on your corrections before you resubmit."
-          : "The handbook rules AICTE applies, run on your draft before you submit."
+          ? t("The handbook rules AICTE applies, run on your corrections before you resubmit.")
+          : t("The handbook rules AICTE applies, run on your draft before you submit.")
       }
       actions={
         <Button size="sm" variant="ghost" leadingIcon={<RefreshCw aria-hidden />} onClick={recheck} disabled={checking}>
-          Check again
+          {t("Check again")}
         </Button>
       }
     >
       {error && !data ? (
-        <Callout tone="warning" title="The readiness check could not run">
-          {error instanceof Error ? error.message : String(error)} Your application is not affected. Try Check again.
+        <Callout tone="warning" title={t("The readiness check could not run")}>
+          {error instanceof Error ? error.message : String(error)} {t("Your application is not affected. Try Check again.")}
         </Callout>
       ) : !data ? (
         <div className="grid gap-6 sm:grid-cols-[188px_minmax(0,1fr)]" role="status">
-          <span className="sr-only">Checking your application</span>
+          <span className="sr-only">{t("Checking your application")}</span>
           <Skeleton className="mx-auto size-40 sm:size-[188px]" rounded="full" />
           <div className="space-y-3 pt-2">
             <Skeleton className="h-5 w-64 max-w-full" />
@@ -286,7 +306,7 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                 activeGroup={activeGroup}
                 onActive={setActive}
                 checking={checking}
-                label={ringLabel(data)}
+                label={ringLabel(data, t, tn)}
                 className="w-36 shrink-0 sm:w-full"
               />
               <div className="min-w-0 flex-1 sm:mt-5">
@@ -302,10 +322,8 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                           onMouseEnter={() => setActiveGroup(g.id)}
                           onMouseLeave={() => setActiveGroup(null)}
                         >
-                          <dt className="text-ink-2">{g.label}</dt>
-                          <dd className="text-ink-3">
-                            {met} of {g.items.length} met
-                          </dd>
+                          <dt className="text-ink-2">{t(g.label)}</dt>
+                          <dd className="text-ink-3">{t("{met} of {n} met", { met, n: g.items.length })}</dd>
                         </div>
                       );
                     })}
@@ -313,18 +331,18 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                 <div className="flex flex-wrap gap-x-3 gap-y-1 pt-3 text-xs text-ink-3" aria-hidden>
                   <span className="inline-flex items-center gap-1">
                     <StatusArc status="met" className="size-3.5" />
-                    Met
+                    {t("Met")}
                   </span>
                   {data.counts.fix > 0 && (
                     <span className="inline-flex items-center gap-1">
                       <StatusArc status="fix" className="size-3.5" />
-                      To fix
+                      {t("To fix")}
                     </span>
                   )}
                   {data.counts.waiting > 0 && (
                     <span className="inline-flex items-center gap-1">
                       <StatusArc status="waiting" className="size-3.5" />
-                      After upload
+                      {t("After upload")}
                     </span>
                   )}
                   {data.resubmission && data.counts.requested > 0 && (
@@ -332,7 +350,7 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                       <svg viewBox="0 0 14 14" className="size-3.5">
                         <line x1="7" y1="2" x2="7" y2="12" stroke="var(--ink-2)" strokeWidth={1.75} strokeLinecap="round" />
                       </svg>
-                      Asked by AICTE
+                      {t("Asked by AICTE")}
                     </span>
                   )}
                   {data.counts.advice > 0 && (
@@ -340,7 +358,7 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
                       <span className="flex size-3.5 items-center justify-center">
                         <span className="size-1.5 rounded-full bg-manual-dot" />
                       </span>
-                      Note
+                      {t("Note")}
                     </span>
                   )}
                 </div>
@@ -349,16 +367,16 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
 
             {/* What it means and what to do */}
             <div className="min-w-0">
-              <h3 className={cn("text-md font-semibold", ready ? "text-verified-fg" : "text-ink")}>{headline(data)}</h3>
-              <p className="mt-0.5 text-sm text-ink-2 text-pretty">{summary(data)}</p>
+              <h3 className={cn("text-md font-semibold", ready ? "text-verified-fg" : "text-ink")}>{headline(data, t, tn)}</h3>
+              <p className="mt-0.5 text-sm text-ink-2 text-pretty">{summary(data, t, tn)}</p>
               <p role="status" className="mt-1 min-h-5 text-sm text-ink-3">
-                {checking ? `${TRIGGER_TEXT[trigger]}.` : changed}
+                {checking ? t("{step}.", { step: t(TRIGGER_TEXT[trigger]) }) : changed}
               </p>
 
               {fixItems.length > 0 && (
                 <section aria-labelledby="readiness-fix" className="mt-1">
                   <h4 id="readiness-fix" className="sr-only">
-                    To fix
+                    {t("To fix")}
                   </h4>
                   <ul className="space-y-1">
                     {fixItems.map((i) => (
@@ -378,7 +396,7 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
               {adviceItems.length > 0 && (
                 <section aria-labelledby="readiness-notes" className={cn(fixItems.length > 0 ? "mt-4 border-t border-line pt-4" : "mt-3")}>
                   <h4 id="readiness-notes" className="text-xs font-medium text-ink-3">
-                    Worth a look
+                    {t("Worth a look")}
                   </h4>
                   <ul className="mt-1 space-y-1">
                     {adviceItems.map((i) => (
@@ -403,10 +421,11 @@ export function ReadinessPanel({ app, onShowDocument, onEditFigure, onResult }: 
           </div>
 
           <p className="mt-5 border-t border-line pt-4 text-xs text-ink-3 text-pretty">
-            A self-check of handbook rules on what you have uploaded and declared, as if submitted on {fmtDate(data.as_of)}. AICTE
-            officials still review every application, and passing this check does not mean approval. Checks that need
-            AICTE&rsquo;s own records, such as the TER payment ledger, run after you submit.{" "}
-            <span title={fmtDateTime(data.checked_at)}>Last checked {fmtDateTime(data.checked_at)}.</span>
+            {t(
+              "A self-check of handbook rules on what you have uploaded and declared, as if submitted on {date}. AICTE officials still review every application, and passing this check does not mean approval. Checks that need AICTE’s own records, such as the TER payment ledger, run after you submit.",
+              { date: date(data.as_of) },
+            )}{" "}
+            <span title={dateTime(data.checked_at)}>{t("Last checked {date}.", { date: dateTime(data.checked_at) })}</span>
           </p>
         </>
       )}

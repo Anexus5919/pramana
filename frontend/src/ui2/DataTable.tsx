@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 
 export interface Column<T> {
@@ -68,6 +69,7 @@ export function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState(defaultSort ?? null);
+  const t = useT();
   const navigate = useNavigate();
   const linkCol = linkColumn ?? columns[0]?.id;
 
@@ -146,7 +148,7 @@ export function DataTable<T>({
           {sorted.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-ink-3">
-                {empty ?? "Nothing to show."}
+                {empty ?? t("Nothing to show.")}
               </td>
             </tr>
           ) : (

@@ -20,6 +20,16 @@ import { ErrorState } from "./ui/States";
 const LandingPage = lazy(() => import("./landing-v3/LandingV3"));
 const LoginPage = lazy(() => import("./pages/login/LoginPage"));
 const ScanPage = lazy(() => import("./pages/scan/ScanPage"));
+// The standard information pages (policies, help, contact, sitemap) share one chunk
+const info = () => import("./pages/info");
+const PrivacyPolicyPage = lazy(() => info().then((m) => ({ default: m.PrivacyPolicyPage })));
+const TermsOfUsePage = lazy(() => info().then((m) => ({ default: m.TermsOfUsePage })));
+const CopyrightPolicyPage = lazy(() => info().then((m) => ({ default: m.CopyrightPolicyPage })));
+const HyperlinkingPolicyPage = lazy(() => info().then((m) => ({ default: m.HyperlinkingPolicyPage })));
+const AccessibilityStatementPage = lazy(() => info().then((m) => ({ default: m.AccessibilityStatementPage })));
+const HelpPage = lazy(() => info().then((m) => ({ default: m.HelpPage })));
+const ContactPage = lazy(() => info().then((m) => ({ default: m.ContactPage })));
+const SitemapPage = lazy(() => info().then((m) => ({ default: m.SitemapPage })));
 // Cytoscape loads only with the integrity views
 const IntegrityPage = lazy(() => import("./pages/integrity/IntegrityPage"));
 // Living reference for design system v2; dev builds, or production with VITE_UI_KIT=1
@@ -62,6 +72,15 @@ export function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/scan" element={<ScanPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-use" element={<TermsOfUsePage />} />
+        <Route path="/copyright-policy" element={<CopyrightPolicyPage />} />
+        <Route path="/hyperlinking-policy" element={<HyperlinkingPolicyPage />} />
+        <Route path="/accessibility-statement" element={<AccessibilityStatementPage />} />
+        <Route path="/help" element={<HelpPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/feedback" element={<Navigate to="/contact" replace />} />
+        <Route path="/sitemap" element={<SitemapPage />} />
         <Route
           element={
             <Guard>

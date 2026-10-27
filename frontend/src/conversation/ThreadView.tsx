@@ -1,14 +1,25 @@
 import { CheckCircle2, CircleDot, Paperclip } from "lucide-react";
-import { fmtBytes, fmtDate, fmtDateTime, fmtRelative } from "../lib/format";
+import { Fragment, type ReactNode } from "react";
+import { useDateFormat, useDateTimeFormat, useRelativeTime, useT } from "../i18n";
+import { fmtBytes } from "../lib/format";
 import { StatusBadge, cn } from "../ui2";
 import type { ItemStatus, MessageEntry, StatusEntry, ThreadEntry } from "./api";
 import { ITEM_STATUS, daysLeftText } from "./labels";
 
+/** A translated sentence with styled parts: "{author} marked this item {status}" with nodes for the placeholders. */
+function sentence(template: string, nodes: Record<string, ReactNode>): ReactNode[] {
+  return template.split(/(\{\w+\})/).map((part, i) => {
+    const key = /^\{(\w+)\}$/.exec(part)?.[1];
+    return <Fragment key={i}>{key && key in nodes ? nodes[key] : part}</Fragment>;
+  });
+}
+
 export function ItemStatusBadge({ status, className }: { status: ItemStatus; className?: string }) {
+  const t = useT();
   const m = ITEM_STATUS[status] ?? ITEM_STATUS.open;
   return (
-    <StatusBadge tone={m.tone} title={m.help} className={className}>
-      {m.label}
+    <StatusBadge tone={m.tone} title={t(m.help)} className={className}>
+      {t(m.label)}
     </StatusBadge>
   );
 }
@@ -25,17 +36,19 @@ export function DueLine({
   pastDue: boolean;
   className?: string;
 }) {
+  const t = useT();
+  const date = useDateFormat();
   if (!respondBy) return null;
-  const left = daysLeftText(daysLeft);
+  const left = daysLeftText(daysLeft, t);
   return (
     <p className={cn("flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3", className)}>
       <span>
-        Respond by <span className="font-medium text-ink-2">{fmtDate(respondBy)}</span>
+        {sentence(t("Respond by {date}"), { date: <span className="font-medium text-ink-2">{date(respondBy)}</span> })}
         {left && !pastDue ? `, ${left.toLowerCase()}` : ""}
       </span>
       {pastDue && (
         <StatusBadge tone="mismatch" title={left ?? undefined}>
-          Past due
+          {t("Past due")}
         </StatusBadge>
       )}
     </p>
@@ -55,14 +68,17 @@ const VERB: Record<MessageEntry["kind"], string> = {
 };
 
 function When({ at }: { at: string }) {
+  const dateTime = useDateTimeFormat();
+  const relative = useRelativeTime();
   return (
-    <time dateTime={at} title={fmtDateTime(at)}>
-      {fmtRelative(at)}
+    <time dateTime={at} title={dateTime(at)}>
+      {relative(at)}
     </time>
   );
 }
 
 function Message({ m, official, pending }: { m: MessageEntry; official: boolean; pending: boolean }) {
+  const t = useT();
   const review = m.kind === "review_request";
   return (
     <li
@@ -73,14 +89,14 @@ function Message({ m, official, pending }: { m: MessageEntry; official: boolean;
       )}
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-        <span className="text-sm font-medium text-ink">{shortName(m.author)}</span>
+        <span className="text-sm font-medium text-ink">{t(shortName(m.author))}</span>
         {official && m.author_name && <span>({shortName(m.author_name)})</span>}
-        <span>{VERB[m.kind]}</span>
+        <span>{t(VERB[m.kind])}</span>
         <span aria-hidden>·</span>
         <When at={m.created_at} />
         {review && (
           <StatusBadge tone="manual" className="ml-auto">
-            {pending ? "Review request, awaiting reply" : "Review request"}
+            {pending ? t("Review request, awaiting reply") : t("Review request")}
           </StatusBadge>
         )}
       </div>
@@ -101,16 +117,24 @@ function Message({ m, official, pending }: { m: MessageEntry; official: boolean;
 }
 
 function StatusLine({ s, official }: { s: StatusEntry; official: boolean }) {
+  const t = useT();
   const done = s.to === "resolved";
+  const label = ITEM_STATUS[s.to]?.label;
   const Icon = done ? CheckCircle2 : CircleDot;
   return (
     <li className="flex gap-2.5 px-1 py-1">
       <Icon aria-hidden className={cn("mt-0.5 size-4 shrink-0", done ? "text-verified-fg" : "text-expired-fg")} />
       <div className="min-w-0 text-sm text-ink-2">
         <p>
-          <span className="font-medium text-ink">{s.author}</span>
-          {official && s.author_name ? ` (${shortName(s.author_name)})` : ""} marked this item{" "}
-          <span className="font-medium text-ink">{ITEM_STATUS[s.to]?.label.toLowerCase() ?? s.to}</span>
+          {sentence(t("{author} marked this item {status}"), {
+            author: (
+              <>
+                <span className="font-medium text-ink">{t(s.author)}</span>
+                {official && s.author_name ? ` (${shortName(s.author_name)})` : ""}
+              </>
+            ),
+            status: <span className="font-medium text-ink">{label ? t(label).toLowerCase() : s.to}</span>,
+          })}
           <span className="text-xs text-ink-3">
             {" "}
             · <When at={s.created_at} />
@@ -124,10 +148,11 @@ function StatusLine({ s, official }: { s: StatusEntry; official: boolean }) {
 
 /** The thread in time order: messages from both sides and the cell's status decisions with their notes. */
 export function ThreadEntries({ entries, official, pendingReview }: { entries: ThreadEntry[]; official: boolean; pendingReview: boolean }) {
+  const t = useT();
   if (entries.length === 0) return null;
   const lastReview = [...entries].reverse().find((e) => e.type === "message" && e.kind === "review_request")?.id;
   return (
-    <ol className="space-y-2" aria-label="Messages">
+    <ol className="space-y-2" aria-label={t("Messages")}>
       {entries.map((e) =>
         e.type === "message" ? (
           <Message key={e.id} m={e} official={official} pending={pendingReview && e.id === lastReview} />
