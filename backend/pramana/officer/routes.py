@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from .. import audit
 from ..auth import OFFICIAL_ROLES, current_user, load_application, require_roles
+from ..conversation.threads import notify_round_opened
 from ..crypto import load_document, store_document
 from ..db import get_db
 from ..models import Application, DeficiencyLetter, Finding, RectificationRequest, User, utcnow
@@ -269,6 +270,7 @@ def finalise_letter(letter_id: str, body: FinaliseBody, user: User = Depends(req
                  object_id=letter.id, application_id=app.id,
                  details={"sha256": sha, "size": len(data), "rectification_id": rect_id, "reason": reason,
                           "findings": [c for i in letter.items for c in i["codes"]], "new_rectification": created})
+    notify_round_opened(db, app, db.get(RectificationRequest, rect_id), letter)
     db.commit()
     return {"letter": lt.letter_json(letter, page_count=lt.page_count(data),
                                      names=_names(db, letter.created_by, letter.finalised_by)),

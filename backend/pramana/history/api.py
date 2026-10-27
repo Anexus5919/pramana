@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .. import audit
 from ..auth import OFFICIAL_ROLES, load_application, require_roles
+from ..conversation import threads as conv
 from ..crypto import load_document
 from ..db import get_db
 from ..models import Document, User, VerificationAttempt
@@ -71,10 +72,16 @@ def record_outcome(app_id: str, body: OutcomeBody, user: User = Depends(require_
         raise HTTPException(400, "a written reason of at least 10 characters is required")
     if app.status in ("draft", "rectification_requested"):
         raise HTTPException(409, f"application is {app.status}; record the outcome after it is submitted")
+    # Natural justice: an institution's review request gets the cell's reply before any outcome is recorded
+    pending = conv.pending_reviews(db, app)
+    if pending:
+        raise HTTPException(409, conv.review_block_message(pending))
     try:
         watch.record_outcome(db, app, user, body.outcome, reason)
     except ValueError as e:
         raise HTTPException(409, str(e)) from e
+    conv.notify.notify(db, "outcome.recorded", app, {"outcome_label": watch.OUTCOMES[body.outcome]}, show="outcome")
+    db.commit()
     return watch.application_watch(db, app)
 
 
