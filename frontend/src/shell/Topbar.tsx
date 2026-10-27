@@ -3,7 +3,9 @@ import { ChevronRight, LogOut, Menu, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { api, qk } from "../api";
+import { AccessibilityMenu } from "../a11y/AccessibilityMenu";
 import { useAuth, useLogout } from "../auth/session";
+import { LanguageToggle, useT } from "../i18n";
 import { roleLabel } from "../lib/labels";
 import { Kbd } from "../ui/Badge";
 import { cn } from "../ui/cn";
@@ -101,6 +103,7 @@ function initials(name: string) {
 }
 
 function UserMenu() {
+  const t = useT();
   const { user, session } = useAuth();
   const logout = useLogout();
   const navigate = useNavigate();
@@ -128,7 +131,7 @@ function UserMenu() {
   }, [open]);
 
   if (!user) return null;
-  const role = session?.role_label || roleLabel[user.role];
+  const role = t(session?.role_label || roleLabel[user.role]);
   const name = user.display_name.replace(/\s*\(.*\)\s*$/, "");
 
   return (
@@ -151,12 +154,12 @@ function UserMenu() {
           <span className="max-w-40 truncate text-sm font-medium text-ink">{name}</span>
           <span className="max-w-40 truncate text-xs text-ink-3">{role}</span>
         </span>
-        <span className="sr-only">Account menu for {user.display_name}</span>
+        <span className="sr-only">{t("Account menu for {name}", { name: user.display_name })}</span>
       </button>
       {open && (
           <div
             role="menu"
-            aria-label="Account"
+            aria-label={t("Account")}
             className="absolute top-11 right-0 z-50 w-64 overflow-hidden rounded-card border border-line bg-surface p-1 shadow-lg"
           >
             <div className="px-3 pt-2 pb-3">
@@ -173,7 +176,7 @@ function UserMenu() {
               className="mt-1 flex w-full items-center gap-2.5 rounded-[6px] px-3 py-2 text-sm text-ink-2 transition-colors duration-150 hover:bg-surface-2 hover:text-ink"
             >
               <LogOut className="size-4" aria-hidden />
-              Sign out
+              {t("Sign out")}
             </button>
           </div>
         )}
@@ -193,6 +196,7 @@ export function Topbar({
   /** Institution layout: brand and links in the bar, no sidebar */
   portal?: boolean;
 }) {
+  const t = useT();
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface">
       <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:px-8">
@@ -200,7 +204,7 @@ export function Topbar({
           <>
             <BrandLink />
             <span aria-hidden className="mx-1 hidden h-5 w-px bg-line sm:block" />
-            <nav aria-label="Main" className="flex min-w-0 flex-1 items-center gap-1">
+            <nav aria-label={t("Main")} className="flex min-w-0 flex-1 items-center gap-1">
               {PORTAL_NAV.map((n) => (
                 <NavLink
                   key={n.to}
@@ -212,7 +216,7 @@ export function Topbar({
                     )
                   }
                 >
-                  {n.label}
+                  {t(n.label)}
                 </NavLink>
               ))}
             </nav>
@@ -239,8 +243,10 @@ export function Topbar({
             </button>
           </>
         )}
+        {portal && <LanguageToggle />}
         <NotificationBell />
-        <ThemeToggle />
+        <AccessibilityMenu withTheme />
+        <ThemeToggle className="hidden sm:inline-flex" />
         <UserMenu />
       </div>
     </header>

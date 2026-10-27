@@ -3,7 +3,10 @@ import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } fro
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/session";
 import { EyeMark } from "../brand/EyeMark";
+import { DisplayPrefsProvider } from "../a11y/prefs";
 import { Drishti } from "../drishti";
+import { LanguageProvider, useT } from "../i18n";
+import { SiteFooter } from "../site/SiteFooter";
 import { Sheet } from "../ui/Dialog";
 import { ToastProvider } from "../ui/Toast";
 import { cn } from "../ui/cn";
@@ -12,23 +15,23 @@ import { BrandLink, SIDEBAR_COLLAPSED_W, SIDEBAR_W, Sidebar, SidebarNav } from "
 import { ThemeProvider } from "./theme";
 import { Topbar } from "./Topbar";
 
-export const DISCLAIMER =
-  "Decision support only. Findings are preliminary indicators for review by competent authorities. Pramana does not approve, reject or penalise any institution. Synthetic demo data.";
+export { DISCLAIMER } from "../site/SiteFooter";
 
+/** The site footer for pages outside the shell (the scan page, not found, the session error screen). */
 export function Footer({ className }: { className?: string }) {
-  return (
-    <footer className={cn("border-t border-line px-4 py-5 sm:px-6 lg:px-8", className)}>
-      <p className="mx-auto max-w-[1440px] text-xs leading-relaxed text-ink-3">{DISCLAIMER}</p>
-    </footer>
-  );
+  return <SiteFooter className={cn("pb-6", className)} />;
 }
 
-/** App-wide providers that sit inside the router: motion preferences, theme and toasts. */
+/** App-wide providers that sit inside the router: motion preferences, theme, display preferences, language and toasts. */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <MotionConfig reducedMotion="user">
       <ThemeProvider>
-        <ToastProvider>{children}</ToastProvider>
+        <DisplayPrefsProvider>
+          <LanguageProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </LanguageProvider>
+        </DisplayPrefsProvider>
       </ThemeProvider>
     </MotionConfig>
   );
@@ -61,7 +64,7 @@ function pageKey(pathname: string): string {
 }
 
 /** Marks <html> as the signed-in app surface so the v2 tokens in index.css apply, including to portalled dialogs. */
-function useAppSurface() {
+export function useAppSurface() {
   useLayoutEffect(() => {
     const el = document.documentElement;
     el.dataset.surface = "app";
@@ -76,6 +79,7 @@ export function AppShell() {
   const location = useLocation();
   const { role } = useAuth();
   const portal = role === "institution";
+  const t = useT();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [navOpen, setNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -118,7 +122,7 @@ export function AppShell() {
         href="#main"
         className="sr-only z-[100] rounded-control bg-brand-solid px-3 py-2 text-sm text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
       {!portal && (
         <>
@@ -139,11 +143,7 @@ export function AppShell() {
           <Outlet />
         </main>
         {/* Bottom padding clears Drishti's button, so the last line can scroll out from under it */}
-        <footer className="px-4 pb-24 sm:px-6 lg:px-8">
-          <p className={cn("mx-auto border-t border-line pt-4 text-xs text-ink-3", portal ? "max-w-[960px]" : "max-w-[1600px]")}>
-            {DISCLAIMER}
-          </p>
-        </footer>
+        <SiteFooter width={portal ? "narrow" : "wide"} className="pb-24" />
       </div>
       {!portal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
       <Drishti />

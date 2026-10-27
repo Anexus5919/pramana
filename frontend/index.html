@@ -8,8 +8,12 @@
     <title>Pramana</title>
     <script>
       try {
+        var h = document.documentElement;
         var t = localStorage.getItem("pramana-theme");
-        if (t === "dark") document.documentElement.classList.add("dark");
+        if (t === "dark") h.classList.add("dark");
+        var z = localStorage.getItem("pramana-text-size");
+        if (z === "sm" || z === "lg") h.dataset.textSize = z;
+        if (localStorage.getItem("pramana-contrast") === "high") h.dataset.contrast = "high";
       } catch (e) {}
     </script>
   </head>
