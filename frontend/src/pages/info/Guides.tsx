@@ -100,6 +100,9 @@ export function AccessibilityStatementPage() {
         <li>The deficiency letter PDF is generated in English and is not a tagged PDF.</li>
         <li>The moving illustration on the home page is decorative; a still version replaces it when your system asks for reduced motion.</li>
         <li>Hindi covers the screens institutions use; officials' screens and these information pages are English only.</li>
+        <li>A signed-in session ends after 8 hours without a warning first; anything not yet saved is lost and you sign in again.</li>
+        <li>In the standard colours some field and card borders are lighter than 3:1 against the page. High contrast makes them dark enough.</li>
+        <li>Links to other websites say so to screen readers, but there is no visible notice before you leave Pramana.</li>
       </ul>
 
       <h2>Feedback</h2>
