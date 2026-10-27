@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 
 export type StepStatus = "complete" | "current" | "upcoming" | "attention";
@@ -47,6 +48,7 @@ const STATUS_TEXT: Record<StepStatus, string> = {
 /** Linear progress for the institution: where the application is and what comes next. */
 export function Stepper({ steps, label, orientation = "horizontal", className }: StepperProps) {
   const vertical = orientation === "vertical";
+  const t = useT();
   return (
     <ol aria-label={label} className={cn(vertical ? "flex flex-col" : "flex w-full items-start", className)}>
       {steps.map((s, i) => {
@@ -73,7 +75,7 @@ export function Stepper({ steps, label, orientation = "horizontal", className }:
             <div className={cn("min-w-0", vertical && "pt-0.5")}>
               <div className={cn("text-sm font-medium", s.status === "upcoming" ? "text-ink-3" : "text-ink")}>
                 {s.label}
-                <span className="sr-only">, {STATUS_TEXT[s.status]}</span>
+                <span className="sr-only">, {t(STATUS_TEXT[s.status])}</span>
               </div>
               {s.description && (
                 <div className={cn("mt-0.5 text-xs", s.status === "attention" ? "font-medium text-manual-fg" : "text-ink-3")}>

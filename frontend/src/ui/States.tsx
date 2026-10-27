@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { ApiError, errorMessage } from "../api";
 import { Button } from "./Button";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 import { dur, ease } from "./motion";
 
@@ -69,7 +70,8 @@ export interface ErrorStateProps {
 }
 
 /** Shows the API error detail, the HTTP status and an optional retry. */
-export function ErrorState({ error, title = "Something went wrong", onRetry, retrying, compact = false, className }: ErrorStateProps) {
+export function ErrorState({ error, title, onRetry, retrying, compact = false, className }: ErrorStateProps) {
+  const t = useT();
   const status = error instanceof ApiError ? error.status : null;
   return (
     <div
@@ -82,13 +84,13 @@ export function ErrorState({ error, title = "Something went wrong", onRetry, ret
     >
       <CircleAlert className="mt-0.5 size-5 shrink-0 text-mismatch-dot" aria-hidden />
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-mismatch-fg">{title}</div>
+        <div className="text-sm font-semibold text-mismatch-fg">{title ?? t("Something went wrong")}</div>
         <p className="mt-0.5 text-sm break-words text-ink-2">{errorMessage(error)}</p>
         {status !== null && status > 0 && <p className="mt-1 font-mono text-[0.6875rem] text-ink-3">HTTP {status}</p>}
       </div>
       {onRetry && (
         <Button size="sm" variant="ghost" leadingIcon={<RotateCcw />} onClick={onRetry} loading={retrying}>
-          Retry
+          {t("Retry")}
         </Button>
       )}
     </div>

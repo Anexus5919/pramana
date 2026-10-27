@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, Search, X } from "lucide-react";
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 
 /* Callout ---------------------------------------------------------------- */
@@ -97,9 +98,10 @@ const COLS: Record<number, string> = {
 
 /** Label and value pairs. Empty values render as "Not given". */
 export function DescriptionList({ items, layout = "inline", columns = 2, labelWidth = 168, className }: DescriptionListProps) {
+  const t = useT();
   const shown = items.filter((i) => !i.hidden);
   const val = (it: DescriptionItem) =>
-    it.value === null || it.value === undefined || it.value === "" ? <span className="text-ink-4">Not given</span> : it.value;
+    it.value === null || it.value === undefined || it.value === "" ? <span className="text-ink-4">{t("Not given")}</span> : it.value;
   if (layout === "stacked") {
     return (
       <dl className={cn("grid gap-x-8 gap-y-4", COLS[columns], className)}>

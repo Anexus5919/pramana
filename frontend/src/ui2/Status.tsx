@@ -8,6 +8,7 @@ import {
   verificationMeta,
   type Tone,
 } from "../lib/labels";
+import { useT } from "../i18n";
 import { cn } from "./cn";
 import { toneClass } from "../ui/tone";
 
@@ -42,10 +43,11 @@ export function StatusBadge({ tone, children, title, className }: StatusBadgePro
 }
 
 export function ApplicationStatusBadge({ status, className }: { status: string; className?: string }) {
+  const t = useT();
   const m = appStatusMeta[status];
   return (
     <StatusBadge tone={m?.tone ?? "unchecked"} className={className}>
-      {m?.label ?? humanize(status)}
+      {m ? t(m.label) : humanize(status)}
     </StatusBadge>
   );
 }

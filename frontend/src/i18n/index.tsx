@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { useSession } from "../auth/session";
+import { fmtRelative } from "../lib/format";
 import { cn } from "../ui/cn";
 import { HI } from "./hi";
 
@@ -120,6 +121,47 @@ export function useDateFormat() {
       return d ? f.format(d) : fallback;
     };
   }, [lang]);
+}
+
+/** Date and time in the screen's language, as fmtDateTime: "28 Oct 2026, 14:05:09". */
+export function useDateTimeFormat() {
+  const { lang } = useLang();
+  return useMemo(() => {
+    const f = new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    return (v: string | Date | null | undefined, fallback = "") => {
+      if (!v) return fallback;
+      const d = typeof v === "string" ? parseDate(v) : v;
+      return d ? f.format(d) : fallback;
+    };
+  }, [lang]);
+}
+
+/** Time since a moment: the English "13 min ago" as before, or "13 मिनट पहले" in Hindi. */
+export function useRelativeTime() {
+  const { lang } = useLang();
+  return useCallback(
+    (v: string | null | undefined) => {
+      if (lang !== "hi") return fmtRelative(v);
+      const d = v ? parseDate(v) : null;
+      if (!d) return "";
+      const s = Math.round((Date.now() - d.getTime()) / 1000);
+      if (s < 45) return "अभी";
+      const m = Math.round(s / 60);
+      if (m < 60) return `${m} मिनट पहले`;
+      const h = Math.round(m / 60);
+      if (h < 24) return `${h} घंटे पहले`;
+      return `${Math.round(h / 24)} दिन पहले`;
+    },
+    [lang],
+  );
 }
 
 function parseDate(v: string): Date | null {
