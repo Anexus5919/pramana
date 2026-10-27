@@ -1,0 +1,139 @@
+import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence } from "motion/react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { qk } from "../api";
+import { useAuth } from "../auth/session";
+import { drishtiSuggestions } from "./client";
+import { displayName, greetingFor, starterChips } from "./copy";
+import { DrishtiButton } from "./DrishtiButton";
+import { DrishtiPanel } from "./DrishtiPanel";
+import type { DrishtiSuggestionsPayload } from "./types";
+import { useDrishtiChat } from "./useDrishtiChat";
+
+const PHONE = "(max-width: 639px)";
+
+function useMediaQuery(query: string): boolean {
+  const [match, setMatch] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setMatch(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [query]);
+  return match;
+}
+
+function readSuggestions(p: DrishtiSuggestionsPayload | undefined): { greeting?: string; chips?: string[] } {
+  if (!p) return {};
+  if (Array.isArray(p)) return { chips: p.filter((s) => typeof s === "string") };
+  const greeting = p.greeting ?? p.text ?? undefined;
+  return { greeting: greeting || undefined, chips: Array.isArray(p.suggestions) ? p.suggestions.filter((s) => typeof s === "string") : undefined };
+}
+
+/**
+ * Drishti, the assistant: the round button and its chat window. Mounted once by AppShell, so it is on every
+ * signed-in page (officials and the institution portal) and never on the landing, sign-in, /scan or not-found pages.
+ */
+export function Drishti() {
+  const { user, role } = useAuth();
+  const id = `drishti-${useId().replace(/:/g, "")}`;
+  const phone = useMediaQuery(PHONE);
+  const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(false);
+  const [replies, setReplies] = useState(0);
+  const [draft, setDraft] = useState("");
+  const button = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  const chat = useDrishtiChat({
+    user: user?.username ?? "",
+    role,
+    onReply: () => {
+      setReplies((n) => n + 1);
+      if (!openRef.current) setUnread(true);
+    },
+  });
+
+  const suggestions = useQuery({
+    queryKey: qk.drishtiSuggestions,
+    queryFn: () => drishtiSuggestions(role),
+    enabled: open && !!role,
+    staleTime: Infinity,
+    retry: false,
+  });
+  const served = readSuggestions(suggestions.data);
+  const greeting = served.greeting ?? greetingFor(role, displayName(user?.display_name));
+  const starters = served.chips?.length ? served.chips : starterChips(role);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    // Back to the button that opened the window
+    requestAnimationFrame(() => button.current?.focus({ preventScroll: true }));
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (openRef.current) close();
+    else {
+      setOpen(true);
+      setUnread(false);
+    }
+  }, [close]);
+
+  // Into the composer as the window opens
+  useEffect(() => {
+    if (!open) return;
+    const raf = requestAnimationFrame(() => input.current?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
+
+  // Toasts read this to stack above the button, and beside the open window when there is room (index.css)
+  useLayoutEffect(() => {
+    const el = document.documentElement;
+    el.dataset.drishti = open && !phone ? "open" : "on";
+    return () => {
+      delete el.dataset.drishti;
+    };
+  }, [open, phone]);
+
+  if (!user) return null;
+  return (
+    <>
+      {!(open && phone) && (
+        <DrishtiButton ref={button} open={open} pending={chat.pending} unread={unread} replies={replies} controls={id} onClick={toggle} />
+      )}
+      <AnimatePresence>
+        {open && (
+          <DrishtiPanel
+            key="panel"
+            id={id}
+            phone={phone}
+            greeting={greeting}
+            starters={starters}
+            messages={chat.messages}
+            pending={chat.pending}
+            failed={chat.failed}
+            error={chat.error}
+            draft={draft}
+            onDraft={setDraft}
+            onSend={chat.send}
+            onRetry={chat.retry}
+            onNewChat={() => {
+              chat.reset();
+              setDraft("");
+              input.current?.focus();
+            }}
+            onClose={close}
+            // On a phone the sheet covers the page, so it steps aside once a link is followed
+            onNavigate={() => {
+              if (phone) close();
+            }}
+            inputRef={input}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
