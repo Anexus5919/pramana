@@ -25,6 +25,7 @@ from ..models import Application, Document, VerificationAttempt, round_label
 from ..pipeline.llm_extract import INJECTION, _post
 from ..rules.engine import active_ruleset
 from ..verification.base import channel_label
+from ..verification.effective import effective_document_status
 from .common import FORBIDDEN_WORDS, citation, latest_run, rules_by_id, rules_needing, run_findings
 from .settings import officer_settings
 
@@ -141,10 +142,12 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
                       "label": label, "say": say}
         return iid
 
+    # What officials read now: later manual confirmations and officer reviews applied to the run's statuses
+    doc_status = effective_document_status(db, run) if run else {}
     if run:
         s = run.summary or {}
-        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_h(s.get('document_status', {}).get(d.id))}"
-                           for d in docs.values() if s.get("document_status", {}).get(d.id))
+        by_doc = "; ".join(f"{labels.get(d.declared_type, d.declared_type)} {_h(doc_status.get(d.id))}"
+                           for d in docs.values() if doc_status.get(d.id))
         items["RUN"] = {"id": "RUN", "kind": "run", "label": "Latest run",
                         "text": f"Latest validation run {run.id}, {round_label(run.round)}, status {run.status}, as of "
                                 f"{s.get('as_of')}, ruleset {run.ruleset_id}, {s.get('findings', 0)} findings. "
@@ -179,7 +182,7 @@ def build_context(db: Session, app: Application, question: str = "") -> dict[str
                              f"{rid} ({c['section']}, page {c['page']}) says: \"{c['quote']}\"")
 
     for d in docs.values():
-        status = ((run.summary or {}).get("document_status", {}) if run else {}).get(d.id, "not_checked")
+        status = doc_status.get(d.id, "not_checked")
         add("D", "document", f"Document {labels.get(d.declared_type, d.declared_type)} ({d.original_filename}): "
                              f"authenticity status {_h(status)}.", {status},
             {"type": "document", "document_id": d.id}, labels.get(d.declared_type, d.declared_type),

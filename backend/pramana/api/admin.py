@@ -24,6 +24,7 @@ from ..insights.proof import dashboard_alerts as session_alerts
 from ..models import Application, AuditEvent, Finding, Institution, User, ValidationRun, VerificationAttempt
 from ..rules.engine import active_ruleset
 from ..sim import issuers as sim
+from ..verification.effective import followed_ids
 from .applications import latest_run
 
 router = APIRouter(prefix="/api", tags=["platform"])
@@ -100,7 +101,12 @@ def dashboard(user: User = Depends(require_roles(*OFFICIAL_ROLES)), db: Session 
                     alerts.append({"application_id": a.id, "institution": a.institution.name, "finding_id": f.id,
                                    "severity": f.severity, "category": f.category, "title": f.title,
                                    "kind": "high_severity_finding"})
-            for v in db.scalars(select(VerificationAttempt).where(VerificationAttempt.run_id == run.id)):
+            attempts = db.scalars(select(VerificationAttempt).where(VerificationAttempt.run_id == run.id)).all()
+            # An attempt a manual confirmation has followed no longer waits; the confirmation counts instead
+            followed = followed_ids(attempts)
+            for v in attempts:
+                if v.id in followed:
+                    continue
                 ver_counts[v.status] = ver_counts.get(v.status, 0) + 1
                 if v.status in ("source_unavailable", "verification_pending"):
                     alerts.append({"application_id": a.id, "institution": a.institution.name, "finding_id": None,
