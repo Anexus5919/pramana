@@ -231,12 +231,13 @@ export function Topbar({
               type="button"
               onClick={onOpenPalette}
               className="flex h-8 items-center gap-2 rounded-control border border-line-2 bg-surface pr-1.5 pl-2.5 text-sm text-ink-3 transition-colors duration-150 hover:border-ink-4 hover:text-ink-2 md:w-64"
-              aria-label="Search pages and applications"
               aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
             >
               <Search className="size-4 shrink-0" aria-hidden />
-              <span className="hidden flex-1 text-left md:inline">Search</span>
-              <span className="hidden items-center gap-1 md:inline-flex">
+              {/* Named "Search pages and applications": the visible word first, so voice control matches it */}
+              <span className="flex-1 text-left max-md:sr-only">Search</span>
+              <span className="sr-only"> pages and applications</span>
+              <span aria-hidden className="hidden items-center gap-1 md:inline-flex">
                 <Kbd>{isMac ? "Cmd" : "Ctrl"}</Kbd>
                 <Kbd>K</Kbd>
               </span>
