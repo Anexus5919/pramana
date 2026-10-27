@@ -35,7 +35,7 @@ export function FieldGrid() {
       <div>
         <div
           className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-[3px] sm:grid-cols-[repeat(41,minmax(0,1fr))]"
-          role="img"
+          role="group"
           aria-label="328 printed fields: 323 read by deterministic patterns, 5 read by the fine-tuned model and grounded on the page"
         >
           {Array.from({ length: missStart }, (_, i) => {

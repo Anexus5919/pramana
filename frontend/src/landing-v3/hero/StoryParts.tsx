@@ -127,24 +127,22 @@ export function Certificate({ id, width, highlight = {}, signature = "plain", cl
         </span>
       </div>
       <div className="mt-[0.85em] grid grid-cols-[1fr_auto] gap-[1em] border-t border-dashed border-(--lp-line-2) pt-[0.8em]">
-        <dl className="grid gap-[0.5em] text-[0.74em]">
-          <div className="px-[0.35em] py-[0.15em]">
+        <dl className="grid grid-cols-2 gap-x-[0.6em] gap-y-[0.5em] text-[0.74em]">
+          <div className="col-span-2 px-[0.35em] py-[0.15em]">
             <dt className="text-[0.82em] font-semibold tracking-wide text-(--lp-ink-3) uppercase">Institution</dt>
             <dd className="font-semibold">{d.inst}</dd>
           </div>
-          <div data-field="number" className="rounded-[0.5em] px-[0.35em] py-[0.15em]" style={hl("number")}>
+          <div data-field="number" className="col-span-2 rounded-[0.5em] px-[0.35em] py-[0.15em]" style={hl("number")}>
             <dt className="text-[0.82em] font-semibold tracking-wide text-(--lp-ink-3) uppercase">Certificate No.</dt>
             <dd className="lp-mono font-medium">{d.no}</dd>
           </div>
-          <div className="grid grid-cols-2 gap-[0.6em]">
-            <div className="px-[0.35em] py-[0.15em]">
-              <dt className="text-[0.82em] font-semibold tracking-wide text-(--lp-ink-3) uppercase">Issued on</dt>
-              <dd className="lp-mono font-medium">{d.issued}</dd>
-            </div>
-            <div data-field="validity" className="rounded-[0.5em] px-[0.35em] py-[0.15em]" style={hl("validity")}>
-              <dt className="text-[0.82em] font-semibold tracking-wide text-(--lp-ink-3) uppercase">Valid Up To</dt>
-              <dd className="lp-mono font-medium">{d.valid}</dd>
-            </div>
+          <div className="px-[0.35em] py-[0.15em]">
+            <dt className="text-[0.82em] font-semibold tracking-wide text-(--lp-ink-3) uppercase">Issued on</dt>
+            <dd className="lp-mono font-medium">{d.issued}</dd>
+          </div>
+          <div data-field="validity" className="rounded-[0.5em] px-[0.35em] py-[0.15em]" style={hl("validity")}>
+            <dt className="text-[0.82em] font-semibold tracking-wide text-(--lp-ink-3) uppercase">Valid Up To</dt>
+            <dd className="lp-mono font-medium">{d.valid}</dd>
           </div>
         </dl>
         <div data-field="qr" className="size-[5.4em] self-start rounded-[0.45em] p-[0.2em]" style={hl("qr")}>
@@ -166,7 +164,7 @@ export function Certificate({ id, width, highlight = {}, signature = "plain", cl
           </div>
         </div>
       </div>
-      <div className="mt-[0.7em] text-center text-[0.56em] font-semibold tracking-[0.28em] text-(--lp-ink-4)">SYNTHETIC TEST DOCUMENT</div>
+      <div className="mt-[0.7em] text-center text-[0.56em] font-semibold tracking-[0.28em] text-(--lp-ink-3)">SYNTHETIC TEST DOCUMENT</div>
       {children}
     </div>
   );
