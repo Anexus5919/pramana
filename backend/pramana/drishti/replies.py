@@ -519,31 +519,31 @@ def _summary_institution_text(d: dict[str, Any], lang: str) -> str:
     return f"{head} {nxt}".strip()
 
 
-ACTION_WORDS = {
-    "en": {"approve": "approve", "reject": "reject", "rectify": "request rectification for", "outcome": "record an outcome for"},
-    "hi": {"approve": "स्वीकृत", "reject": "अस्वीकार", "rectify": "रिक्टिफिकेशन", "outcome": "परिणाम दर्ज"},
-    "hinglish": {"approve": "approve", "reject": "reject", "rectify": "rectification request", "outcome": "outcome record"},
-}
-
-
 def _action_text(d: dict[str, Any], lang: str) -> str:
-    app, inst, verb = d["app_id"], d["institution"], ACTION_WORDS[lang].get(d["action"], "")
+    # Never echoes the requested verb: Drishti names who decides, not what it will not do
+    app, inst, officer = d["app_id"], d["institution"], d["officer"]
     if lang == "en":
-        target = f" {app} ({inst})" if app else " an application"
-        text = f"Officials decide in Pramana, so Drishti cannot {verb}{target}."
-        if d["officer"]:
-            text += " Use Decide on the application to do it yourself." if app else                 " Open the application and use Decide."
+        text = "Officials decide in Pramana, not Drishti."
+        if app:
+            text += f" The decision on {app} ({inst}) is yours." if officer else \
+                f" The decision on {app} ({inst}) rests with the AICTE scrutiny officer."
+        if officer:
+            text += " Use Decide on the application to record it." if app else " Open the application and use Decide."
         return text
     if lang == "hi":
-        target = f"{app} ({inst}) " if app else "किसी आवेदन को "
-        text = f"Pramana में फ़ैसला अधिकारी लेते हैं, इसलिए Drishti {target}{verb} नहीं कर सकती।"
-        if d["officer"]:
-            text += " यह आप आवेदन के Decide मेनू से कर सकते हैं।" if app else " आवेदन खोलकर Decide इस्तेमाल करें।"
+        text = "Pramana में फ़ैसला अधिकारी लेते हैं, Drishti नहीं।"
+        if app:
+            text += f" {app} ({inst}) पर फ़ैसला आपका है।" if officer else \
+                f" {app} ({inst}) पर फ़ैसला AICTE के जाँच अधिकारी का है।"
+        if officer:
+            text += " इसे आवेदन के Decide मेनू से दर्ज करें।" if app else " आवेदन खोलकर Decide इस्तेमाल करें।"
         return text
-    target = f"{app} ({inst}) " if app else "kisi application ko "
-    text = f"Pramana mein faisla officials lete hain, isliye Drishti {target}{verb} nahi kar sakti."
-    if d["officer"]:
-        text += " Yeh aap application ke Decide menu se kar sakte hain." if app else             " Application kholkar Decide use kijiye."
+    text = "Pramana mein faisla officials lete hain, Drishti nahi."
+    if app:
+        text += f" {app} ({inst}) par faisla aapka hai." if officer else \
+            f" {app} ({inst}) par faisla AICTE ke scrutiny officer ka hai."
+    if officer:
+        text += " Ise application ke Decide menu se record kijiye." if app else " Application kholkar Decide use kijiye."
     return text
 
 
