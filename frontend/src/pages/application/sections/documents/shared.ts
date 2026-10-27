@@ -35,6 +35,13 @@ export function currentAttempts(all: VerificationAttempt[], latestRun: string | 
   return all.filter((a) => !latestRun || a.run_id === latestRun || a.channel === "manual_confirmation");
 }
 
+/** Ids of the attempts a manual confirmation has followed, which no longer wait for one. */
+export function followedIds(all: VerificationAttempt[]): Set<string> {
+  const out = new Set<string>();
+  for (const a of all) if (a.channel === "manual_confirmation" && typeof a.request?.follows === "string") out.add(a.request.follows);
+  return out;
+}
+
 /** Instruction lines from the document, or from the instruction finding when the API does not return them. */
 export function instructionLinesFor(doc: DocumentDetail, findings: Finding[] | undefined): InstructionLine[] {
   const own = instructionLinesOf(doc);

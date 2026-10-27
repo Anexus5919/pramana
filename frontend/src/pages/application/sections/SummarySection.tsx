@@ -20,6 +20,7 @@ import {
 } from "../../../ui2";
 import { useDocTypeLabel, useWorkspace } from "../context";
 import { isOpenFinding, useVerifications } from "../data";
+import { followedIds } from "./documents/shared";
 import { useSinceLastYear } from "../history/api";
 import { WatchCard } from "../history/WatchCard";
 import { CoverageCalendar } from "../insights/CoverageCalendar";
@@ -34,7 +35,10 @@ const RULE_ORDER: [string, string][] = [
 ];
 
 /** Plain-text breakdown such as "8 verified, 1 mismatch, 2 awaiting manual confirmation". */
-export function verificationBreakdown(attempts: VerificationAttempt[]): string {
+export function verificationBreakdown(all: VerificationAttempt[]): string {
+  // An attempt a manual confirmation has followed is counted by the confirmation instead
+  const followed = followedIds(all);
+  const attempts = all.filter((a) => !followed.has(a.id));
   const n = (pred: (a: VerificationAttempt) => boolean) => attempts.filter(pred).length;
   const parts: [number, string][] = [
     [n((a) => a.status === "verified"), "verified"],
