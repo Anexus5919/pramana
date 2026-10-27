@@ -785,6 +785,7 @@ entries:
 
   - id: certificate-expired
     title: Issuer source shows the certificate expired
+    codes: [WATCH-CERT-EXPIRED]
     patterns: ["VER-*-EXPIRED"]
     document_clause: true
     provisions: [APH-ANX16.8-SC, ACT-10-I]
@@ -792,10 +793,18 @@ entries:
 
   - id: verification-incomplete
     title: Verification could not be completed
+    codes: [WATCH-SOURCE-UNAVAILABLE]
     patterns: ["VER-*-SOURCE_UNAVAILABLE", "VER-*-VERIFICATION_PENDING", "VER-*-MANUAL_REVIEW_REQUIRED"]
     document_clause: true
     provisions: [APH-ANX16.8-SC, ACT-10-K]
     establish: [source-retry, issuer-original, record-reasons]
+
+  - id: issuer-record-changed
+    title: Issuer record changed after the scrutiny outcome
+    patterns: ["WATCH-*"]
+    document_clause: true
+    provisions: [APH-ANX16.8-SC, REG-6.3A-NORMS, ACT-10-K]
+    establish: [issuer-validity, opportunity-heard, record-reasons]
 
   - id: applicant-signature
     title: The applicant's digital signature on an upload

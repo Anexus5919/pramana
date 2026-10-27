@@ -14,7 +14,7 @@ from pramana.verification import base as vb
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = Path(__file__).resolve().parents[1]
 SCRIPTS = BACKEND / "scripts"
-CODE = re.compile(r"\"((?:APH|ADD26|PN2627|XR|XD|XA|FX|VER|YOY|PH|SEC|DOC|FIELD|RECT)-[A-Z0-9_]+(?:-[A-Z0-9_]+)*)\"")
+CODE = re.compile(r"\"((?:APH|ADD26|PN2627|XR|XD|XA|FX|VER|YOY|PH|SEC|DOC|FIELD|RECT|WATCH)-[A-Z0-9_]+(?:-[A-Z0-9_]+)*)\"")
 # Prefixes the code tests with startswith(), not codes a finding carries
 PREFIXES = {"FX-IMG", "FX-FONT", "FX-PDF-REVISION", "FX-PDF-OVERLAID", "VER-APPLICANT_SIGNATURE",
             "VER-ISSUER_REGISTRY", "VER-SIGNED_QR", "VER-ISSUER_SIGNATURE-MISMATCH"}
@@ -61,7 +61,8 @@ def _codes_in(paths) -> set[str]:
 
 def raisable_codes() -> set[str]:
     """Every finding code Pramana can raise: the rules, every verification channel and status, and the literal
-    codes in the pipeline, forensic, cross-application, photo, history and insight modules."""
+    codes in the pipeline, forensic, cross-application, photo, history, watch and insight modules. STORY-* flags
+    belong to the document life story view and are never stored as findings."""
     rules = yaml.safe_load((BACKEND / "rulesets" / "aicte-aph-2024-27.yaml").read_text(encoding="utf-8"))["rules"]
     ver = {f"VER-{c.upper()}-{s.upper()}" for c in CHANNELS for s in vb.STATUSES if s not in (vb.VERIFIED, vb.NOT_CHECKED)}
     return {r["id"] for r in rules} | ver | _codes_in((BACKEND / "pramana").rglob("*.py"))
