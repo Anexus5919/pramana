@@ -1217,9 +1217,21 @@ class Generator:
         return ex
 
 
+def grammar_order(d: dict, top: bool = True) -> dict:
+    """The intent's keys in the order Ollama's JSON-schema grammar lets this model write them: `intent`, the one
+    required key, first, then every key in alphabetical order, at every level. Measured on Ollama 0.40 with
+    this model's own template: 2,081 key pairs in schema-constrained answers, none out of alphabetical order,
+    so an answer in schema order (period before actor) is forced off course at the first such pair."""
+    keys = sorted(d, key=lambda k: (not (top and k == "intent"), k))
+    return {k: grammar_order(d[k], False) if isinstance(d[k], dict) else d[k] for k in keys}
+
+
 def to_row(ex) -> dict:
     hint = detect(ex["message"])
     row = training_example(ex["message"], ex["role"], ex["intent"], ex["previous"], hint)
+    # Same intent as target_text, keys in the order the engine's `format` request allows
+    answer = grammar_order(json.loads(row["messages"][2]["content"]))
+    row["messages"][2]["content"] = json.dumps(answer, ensure_ascii=False, separators=(",", ":"))
     row["meta"] = {"message": ex["message"], "role": ex["role"],
                    "previous": compact(ex["previous"]) if ex["previous"] else None,
                    "language_hint": hint, "gold": compact(ex["intent"]), "family": ex["family"], "lang": ex["lang"],
