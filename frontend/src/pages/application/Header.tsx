@@ -23,6 +23,10 @@ export interface HeaderProps {
   onAsk?: () => void;
   onRectify?: () => void;
   onOutcome?: () => void;
+  /** Threads where the institution wrote last, for the Rectification tab count */
+  awaitingReply?: number;
+  /** Review requests without a cell reply; recording the outcome waits for them */
+  reviewPending?: number;
 }
 
 /** Institution, one status, one context line, Ask why, More actions and the one primary action: Decide. */
@@ -41,6 +45,8 @@ export function WorkspaceHeader({
   onAsk,
   onRectify,
   onOutcome,
+  awaitingReply,
+  reviewPending = 0,
 }: HeaderProps) {
   const inst = app.institution;
   const menu: ActionMenuItem[] = [
@@ -68,7 +74,10 @@ export function WorkspaceHeader({
     {
       id: "outcome",
       label: "Record scrutiny outcome",
-      description: "Record the authority's decision with a reason. Starts the re-verification watch.",
+      description:
+        reviewPending > 0
+          ? "Reply to the institution's review request first."
+          : "Record the authority's decision with a reason. Starts the re-verification watch.",
       icon: <Gavel />,
       onSelect: onOutcome,
       disabled: !app.latest_run,
@@ -106,11 +115,11 @@ export function WorkspaceHeader({
       <Tabs
         label="Application sections"
         value={section}
-        items={WORKSPACE_SECTIONS.map((s) => ({
+        items={WORKSPACE_SECTIONS.filter((s) => s.id !== "rectification" || app.rectifications.length > 0 || section === s.id).map((s) => ({
           id: s.id,
           label: s.label,
           href: workspacePath(app.id, s.id),
-          count: s.id === "findings" ? openCount : undefined,
+          count: s.id === "findings" ? openCount : s.id === "rectification" && awaitingReply ? awaitingReply : undefined,
           attention: s.id === "findings" ? openHigh : undefined,
         }))}
       />

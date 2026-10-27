@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react
 import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, api } from "../../api";
 import { useAuth } from "../../auth/session";
+import { useRoundThreads } from "../../conversation/api";
 import { LEGACY_TABS, workspacePath, type WorkspaceSection } from "../../shell/nav";
 import type { DocumentSummary } from "../../types";
 import type { AppNavState } from "../../ui/shared";
@@ -23,6 +24,7 @@ import { ReplayDialog } from "./ReplayDialog";
 import { ActivitySection } from "./sections/ActivitySection";
 import { DocumentsSection } from "./sections/DocumentsSection";
 import { FindingsSection } from "./sections/FindingsSection";
+import { RectificationSection } from "./sections/RectificationSection";
 import { SummarySection } from "./sections/SummarySection";
 import { ViewerSheet } from "./viewer/ViewerSheet";
 
@@ -58,6 +60,10 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
   const findingsQ = useFindings(appId, !!app);
   const verQ = useVerifications(appId, !!app);
   const watchQ = useWatch(appId);
+  // The latest round's counts: the tab count, and whether a review request holds up the outcome
+  const convQ = useRoundThreads(appId, undefined, !!app && app.rectifications.length > 0);
+  const reviewPending = convQ.data?.counts.pending_reviews_all_rounds ?? 0;
+  const pendingThread = convQ.data?.threads.find((t) => t.pending_review)?.id;
   const validation = useValidation(appId);
   const invalidate = useInvalidateApp(appId);
   const replay = useMutation({ mutationFn: (runId: string) => api.replay(runId), onSuccess: () => invalidate() });
@@ -183,6 +189,8 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
           onAsk={actions.ask ? () => setAsk((a) => ({ open: !a.open })) : undefined}
           onRectify={actions.rectify ? () => setRectify({ open: true }) : undefined}
           onOutcome={actions.recordOutcome}
+          awaitingReply={convQ.data?.counts.awaiting_reply}
+          reviewPending={reviewPending}
         />
 
         <RunCallout appId={app.id} v={validation} />
@@ -203,6 +211,7 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
               <ComparisonsSection />
             </Suspense>
           )}
+          {section === "rectification" && <RectificationSection />}
           {section === "activity" && <ActivitySection />}
         </div>
       </Page>
@@ -239,7 +248,13 @@ function Workspace({ appId, section }: { appId: string; section: WorkspaceSectio
           <LetterEditor appId={app.id} open={letter.open} findingIds={letter.findingIds} resumeId={letter.resumeId} onClose={() => setLetter({ open: false })} />
           <EvidencePackDialog appId={app.id} open={packOpen} onClose={() => setPackOpen(false)} />
           <InspectionBriefDialog appId={app.id} open={briefOpen} onClose={() => setBriefOpen(false)} />
-          <OutcomeDialog open={outcomeOpen} onClose={() => setOutcomeOpen(false)} watch={watchQ.data} />
+          <OutcomeDialog
+            open={outcomeOpen}
+            onClose={() => setOutcomeOpen(false)}
+            watch={watchQ.data}
+            reviewPending={reviewPending}
+            reviewLink={workspacePath(app.id, "rectification", { thread: pendingThread })}
+          />
           <AskPanel open={ask.open} prefill={ask.prefill} onClose={() => setAsk({ open: false })} />
         </>
       )}
