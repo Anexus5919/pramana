@@ -374,4 +374,40 @@ export const HI: Record<string, string> = {
   "sq m": "वर्ग मीटर",
   "acres": "एकड़",
   "years": "वर्ष",
+
+  // New application
+  "Category and year": "श्रेणी और वर्ष",
+  "The category decides which documents AICTE asks for.": "श्रेणी से तय होता है कि AICTE कौन-से दस्तावेज़ माँगता है।",
+  "Pramana compares these figures with your documents. Leave a field empty if it does not apply to you.":
+    "Pramana इन आँकड़ों का मिलान आपके दस्तावेज़ों से करता है। जो फ़ील्ड आप पर लागू नहीं होता, उसे खाली छोड़ दें।",
+  "Review": "समीक्षा",
+  "Nothing is sent to AICTE yet. The draft opens next, where you upload documents and then submit.":
+    "अभी AICTE को कुछ नहीं भेजा जाता। इसके बाद ड्राफ़्ट खुलेगा, जहाँ आप दस्तावेज़ अपलोड करके जमा करेंगे।",
+  "Extension of Approval (EoA): the yearly renewal to keep running your approved programmes.":
+    "अनुमोदन का विस्तार (EoA): अपने अनुमोदित कार्यक्रम जारी रखने के लिए वार्षिक नवीनीकरण।",
+  "Increase in intake: ask for more seats in an approved programme, or add a new course.":
+    "इंटेक में वृद्धि: किसी अनुमोदित कार्यक्रम में अधिक सीटें माँगें, या नया पाठ्यक्रम जोड़ें।",
+  "{req} required, {opt} optional documents": "{req} आवश्यक, {opt} वैकल्पिक दस्तावेज़",
+  "{req} required, {opt} optional documents. {source}": "{req} आवश्यक, {opt} वैकल्पिक दस्तावेज़। {source}",
+  "Change {section}": "{section} बदलें",
+  "Change@@verb": "बदलें",
+  "Draft created": "ड्राफ़्ट बनाया गया",
+  "{id}. Upload the documents on the checklist next, then submit.": "{id}। अब चेकलिस्ट के दस्तावेज़ अपलोड करें, फिर जमा करें।",
+  "New application": "नया आवेदन",
+  "Four short steps. You can upload documents after the draft is created.":
+    "चार छोटे चरण। ड्राफ़्ट बनने के बाद आप दस्तावेज़ अपलोड कर सकते हैं।",
+  "New application steps": "नए आवेदन के चरण",
+  "Back": "पीछे",
+  "Create draft": "ड्राफ़्ट बनाएँ",
+  "Continue": "आगे बढ़ें",
+  "Loading the categories": "श्रेणियाँ लोड हो रही हैं",
+  "Could not load the categories": "श्रेणियाँ लोड नहीं हो सकीं",
+  "What are you applying for?": "आप किसके लिए आवेदन कर रहे हैं?",
+  "Choose what you are applying for": "चुनें कि आप किसके लिए आवेदन कर रहे हैं",
+  "The year the approval is for. AY in AICTE letters means academic year.":
+    "वह वर्ष जिसके लिए अनुमोदन माँगा जा रहा है। AICTE के पत्रों में AY का अर्थ शैक्षणिक वर्ष है।",
+  "Category": "श्रेणी",
+  "The draft could not be created": "ड्राफ़्ट नहीं बन सका",
+  "Some entries need a fix before you continue. They are marked above.":
+    "आगे बढ़ने से पहले कुछ प्रविष्टियों में सुधार आवश्यक है। उन्हें ऊपर चिह्नित किया गया है।",
 };

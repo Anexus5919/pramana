@@ -28,13 +28,22 @@ function fill(s: string, vars?: Vars): string {
   return vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s;
 }
 
+/**
+ * A key may carry a context after "@@" when one English word needs two Hindi words: "Change@@verb" is the button
+ * and "Change" the column heading. English shows the text before "@@".
+ */
+function plain(s: string): string {
+  const i = s.indexOf("@@");
+  return i < 0 ? s : s.slice(0, i);
+}
+
 /** English text in the given language, with {name} placeholders filled. */
 export function translate(lang: Lang, en: string, vars?: Vars): string {
-  return fill(lang === "hi" ? (HI[en] ?? en) : en, vars);
+  return fill(lang === "hi" ? (HI[en] ?? plain(en)) : plain(en), vars);
 }
 
 /** English stays English: for helpers called on officials' screens too. */
-export const en: T = (s, vars) => fill(s, vars);
+export const en: T = (s, vars) => fill(plain(s), vars);
 
 interface LangCtx {
   /** The language this screen is shown in */
