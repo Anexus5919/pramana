@@ -92,7 +92,7 @@ function answer(msg: string, lang: Lang, role: Role | undefined, body: DrishtiAs
         hi: "निर्णय अधिकारी लेते हैं, Drishti नहीं। अपना निर्णय दर्ज करने के लिए आवेदन खोलें और Decide चुनें।",
         hinglish: "Decision officials lete hain, Drishti nahi. Apna decision record karne ke liye application kholiye aur Decide chuniye.",
       }),
-      { items: [{ type: "application", id: appId(7), title: NAMES[7], subtitle: `${appId(7)} · Decide from the header`, href: ws(7) }] },
+      { items: [{ type: "page", id: `${appId(7)}:decide`, title: `Decide on ${appId(7)}`, subtitle: NAMES[7], href: `${ws(7)}?action=decide` }] },
     );
 
   if (institution && /\b(all|colleges|institutions|every)\b|sab(hi)?\b|सभी|सब/.test(m))
@@ -175,8 +175,8 @@ function answer(msg: string, lang: Lang, role: Role | undefined, body: DrishtiAs
       {
         count: 2,
         items: [
-          { type: "page", id: "r1", title: "Upload the fire NOC", subtitle: "Required document", href: ownHref },
-          { type: "page", id: "r2", title: "Faculty list: 3 entries have no registration ID", subtitle: "Declared details", href: ownHref },
+          { type: "readiness", id: "r1", title: "Upload the fire NOC", subtitle: "Required document", href: ownHref },
+          { type: "readiness", id: "r2", title: "Faculty list: 3 entries have no registration ID", subtitle: "Declared details", href: ownHref },
         ],
         suggestions: ["How do I fix readiness items?"],
       },
@@ -283,10 +283,10 @@ function answer(msg: string, lang: Lang, role: Role | undefined, body: DrishtiAs
       {
         count: 4,
         items: [
-          { type: "application", id: "v1", title: `Occupancy certificate · ${NAMES[9]}`, subtitle: "Registry unavailable during validation", href: ws(9, "documents") },
-          { type: "application", id: "v2", title: `Fire NOC · ${NAMES[11]}`, subtitle: "Issuer layout not recognised", href: ws(11, "documents") },
-          { type: "application", id: "v3", title: `Fire NOC · ${NAMES[8]}`, subtitle: "Signer is not the issuer", href: ws(8, "documents") },
-          { type: "application", id: "v4", title: `Land document · ${NAMES[6]}`, subtitle: "No signed QR", href: ws(6, "documents") },
+          { type: "verification", id: "v1", title: `Occupancy certificate · ${NAMES[9]}`, subtitle: "Registry unavailable during validation", href: ws(9, "documents") },
+          { type: "verification", id: "v2", title: `Fire NOC · ${NAMES[11]}`, subtitle: "Issuer layout not recognised", href: ws(11, "documents") },
+          { type: "verification", id: "v3", title: `Fire NOC · ${NAMES[8]}`, subtitle: "Signer is not the issuer", href: ws(8, "documents") },
+          { type: "verification", id: "v4", title: `Land document · ${NAMES[6]}`, subtitle: "No signed QR", href: ws(6, "documents") },
         ],
       },
     );

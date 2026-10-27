@@ -33,7 +33,7 @@ import type {
   VerificationAttempt,
 } from "./types";
 import type { FacultyOverlapPayload, NetworkPayload } from "./pages/integrity/types";
-import type { DrishtiAskBody, DrishtiAskResponse, DrishtiSuggestionsPayload } from "./drishti/types";
+import type { DrishtiAskBody, DrishtiAskResponse, DrishtiLanguage, DrishtiSuggestionsPayload } from "./drishti/types";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -209,7 +209,7 @@ export const api = {
 
   // Drishti, the assistant (docs/features/drishti-spec.md)
   drishtiAsk: (body: DrishtiAskBody) => post<DrishtiAskResponse>("/drishti/ask", body),
-  drishtiSuggestions: () => get<DrishtiSuggestionsPayload>("/drishti/suggestions"),
+  drishtiSuggestions: (lang: DrishtiLanguage = "en") => get<DrishtiSuggestionsPayload>(`/drishti/suggestions?lang=${lang}`),
 };
 
 export const qk = {
@@ -236,7 +236,7 @@ export const qk = {
   issuers: ["sim-issuers"] as const,
   platform: ["platform"] as const,
   retention: ["retention"] as const,
-  drishtiSuggestions: ["drishti", "suggestions"] as const,
+  drishtiSuggestions: (lang: string) => ["drishti", "suggestions", lang] as const,
 };
 
 export function errorMessage(err: unknown): string {

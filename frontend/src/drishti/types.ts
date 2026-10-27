@@ -4,7 +4,16 @@ export type DrishtiKind = "answer" | "clarify" | "refuse" | "navigate" | "help" 
 export type DrishtiLanguage = "en" | "hi" | "hinglish";
 /** How the message was understood; guardrail replies carry no source tag in the UI */
 export type DrishtiSource = "guardrail" | "rules" | "model";
-export type DrishtiItemType = "application" | "decision" | "finding" | "certificate" | "page" | "term";
+/** `verification`: an item awaiting manual confirmation; `readiness`: an institution's item to fix before submitting */
+export type DrishtiItemType =
+  | "application"
+  | "decision"
+  | "finding"
+  | "certificate"
+  | "verification"
+  | "readiness"
+  | "page"
+  | "term";
 
 /** One record behind an answer; `href` is an in-app route */
 export interface DrishtiItem {
@@ -46,8 +55,10 @@ export interface DrishtiAskResponse {
   reply: DrishtiReply;
 }
 
-/** Starter chips; the spec does not fix the shape, so a bare list or an object with an optional greeting both work */
-export type DrishtiSuggestionsPayload = string[] | { greeting?: string | null; text?: string | null; suggestions?: string[] | null };
+/** Starter chips and the greeting, as the engine sends them: {greeting, suggestions, language}. A bare list also works. */
+export type DrishtiSuggestionsPayload =
+  | string[]
+  | { greeting?: string | null; text?: string | null; suggestions?: string[] | null; language?: DrishtiLanguage | null };
 
 /** A message as the chat window shows and keeps it */
 export type ChatMessage =

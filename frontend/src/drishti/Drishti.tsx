@@ -3,7 +3,7 @@ import { AnimatePresence } from "motion/react";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { qk } from "../api";
 import { useAuth } from "../auth/session";
-import { drishtiSuggestions } from "./client";
+import { drishtiSuggestions, preferredLanguage } from "./client";
 import { displayName, greetingFor, starterChips } from "./copy";
 import { DrishtiButton } from "./DrishtiButton";
 import type { MascotCue, MascotMood } from "./DrishtiMascot";
@@ -60,9 +60,10 @@ export function Drishti() {
   });
   const mood: MascotMood = chat.pending ? "thinking" : chat.failed && chat.error ? "error" : "idle";
 
+  const lang = preferredLanguage();
   const suggestions = useQuery({
-    queryKey: qk.drishtiSuggestions,
-    queryFn: () => drishtiSuggestions(role),
+    queryKey: qk.drishtiSuggestions(lang),
+    queryFn: () => drishtiSuggestions(role, lang),
     enabled: open && !!role,
     staleTime: Infinity,
     retry: false,
