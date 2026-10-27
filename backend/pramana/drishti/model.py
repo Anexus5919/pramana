@@ -30,10 +30,16 @@ def enabled() -> bool:
     return bool(providers())
 
 
+def _keep_alive(v: str) -> str | int:
+    """Ollama reads a number of seconds (-1: never unload) or a duration string such as "10m"."""
+    return int(v) if v.lstrip("-").isdigit() else v
+
+
 def _ollama(message: str, role: str, previous: Intent | None, language: str) -> Intent | None:
     s = get_settings()
-    body = {"model": s.drishti_model, "stream": False, "think": False, "keep_alive": "10m", "format": OUTPUT_SCHEMA,
-            "options": GENERATION_OPTIONS, "messages": build_messages(message, role, previous, language)}
+    body = {"model": s.drishti_model, "stream": False, "think": False, "keep_alive": _keep_alive(s.drishti_keep_alive),
+            "format": OUTPUT_SCHEMA, "options": GENERATION_OPTIONS,
+            "messages": build_messages(message, role, previous, language)}
     req = urllib.request.Request(f"{s.ollama_url.rstrip('/')}/api/chat", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json", "User-Agent": "pramana/0.3"})
     with urllib.request.urlopen(req, timeout=s.drishti_timeout_s) as r:

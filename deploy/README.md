@@ -1,8 +1,14 @@
 # Public demo deployment
 
 One Azure VM (Ubuntu 24.04, 2 vCPU, 4 GB) serves the demo over HTTPS at `https://<label>.<region>.cloudapp.azure.com`.
-It runs in lite mode: no language models on the server. The fields our fine-tuned model reads are produced on a
-machine with the model and shipped in the demo snapshot; Ask why answers from its evidence templates.
+The only language model on the server is Drishti's question model (`pramana-drishti-0.6b`, about 0.9 GB in memory,
+kept loaded and warmed after every reset). On this VM it read 166 of 167 hand-written questions correctly, in 1.65 s
+median and 2.27 s at the 90th percentile (`training/drishti/eval_drishti.py --cpu --threads 2`). Everything else is
+lite mode: the fields our fine-tuned extraction model reads are produced on a machine with that model and shipped in
+the demo snapshot, and Ask why answers from its evidence templates.
+
+To install the question model, copy `Modelfile` and the GGUF from `training/drishti` output to the VM and run setup
+with `DRISHTI_MODEL_DIR=<that folder>`. Without it Drishti answers from its rules alone.
 
 | File | Purpose |
 |---|---|

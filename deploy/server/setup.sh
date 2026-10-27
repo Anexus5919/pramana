@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Installs the public Pramana demo on a fresh Ubuntu 24.04 VM: app, models, HTTPS, nightly reset.
 # Usage: sudo bash setup.sh <public hostname> <demo snapshot .tar.gz>
+# Optional: DRISHTI_MODEL_DIR=<folder with Modelfile and GGUF> installs Drishti's question model (0.6B, CPU) with Ollama
 set -euo pipefail
 
 FQDN="${1:?public hostname, e.g. pramana-demo.indiasouthcentral.cloudapp.azure.com}"
@@ -58,14 +59,29 @@ test -f "$APP_DIR/backend/models/yolox_m.onnx"
 # RapidOCR fetches its detection and recognition weights on first use; do it now, not in a judge's first upload
 sudo -u pramana-app -H bash -c "cd $APP_DIR/backend && .venv/bin/python -c 'from rapidocr import RapidOCR; RapidOCR()'"
 
-# Lite mode: no language models on this box. Ask why answers from templates; fields the model read are in the snapshot.
+# Drishti's question model is the only model on this box: 0.6B, about 0.9 GB in memory, kept loaded. Without it
+# Drishti answers from its rules alone. A model installed by an earlier run stays enabled.
+DRISHTI_MODEL=pramana-drishti-0.6b
+if [ -n "${DRISHTI_MODEL_DIR:-}" ]; then
+  command -v ollama >/dev/null || curl -fsSL https://ollama.com/install.sh | sh
+  (cd "$DRISHTI_MODEL_DIR" && ollama create "$DRISHTI_MODEL" -f Modelfile)
+fi
+if command -v ollama >/dev/null && ollama list 2>/dev/null | grep -q "^$DRISHTI_MODEL"; then
+  DRISHTI_ENV="PRAMANA_DRISHTI_PROVIDERS=ollama
+PRAMANA_DRISHTI_MODEL=$DRISHTI_MODEL
+PRAMANA_DRISHTI_KEEP_ALIVE=-1"
+else
+  DRISHTI_ENV="PRAMANA_DRISHTI_PROVIDERS="
+fi
+
+# Lite mode otherwise: Ask why answers from templates; fields the extraction model read are in the snapshot.
 cat > "$APP_DIR/backend/.env" <<EOF
 PRAMANA_PUBLIC_BASE_URL=https://$FQDN
 PRAMANA_COOKIE_SECURE=true
 PRAMANA_DEMO_MODE=true
 PRAMANA_LLM_PROVIDERS=
 PRAMANA_ASK_PROVIDERS=
-PRAMANA_DRISHTI_PROVIDERS=
+$DRISHTI_ENV
 PRAMANA_FETCH_MODELS=false
 PRAMANA_JOB_WORKERS=1
 PRAMANA_SANDBOX_WORKERS=1

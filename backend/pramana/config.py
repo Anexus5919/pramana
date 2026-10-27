@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     drishti_providers: str = "ollama"
     drishti_model: str = "pramana-drishti"
     drishti_timeout_s: float = 8
+    # How long Ollama keeps the question model loaded after a call; a server that answers the public keeps it
+    # loaded ("-1"), since reloading after an idle spell can take longer than the timeout
+    drishti_keep_alive: str = "10m"
     # Model weights outside data_dir, so a fresh data directory does not refetch them: the photo detector
     # (scripts/fetch_photo_assets.py) and the Devanagari recogniser, both pinned by SHA-256. The map tile URL
     # is for the Campus tab; empty disables tiles and the tab shows a plain plot instead
