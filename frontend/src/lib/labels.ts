@@ -38,6 +38,7 @@ export const VERIFICATION_STATUSES = [
   "source_unavailable",
   "manual_review_required",
   "not_checked",
+  "officer_reviewed",
 ] as const;
 
 export const verificationMeta: Record<string, { label: string; tone: Tone; meaning: string }> = {
@@ -67,6 +68,11 @@ export const verificationMeta: Record<string, { label: string; tone: Tone; meani
     label: "No outside source",
     tone: "unchecked",
     meaning: "No issuing body is connected for this kind of document, so Pramana cannot confirm it from outside. Review it yourself.",
+  },
+  officer_reviewed: {
+    label: "Reviewed by officer",
+    tone: "primary",
+    meaning: "An officer or verifier examined this document and recorded what they checked. No issuing body confirmed it.",
   },
 };
 
@@ -173,6 +179,7 @@ export const CHANNELS = [
   "issuer_registry",
   "content_credentials",
   "manual_confirmation",
+  "officer_review",
 ] as const;
 
 const SIGNATURE_CHANNELS = new Set(["issuer_signature", "applicant_signature", "pdf_signature", "content_credentials"]);
@@ -198,6 +205,10 @@ export const channelMeta: Record<string, { label: string; meaning: string }> = {
     meaning: "C2PA manifest embedded in a photo, validated against the DEMO capture trust list.",
   },
   manual_confirmation: { label: "Manual confirmation", meaning: "Recorded by the verification cell after an offline check." },
+  officer_review: {
+    label: "Officer review",
+    meaning: "An official examined a document no outside source can confirm, and noted what they checked. It is not a confirmation.",
+  },
 };
 
 export const stageLabel: Record<string, string> = {

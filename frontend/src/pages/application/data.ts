@@ -154,6 +154,14 @@ export function useManualVerification(appId: string) {
   });
 }
 
+export function useOfficerReview(appId: string) {
+  const invalidate = useInvalidateVerification(appId);
+  return useMutation({
+    mutationFn: ({ docId, note }: { docId: string; note: string }) => api.officerReview(docId, note),
+    onSuccess: () => invalidate(),
+  });
+}
+
 export function useRectification(appId: string) {
   const invalidate = useInvalidateApp(appId);
   return useMutation({

@@ -46,6 +46,7 @@ export function verificationBreakdown(all: VerificationAttempt[]): string {
     [n((a) => a.status === "expired"), "expired"],
     [n((a) => a.status === "verification_pending"), "pending with the issuer"],
     [n((a) => a.status === "source_unavailable" || a.status === "manual_review_required"), "awaiting manual confirmation"],
+    [n((a) => a.status === "officer_reviewed"), "reviewed by officer"],
   ];
   const shown = parts.filter(([c]) => c > 0).map(([c, l]) => `${c} ${l}`);
   return shown.length ? shown.join(", ") : "No checks applied";

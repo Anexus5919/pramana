@@ -251,6 +251,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
     let mismatch = 0;
     let expired = 0;
     let waiting = 0;
+    let reviewed = 0;
     for (const r of rows) {
       const confirmed = !!r.cells.manual_confirmation;
       for (const c of CHANNELS) {
@@ -259,6 +260,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
         if (s === "verified") verified++;
         else if (s === "mismatch_detected") mismatch++;
         else if (s === "expired") expired++;
+        else if (s === "officer_reviewed") reviewed++;
         else if (NEEDS_MANUAL.has(s) && !confirmed) waiting++;
       }
     }
@@ -267,6 +269,7 @@ export function VerificationView({ query }: { query: UseQueryResult<Verification
       mismatch ? `${mismatch} ${mismatch === 1 ? "mismatch" : "mismatches"}` : null,
       expired ? `${expired} expired` : null,
       waiting ? `${waiting} awaiting manual confirmation` : null,
+      reviewed ? `${reviewed} reviewed by officer` : null,
     ].filter(Boolean);
     return parts.join(", ");
   }, [rows]);

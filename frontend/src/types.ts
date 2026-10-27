@@ -61,6 +61,7 @@ export type VerificationStatus = Open<
   | "source_unavailable"
   | "manual_review_required"
   | "not_checked"
+  | "officer_reviewed"
 >;
 export type RuleOutcome = Open<"pass" | "fail" | "insufficient_evidence" | "not_applicable" | "error">;
 export type ReviewStatus = Open<
@@ -570,7 +571,7 @@ export interface VerificationAttempt {
   id: string;
   document_id: string | null;
   run_id: string | null;
-  channel: Open<"pdf_signature" | "signed_qr" | "issuer_registry" | "manual_confirmation">;
+  channel: Open<"pdf_signature" | "signed_qr" | "issuer_registry" | "manual_confirmation" | "officer_review">;
   source_name: string;
   simulated: boolean;
   status: VerificationStatus;
