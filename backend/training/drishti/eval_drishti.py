@@ -80,10 +80,11 @@ def same(a: dict | None, b: dict | None, with_language: bool) -> bool:
     return all(field(a, f) == field(b, f) for f in FIELDS)
 
 
-def ask(url: str, model: str, row: dict, options: dict) -> tuple[str | None, float]:
-    body = {"model": model, "stream": False, "think": False, "keep_alive": "10m", "format": OUTPUT_SCHEMA,
-            "options": options,
+def ask(url: str, model: str, row: dict, options: dict, schema: bool = True) -> tuple[str | None, float]:
+    body = {"model": model, "stream": False, "think": False, "keep_alive": "10m", "options": options,
             "messages": build_messages(row["message"], row["role"], row["previous"], detect(row["message"]))}
+    if schema:
+        body["format"] = OUTPUT_SCHEMA
     req = urllib.request.Request(f"{url}/api/chat", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
     t = time.perf_counter()
@@ -147,6 +148,7 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=0, help="a seeded sample of this many rows per split (0: all)")
     ap.add_argument("--cpu", action="store_true", help="num_gpu 0: run the model on the CPU only")
     ap.add_argument("--threads", type=int, default=0, help="num_thread for CPU runs")
+    ap.add_argument("--no-format", action="store_true", help="leave out the schema, to see the model unconstrained")
     ap.add_argument("--url", default="http://127.0.0.1:11434")
     ap.add_argument("--tag", default="")
     a = ap.parse_args()
@@ -160,16 +162,16 @@ def main() -> None:
     seen = {json.loads(x)["meta"]["message"].lower()
             for x in (HERE / "data" / "train.jsonl").read_text(encoding="utf-8").splitlines()}
     # Warm-up: load the model with these options before anything is timed; its time includes loading
-    _, first = ask(a.url, a.model, {"message": "hello", "role": "officer", "previous": None}, options)
+    _, first = ask(a.url, a.model, {"message": "hello", "role": "officer", "previous": None}, options, not a.no_format)
     print("first call, including load:", round(first, 2), "s", flush=True)
-    report = {"model": a.model, "options": options, "splits": {}}
+    report = {"model": a.model, "options": options, "format": not a.no_format, "splits": {}}
     for split in a.split or ["test", "handwritten"]:
         rows = rows_for(split)
         if a.n and a.n < len(rows):
             rows = random.Random(26261).sample(rows, a.n)
         preds, raw, lat = [], [], []
         for r in rows:
-            text, dt = ask(a.url, a.model, r, options)
+            text, dt = ask(a.url, a.model, r, options, not a.no_format)
             p = parse_output(text)
             preds.append(compact(p) if p else None)
             raw.append({"id": r["id"], "message": r["message"], "role": r["role"], "previous": r["previous"],
@@ -187,7 +189,7 @@ def main() -> None:
                 / max(len(fresh), 1), 3)}
         report["splits"][split] = res
         name = f"{a.model.replace(':', '_').replace('/', '_')}_{split}{'_cpu' if a.cpu else ''}" \
-               f"{f'_t{a.threads}' if a.threads else ''}{f'_n{a.n}' if a.n else ''}{a.tag}"
+               f"{f'_t{a.threads}' if a.threads else ''}{f'_n{a.n}' if a.n else ''}{'_noformat' if a.no_format else ''}{a.tag}"
         (out_dir / f"{name}_outputs.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in raw),
                                                         encoding="utf-8")
         (out_dir / f"{name}.json").write_text(json.dumps({"model": a.model, "split": split, "options": options, **res},
