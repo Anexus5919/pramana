@@ -22,6 +22,7 @@ from reportlab.platypus import (
 from .. import sandbox
 from ..crypto import cache_get, cache_put, load_document
 from ..models import Document, round_label
+from ..rules.basis import basis_for
 from ..verification.base import channel_label
 from .letter import ACCENT, INK, INK_3, LINE, QUOTE_BG, _NumberedCanvas
 
@@ -219,6 +220,9 @@ def render_report(ctx: dict[str, Any]) -> bytes:
                                    ("LINEBEFORE", (0, 0), (0, -1), 2.2, ACCENT), ("LEFTPADDING", (0, 0), (-1, -1), 8),
                                    ("TOPPADDING", (0, 0), (-1, 0), 5), ("BOTTOMPADDING", (0, -1), (-1, -1), 5)]))
             body += [Spacer(1, 5), q]
+        rel = basis_for(f.code, docs[f.document_id].declared_type if f.document_id in docs else None)
+        if rel:
+            body += [Spacer(1, 4), _p("Relates to: " + "; ".join(x["cite"] for x in rel["provisions"]), st["small"])]
         decisions = ctx["decisions"].get(f.fingerprint, [])
         body += [Spacer(1, 5), _p("OFFICER DECISIONS", st["label"])]
         if decisions:
