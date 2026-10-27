@@ -11,6 +11,7 @@ from .analyse import api as analyse_api
 from .api import admin, applications, live, ops, photos, public
 from .config import get_settings
 from .db import init_db
+from .drishti import api as drishti_api
 from .history import api as history_api
 from .history.watch import start_scheduler
 from .insights import inspection as insight_inspection
@@ -59,6 +60,7 @@ app.include_router(insights_network.router)
 app.include_router(readiness_api.router)
 app.include_router(insight_story.router)
 app.include_router(insight_inspection.router)
+app.include_router(drishti_api.router)
 
 
 @app.middleware("http")
