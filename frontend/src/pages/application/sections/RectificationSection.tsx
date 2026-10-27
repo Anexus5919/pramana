@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { AlertTriangle, Download } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CellComposer } from "../../../conversation/Composer";
@@ -60,13 +60,14 @@ function ThreadPanel({ appId, data, t }: { appId: string; data: RoundThreads; t:
     >
       <div className="space-y-3">
         {t.pending_review && (
-          <Callout tone="warning" title="Review requested">
+          <p className="flex items-start gap-1.5 text-sm font-medium text-manual-fg">
+            <AlertTriangle aria-hidden className="mt-0.5 size-4 shrink-0" />
             The institution thinks this item is not right. Reply, or mark it resolved or keep it open with a note, before recording an outcome.
-          </Callout>
+          </p>
         )}
         {!t.general && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            {t.status !== "resolved" && <DueLine respondBy={t.respond_by} daysLeft={t.days_left} pastDue={t.past_due} />}
+            {t.status !== "resolved" && data.round?.status === "open" && <DueLine respondBy={t.respond_by} daysLeft={t.days_left} pastDue={t.past_due} />}
             {first && (
               <Link to={workspacePath(appId, "findings", { finding: first })} className="text-xs text-ink-2 underline underline-offset-2 hover:text-ink">
                 {t.finding_ids && t.finding_ids.length > 1 ? `Open the first of ${t.finding_ids.length} findings` : "Open the finding"}
