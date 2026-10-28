@@ -77,7 +77,7 @@ function EcReadyPanel({ queue }: { queue: NonNullable<Dashboard["ec_handoff"]> }
                 <MetaList
                   items={[
                     i.outcome_label,
-                    `Version ${i.version}`,
+                    i.version > 1 ? `Version ${i.version}` : null,
                     <span key="t" title={fmtDateTime(i.prepared_at)}>
                       {fmtRelative(i.prepared_at)}
                     </span>,

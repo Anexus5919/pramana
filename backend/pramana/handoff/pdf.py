@@ -157,7 +157,7 @@ def render(c: dict[str, Any], report_sha256: str) -> bytes:
         rows.append(["", _p("No findings on this run.", st["small"]), "", "", ""])
     story.append(_grid(rows, [8 * mm, 74 * mm, 20 * mm, 28 * mm, 40 * mm], st))
 
-    story += [PageBreak(), _p("Verification", st["h2"]),
+    story += [Spacer(1, 14), _p("Verification", st["h2"]),
               _p("Each current document's status as officials read it when the outcome was recorded: the validation "
                  "run's result with later manual confirmations and officer reviews applied."
                  + (" SIMULATED: issuer registries in this prototype are simulated; their results are not real-world "
