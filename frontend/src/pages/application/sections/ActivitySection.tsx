@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api, errorMessage, qk } from "../../../api";
 import { fmtDate, fmtDateTime, fmtMs, fmtRelative, fmtValue, pluralize } from "../../../lib/format";
 import { humanize, reviewActionLabel, roleLabel, roundLabel as roundName, roundPhrase, SEVERITIES, severityRank, stageLabel, type Tone } from "../../../lib/labels";
+import { actionLabel } from "../../audit/chain";
 import { workspacePath } from "../../../shell/nav";
 import type { AuditEvent, ChainVerification, Finding, RunBrief, Stage } from "../../../types";
 import {
@@ -473,6 +474,7 @@ function actionText(action: string): string {
   const [obj, verb] = dot >= 0 ? [action.slice(0, dot), action.slice(dot + 1)] : ["", action];
   if (obj === "finding" && reviewActionLabel[verb]) return `Finding: ${reviewActionLabel[verb]}`;
   if (action === "verification.manual_recorded") return "Manual verification recorded";
+  if (obj === "ec_report") return actionLabel(action);
   return humanize(`${obj} ${verb}`.trim());
 }
 

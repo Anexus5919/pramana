@@ -19,6 +19,7 @@ from ..auth import (
 )
 from ..config import get_settings
 from ..db import get_db
+from ..handoff.report import ready_for_ec
 from ..history.watch import dashboard_alerts as watch_alerts
 from ..insights.proof import dashboard_alerts as session_alerts
 from ..models import Application, AuditEvent, Finding, Institution, User, ValidationRun, VerificationAttempt
@@ -121,7 +122,9 @@ def dashboard(user: User = Depends(require_roles(*OFFICIAL_ROLES)), db: Session 
     alerts.sort(key=lambda x: sev_rank.get(x["severity"], 9))
     session_alerts(db, alerts)
     return {"applications": rows, "status_counts": status_counts, "verification_counts": ver_counts,
-            "open_findings_by_category": cat_counts, "open_findings": open_total, "alerts": alerts[:50]}
+            "open_findings_by_category": cat_counts, "open_findings": open_total, "alerts": alerts[:50],
+            # Reports prepared from recorded outcomes and not yet recorded as forwarded to the Executive Committee
+            "ec_handoff": ready_for_ec(db)}
 
 
 @router.get("/rulesets/active")

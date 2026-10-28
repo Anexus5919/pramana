@@ -239,6 +239,11 @@ def test_items_move_through_their_statuses_and_a_review_request_blocks_the_outco
     ok = officer.post(f"/api/applications/{A4}/scrutiny-outcome",
                       json={"outcome": "deficiencies_recorded", "reason": "The intake figure differs from the AICTE record."})
     assert ok.status_code == 200, ok.text
+    # The report for the Executive Committee records the round and that its review request had the cell's answer
+    ec = officer.get(f"/api/applications/{A4}/ec-reports").json()["latest"]
+    assert ec["summary"]["correction_rounds"] == 1 and ec["outcome"]["code"] == "deficiencies_recorded"
+    assert ec["summary"]["review_requests"] == ec["summary"]["review_requests_answered"] == 1
+    assert inst.get(f"/api/applications/{A4}/ec-reports").status_code == 403
 
     view = inst.get(f"/api/applications/{A4}/outcome").json()["outcome"]
     assert view["reasons"] == "The intake figure differs from the AICTE record." and view["what_next"]

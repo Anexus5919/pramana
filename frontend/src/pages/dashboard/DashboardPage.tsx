@@ -7,7 +7,7 @@ import { useAuth } from "../../auth/session";
 import { useAwaiting, type AwaitingItem } from "../../conversation/api";
 import { fmtDateTime, fmtRelative, pluralize } from "../../lib/format";
 import { humanize, roundPhrase } from "../../lib/labels";
-import type { DashboardAlert, DashboardRow } from "../../types";
+import type { Dashboard, DashboardAlert, DashboardRow } from "../../types";
 import type { AppNavState } from "../../ui/shared";
 import {
   ApplicationStatusBadge,
@@ -54,6 +54,42 @@ function alertHref(a: DashboardAlert): string {
 
 function navState(row: DashboardRow): AppNavState {
   return { institution: row.institution.name, from: "/dashboard" };
+}
+
+/** Reports prepared from recorded outcomes and not yet recorded as forwarded; shown only while there are some. */
+function EcReadyPanel({ queue }: { queue: NonNullable<Dashboard["ec_handoff"]> }) {
+  if (queue.ready === 0) return null;
+  const shown = queue.items.slice(0, 5);
+  return (
+    <Panel
+      as="aside"
+      title="Ready for the Executive Committee"
+      description={`${pluralize(queue.ready, "report")} to forward${queue.forwarded ? `, ${queue.forwarded} already forwarded` : ""}. The Executive Committee decides; the Council ratifies.`}
+      padding="none"
+      footer={queue.items.length > shown.length ? <span className="mr-auto text-xs text-ink-3">Showing {shown.length} of {queue.items.length}</span> : undefined}
+    >
+      <ul className="divide-y divide-line border-t border-line">
+        {shown.map((i) => (
+          <li key={i.report_id}>
+            <Link to={workspacePath(i.application_id)} className="block px-5 py-3 transition-colors duration-150 hover:bg-surface-2">
+              <span className="block truncate text-sm font-medium text-ink">{i.institution}</span>
+              <span className="mt-0.5 block truncate text-xs text-ink-3">
+                <MetaList
+                  items={[
+                    i.outcome_label,
+                    i.version > 1 ? `Version ${i.version}` : null,
+                    <span key="t" title={fmtDateTime(i.prepared_at)}>
+                      {fmtRelative(i.prepared_at)}
+                    </span>,
+                  ]}
+                />
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
 }
 
 function DashboardSkeleton() {
@@ -352,6 +388,7 @@ export default function DashboardPage() {
           </div>
         </Panel>
         <div className="min-w-0 space-y-6">
+          {data.ec_handoff && <EcReadyPanel queue={data.ec_handoff} />}
           <NetworkSummaryBlock />
           <AttentionList alerts={data.alerts} />
         </div>

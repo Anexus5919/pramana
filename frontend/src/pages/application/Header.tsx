@@ -77,7 +77,7 @@ export function WorkspaceHeader({
       description:
         reviewPending > 0
           ? "Reply to the institution's review request first."
-          : "Record the authority's decision with a reason. Starts the re-verification watch.",
+          : "Record it with a reason. It goes to the Executive Committee, which decides.",
       icon: <Gavel />,
       onSelect: onOutcome,
       disabled: !app.latest_run,

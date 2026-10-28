@@ -65,7 +65,7 @@ The command-line seed already opens A3's round with a final letter and a short c
 
 ### What it does
 
-One ZIP per application, built on request:
+One ZIP per application, built on request, and once more each time a scrutiny outcome is recorded, for the report to the Executive Committee (`docs/features/ec-handoff.md`; that pack leaves out original files and its export event carries `purpose: executive_committee_report`):
 
 | File | Content |
 |---|---|

@@ -1239,10 +1239,14 @@ def main() -> None:
         "reference_records": refs, "issuer_registry": registry, "issuer_keys": issuer_keys,
         "applications": apps,
         "rectification": {"A3": {"declared_type": "fire_noc", "file": "rectification/A3_fire_noc_renewed.pdf"}},
-        # Outcomes an officer already recorded, so the re-verification watch has certificates to watch
+        # Outcomes an officer already recorded, so the re-verification watch has certificates to watch. Each one
+        # gets its report for the Executive Committee; A1's was already forwarded, recorded by hand on the seed day
         "scrutiny_outcomes": [
             {"application": "A1", "outcome": "no_deficiency",
-             "reason": "All documents confirmed with the issuers and AICTE records; no deficiency found."},
+             "reason": "All documents confirmed with the issuers and AICTE records; no deficiency found.",
+             "forwarding": {"reference": "RB/EC/2026-27/0041",
+                            "note": "Report version 1 and its evidence pack placed with the Regulation Bureau for "
+                                    "the Executive Committee's next meeting."}},
             {"application": "A6", "outcome": "deficiencies_recorded",
              # The institution reads this reason in its portal, so it names no other institution
              "reason": "Three faculty on the roster could not be confirmed as working only at this institution; the "

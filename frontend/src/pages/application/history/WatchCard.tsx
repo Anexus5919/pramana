@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
+import { AlertTriangle, ArrowRight, Landmark, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../../api";
@@ -113,7 +113,10 @@ export function OutcomeDialog({
       { outcome, reason: reason.trim() },
       {
         onSuccess: (w) => {
-          toast.success("Scrutiny outcome recorded", `Watching ${pluralize(w.items.length, "certificate")} from the issuer registries (SIMULATED) every ${w.interval_hours} h.`);
+          toast.success(
+            "Scrutiny outcome recorded",
+            `Report prepared for the Executive Committee. Watching ${pluralize(w.items.length, "certificate")} from the issuer registries (SIMULATED) every ${w.interval_hours} h.`,
+          );
           onClose();
         },
       },
@@ -138,6 +141,10 @@ export function OutcomeDialog({
       }
     >
       <div className="space-y-4">
+        <p className="flex items-start gap-2 text-sm font-medium text-ink text-pretty">
+          <Landmark aria-hidden className="mt-0.5 size-4 shrink-0 text-ink-3" />
+          The outcome goes to AICTE's Executive Committee, which decides; the Council ratifies the decision.
+        </p>
         {blocked ? (
           <Callout
             tone="warning"
@@ -191,7 +198,7 @@ export function OutcomeDialog({
         <p className="text-sm text-ink-3 text-pretty">
           {ver.isPending
             ? "Counting the certificates that issuer registries confirmed on the latest run."
-            : `After you record it, the ${pluralize(watchable, "certificate")} confirmed by an issuer registry on the latest run ${watchable === 1 ? "is" : "are"} rechecked every ${watch?.interval_hours ?? 24} h. A revocation, expiry or missing record raises a finding; it never changes the recorded outcome.`}
+            : `When you record it, Pramana prepares the report for the Executive Committee with a signed evidence pack, and the ${pluralize(watchable, "certificate")} confirmed by an issuer registry on the latest run ${watchable === 1 ? "is" : "are"} rechecked every ${watch?.interval_hours ?? 24} h. A revocation, expiry or missing record raises a finding; it never changes the recorded outcome.`}
         </p>
       </div>
     </Dialog>

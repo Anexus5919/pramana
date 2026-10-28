@@ -115,9 +115,19 @@ export function AccessibilityStatementPage() {
   );
 }
 
+/** A clause of the Approval Process Handbook, quoted exactly, with where it is. */
+function Clause({ where, children }: { where: string; children: string }) {
+  return (
+    <blockquote className="mt-2 border-l-2 border-line-2 pl-3 text-sm text-ink-2">
+      <p>&ldquo;{children}&rdquo;</p>
+      <footer className="mt-1 text-xs text-ink-3">Approval Process Handbook 2024-27, {where}</footer>
+    </blockquote>
+  );
+}
+
 export function HelpPage() {
   return (
-    <InfoPage title="Help" summary="How to sign in, how institutions and officials use Pramana, and where to get answers.">
+    <InfoPage title="Help" summary="How to sign in, how institutions and officials use Pramana, how a decision is made, and where to get answers.">
       <h2>Signing in</h2>
       <ul>
         <li>
@@ -138,7 +148,10 @@ export function HelpPage() {
           If AICTE asks for corrections, a deficiency letter appears on the application page. Each item has its own conversation
           with the AICTE Scrutiny Cell. Upload corrected documents or fix your figures, then resubmit.
         </li>
-        <li>When AICTE records the scrutiny outcome, it appears on the application page with its reasons and what you can do next.</li>
+        <li>
+          When AICTE records the scrutiny outcome, it appears on the application page with its reasons and what happens next: AICTE&apos;s Executive Committee
+          decides, the Council ratifies, and the decision reaches you on the AICTE portal.
+        </li>
       </ol>
       <p>The bell in the top bar lists new messages and requests. The हिंदी button shows the portal in Hindi.</p>
 
@@ -151,6 +164,58 @@ export function HelpPage() {
         <li><strong>Rules</strong>, <strong>Audit log</strong> and <strong>Platform</strong>: the cited ruleset, the tamper-evident trail and the system's status.</li>
         <li>Press {MOD} + K to search for pages and applications.</li>
       </ul>
+
+      <h2>How a decision is made</h2>
+      <p>
+        An application passes through AICTE&apos;s committees in this order. Pramana supports the scrutiny stage only. The Executive Committee decides and
+        the Council ratifies; Pramana never decides.
+      </p>
+      <ol>
+        <li>
+          <strong>Scrutiny.</strong> The Scrutiny Committee verifies the documents, deficiencies are communicated through the portal and an officer records
+          the scrutiny outcome with its reasons. Pramana supports this stage with its checks, findings, correction rounds and the report for the Executive
+          Committee.
+          <Clause where="Annexure 16.8, the Scrutiny Committee, PDF page 194">
+            Verify the authenticity of the documents submitted by the Applicant as specified in Annexure 1/2 (as applicable) of the Approval Process
+            Handbook.
+          </Clause>
+        </li>
+        <li>
+          <strong>Expert visit, where needed.</strong> The Expert Visit Committee checks the campus; the Standing Hearing and Standing Appellate Committees
+          assess compliance and appeals.
+          <Clause where="Annexure 16.8, the Expert Visit Committee, PDF page 194">
+            Online/ Offline Visit of the premises of Institution to verify the availability of Infrastructural facilities and Faculty with respect to the
+            norms specified in the Approval Process Handbook.
+          </Clause>
+        </li>
+        <li>
+          <strong>Decision by the Executive Committee.</strong>
+          <Clause where="clause 1.10(a), PDF page 24">
+            The Executive Committee (EC) after considering the recommendations of the Committee and views of the Regulation Bureau shall take decision
+            either to grant of approval or otherwise.
+          </Clause>
+        </li>
+        <li>
+          <strong>Ratification by the Council.</strong>
+          <Clause where="clause 1.10(a), PDF page 24">The decisions of the Executive Committee shall be ratified by the Council.</Clause>
+          <Clause where="clause 2.25(a), for existing institutions, PDF page 47">The decisions taken by the Executive Committee are ratified by the Council.</Clause>
+        </li>
+        <li>
+          <strong>The letter on the AICTE portal.</strong>
+          <Clause where="clause 1.10(b), PDF page 24">
+            The decision of the Executive Committee shall be uploaded on the Web-Portal in the form of Letter of Approval (LoA) or Letter of Deficiency
+            (LoD)/ Letter of Rejection (LoR).
+          </Clause>
+          <Clause where="clause 1.9(h), PDF page 24">
+            The Scrutiny/Re-Scrutiny Committee Report and EVC Report shall be made available to the institutions through AICTE web portal.
+          </Clause>
+        </li>
+      </ol>
+      <p>
+        In Pramana, recording the scrutiny outcome prepares a report for the Executive Committee with a signed evidence pack. Pramana does not send it, as
+        the AICTE portal has no connection for it: an officer forwards the report and records the date and reference. Institutions see the outcome, its
+        reasons and these next steps, never the report.
+      </p>
 
       <h2>Checking a certificate with a QR code</h2>
       <p>

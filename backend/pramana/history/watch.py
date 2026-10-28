@@ -210,7 +210,8 @@ def _watch_candidates(db: Session, app: Application, run: ValidationRun) -> list
 
 def record_outcome(db: Session, app: Application, user: User, outcome: str, reason: str,
                    today: date | None = None) -> ScrutinyOutcome:
-    """Record an official's scrutiny outcome and start watching the issuer-verified certificates."""
+    """Record an official's scrutiny outcome, start watching the issuer-verified certificates and prepare the report
+    for the Executive Committee."""
     run = latest_complete_run(db, app.id)
     if run is None:
         raise ValueError("the application has no completed validation run")
@@ -235,16 +236,29 @@ def record_outcome(db: Session, app: Application, user: User, outcome: str, reas
     changes = sum(1 for i in items if check_and_record(db, i, today or date.today(), wr.id, "watch") is not None)
     wr.checked, wr.changes, wr.finished_at = len(items), changes, utcnow()
     db.commit()
+    # The outcome goes to AICTE's Executive Committee, which decides; Pramana prepares the report it reads
+    from ..handoff.report import prepare_safely
+
+    prepare_safely(db, app, out, user)
     return out
 
 
 def seed_outcomes(db: Session, manifest: dict[str, Any], officer: User) -> None:
-    """Demo state: outcomes the fixture world says an officer has already recorded."""
+    """Demo state: outcomes the fixture world says an officer has already recorded, each with its report for the
+    Executive Committee, and the forwardings the world says an officer recorded by hand."""
+    from ..handoff.report import add_forwarding, latest_report
+
     ids = {a["key"]: a["id"] for a in manifest.get("applications", [])}
     for o in manifest.get("scrutiny_outcomes", []):
         app = db.get(Application, ids.get(o["application"], ""))
-        if app is not None:
-            record_outcome(db, app, officer, o["outcome"], o["reason"])
+        if app is None:
+            continue
+        record_outcome(db, app, officer, o["outcome"], o["reason"])
+        fw = o.get("forwarding")
+        report = latest_report(db, app.id) if fw else None
+        if report is not None:
+            add_forwarding(db, report, officer, date.today(), fw["reference"], fw.get("note"))
+            db.commit()
 
 
 def run_watch(trigger: str, actor: str, today: date | None = None) -> dict[str, Any]:
