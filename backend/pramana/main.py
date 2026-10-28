@@ -13,6 +13,7 @@ from .config import get_settings
 from .conversation import api as conversation_api
 from .db import init_db
 from .drishti import api as drishti_api
+from .handoff import api as handoff_api
 from .history import api as history_api
 from .history.watch import start_scheduler
 from .insights import inspection as insight_inspection
@@ -66,6 +67,7 @@ app.include_router(insight_story.router)
 app.include_router(insight_inspection.router)
 app.include_router(drishti_api.router)
 app.include_router(conversation_api.router)
+app.include_router(handoff_api.router)
 
 
 @app.middleware("http")
