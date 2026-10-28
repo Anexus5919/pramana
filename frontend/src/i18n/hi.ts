@@ -178,6 +178,18 @@ export const HI: Record<string, string> = {
   "Recorded by AICTE on {date}, {round}": "AICTE द्वारा {date} को दर्ज, {round}",
   "Reasons": "कारण",
   "What you can do next": "आप आगे क्या कर सकते हैं",
+  "What happens next": "आगे क्या होगा",
+  "AICTE's Executive Committee takes the decision on the approval of your application, considering this scrutiny outcome.":
+    "AICTE की कार्यकारी समिति इस स्क्रूटिनी परिणाम पर विचार करके आपके आवेदन के अनुमोदन पर निर्णय लेती है।",
+  "The Council of AICTE ratifies the Executive Committee's decision.": "AICTE की परिषद कार्यकारी समिति के निर्णय का अनुसमर्थन करती है।",
+  "The decision reaches you on the AICTE portal as a letter.": "निर्णय आपको AICTE पोर्टल पर पत्र के रूप में प्राप्त होगा।",
+  "Nothing more is needed from you for this scrutiny. AICTE tells you directly about any further step.":
+    "इस स्क्रूटिनी के लिए आपसे आगे कुछ भी आवश्यक नहीं है। आगे के किसी भी चरण की सूचना AICTE आपको सीधे देगा।",
+  "The reasons above say what was recorded. Keep the related documents ready. AICTE tells you directly about any further step.":
+    "ऊपर दिए गए कारण बताते हैं कि क्या दर्ज किया गया। संबंधित दस्तावेज़ तैयार रखें। आगे के किसी भी चरण की सूचना AICTE आपको सीधे देगा।",
+  "An expert visit committee may visit the campus. Keep the original documents ready for it. AICTE tells you the dates directly.":
+    "विशेषज्ञ दौरा समिति परिसर का दौरा कर सकती है। इसके लिए मूल दस्तावेज़ तैयार रखें। तिथियों की सूचना AICTE आपको सीधे देगा।",
+  "AICTE tells you directly about any further step.": "आगे के किसी भी चरण की सूचना AICTE आपको सीधे देगा।",
   "PDF, JPG or PNG. A new upload replaces the earlier file.": "PDF, JPG या PNG। नया अपलोड पिछली फ़ाइल का स्थान ले लेता है।",
   "This application is closed, so its documents can no longer change.": "यह आवेदन बंद है, इसलिए इसके दस्तावेज़ अब बदले नहीं जा सकते।",
   "This application is withdrawn, so its documents can no longer change.":
