@@ -512,6 +512,12 @@ export interface Dashboard {
   open_findings_by_category: Record<string, number>;
   open_findings: number;
   alerts: DashboardAlert[];
+  /** Reports prepared from recorded outcomes; ready ones are not yet recorded as forwarded to the Executive Committee */
+  ec_handoff?: {
+    ready: number;
+    forwarded: number;
+    items: { application_id: string; institution: string; report_id: string; version: number; outcome_label: string; prepared_at: string }[];
+  };
 }
 
 export interface ExtractedField {
