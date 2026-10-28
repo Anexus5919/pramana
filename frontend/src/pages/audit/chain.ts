@@ -88,6 +88,10 @@ const ACTION_LABEL: Record<string, string> = {
   "sim.availability_changed": "Issuer availability changed",
   "system.seeded": "Demo data seeded",
   "audit.checkpoint": "Signed checkpoint created",
+  "ec_report.prepared": "Report for the Executive Committee prepared",
+  "ec_report.forwarding_recorded": "Forwarding to the Executive Committee recorded",
+  "ec_report.downloaded": "Report for the Executive Committee downloaded",
+  "ec_report.preparation_failed": "Report for the Executive Committee not prepared",
 };
 
 export function actionLabel(action: string): string {
