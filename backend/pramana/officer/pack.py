@@ -92,7 +92,9 @@ def _decisions(db: Session, app: Application) -> dict[str, list[dict[str, Any]]]
     return out
 
 
-def build_pack(db: Session, app: Application, user: User, *, include_originals: bool) -> dict[str, Any]:
+def build_pack(db: Session, app: Application, user: User, *, include_originals: bool,
+               purpose: str | None = None) -> dict[str, Any]:
+    """purpose names why a pack was built when it is not an officer's own export (the Executive Committee report)."""
     t_all = time.perf_counter()
     stages: list[dict[str, Any]] = []
 
@@ -126,7 +128,7 @@ def build_pack(db: Session, app: Application, user: User, *, include_originals: 
     ev = audit.record(db, actor=user.username, actor_role=user.role, action="evidence_pack.exported",
                       object_type="application", object_id=app.id, application_id=app.id,
                       details={"pack_id": pack_id, "include_originals": include_originals,
-                               "run_id": run.id if run else None})
+                               "run_id": run.id if run else None, **({"purpose": purpose} if purpose else {})})
     cp = audit.checkpoint(db)
     db.commit()
     events = db.scalars(select(AuditEvent).where(AuditEvent.application_id == app.id, AuditEvent.seq <= ev.seq)
