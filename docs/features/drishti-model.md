@@ -131,7 +131,10 @@ Same request as the engine, with `num_gpu 0` added for the CPU rows so that Olla
 | pramana-drishti-0.6b | CPU, 12 threads | hand-written, 60 | 0.94 s | 1.52 s | 2.54 s | 7.0 s |
 | pramana-drishti-0.6b | CPU, 2 threads | hand-written, 60 | 1.31 s | 2.06 s | 5.19 s | 11.2 s |
 | pramana-drishti-0.6b | CPU, 2 threads | held-out, 60 | 1.58 s | 2.57 s | 5.77 s | |
+| pramana-drishti-0.6b | Azure public server (2 vCPU, 4 GB), 2 threads | hand-written, all 167 | 1.65 s | 2.27 s | 3.54 s | 14.3 s |
 | `qwen3:1.7b` base | CPU, 2 threads | hand-written, 60 | 3.51 s | 10.04 s | 14.23 s | 22.3 s |
+
+On the public server itself (28 Oct, Ollama 0.40.11, `eval_drishti.py --cpu --threads 2`) the 0.6B model understood 166 of 167 hand-written messages (0.994; 0.994 on the 154 not seen in training). It is kept loaded there (`PRAMANA_DRISHTI_KEEP_ALIVE=-1`) and warmed after every reset, so visitors never wait for the first-call load.
 | `qwen3:0.6b` base | CPU, 2 threads | hand-written, 60 | 2.19 s | 4.19 s | 7.49 s | 11.4 s |
 
 - Held-out messages are slower than hand-written ones because 38% of them carry a previous intent, which lengthens the user turn. The 843-token system prompt is the same on every call, so after the first call Ollama reuses it from its cache and processes only the user turn.
