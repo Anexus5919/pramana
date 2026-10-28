@@ -46,7 +46,7 @@ API (officials only; institutions get 403):
 
 ### What it does
 
-- **Scrutiny outcome.** An officer records the outcome they decided, with a written reason of at least 10 characters. The choices are "Scrutiny complete, no deficiency recorded", "Scrutiny complete, deficiencies recorded" and "Referred to an expert visit committee". None of them approves or rejects. The outcome is stored, written to the audit chain and shown on the Overview tab with who recorded it. The application status is left unchanged.
+- **Scrutiny outcome.** An officer records the outcome they decided, with a written reason of at least 10 characters. The choices are "Scrutiny complete, no deficiency recorded", "Scrutiny complete, deficiencies recorded" and "Referred to an expert visit committee". None of them approves or rejects. The outcome is stored, written to the audit chain and shown on the Overview tab with who recorded it. The application status is left unchanged. Recording it also prepares the report for AICTE's Executive Committee, which decides; the Council ratifies (`docs/features/ec-handoff.md`).
 - **What is watched.** Every certificate that an issuer registry confirmed (status verified) on the latest validation run: for example the fire NOC, occupancy certificate, e-stamp and UDIN. Sources that were unavailable or pending at the time were never confirmed, so they are not watched.
 - **Checks.** A background scheduler re-queries each watched reference in the simulated issuer registry and re-checks validity dates against today. It runs every 24 hours by default; "Run watch now" runs it on demand.
 - **Changes reported:**
