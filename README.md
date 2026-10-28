@@ -115,7 +115,7 @@ Demo accounts (password `Pramana@2026`):
 
 ```bash
 cd backend
-.venv/Scripts/python -m pytest              # 162 tests: rules, forensics, signatures, QR, uploads, workflow, platform, officer tools, history, photos, edits, insights
+.venv/Scripts/python -m pytest              # 230 tests: rules, forensics, signatures, QR, uploads, workflow, platform, officer tools, history, photos, edits, insights, Drishti, regulatory basis, conversation, handoff
 .venv/Scripts/python scripts/evaluate.py    # planted conditions, fields, verification outcomes, controls
 .venv/Scripts/python scripts/eval_hindi.py  # Hindi OCR accuracy
 .venv/Scripts/python scripts/eval_ask.py    # Ask why: kept sentences, citations, latency
@@ -130,7 +130,7 @@ Current results, measured on 24 Oct 2026 on the merged code:
 - **Real documents:** 9 of 9 real DSC-signed Government e-Gazettes verified against the CCA India roots, with 0 false indicators.
 - **Our model (version 2):** the fine-tuned Qwen3 1.7B extractor gets 94.7% of fields fully correct on held-out layouts, against 82.5% for a general 4B model and 89.1% for a 20B model on a cloud service. It followed 0 of 30 planted instructions, against 9 and 3, at about 1.1 s per document.
 - **Speed:** a validation run takes about 1.1 to 1.8 s per application on a laptop CPU, once documents are read.
-- **Tests:** 162 automated tests pass on SQLite. On the platform branch, the full suite at that point (35 tests) also passed on PostgreSQL 16.2.
+- **Tests:** 230 automated tests pass on SQLite. On the platform branch, the full suite at that point (35 tests) also passed on PostgreSQL 16.2.
 
 Method, controls and limitations: `docs/evaluation-results.md`.
 
