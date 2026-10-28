@@ -21,6 +21,7 @@ import {
 import { useDocTypeLabel, useWorkspace } from "../context";
 import { isOpenFinding, useVerifications } from "../data";
 import { followedIds } from "./documents/shared";
+import { EcHandoffPanel } from "../handoff/EcHandoffPanel";
 import { useSinceLastYear } from "../history/api";
 import { WatchCard } from "../history/WatchCard";
 import { CoverageCalendar } from "../insights/CoverageCalendar";
@@ -306,6 +307,8 @@ export function SummarySection() {
   return (
     <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0 space-y-6">
+        {/* Once an outcome is recorded, where it goes next leads the summary */}
+        <EcHandoffPanel />
         <ProofMatrix />
         <NeedsAttention />
         <CoverageCalendar />
